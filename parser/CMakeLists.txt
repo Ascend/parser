@@ -1,5 +1,5 @@
 set(PROTO_LIST
-    "${TOP_DIR}/inc/register/proto/tensorflow/graph_library.proto"
+    "${METADEF_DIR}/proto/tensorflow/graph_library.proto"
 )
 
 set(SRC_LIST
@@ -56,16 +56,25 @@ target_compile_definitions(fmk_parser PRIVATE
 
 target_include_directories(fmk_parser PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
-    ${TOP_DIR}/framework/domi
-    ${TOP_DIR}/framework/domi/common
-    ${TOP_DIR}/framework/domi/parser
-    ${TOP_DIR}/inc
-    ${TOP_DIR}/inc/external
-    ${TOP_DIR}/inc/external/parser
-    ${TOP_DIR}/inc/external/graph
-    ${TOP_DIR}/inc/framework
+    ${PARSER_DIR}
+    ${PARSER_DIR}/inc
+    ${PARSER_DIR}/parser
+    ${PARSER_DIR}/../inc
+    ${PARSER_DIR}/../inc/common/util
+    ${METADEF_DIR}/inc
+    ${METADEF_DIR}/inc/graph
+    ${METADEF_DIR}/inc/register
+    ${METADEF_DIR}/inc/external
+    ${METADEF_DIR}/inc/external/graph
+    ${METADEF_DIR}/inc/external/register
+    #### temp ####
+    ${PARSER_DIR}/../graphengine/inc/common/util
+    ${PARSER_DIR}/../graphengine/inc/external
+    ${PARSER_DIR}/../graphengine/inc/framework
+    ${PARSER_DIR}/../graphengine/inc
+    ${PARSER_DIR}/../graphengine/ge
     ${CMAKE_BINARY_DIR}
-    ${CMAKE_BINARY_DIR}/proto/ge
+    ${CMAKE_BINARY_DIR}/proto/ge 
 )
 
 target_link_libraries(fmk_parser
@@ -90,12 +99,12 @@ add_custom_command(
     OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/stub_tensorflow_parser.cc
            ${CMAKE_CURRENT_BINARY_DIR}/stub_caffe_parser.cc
     COMMAND echo "Generating stub files."
-            && ${HI_PYTHON} ${CMAKE_CURRENT_LIST_DIR}/../stub/gen_stubapi.py ${TOP_DIR}/inc/external ${CMAKE_CURRENT_BINARY_DIR}
+            && ${HI_PYTHON} ${CMAKE_CURRENT_LIST_DIR}/stub/gen_stubapi.py ${PARSER_DIR}/inc/external ${CMAKE_CURRENT_BINARY_DIR}
             && mv tensorflow_parser.cc stub_tensorflow_parser.cc
             && mv caffe_parser.cc stub_caffe_parser.cc
             &&  echo "Generating stub files end."
-    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    DEPENDS ../stub/gen_stubapi.py ${TOP_DIR}/inc/external ${CMAKE_CURRENT_BINARY_DIR}
+    #WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    #DEPENDS ../stub/gen_stubapi.py ${TOP_DIR}/inc/external ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 ##################################################################
@@ -119,13 +128,24 @@ target_compile_definitions(fmk_parser_stub PRIVATE
 
 target_include_directories(fmk_parser_stub PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
-    ${TOP_DIR}/inc
-    ${TOP_DIR}/inc/external
-    ${TOP_DIR}/inc/external/parser
-    ${TOP_DIR}/inc/external/graph
-    ${TOP_DIR}/inc/framework
-    ${CMAKE_BINARY_DIR}
-    ${CMAKE_CURRENT_BINARY_DIR}
+    ${PARSER_DIR}
+    ${PARSER_DIR}/inc
+    ${PARSER_DIR}/inc/external
+    ${PARSER_DIR}/parser
+    ${PARSER_DIR}/../inc
+    ${PARSER_DIR}/../inc/common/util
+    ${METADEF_DIR}/inc
+    ${METADEF_DIR}/inc/graph
+    ${METADEF_DIR}/inc/register
+    ${METADEF_DIR}/inc/external
+    ${METADEF_DIR}/inc/external/graph
+    ${METADEF_DIR}/inc/external/register
+    #### temp ####
+    ${PARSER_DIR}/../graphengine/inc/common/util
+    ${PARSER_DIR}/../graphengine/inc/external
+    ${PARSER_DIR}/../graphengine/inc/framework
+    ${PARSER_DIR}/../graphengine/inc
+    ${PARSER_DIR}/../graphengine/ge
 )
 
 target_link_libraries(fmk_parser_stub PRIVATE

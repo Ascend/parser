@@ -1,15 +1,15 @@
 set(PROTO_LIST
-    "${TOP_DIR}/inc/register/proto/tensorflow/graph.proto"
-    "${TOP_DIR}/inc/register/proto/tensorflow/node_def.proto"
-    "${TOP_DIR}/inc/register/proto/tensorflow/tensor_shape.proto"
-    "${TOP_DIR}/inc/register/proto/tensorflow/attr_value.proto"
-    "${TOP_DIR}/inc/register/proto/tensorflow/function.proto"
-    "${TOP_DIR}/inc/register/proto/tensorflow/op_def.proto"
-    "${TOP_DIR}/inc/register/proto/tensorflow/resource_handle.proto"
-    "${TOP_DIR}/inc/register/proto/tensorflow/tensor.proto"
-    "${TOP_DIR}/inc/register/proto/tensorflow/types.proto"
-    "${TOP_DIR}/inc/register/proto/tensorflow/versions.proto"
-    "${TOP_DIR}/inc/register/proto/tensorflow/graph_library.proto"
+    "${METADEF_DIR}/proto/tensorflow/graph.proto"
+    "${METADEF_DIR}/proto/tensorflow/node_def.proto"
+    "${METADEF_DIR}/proto/tensorflow/tensor_shape.proto"
+    "${METADEF_DIR}/proto/tensorflow/attr_value.proto"
+    "${METADEF_DIR}/proto/tensorflow/function.proto"
+    "${METADEF_DIR}/proto/tensorflow/op_def.proto"
+    "${METADEF_DIR}/proto/tensorflow/resource_handle.proto"
+    "${METADEF_DIR}/proto/tensorflow/tensor.proto"
+    "${METADEF_DIR}/proto/tensorflow/types.proto"
+    "${METADEF_DIR}/proto/tensorflow/versions.proto"
+    "${METADEF_DIR}/proto/tensorflow/graph_library.proto"
 )
 
 protobuf_generate_py(ge PROTO_SRCS ${PROTO_LIST})

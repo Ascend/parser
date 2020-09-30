@@ -1,6 +1,6 @@
 set(PROTO_LIST
-    "${TOP_DIR}/inc/register/proto/onnx/ge_onnx.proto"
-    "${TOP_DIR}/inc/common/proto/om.proto"
+    "${METADEF_DIR}/proto/onnx/ge_onnx.proto"
+    "${METADEF_DIR}/proto/om.proto"
 )
 
 set(SRC_LIST
@@ -26,12 +26,23 @@ target_compile_definitions(fmk_onnx_parser PRIVATE
 
 target_include_directories(fmk_onnx_parser PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
-    ${TOP_DIR}/framework/domi/parser
-    ${TOP_DIR}/framework/domi
-    ${TOP_DIR}/inc
-    ${TOP_DIR}/inc/external
-    ${TOP_DIR}/inc/external/graph
-    ${TOP_DIR}/inc/framework
+    ${PARSER_DIR}
+    ${PARSER_DIR}/inc
+    ${PARSER_DIR}/parser
+    ${PARSER_DIR}/../inc
+    ${PARSER_DIR}/../inc/common/util
+    ${METADEF_DIR}/inc
+    ${METADEF_DIR}/inc/graph
+    ${METADEF_DIR}/inc/register
+    ${METADEF_DIR}/inc/external
+    ${METADEF_DIR}/inc/external/graph
+    ${METADEF_DIR}/inc/external/register
+    #### temp ####
+    ${PARSER_DIR}/../graphengine/inc/common/util
+    ${PARSER_DIR}/../graphengine/inc/external
+    ${PARSER_DIR}/../graphengine/inc/framework
+    ${PARSER_DIR}/../graphengine/inc
+    ${PARSER_DIR}/../graphengine/ge
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/proto/ge
 )
