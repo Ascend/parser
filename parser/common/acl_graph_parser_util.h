@@ -137,6 +137,77 @@ bool ValidateStr(const std::string &filePath, const std::string &mode);
 /// @return Time character string in the format: %Y%m%d%H%M%S, eg: 20171011083555
 ///
 std::string CurrentTimeInStr();
+
+template <typename T, typename... Args>
+static inline std::shared_ptr<T> ComGraphMakeShared(Args &&... args) {
+  using T_nc = typename std::remove_const<T>::type;
+  std::shared_ptr<T> ret(new (std::nothrow) T_nc(std::forward<Args>(args)...));
+  return ret;
+}
+
+/// @ingroup math_util
+/// @brief check whether int64 multiplication can result in overflow
+/// @param [in] a  multiplicator
+/// @param [in] b  multiplicator
+/// @return Status
+inline Status Int64MulCheckOverflow(int64_t a, int64_t b) {
+  if (a > 0) {
+    if (b > 0) {
+      if (a > (INT64_MAX / b)) {
+        return FAILED;
+      }
+    } else {
+      if (b < (INT64_MIN / a)) {
+        return FAILED;
+      }
+    }
+  } else {
+    if (b > 0) {
+      if (a < (INT64_MIN / b)) {
+        return FAILED;
+      }
+    } else {
+      if ((a != 0) && (b < (INT64_MAX / a))) {
+        return FAILED;
+      }
+    }
+  }
+  return SUCCESS;
+}
+/// @ingroup math_util
+/// @brief check whether int64 multiplication can result in overflow
+/// @param [in] a  multiplicator
+/// @param [in] b  multiplicator
+/// @return Status
+inline Status CheckInt64Uint32MulOverflow(int64_t a, uint32_t b) {
+  if (a == 0 || b == 0) {
+    return SUCCESS;
+  }
+  if (a > 0) {
+    if (a > (INT64_MAX / b)) {
+      return FAILED;
+    }
+  } else {
+    if (a < (INT64_MIN / b)) {
+      return FAILED;
+    }
+  }
+  return SUCCESS;
+}
+
+#define PARSER_INT64_MULCHECK(a, b)                                                           \
+  if (ge::Int64MulCheckOverflow((a), (b)) != SUCCESS) {                                         \
+    GELOGW("Int64 %ld and %ld multiplication can result in overflow!", static_cast<int64_t>(a), \
+           static_cast<int64_t>(b));                                                            \
+    return INTERNAL_ERROR;                                                                      \
+  }
+
+#define PARSER_INT64_UINT32_MULCHECK(a, b)                                                                \
+  if (ge::CheckInt64Uint32MulOverflow((a), (b)) != SUCCESS) {                                          \
+    GELOGW("Int64 %ld and UINT32 %u multiplication can result in overflow!", static_cast<uint32_t>(a), \
+           static_cast<uint32_t>(b));                                                                  \
+    return INTERNAL_ERROR;                                                                             \
+  }
 }  // namespace parser
 }  // namespace ge
 

@@ -25,7 +25,7 @@
 #include "framework/omg/parser/parser_inner_ctx.h"
 #include "graph/utils/type_utils.h"
 #include "parser/common/op_parser_factory.h"
-#include "common/math/math_util.h"
+#include "parser/common/acl_graph_parser_util.h"
 
 using domi::tensorflow::AttrValue;
 using std::vector;
@@ -52,10 +52,10 @@ Status TensorFlowSqueezeParser::ParseDesc(const domi::tensorflow::AttrValue &att
   for (uint32_t j = 0; j < ge_desc.GetShape().GetDimNum(); ++j) {
     tmp_dim = ge_desc.GetShape().GetDim(j);
     GE_IF_BOOL_EXEC(tmp_dim < 0, real_size = tmp_dim * (-1) * real_size; continue;);
-    FMK_INT64_MULCHECK(real_size, tmp_dim);
+    PARSER_INT64_MULCHECK(real_size, tmp_dim);
     real_size *= tmp_dim;
   }
-  FMK_INT64_MULCHECK(real_size, size_type);
+  PARSER_INT64_MULCHECK(real_size, size_type);
   ge::TensorUtils::SetSize(ge_desc, real_size * size_type);
   ge::TensorUtils::SetRealDimCnt(ge_desc, ge_desc.GetShape().GetDimNum());
   GELOGD("after translate tf_desc, datatype: %s, format: %s, real size: %u, size_type: %u",

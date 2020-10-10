@@ -18,7 +18,7 @@
 #include <cstdlib>
 #include "common/debug/log.h"
 #include "common/op/ge_op_utils.h"
-#include "common/math/math_util.h"
+#include "parser/common/acl_graph_parser_util.h"
 #include "common/util.h"
 #include "graph/utils/type_utils.h"
 #include "omg/omg.h"
@@ -128,10 +128,10 @@ Status DataOpParser::InitNDTensor(const vector<int64_t> &shape, ge::DataType dat
   }
   uint32_t type_size = 0;
   if (ge::TypeUtils::GetDataTypeLength(data_type, type_size)) {
-    FMK_INT64_UINT32_MULCHECK(size, type_size);
+    PARSER_INT64_UINT32_MULCHECK(size, type_size);
     size *= type_size;
   } else {
-    FMK_INT64_UINT32_MULCHECK(size, static_cast<uint32_t>(sizeof(float)));
+    PARSER_INT64_UINT32_MULCHECK(size, static_cast<uint32_t>(sizeof(float)));
     size *= sizeof(float);
   }
   ge::TensorUtils::SetSize(tensor_desc, size);
@@ -169,7 +169,7 @@ Status DataOpParser::InitInputTensor(const vector<int64_t> &shape, ge::GeTensorD
   if (input.GetShape().GetDim(0) != -1) {
     size = input.GetShape().GetShapeSize();
   }
-  FMK_INT64_UINT32_MULCHECK(size, static_cast<uint32_t>(sizeof(float)));
+  PARSER_INT64_UINT32_MULCHECK(size, static_cast<uint32_t>(sizeof(float)));
   ge::TensorUtils::SetSize(input, size * sizeof(float));
 
   return SUCCESS;

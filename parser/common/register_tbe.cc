@@ -19,7 +19,7 @@
 #include <memory>
 #include <string>
 #include "common/debug/log.h"
-#include "common/ge/ge_util.h"
+#include "parser/common/acl_graph_parser_util.h"
 #include "common/op/ge_op_utils.h"
 #include "common/op_map.h"
 #include "common/util.h"
@@ -79,7 +79,7 @@ bool OpRegistrationTbe::RegisterParser(const OpRegistrationData &reg_data) {
         return false;
       }
       std::shared_ptr<TensorFlowCustomParserAdapter> tf_parser_adapter =
-          ge::MakeShared<TensorFlowCustomParserAdapter>();
+          ge::parser::MakeShared<TensorFlowCustomParserAdapter>();
       if (tf_parser_adapter == nullptr) {
         GELOGE(PARAM_INVALID, "Create tf parser adapter failed.");
         return false;
@@ -95,7 +95,7 @@ bool OpRegistrationTbe::RegisterParser(const OpRegistrationData &reg_data) {
       }
       GELOGI("Register fusion custom op parser: %s", reg_data.GetOmOptype().c_str());
       std::shared_ptr<TensorFlowFusionCustomParserAdapter> tf_fusion_parser_adapter =
-          ge::MakeShared<TensorFlowFusionCustomParserAdapter>();
+          ge::parser::MakeShared<TensorFlowFusionCustomParserAdapter>();
       if (tf_fusion_parser_adapter == nullptr) {
         GELOGE(PARAM_INVALID, "Create tf fusion parser adapter failed.");
         return false;

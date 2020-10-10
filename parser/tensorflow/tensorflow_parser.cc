@@ -19,7 +19,7 @@
 #include <iostream>
 #include "parser/common/convert/pb2json.h"
 #include "common/debug/log.h"
-#include "common/ge/ge_util.h"
+#include "parser/common/acl_graph_parser_util.h"
 #include "common/util/error_manager/error_manager.h"
 #include "external/graph/operator_factory.h"
 #include "external/parser/tensorflow_parser.h"
@@ -99,7 +99,7 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, ge::Graph &graph) {
   (void)acl_graph_parse_util.AclParserInitialize(options);
 
   // Create an empty computegraph
-  ge::ComputeGraphPtr compute_graph = ge::MakeShared<ge::ComputeGraph>("tmpGraph");
+  ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>("tmpGraph");
   GE_CHECK_NOTNULL(compute_graph);
 
   graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
@@ -172,7 +172,7 @@ Status GenSubgraphParseTasks(const ge::ComputeGraphPtr &parent_graph, std::deque
 
       // A function may be referenced multiple times in TF, change the graph name to ensure it is unique in GE
       auto unique_name = node->GetName() + std::to_string(i) + subgraph_iname;
-      auto subgraph = ge::MakeShared<ge::ComputeGraph>(unique_name);
+      auto subgraph = ge::parser::MakeShared<ge::ComputeGraph>(unique_name);
       if (subgraph == nullptr) {
         GELOGE(OUT_OF_MEMORY, "Failed to alloc subgraph %s", subgraph_iname.c_str());
         return OUT_OF_MEMORY;
@@ -246,7 +246,7 @@ Status TensorFlowModelParser::DefunToPartitionedCall(const domi::tensorflow::Nod
     return FAILED;
   }
 
-  op = ge::MakeShared<ge::OpDesc>(op_name, ge::parser::PARTITIONEDCALL);
+  op = ge::parser::MakeShared<ge::OpDesc>(op_name, ge::parser::PARTITIONEDCALL);
   GE_CHECK_NOTNULL(op);
 
   size_t input_tensor_num = 0;
@@ -284,7 +284,7 @@ Status TensorFlowModelParser::TransNodeToOpDesc(const domi::tensorflow::NodeDef 
   ge::Operator op_factory = ge::OperatorFactory::CreateOperator(node_name, op_type);
   if (op_factory.GetName() != node_name || op_type == ge::parser::DATA) {
     if (std::find(kMakeOperatorNotByIr.begin(), kMakeOperatorNotByIr.end(), op_type) != kMakeOperatorNotByIr.end()) {
-      op = ge::MakeShared<ge::OpDesc>(node_name, op_type);
+      op = ge::parser::MakeShared<ge::OpDesc>(node_name, op_type);
       GE_CHECK_NOTNULL(op);
     } else if (node_name == op_type) {
       // Trans @tensorflow.python.framework.Defun(...) to PartitionedCall.
@@ -809,7 +809,7 @@ Status TensorFlowModelParser::ParseNodeDef(TensorFlowModelParser *parser, ge::Co
   ge::Operator op_factory = ge::OperatorFactory::CreateOperator(node_name, op_type);
   if (op_factory.GetName() != node_name) {
     if (std::find(kMakeOperatorNotByIr.begin(), kMakeOperatorNotByIr.end(), op_type) != kMakeOperatorNotByIr.end()) {
-      op = ge::MakeShared<ge::OpDesc>(node_name, op_type);
+      op = ge::parser::MakeShared<ge::OpDesc>(node_name, op_type);
       GE_CHECK_NOTNULL(op);
     } else if (node_name == op_type) {
       GE_RETURN_IF_ERROR(parser->DefunToPartitionedCall(node_def, op));
@@ -939,7 +939,7 @@ Status TensorFlowModelParser::AddFmkNode(ge::ComputeGraphPtr &graph, shared_ptr<
   ThreadPool executor(kThreadNum);
   std::mutex graphMutex;
   std::vector<std::future<Status>> vectorFuture(op_node_list_size);
-  ge::ComputeGraphPtr graph_tmp = ge::MakeShared<ge::ComputeGraph>("tmpGraph");
+  ge::ComputeGraphPtr graph_tmp = ge::parser::MakeShared<ge::ComputeGraph>("tmpGraph");
   GE_CHECK_NOTNULL(graph_tmp);
   for (size_t j = 0; j < op_node_list_size; j++) {
     const string op_node_name = op_node_name_list[j];

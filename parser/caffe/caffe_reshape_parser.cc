@@ -17,7 +17,7 @@
 #include "parser/caffe/caffe_reshape_parser.h"
 #include <vector>
 #include "common/debug/log.h"
-#include "common/ge/ge_util.h"
+#include "parser/common/acl_graph_parser_util.h"
 #include "common/op/op_parser_util.h"
 #include "common/util.h"
 #include "framework/common/debug/ge_log.h"
@@ -109,7 +109,7 @@ Status CaffeReshapeParser::AddConstInput(ge::NodePtr &node) {
   }
 
   // construct GeTensorPtr
-  ge::GeTensorPtr constTensor = ge::MakeShared<ge::GeTensor>();
+  ge::GeTensorPtr constTensor = ge::parser::MakeShared<ge::GeTensor>();
   GE_CHECK_NOTNULL(constTensor);
   constTensor->SetTensorDesc(const_desc);
 

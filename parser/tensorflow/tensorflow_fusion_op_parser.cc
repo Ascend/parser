@@ -17,7 +17,7 @@
 #include "parser/tensorflow/tensorflow_fusion_op_parser.h"
 #include <memory>
 #include "common/debug/log.h"
-#include "common/ge/ge_util.h"
+#include "parser/common/acl_graph_parser_util.h"
 #include "common/util.h"
 #include "framework/common/debug/ge_log.h"
 #include "omg/omg.h"
@@ -132,7 +132,7 @@ Status TensorFlowFusionOpParser::ParseWeightFromConst(const NodeDef *node_def, g
   GE_CHECK_NOTNULL(node_def);
   TensorProto tensor;
   GE_CHK_STATUS_RET(GetTensorFromNode(node_def, tensor), "get tensor failed.");
-  weight = ge::MakeShared<ge::GeTensor>();
+  weight = ge::parser::MakeShared<ge::GeTensor>();
   GE_CHECK_NOTNULL(weight);
   domi::tensorflow::DataType data_type = tensor.dtype();
   GE_CHK_STATUS_RET(

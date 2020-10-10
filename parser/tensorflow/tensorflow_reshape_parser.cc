@@ -22,7 +22,7 @@
 #include "graph/utils/type_utils.h"
 #include "parser/common/op_parser_factory.h"
 #include "parser/tensorflow/tensorflow_util.h"
-#include "common/math/math_util.h"
+#include "parser/common/acl_graph_parser_util.h"
 
 using domi::TENSORFLOW;
 using namespace ge::parser;
@@ -48,7 +48,7 @@ Status TensorFlowReshapeParser::ParseDesc(const domi::tensorflow::AttrValue &att
     GE_IF_BOOL_EXEC(tmp_dim < 0, real_size = tmp_dim * (-1) * real_size; continue;);
     real_size *= tmp_dim;
   }
-  FMK_INT64_MULCHECK(real_size, size_type);
+  PARSER_INT64_MULCHECK(real_size, size_type);
   ge::TensorUtils::SetSize(ge_desc, real_size * size_type);
   ge::TensorUtils::SetRealDimCnt(ge_desc, ge_desc.GetShape().GetDimNum());
   GELOGI("after translate tf_desc, datatype: %s, format: %s, real size: %u, size_type: %u",
