@@ -23,7 +23,7 @@
 #include "cce/cce.h"
 #include "cce/dnn.h"
 #include "common/debug/log.h"
-#include "common/math/math_util.h"
+#include "parser/common/acl_graph_parser_util.h"
 #include "common/op/ge_op_utils.h"
 #include "common/op_map.h"
 #include "common/types_map.h"
@@ -807,7 +807,8 @@ Status CreateNodeDefBytes(ge::NodePtr n, string originalType, map<string, PIOLis
     for (uint32_t j = 0; j < ge_desc->GetShape().GetDimNum(); ++j) {
       tmp_dim = ge_desc->GetShape().GetDim(j);
       GE_CHECK_GE(tmp_dim, 0);
-      FMK_INT64_MULCHECK(real_size, tmp_dim);
+      
+      PARSER_INT64_MULCHECK(real_size, tmp_dim);
       real_size *= tmp_dim;
     }
     ge::TensorUtils::SetSize(*ge_desc, real_size * size_type);

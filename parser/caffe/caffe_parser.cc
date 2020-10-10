@@ -22,7 +22,7 @@
 #include <memory>
 #include "parser/common/convert/pb2json.h"
 #include "common/debug/log.h"
-#include "common/ge/ge_util.h"
+#include "parser/common/acl_graph_parser_util.h"
 #include "common/op_map.h"
 #include "common/util/error_manager/error_manager.h"
 #include "common/ge_types.h"
@@ -85,7 +85,7 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file, 
   (void)acl_graph_parse_util.AclParserInitialize(options);
 
   // Create an empty computegraph
-  ge::ComputeGraphPtr compute_graph = ge::MakeShared<ge::ComputeGraph>("tmpGraph");
+  ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>("tmpGraph");
   GE_CHECK_NOTNULL(compute_graph);
 
   graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
@@ -1119,7 +1119,7 @@ Status CaffeModelParser::AddTensorDescToOpDesc(ge::OpDescPtr &op_desc, const dom
 Status CaffeModelParser::AddTensorDescToOpDescByIr(ge::OpDescPtr &op_desc, const domi::caffe::LayerParameter &layer,
                                                    const string &op_type) {
   if (std::find(kAddTensorIrSkipNodes.begin(), kAddTensorIrSkipNodes.end(), op_type) != kAddTensorIrSkipNodes.end()) {
-    op_desc = ge::MakeShared<ge::OpDesc>(layer.name(), op_type);
+    op_desc = ge::parser::MakeShared<ge::OpDesc>(layer.name(), op_type);
     GE_CHECK_NOTNULL(op_desc);
     Status ret = AddTensorDescToOpDesc(op_desc, layer);
     if (ret != SUCCESS) {
@@ -1138,44 +1138,40 @@ Status CaffeModelParser::AddTensorDescToOpDescByIr(ge::OpDescPtr &op_desc, const
   } else {
     op_desc = ge::OpDescUtils::GetOpDescFromOperator(op_factory);
     GE_CHECK_NOTNULL(op_desc);
-    auto valid_size = layer.bottom_size();
+    auto valid_input_size = layer.bottom_size();
+    auto blob_size = layer.blobs_size();
     GELOGI("After GetOpDescFromOperator op[%s] type[%s] have all input size: %zu, caffe_input_size:%d output size: %zu",
            op_desc->GetName().c_str(), op_desc->GetType().c_str(),
-           op_desc->GetAllInputsSize(), valid_size, op_desc->GetOutputsSize());
-    for (int i = 0; i < valid_size; i++) {
+           op_desc->GetAllInputsSize(), valid_input_size, op_desc->GetOutputsSize());
+    bool update_in_turn = (static_cast<int64_t>(op_desc->GetAllInputsSize()) == (valid_input_size + blob_size);
+    for (int i = 0; i < valid_input_size; i++) {
       ge::GeTensorDesc input_tensor;
       std::string input_name;
       ge::graphStatus ret = ge::GRAPH_SUCCESS;
-      // Only two case is supported fow now when there are optional inputs
+      // Below cases are supported fow now when there are optional inputs
       // x means optional, o means requierd input
-      // a. ooxxx, layer.bottom_size=number of o and x
-      // b. oxoxoxox, layer.bottom_size=number of o
-      if (static_cast<size_t>(i) >= op_desc->GetInputsSize()) {
-        ret = op_desc->UpdateInputDesc(static_cast<uint32_t>(i), input_tensor);
+      // a. ooxxx, number of o and x>=layer.bottom_size+layer.blobs_size>=number of o
+      // b. oxoxoxox, layer.bottom_size+layer.blobs_size>=number of o
+      // c. oxoxoxox, layer.bottom_size+layer.blobs_size>=number of o and x
+      if (update_in_turn) {
+        ret = op_desc->UpdateInputDesc(op_desc->GetInputNameByIndex(static_cast<uint32_t>(i)), input_tensor);
       } else {
-        input_name = op_desc->GetValidInputNameByIndex(static_cast<uint32_t>(i));
-        ret = op_desc->UpdateInputDesc(input_name, input_tensor);
+        if (static_cast<size_t>(i) >= op_desc->GetInputsSize()) {
+          ret = op_desc->UpdateInputDesc(static_cast<uint32_t>(i), input_tensor);
+        } else {
+          input_name = op_desc->GetValidInputNameByIndex(static_cast<uint32_t>(i));
+          ret = op_desc->UpdateInputDesc(input_name, input_tensor);
+        }
       }
-
-      if (ret != ge::GRAPH_SUCCESS) {
-        GELOGW("op [%s], type[%s], update input(%d) with name %s failed", op_desc->GetName().c_str(),
-               op_desc->GetType().c_str(), i, input_name.c_str());
-      } else {
-        GELOGI("op [%s], type[%s], update input(%d) with name %s success", op_desc->GetName().c_str(),
-               op_desc->GetType().c_str(), i, input_name.c_str());
-      }
+      GELOGI("op [%s], type[%s], update input(%d) with name %s %s", op_desc->GetName().c_str(),
+            op_desc->GetType().c_str(), i, input_name.c_str(), ret == ge::GRAPH_SUCCESS ? "success" : "failed");
     }
 
     for (int i = 0; i < layer.top_size(); i++) {
       ge::GeTensorDesc output_tensor;
-      ge::graphStatus ret = op_desc->UpdateOutputDesc(op_desc->GetOutputNameByIndex(i), output_tensor);
-      if (ret != ge::GRAPH_SUCCESS) {
-        GELOGW("op [%s], type[%s], update output(%d) with name %s failed", op_desc->GetName().c_str(),
-               op_desc->GetType().c_str(), i, op_desc->GetOutputNameByIndex(i).c_str());
-      } else {
-        GELOGI("op [%s], type[%s], update output(%d) with name %s success", op_desc->GetName().c_str(),
-               op_desc->GetType().c_str(), i, op_desc->GetOutputNameByIndex(i).c_str());
-      }
+      auto ret = op_desc->UpdateOutputDesc(op_desc->GetOutputNameByIndex(static_cast<uint32_t>(i)), output_tensor);
+      GELOGI("op [%s], type[%s], update output(%d) with name %s %s", op_desc->GetName().c_str(),
+            op_desc->GetType().c_str(), i, op_desc->GetOutputNameByIndex(i).c_str(), ret == ge::GRAPH_SUCCESS ? "success" : "failed");
     }
   }
   return SUCCESS;
@@ -1226,6 +1222,12 @@ Status CaffeModelParser::AddEdges(ge::ComputeGraphPtr &graph) {
                           GELOGE(INTERNAL_ERROR, "Add link failed from op[%s] to op[%s].",
                                  top_node_iter->second->GetName().c_str(), bottom_node_iter->second->GetName().c_str());
                           return INTERNAL_ERROR;);
+          auto op_desc = bottom_node_iter->second->GetOpDesc();
+          GE_CHECK_NOTNULL(op_desc);
+          auto out_op_desc = top_node_iter->second->GetOpDesc();
+          GE_CHECK_NOTNULL(out_op_desc);
+          (void) op_desc->UpdateInputDesc((static_cast<uint32_t>(in_archor_ptr->GetIdx())),
+                                          out_op_desc->GetOutputDesc(static_cast<uint32_t>(out_archor_ptr->GetIdx())));
         }
         GE_IF_BOOL_EXEC(top_node_iter == node_map.end(), ErrorManager::GetInstance().ATCReportErrMessage(
                                                              "E11014", {"opname"}, {top_blob_layer_pair.first});

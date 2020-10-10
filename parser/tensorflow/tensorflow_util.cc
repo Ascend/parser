@@ -19,7 +19,6 @@
 #include <cstdlib>
 #include <iostream>
 #include <memory>
-#include "common/math/math_util.h"
 #include "framework/common/debug/ge_log.h"
 #include "framework/common/debug/log.h"
 #include "framework/common/op/ge_op_utils.h"
