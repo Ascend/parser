@@ -41,8 +41,11 @@ target_include_directories(parser_common PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${PARSER_DIR}
     ${PARSER_DIR}/parser
+    ${PARSER_DIR}/../ge
     ${PARSER_DIR}/../inc
+    ${PARSER_DIR}/../inc/framework
     ${PARSER_DIR}/../inc/common/util
+    ${PARSER_DIR}/../inc/external
     ${METADEF_DIR}/inc
     ${METADEF_DIR}/inc/graph
     ${METADEF_DIR}/inc/register
