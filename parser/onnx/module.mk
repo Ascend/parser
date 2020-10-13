@@ -43,7 +43,6 @@ LOCAL_SHARED_LIBRARIES := \
     libparser_common \
     libgraph \
     libregister \
-    libge_common \
 
 LOCAL_LDFLAGS := -lrt
 

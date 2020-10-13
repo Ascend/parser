@@ -18,7 +18,7 @@
 #include <memory>
 #include <vector>
 #include "common/debug/log.h"
-#include "common/ge/ge_util.h"
+#include "parser/common/acl_graph_parser_util.h"
 #include "common/util.h"
 #include "framework/common/debug/ge_log.h"
 #include "framework/omg/omg_inner_types.h"
@@ -83,9 +83,10 @@ Status CaffeCustomParserAdapter::ParseWeights(const Message *op_src, ge::NodePtr
   }
 
   bool bias_en = false;
+  bool update_in_turn = (static_cast<int64_t >(op->GetAllInputsSize()) == (layer->bottom_size() + layer->blobs_size()));
   int start_pos = layer->bottom_size();
   for (int i = 0; i < layer->blobs_size(); ++i) {
-    ge::GeTensorPtr weight = ge::MakeShared<ge::GeTensor>();
+    ge::GeTensorPtr weight = ge::parser::MakeShared<ge::GeTensor>();
     GE_CHECK_NOTNULL(weight);
     GE_CHK_STATUS_RET(ConvertWeight(layer->blobs(i), layer->name(), weight), "Convert blobs(%d) for layer %s failed", i,
                       layer->name().c_str());
@@ -120,7 +121,7 @@ Status CaffeCustomParserAdapter::ParseWeights(const Message *op_src, ge::NodePtr
     GE_CHECK_NOTNULL(const_node);
     auto index = start_pos + i;
     auto valid_input_name = op->GetValidInputNameByIndex(static_cast<uint32_t>(index));
-    if (valid_input_name.empty()) {
+    if (update_in_turn || valid_input_name.empty()) {
       if (node->AddLinkFrom(static_cast<const uint32_t &>(index), const_node) != GRAPH_SUCCESS) {
         GELOGE(GRAPH_FAILED, "AddEdge failed of from Node %s output to Node %s input %d", const_node->GetName().c_str(),
                node->GetName().c_str(), index);

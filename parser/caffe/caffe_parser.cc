@@ -22,7 +22,7 @@
 #include <memory>
 #include "parser/common/convert/pb2json.h"
 #include "common/debug/log.h"
-#include "common/ge/ge_util.h"
+#include "parser/common/acl_graph_parser_util.h"
 #include "common/op_map.h"
 #include "common/util/error_manager/error_manager.h"
 #include "common/ge_types.h"
@@ -85,7 +85,7 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file, 
   (void)acl_graph_parse_util.AclParserInitialize(options);
 
   // Create an empty computegraph
-  ge::ComputeGraphPtr compute_graph = ge::MakeShared<ge::ComputeGraph>("tmpGraph");
+  ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>("tmpGraph");
   GE_CHECK_NOTNULL(compute_graph);
 
   graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
@@ -107,6 +107,10 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file, 
     return ret;
   }
   GELOGI("Weights parse success. graph: %s", graph.GetName().c_str());
+  if (acl_graph_parse_util.SetDefaultOutputNode(graph) != ge::SUCCESS) {
+    GELOGE(ret, "Set graph %s default output node failed.", graph.GetName().c_str());
+    return ge::FAILED;
+  }
   return ge::SUCCESS;
 }
 } // namespace ge
@@ -803,10 +807,6 @@ Status CaffeModelParser::ParseOutputNodeTopInfo(const domi::caffe::NetParameter 
 
 Status CaffeModelParser::AddBlobsToMap(const domi::caffe::LayerParameter &layer,
                                        std::map<std::string, std::string> &inplace_blob_name_remapping) {
-  if (layer.type() == ge::parser::NETOUTPUT) {
-    return SUCCESS;
-  }
-
   if (layer.top_size() <= 0) {
     ErrorManager::GetInstance().ATCReportErrMessage("E19011", {"opname"}, {layer.name()});
     GELOGE(FAILED, "The output size of layer %s needs to be greater than zero.", layer.name().c_str());
@@ -1085,41 +1085,13 @@ Status CaffeModelParser::AddTensorDescToOpDesc(ge::OpDescPtr &op_desc, const dom
         "while it's original input num is: %d",
         layer.bottom_size());
   }
-
-  // Netoutput node processing
-  if (op_desc->GetType() == ge::parser::NETOUTPUT) {
-    size_t input_output_tensor_num = 0;
-    if (!ge::GetParserContext().user_out_nodes.empty()) {
-      // User specified output
-      input_output_tensor_num = ge::GetParserContext().user_out_nodes.size();
-    } else {
-      for (auto t_iter = top_blobs_map_.begin(); t_iter != top_blobs_map_.end(); t_iter++) {
-        auto b_iter = bottom_blobs_map_.find(t_iter->first);
-        // Find the output node of the network
-        if (b_iter == bottom_blobs_map_.end()) {
-          input_output_tensor_num += top_blobs_map_[t_iter->first].size();
-        }
-      }
-    }
-    // add tensordesc
-    GELOGD(
-        "Current op type is NETOUTPUT, add additional input&output num: %zu."
-        "while it's original input num is: %d, output num is: %d",
-        input_output_tensor_num, layer.bottom_size(), output_tensor_num);
-    for (size_t i = 0; i < input_output_tensor_num; i++) {
-      ge::GeTensorDesc input_tensor;
-      GE_RETURN_IF_ERROR(op_desc->AddInputDesc(input_tensor));
-      ge::GeTensorDesc output_tensor;
-      GE_RETURN_IF_ERROR(op_desc->AddOutputDesc(output_tensor));
-    }
-  }
   return SUCCESS;
 }
 
 Status CaffeModelParser::AddTensorDescToOpDescByIr(ge::OpDescPtr &op_desc, const domi::caffe::LayerParameter &layer,
                                                    const string &op_type) {
   if (std::find(kAddTensorIrSkipNodes.begin(), kAddTensorIrSkipNodes.end(), op_type) != kAddTensorIrSkipNodes.end()) {
-    op_desc = ge::MakeShared<ge::OpDesc>(layer.name(), op_type);
+    op_desc = ge::parser::MakeShared<ge::OpDesc>(layer.name(), op_type);
     GE_CHECK_NOTNULL(op_desc);
     Status ret = AddTensorDescToOpDesc(op_desc, layer);
     if (ret != SUCCESS) {
@@ -1138,44 +1110,44 @@ Status CaffeModelParser::AddTensorDescToOpDescByIr(ge::OpDescPtr &op_desc, const
   } else {
     op_desc = ge::OpDescUtils::GetOpDescFromOperator(op_factory);
     GE_CHECK_NOTNULL(op_desc);
-    auto valid_size = layer.bottom_size();
-    GELOGI("After GetOpDescFromOperator op[%s] type[%s] have all input size: %zu, caffe_input_size:%d output size: %zu",
+    auto valid_input_size = layer.bottom_size();
+    auto blob_size = layer.blobs_size();
+    GELOGI("After GetOpDescFromOperator op[%s] type[%s] have all input size: %zu, "
+           "caffe_input_size:%d blob_size %d output size: %zu",
            op_desc->GetName().c_str(), op_desc->GetType().c_str(),
-           op_desc->GetAllInputsSize(), valid_size, op_desc->GetOutputsSize());
-    for (int i = 0; i < valid_size; i++) {
+           op_desc->GetAllInputsSize(), valid_input_size,
+           blob_size, op_desc->GetOutputsSize());
+    bool update_in_turn = (static_cast<int64_t >(op_desc->GetAllInputsSize()) == (valid_input_size + blob_size));
+    for (int i = 0; i < valid_input_size; i++) {
       ge::GeTensorDesc input_tensor;
       std::string input_name;
       ge::graphStatus ret = ge::GRAPH_SUCCESS;
-      // Only two case is supported fow now when there are optional inputs
+      // Below cases are supported fow now when there are optional inputs
       // x means optional, o means requierd input
-      // a. ooxxx, layer.bottom_size=number of o and x
-      // b. oxoxoxox, layer.bottom_size=number of o
-      if (static_cast<size_t>(i) >= op_desc->GetInputsSize()) {
-        ret = op_desc->UpdateInputDesc(static_cast<uint32_t>(i), input_tensor);
+      // a. ooxxx, number of o and x>=layer.bottom_size+layer.blobs_size>=number of o
+      // b. oxoxoxox, layer.bottom_size+layer.blobs_size=number of o
+      // c. oxoxoxox, layer.bottom_size+layer.blobs_size=number of o and x
+      if (update_in_turn) {
+        ret = op_desc->UpdateInputDesc(op_desc->GetInputNameByIndex(static_cast<uint32_t>(i)), input_tensor);
       } else {
-        input_name = op_desc->GetValidInputNameByIndex(static_cast<uint32_t>(i));
-        ret = op_desc->UpdateInputDesc(input_name, input_tensor);
+        if (static_cast<size_t>(i) >= op_desc->GetInputsSize()) {
+          ret = op_desc->UpdateInputDesc(static_cast<uint32_t>(i), input_tensor);
+        } else {
+          input_name = op_desc->GetValidInputNameByIndex(static_cast<uint32_t>(i));
+          ret = op_desc->UpdateInputDesc(input_name, input_tensor);
+        }
       }
-
-      if (ret != ge::GRAPH_SUCCESS) {
-        GELOGW("op [%s], type[%s], update input(%d) with name %s failed", op_desc->GetName().c_str(),
-               op_desc->GetType().c_str(), i, input_name.c_str());
-      } else {
-        GELOGI("op [%s], type[%s], update input(%d) with name %s success", op_desc->GetName().c_str(),
-               op_desc->GetType().c_str(), i, input_name.c_str());
-      }
+      GELOGI("op [%s], type[%s], update input(%d) with name %s %s", op_desc->GetName().c_str(),
+             op_desc->GetType().c_str(), i, input_name.c_str(), ret == ge::GRAPH_SUCCESS ? "success" : "failed");
     }
 
     for (int i = 0; i < layer.top_size(); i++) {
       ge::GeTensorDesc output_tensor;
-      ge::graphStatus ret = op_desc->UpdateOutputDesc(op_desc->GetOutputNameByIndex(i), output_tensor);
-      if (ret != ge::GRAPH_SUCCESS) {
-        GELOGW("op [%s], type[%s], update output(%d) with name %s failed", op_desc->GetName().c_str(),
-               op_desc->GetType().c_str(), i, op_desc->GetOutputNameByIndex(i).c_str());
-      } else {
-        GELOGI("op [%s], type[%s], update output(%d) with name %s success", op_desc->GetName().c_str(),
-               op_desc->GetType().c_str(), i, op_desc->GetOutputNameByIndex(i).c_str());
-      }
+      auto ret = op_desc->UpdateOutputDesc(op_desc->GetOutputNameByIndex(static_cast<uint32_t>(i)), output_tensor);
+      GELOGI("op [%s], type[%s], update output(%d) with name %s %s",
+             op_desc->GetName().c_str(), op_desc->GetType().c_str(),
+             i, op_desc->GetOutputNameByIndex(i).c_str(),
+             ret == ge::GRAPH_SUCCESS ? "success" : "failed");
     }
   }
   return SUCCESS;
@@ -1226,6 +1198,12 @@ Status CaffeModelParser::AddEdges(ge::ComputeGraphPtr &graph) {
                           GELOGE(INTERNAL_ERROR, "Add link failed from op[%s] to op[%s].",
                                  top_node_iter->second->GetName().c_str(), bottom_node_iter->second->GetName().c_str());
                           return INTERNAL_ERROR;);
+          auto op_desc = bottom_node_iter->second->GetOpDesc();
+          GE_CHECK_NOTNULL(op_desc);
+          auto out_op_desc = top_node_iter->second->GetOpDesc();
+          GE_CHECK_NOTNULL(out_op_desc);
+          (void) op_desc->UpdateInputDesc((static_cast<uint32_t>(in_archor_ptr->GetIdx())),
+                                          out_op_desc->GetOutputDesc(static_cast<uint32_t>(out_archor_ptr->GetIdx())));
         }
         GE_IF_BOOL_EXEC(top_node_iter == node_map.end(), ErrorManager::GetInstance().ATCReportErrMessage(
                                                              "E11014", {"opname"}, {top_blob_layer_pair.first});
@@ -1264,46 +1242,33 @@ bool CaffeModelParser::IsOutputTop(const string &op_name, const int32_t index) {
   return ret;
 }
 
-Status CaffeModelParser::AddEdgeForUserOutNodes(ge::ComputeGraphPtr &graph) {
-  GE_CHECK_NOTNULL(graph);
-  ge::NodePtr net_output_node = graph->FindFirstNodeMatchType(ge::parser::NETOUTPUT);
-  if (net_output_node == nullptr) {
-    GELOGE(INTERNAL_ERROR, "Can not find netoutput node.");
-    return INTERNAL_ERROR;
-  }
-  uint32_t net_output_num = net_output_node->GetAllInDataAnchorsSize();
+Status CaffeModelParser::AddUserOutNodesTop() {
   int32_t index = 0;
   const std::vector<std::pair<std::string, int32_t>> &user_out_nodes = ge::GetParserContext().user_out_nodes;
+  int net_output_num = user_out_nodes.size();
   for (const auto &out_pair : user_out_nodes) {
-    auto node_iter = node_map.find(out_pair.first);
+    auto layer_iter = layer_tops_map_.find(out_pair.first);
     GELOGI("Add to output, node name: %s", out_pair.first.c_str());
-    if (node_iter != node_map.end()) {
-      if ((static_cast<uint32_t>(out_pair.second) >= node_iter->second->GetAllOutDataAnchorsSize()) ||
-          (static_cast<uint32_t>(index) >= net_output_num)) {
+    if (layer_iter != layer_tops_map_.end()) {
+      if (static_cast<uint32_t>(out_pair.second) >= (layer_iter->second).size()) {
         ErrorManager::GetInstance().ATCReportErrMessage(
             "E11016", {"opname", "outputindex", "totlaloutputindex", "inputindex", "totlalinputindex"},
             {out_pair.first.c_str(), std::to_string(out_pair.second),
-             std::to_string(node_iter->second->GetAllOutDataAnchorsSize()), std::to_string(index),
+             std::to_string((layer_iter->second).size()), std::to_string(index),
              std::to_string(net_output_num)});
         GELOGE(INTERNAL_ERROR,
                "Add op %s to NetOutput faild, current node output index:%d should < %u. NetOutput"
                "input_index:%d should < %u.",
-               out_pair.first.c_str(), out_pair.second, node_iter->second->GetAllOutDataAnchorsSize(), index,
+               out_pair.first.c_str(), out_pair.second, (layer_iter->second).size(), index,
                net_output_num);
         return INTERNAL_ERROR;
       }
-      GELOGD("Start add edge for user out node: From %s:%d To %s:%d.", node_iter->second->GetName().c_str(),
-             out_pair.second, net_output_node->GetName().c_str(), index);
-      ge::OutDataAnchorPtr out_archor_ptr = node_iter->second->GetOutDataAnchor(out_pair.second);
-      GE_CHECK_NOTNULL(out_archor_ptr);
-      ge::InDataAnchorPtr in_archor_ptr = net_output_node->GetInDataAnchor(index);
-      GE_CHECK_NOTNULL(in_archor_ptr);
-      if (ge::GraphUtils::AddEdge(out_archor_ptr, in_archor_ptr) != ge::GRAPH_SUCCESS) {
-        ErrorManager::GetInstance().ATCReportErrMessage("E11013", {"opname1", "opname2"},
-                                                        {node_iter->second->GetName(), net_output_node->GetName()});
-        GELOGE(INTERNAL_ERROR, "Add link failed from op[%s] to op[%s].", node_iter->second->GetName().c_str(),
-               net_output_node->GetName().c_str());
-        return INTERNAL_ERROR;
+
+      string top_name = layer_iter->second[out_pair.second];
+      auto top_node_iter = node_map.find(out_pair.first);
+      if (top_node_iter != node_map.end()) {
+        ge::GetParserContext().out_top_names.push_back(top_name);
+        GELOGI("The top of out node [%s] is [%s]", out_pair.first.c_str(), top_name.c_str());
       }
       ++index;
     } else {
@@ -1315,13 +1280,7 @@ Status CaffeModelParser::AddEdgeForUserOutNodes(ge::ComputeGraphPtr &graph) {
   return SUCCESS;
 }
 
-Status CaffeModelParser::AddEdge4Output(const domi::caffe::NetParameter &proto_message, ge::ComputeGraphPtr &graph) {
-  GE_CHECK_NOTNULL(graph);
-  ge::NodePtr node = graph->FindFirstNodeMatchType(ge::parser::NETOUTPUT);
-
-  GE_RETURN_WITH_LOG_IF_FALSE(node != nullptr, "Net without output, some phase failed in front.");
-
-  int32_t index = 0;
+Status CaffeModelParser::AddOutputTop(const domi::caffe::NetParameter &proto_message) {
   for (int32_t i = 0; i < proto_message.layer_size(); i++) {
     const domi::caffe::LayerParameter &layer = proto_message.layer(i);
 
@@ -1331,6 +1290,7 @@ Status CaffeModelParser::AddEdge4Output(const domi::caffe::NetParameter &proto_m
 
     for (int i = 0; i < layer.top_size(); i++) {
       string top = layer.top(i);
+      string top_origin = top;
       // Handling 'inplace' scenarios
       if (IsInplaceTopBlob(layer, top)) {
         top = RemapTopNameByLayer(layer, top, i);
@@ -1352,21 +1312,9 @@ Status CaffeModelParser::AddEdge4Output(const domi::caffe::NetParameter &proto_m
       auto top_node_iter = node_map.find(layer.name());
       GELOGI("output in top_blob: %s", layer.name().c_str());
       if (top_node_iter != node_map.end()) {
-        // add edge
-        // Output node, output index, input node, input index
-        GELOGD("Start add edge for out node: From %s:%d To %s:%d.", top_node_iter->second->GetName().c_str(), i,
-               node->GetName().c_str(), index);
-        ge::OutDataAnchorPtr out_archor_ptr = top_node_iter->second->GetOutDataAnchor(i);
-        GE_CHECK_NOTNULL(out_archor_ptr);
-        ge::InDataAnchorPtr in_archor_ptr = node->GetInDataAnchor(index);
-        GE_CHECK_NOTNULL(in_archor_ptr);
-        GE_IF_BOOL_EXEC(ge::GraphUtils::AddEdge(out_archor_ptr, in_archor_ptr) != ge::GRAPH_SUCCESS,
-                        ErrorManager::GetInstance().ATCReportErrMessage(
-                            "E11013", {"opname1", "opname2"}, {top_node_iter->second->GetName(), node->GetName()});
-                        GELOGE(INTERNAL_ERROR, "Add link failed from op[%s] to to op[%s].",
-                               top_node_iter->second->GetName().c_str(), node->GetName().c_str());
-                        return INTERNAL_ERROR;);
-        index++;
+        ge::GetParserContext().out_top_names.push_back(top_origin);
+        ge::GetParserContext().default_out_nodes.push_back(std::make_pair(layer.name(), (int32_t)i));
+        GELOGI("The top of out node [%s] is [%s]", layer.name().c_str(), top_origin.c_str());
       }
     }
   }
@@ -1480,12 +1428,6 @@ Status CaffeModelParser::ParseFromMemory(const char *data, uint32_t size, ge::Co
   CHECK_FALSE_EXEC(ParseInput(proto_message, input_data_flag) == SUCCESS, has_error = true;
                    GELOGE(FAILED, "ParseInput ret fail."));
 
-  // build output layer
-  domi::caffe::LayerParameter *layer = proto_message.add_layer();
-  GE_CHECK_NOTNULL(layer);
-  layer->set_name(graph->GetName() + "_" + ge::parser::NODE_NAME_NET_OUTPUT);
-  layer->set_type(ge::parser::NETOUTPUT);
-
   int32_t layer_count = proto_message.layer_size();
   std::map<std::string, std::string> inplace_blob_name_remapping;
   // Map of operator name and occurrence times
@@ -1551,9 +1493,9 @@ Status CaffeModelParser::ParseFromMemory(const char *data, uint32_t size, ge::Co
   GE_RETURN_WITH_LOG_IF_ERROR(AddEdges(graph), "Caffe parser add edges fail.");
 
   if (!(ge::GetParserContext().user_out_nodes.empty())) {
-    GE_RETURN_WITH_LOG_IF_ERROR(AddEdgeForUserOutNodes(graph), "Caffe parser add edges for user out nodes failed.");
+    GE_RETURN_WITH_LOG_IF_ERROR(AddUserOutNodesTop(), "Caffe parser add top_name for user out nodes failed.");
   } else {
-    GE_RETURN_WITH_LOG_IF_ERROR(AddEdge4Output(proto_message, graph), "Caffe parser add edges for output fail.");
+    GE_RETURN_WITH_LOG_IF_ERROR(AddOutputTop(proto_message), "Caffe parser add top_name for output fail.");
   }
   GE_RETURN_WITH_LOG_IF_ERROR(graph->TopologicalSorting(), "Caffe parser call graph topo sort fail.");
 
@@ -1655,12 +1597,6 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
   CHECK_FALSE_EXEC(ParseInput(proto_message, input_data_flag) == SUCCESS, has_error = true;
                    GELOGE(FAILED, "ParseInput ret fail."));
 
-  // build output layer
-  domi::caffe::LayerParameter *layer = proto_message.add_layer();
-  GE_CHECK_NOTNULL(layer);
-  layer->set_name(graph->GetName() + "_" + ge::parser::NODE_NAME_NET_OUTPUT);
-  layer->set_type(ge::parser::NETOUTPUT);
-
   int32_t layer_count = proto_message.layer_size();
 
   if (!ge::GetParserContext().user_out_nodes_top_vec.empty()) {
@@ -1733,12 +1669,11 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
   GE_RETURN_WITH_LOG_IF_ERROR(AddEdges(graph), "Caffe parser add edges fail.");
 
   if (!(ge::GetParserContext().user_out_nodes.empty())) {
-    GE_RETURN_WITH_LOG_IF_ERROR(AddEdgeForUserOutNodes(graph), "Caffe parser add edges for user out nodes failed.");
+    GE_RETURN_WITH_LOG_IF_ERROR(AddUserOutNodesTop(), "Caffe parser add top_name for user out nodes failed.");
   } else {
-    GE_RETURN_WITH_LOG_IF_ERROR(AddEdge4Output(proto_message, graph), "Caffe parser add edges for output fail.");
+    GE_RETURN_WITH_LOG_IF_ERROR(AddOutputTop(proto_message), "Caffe parser add top_name for output fail.");
   }
   GE_RETURN_WITH_LOG_IF_ERROR(graph->TopologicalSorting(), "Caffe parser call graph topo sort fail.");
-  GE_RETURN_WITH_LOG_IF_ERROR(GetLeafNodeTops(graph), "Caffe parser get out nodes top names failed.");
 
   auto nodes = graph->GetDirectNode();
   GELOGI("graph node size = %zu.", nodes.size());
@@ -2446,27 +2381,6 @@ Status CaffeWeightsParser::ConvertNetParameter(const NetParameter &param, ge::Co
     }
   }
 
-  return SUCCESS;
-}
-
-Status CaffeModelParser::GetLeafNodeTops(ge::ComputeGraphPtr &graph) {
-  auto netout = graph->FindFirstNodeMatchType(ge::parser::NETOUTPUT);
-  GE_CHECK_NOTNULL(netout);
-  for (const auto &in_anchor : netout->GetAllInDataAnchors()) {
-    auto peer_out_data_anchor = in_anchor->GetPeerOutAnchor();
-    GE_CHECK_NOTNULL(peer_out_data_anchor);
-    auto peer_out_data_node = peer_out_data_anchor->GetOwnerNode();
-    GE_CHECK_NOTNULL(peer_out_data_node);
-    int idx = peer_out_data_anchor->GetIdx();
-    string node_name = peer_out_data_node->GetName();
-    auto layer_iter = layer_tops_map_.find(node_name);
-    if (layer_iter != layer_tops_map_.end()) {
-      ge::GetParserContext().out_top_names.push_back(layer_iter->second[idx]);
-      GELOGI("The top of out node [%s] is [%s]", node_name.c_str(), layer_iter->second[idx].c_str());
-    } else {
-      GELOGW("The out node [%s] can not find its top.", node_name.c_str());
-    }
-  }
   return SUCCESS;
 }
 

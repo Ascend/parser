@@ -32,7 +32,7 @@
 #include "framework/common/ge_inner_error_codes.h"
 #include "external/ge/ge_api_error_codes.h"
 #include "graph/types.h"
-#include "common/ge/ge_util.h"
+#include "parser/common/acl_graph_parser_util.h"
 
 namespace ge {
 using ThreadTask = std::function<void()>;
@@ -53,7 +53,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ThreadPool {
     }
 
     auto bindFunc = std::bind(std::forward<Func>(func), std::forward<Args>(args)...);
-    auto task = ge::MakeShared<std::packaged_task<retType()>>(bindFunc);
+    auto task = ge::parser::MakeShared<std::packaged_task<retType()>>(bindFunc);
     if (task == nullptr) {
       GELOGE(ge::FAILED, "Make shared failed.");
       return fail_future;
