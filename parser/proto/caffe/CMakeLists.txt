@@ -1,5 +1,5 @@
 set(PROTO_LIST
-    "${TOP_DIR}/inc/register/proto/caffe/caffe.proto"
+    "${METADEF_DIR}/proto/caffe/caffe.proto"
 )
 
 protobuf_generate(ge PROTO_SRCS PROTO_HDRS ${PROTO_LIST})

@@ -807,7 +807,6 @@ Status CreateNodeDefBytes(ge::NodePtr n, string originalType, map<string, PIOLis
     for (uint32_t j = 0; j < ge_desc->GetShape().GetDimNum(); ++j) {
       tmp_dim = ge_desc->GetShape().GetDim(j);
       GE_CHECK_GE(tmp_dim, 0);
-      
       PARSER_INT64_MULCHECK(real_size, tmp_dim);
       real_size *= tmp_dim;
     }
