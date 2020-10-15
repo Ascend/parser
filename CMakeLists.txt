@@ -15,19 +15,39 @@ if (ENABLE_OPEN_SRC)
     include(cmake/FindModule.cmake)
     include(cmake/intf_pub_linux.cmake)
 
-    if(DEFINED ENV{ASCEND_CUSTOM_PATH})
-        set(ASCEND_DIR $ENV{ASCEND_CUSTOM_PATH})
+    if(DEFINED ENV{D_LINK_PATH})
+        # D_LINK_PATH is set
+        set(GE_LIB_PATH $ENV{D_LINK_PATH})
+        set(GE_SYS_ARCH "")
+        if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "x86_64")
+            # x86 ubuntu
+            set(GE_SYS_ARCH "x86_64")
+        elseif(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "aarch64")
+            # arm euleros
+            set(GE_SYS_ARCH "aarch64")
+        else()
+            message(FATAL_ERROR "Running on a unsupported architecture: ${SYSTEM_TYPE}, build terminated")
+        endif()
+        set(GE_LIB_PATH ${GE_LIB_PATH}/${GE_SYS_ARCH})
+        find_module(slog libslog.so ${GE_LIB_PATH})
+        find_module(mmpa libmmpa.so ${GE_LIB_PATH})
+        find_module(ge_common libge_common.so ${GE_LIB_PATH})
+        find_module(error_manager liberror_manager.so ${GE_LIB_PATH})
     else()
-        set(ASCEND_DIR /usr/local/Ascend)
+        if(DEFINED ENV{ASCEND_CUSTOM_PATH})
+            set(ASCEND_DIR $ENV{ASCEND_CUSTOM_PATH})
+        else()
+            set(ASCEND_DIR /usr/local/Ascend)
+        endif()
+
+        set(ASCEND_DRIVER_DIR ${ASCEND_DIR}/driver/lib64/common)
+        set(ASCEND_RUNTIME_DIR ${ASCEND_DIR}/fwkacllib/lib64)
+
+        find_module(slog libslog.so ${ASCEND_DRIVER_DIR})
+        find_module(mmpa libmmpa.so ${ASCEND_DRIVER_DIR})
+        find_module(ge_common libge_common.so ${ASCEND_RUNTIME_DIR})
+        find_module(error_manager liberror_manager.so ${ASCEND_RUNTIME_DIR})
     endif()
-
-    set(ASCEND_DRIVER_DIR ${ASCEND_DIR}/driver/lib64/common)
-    set(ASCEND_RUNTIME_DIR ${ASCEND_DIR}/fwkacllib/lib64)
-
-    find_module(slog libslog.so ${ASCEND_DRIVER_DIR})
-    find_module(mmpa libmmpa.so ${ASCEND_DRIVER_DIR})
-    find_module(ge_common libge_common.so ${ASCEND_RUNTIME_DIR})
-    find_module(error_manager liberror_manager.so ${ASCEND_RUNTIME_DIR})
 
     #set(METADEF_DIR ${CMAKE_CURRENT_LIST_DIR}/metadef)
 
