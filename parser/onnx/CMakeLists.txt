@@ -32,8 +32,8 @@ target_include_directories(fmk_onnx_parser PRIVATE
     ${PARSER_DIR}/../ge
     ${PARSER_DIR}/../inc
     ${PARSER_DIR}/../inc/common/util
-    {PARSER_DIR}/../inc/framework
-    {PARSER_DIR}/../inc/external
+    ${PARSER_DIR}/../inc/framework
+    ${PARSER_DIR}/../inc/external
     ${PARSER_DIR}/../third_party/fwkacllib/inc
     ${METADEF_DIR}/inc
     ${METADEF_DIR}/inc/graph
