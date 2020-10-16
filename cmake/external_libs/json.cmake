@@ -4,7 +4,7 @@ endif()
 
 include(ExternalProject)
 
-set(JSON_SRC_DIR ${PARSER_DIR}/../third_party/json/include)
+set(JSON_SRC_DIR ${PARSER_DIR}/../../third_party/json/include)
 ExternalProject_Add(json_build
                     URL https://github.com/nlohmann/json/releases/download/v3.6.1/include.zip
                     #URL /home/txd/workspace/cloud_code/pkg/include.zip
