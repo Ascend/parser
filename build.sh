@@ -29,7 +29,7 @@ usage()
   echo "    -h Print usage"
   echo "    -u Only compile ut, not execute"
   echo "    -s Build st"
-  echo "    -j[n] Set the number of threads used for building GraphEngine, default is 8"
+  echo "    -j[n] Set the number of threads used for building Parser, default is 8"
   echo "    -t Build and execute ut"
   echo "    -c Build ut with coverage tag"
   echo "    -v Display build command"
@@ -142,46 +142,24 @@ echo "---------------- Parser output generated ----------------"
 generate_package()
 {
   cd "${BASEPATH}"
-  FWK_PATH="fwkacllib/lib64"
-  ATC_PATH="atc/lib64"
-  NNENGINE_PATH="plugin/nnengine/ge_config"
-  OPSKERNEL_PATH="plugin/opskernel"
+  PARSER_PATH="parser/lib64"
 
-  ATC_LIB=("libc_sec.so" "libge_common.so" "libge_compiler.so" "libgraph.so")
-  FWK_LIB=("libge_common.so" "libge_runner.so" "libgraph.so")
+  PARSER_LIB=("libfmk_parser.so" "libparser_common.so" "lib_caffe_parser.so" "libfmk_onnx_parser.so")
 
-  rm -rf ${OUTPUT_PATH:?}/${FWK_PATH}/
-  rm -rf ${OUTPUT_PATH:?}/${ATC_PATH}/
-  mk_dir "${OUTPUT_PATH}/${FWK_PATH}/${NNENGINE_PATH}"
-  mk_dir "${OUTPUT_PATH}/${FWK_PATH}/${OPSKERNEL_PATH}"
-  mk_dir "${OUTPUT_PATH}/${ATC_PATH}/${NNENGINE_PATH}"
-  mk_dir "${OUTPUT_PATH}/${ATC_PATH}/${OPSKERNEL_PATH}"
+  rm -rf ${OUTPUT_PATH:?}/${PARSER_PATH}/
+  mk_dir "${OUTPUT_PATH}/${PARSER_PATH}"
 
-  find output/ -name graphengine_lib.tar -exec rm {} \;
-  cp ge/engine_manager/engine_conf.json ${OUTPUT_PATH}/${FWK_PATH}/${NNENGINE_PATH}
-  cp ge/engine_manager/engine_conf.json ${OUTPUT_PATH}/${ATC_PATH}/${NNENGINE_PATH}
-
-  find output/ -maxdepth 1 -name libengine.so -exec cp -f {} ${OUTPUT_PATH}/${FWK_PATH}/${NNENGINE_PATH}/../ \;
-  find output/ -maxdepth 1 -name libengine.so -exec cp -f {} ${OUTPUT_PATH}/${ATC_PATH}/${NNENGINE_PATH}/../ \;
-
-  find output/ -maxdepth 1 -name libge_local_engine.so -exec cp -f {} ${OUTPUT_PATH}/${FWK_PATH}/${OPSKERNEL_PATH} \;
-  find output/ -maxdepth 1 -name libge_local_engine.so -exec cp -f {} ${OUTPUT_PATH}/${ATC_PATH}/${OPSKERNEL_PATH} \;
+  find output/ -name parser_lib.tar -exec rm {} \;
 
   cd "${OUTPUT_PATH}"
-  for lib in "${ATC_LIB[@]}";
+  for lib in "${PARSER_LIB[@]}";
   do
-    cp "$lib" "${OUTPUT_PATH}/${ATC_PATH}"
+    find output/ -name "$lib" -exec cp -f {} ${OUTPUT_PATH}/${PARSER_PATH}/ \;
   done
-
-  for lib in "${FWK_LIB[@]}";
-  do
-    cp "$lib" "${OUTPUT_PATH}/${FWK_PATH}"
-  done
-
-  tar -cf graphengine_lib.tar fwkacllib/ atc/
+  tar -cf parser_lib.tar parser
 }
 
 if [[ "X$ENABLE_GE_UT" = "Xoff" ]]; then
   generate_package
 fi
-echo "---------------- GraphEngine package archive generated ----------------"
+echo "---------------- Parser package archive generated ----------------"
