@@ -100,8 +100,8 @@ echo "---------------- Parser build start ----------------"
 build_parser()
 {
   echo "create build directory and build Parser";
-  mk_dir "${BUILD_PATH}/parser"
-  cd "${BUILD_PATH}/parser"
+  mk_dir "${BUILD_PATH}"
+  cd "${BUILD_PATH}"
   CMAKE_ARGS="-DBUILD_PATH=$BUILD_PATH -DGE_ONLY=$GE_ONLY"
 
   if [[ "X$ENABLE_GE_COV" = "Xon" ]]; then
@@ -117,18 +117,16 @@ build_parser()
     CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_GE_ST=ON"
   fi
 
-  CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_OPEN_SRC=True"
+  CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_OPEN_SRC=True -DCMAKE_INSTALL_PREFIX=${OUTPUT_PATH}"
   echo "${CMAKE_ARGS}"
-  cmake ${CMAKE_ARGS} ../..
-  make ${VERBOSE} -j${THREAD_NUM}
+  cmake ${CMAKE_ARGS} ..
+  make ${VERBOSE} -j${THREAD_NUM} && make install
   echo "Parser build success!"
 }
 g++ -v
+mk_dir ${OUTPUT_PATH}
 build_parser
 echo "---------------- Parser build finished ----------------"
-mk_dir ${OUTPUT_PATH}
-cp -rf "${BUILD_PATH}/parser/"*.so "${OUTPUT_PATH}"
-rm -rf "${OUTPUT_PATH}/"libproto*
 rm -f ${OUTPUT_PATH}/libgmock*.so
 rm -f ${OUTPUT_PATH}/libgtest*.so
 rm -f ${OUTPUT_PATH}/lib*_stub.so
@@ -142,21 +140,14 @@ echo "---------------- Parser output generated ----------------"
 generate_package()
 {
   cd "${BASEPATH}"
-  PARSER_PATH="parser/lib64"
 
-  PARSER_LIB=("libfmk_parser.so" "libparser_common.so" "lib_caffe_parser.so" "libfmk_onnx_parser.so")
-
-  rm -rf ${OUTPUT_PATH:?}/${PARSER_PATH}/
-  mk_dir "${OUTPUT_PATH}/${PARSER_PATH}"
+  PARSER_LIB_PATH="lib"
 
   find output/ -name parser_lib.tar -exec rm {} \;
-
+ 
   cd "${OUTPUT_PATH}"
-  for lib in "${PARSER_LIB[@]}";
-  do
-    find output/ -name "$lib" -exec cp -f {} ${OUTPUT_PATH}/${PARSER_PATH}/ \;
-  done
-  tar -cf parser_lib.tar parser
+
+  tar -cf parser_lib.tar "${PARSER_LIB_PATH}"
 }
 
 if [[ "X$ENABLE_GE_UT" = "Xoff" ]]; then
