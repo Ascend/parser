@@ -49,11 +49,11 @@ if (ENABLE_OPEN_SRC)
         find_module(error_manager liberror_manager.so ${ASCEND_RUNTIME_DIR})
     endif()
 
-    #set(METADEF_DIR ${CMAKE_CURRENT_LIST_DIR}/metadef)
+    if (NOT DEFINED METADEF_DIR)
+        set(METADEF_DIR ${CMAKE_CURRENT_LIST_DIR}/metadef)
+    endif()
 
-    #add_subdirectory(metadef)
-    #add_subdirectory(metadef/graph)
-    #add_subdirectory(metadef/register)
+    add_subdirectory(metadef)
 
 else()
 
