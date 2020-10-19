@@ -17,7 +17,7 @@ ExternalProject_Add(protobuf_build
                     URL https://github.com/protocolbuffers/protobuf/archive/v3.8.0.tar.gz
                     #URL /home/txd/workspace/linux_cmake/pkg/protobuf-3.8.0.tar.gz
                     #SOURCE_DIR ${PARSER_DIR}/../../third_party/protobuf/src/protobuf-3.8.0
-                    DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${PARSER_DIR}/../third_party/protobuf/src/protobuf-3.8.0 <SOURCE_DIR>
+                    DOWNLOAD_COMMAND ${CMAKE_COMMAND} -E copy_directory ${PARSER_DIR}/../../third_party/protobuf/src/protobuf-3.8.0 <SOURCE_DIR>
                     #CONFIGURE_COMMAND ${CMAKE_COMMAND}
                     #-DCMAKE_INSTALL_LIBDIR=${CMAKE_INSTALL_LIBDIR}
                     #-DCMAKE_C_COMPILER=${CMAKE_C_COMPILER}
@@ -56,4 +56,5 @@ install(FILES ${PROTOBUF_SHARED_PKG_DIR}/lib/libprotobuf.so ${PROTOBUF_SHARED_PK
 
 add_dependencies(protobuf protobuf_build)
 
-set(HAVE_PROTOBUF TRUE CACHE BOOL "protobuf build add")
+#set(HAVE_PROTOBUF TRUE CACHE BOOL "protobuf build add")
+set(HAVE_PROTOBUF TRUE)
