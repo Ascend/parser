@@ -31,7 +31,6 @@ if (ENABLE_OPEN_SRC)
         set(GE_LIB_PATH ${GE_LIB_PATH}/${GE_SYS_ARCH})
         find_module(slog libslog.so ${GE_LIB_PATH})
         find_module(mmpa libmmpa.so ${GE_LIB_PATH})
-        find_module(ge_common libge_common.so ${GE_LIB_PATH})
         find_module(error_manager liberror_manager.so ${GE_LIB_PATH})
     else()
         if(DEFINED ENV{ASCEND_CUSTOM_PATH})
@@ -45,16 +44,13 @@ if (ENABLE_OPEN_SRC)
 
         find_module(slog libslog.so ${ASCEND_DRIVER_DIR})
         find_module(mmpa libmmpa.so ${ASCEND_DRIVER_DIR})
-        find_module(ge_common libge_common.so ${ASCEND_RUNTIME_DIR})
         find_module(error_manager liberror_manager.so ${ASCEND_RUNTIME_DIR})
     endif()
 
     if (NOT DEFINED METADEF_DIR)
         set(METADEF_DIR ${CMAKE_CURRENT_LIST_DIR}/metadef)
+        add_subdirectory(metadef)
     endif()
-
-    add_subdirectory(metadef)
-
 else()
 
     ####工程tigong

@@ -42,10 +42,10 @@ target_include_directories(fmk_onnx_parser PRIVATE
     ${METADEF_DIR}/inc/external/graph
     ${METADEF_DIR}/inc/external/register
     #### independent compile #####
-    ${METADEF_DIR}/third_party/ge
-    ${METADEF_DIR}/third_party/ge/inc
-    ${METADEF_DIR}/third_party/ge/inc/framework
-    ${METADEF_DIR}/third_party/ge/inc/external
+    ${METADEF_DIR}/third_party/graphengine/ge
+    ${METADEF_DIR}/third_party/graphengine/inc
+    ${METADEF_DIR}/third_party/graphengine/inc/framework
+    ${METADEF_DIR}/third_party/graphengine/inc/external
     ${METADEF_DIR}/third_party/fwkacllib/inc
     #### temp ####
     ${PARSER_DIR}/../graphengine/inc/common/util
@@ -61,7 +61,6 @@ target_link_libraries(fmk_onnx_parser PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     -Wl,--no-as-needed
     protobuf
-    ge_common
     register
     c_sec
     parser_common 
