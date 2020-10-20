@@ -53,6 +53,12 @@ target_include_directories(parser_common PRIVATE
     ${METADEF_DIR}/inc/external
     ${METADEF_DIR}/inc/external/graph
     ${METADEF_DIR}/inc/external/register
+    #### independent compile #####
+    ${METADEF_DIR}/third_party/ge
+    ${METADEF_DIR}/third_party/ge/inc
+    ${METADEF_DIR}/third_party/ge/inc/framework
+    ${METADEF_DIR}/third_party/ge/inc/external
+    ${METADEF_DIR}/third_party/fwkacllib/inc
     #### temp ####
     ${PARSER_DIR}/../graphengine/inc/common/util
     ${PARSER_DIR}/../graphengine/inc/external
