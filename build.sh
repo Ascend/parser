@@ -120,12 +120,22 @@ build_parser()
   CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_OPEN_SRC=True -DCMAKE_INSTALL_PREFIX=${OUTPUT_PATH}"
   echo "${CMAKE_ARGS}"
   cmake ${CMAKE_ARGS} ..
+  if [ 0 -ne $? ]
+  then
+    echo "execute command: cmake ${CMAKE_ARGS} .. failed."
+    return 1
+  fi
   make ${VERBOSE} -j${THREAD_NUM} && make install
+  if [ 0 -ne $? ]
+  then
+    echo "execute command: make ${VERBOSE} -j${THREAD_NUM} && make install failed."
+    return 1
+  fi
   echo "Parser build success!"
 }
 g++ -v
 mk_dir ${OUTPUT_PATH}
-build_parser
+build_parser || { echo "Parser build failed."; return; }
 echo "---------------- Parser build finished ----------------"
 rm -f ${OUTPUT_PATH}/libgmock*.so
 rm -f ${OUTPUT_PATH}/libgtest*.so
