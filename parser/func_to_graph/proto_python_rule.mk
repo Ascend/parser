@@ -2,7 +2,7 @@ include $(BUILD_SYSTEM)/base_rules.mk
 
 FUNCTION_TO_GRAPH_OUT_TIMESTAMP := $(HOST_OUT_ROOT)/func_to_graph/.timestamp
 
-PROTO_SRC_DIR = framework/domi/parser/func_to_graph/proto
+PROTO_SRC_DIR = parser/parser/func_to_graph/proto
 PY_PROTO_BUILD_DIR = $(HOST_OUT_ROOT)/tmp/function_to_graph/proto
 
 $(warning PRIVATE_PROTOC is $(PRIVATE_PROTOC))

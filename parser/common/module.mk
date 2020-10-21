@@ -73,9 +73,10 @@ LOCAL_C_INCLUDES := \
     $(TOPDIR)inc/external/graph \
     $(TOPDIR)inc/framework \
     $(TOPDIR)inc/common/util \
-    $(TOPDIR)framework/domi \
-    $(TOPDIR)framework/domi/common \
-    $(TOPDIR)framework/domi/parser \
+    $(TOPDIR)graphengine/ge \
+    $(TOPDIR)graphengine/ge/common \
+    $(TOPDIR)parser/parser \
+    $(TOPDIR)parser   \
     $(TOPDIR)third_party/json/include \
     $(TOPDIR)third_party/protobuf/include \
     libc_sec/include \
