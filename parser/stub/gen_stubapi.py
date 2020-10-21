@@ -63,8 +63,9 @@ max_code_len_per_line = 100
     determines which header files to generate cc files from
     when DEBUG on
 """
-white_list_for_debug = ["tensorflow_parser.h", "caffe_parser.h"]
-include_dir_key_words = ["parser"]
+white_list_for_debug = ["attr_value.h", "operator.h", "tensor.h", "graph.h", "operator_factory.h",
+                        "ge_ir_build.h", "ge_api.h", "ge_prof.h", "tensorflow_parser.h", "caffe_parser.h"]
+include_dir_key_words = ["ge", "graph", "parser"]
 DEBUG = True
 
 
@@ -101,7 +102,7 @@ pattern_func = re.compile(r"""(^[\s]*)          #leading with space,we will find
 ([a-zA-Z~_]            # void int likely
 .*
 [)]                     #we find )
-(?!.*{)                 # we do not want the case int abc() const
+(?!.*{)                 # we do not want the case int abc() const { return 1;}
 .*)
 (;.*)                   #we want to find ; and after for we will replace these later
 \n$
