@@ -39,12 +39,11 @@ if (ENABLE_OPEN_SRC)
             set(ASCEND_DIR /usr/local/Ascend)
         endif()
 
-        set(ASCEND_DRIVER_DIR ${ASCEND_DIR}/driver/lib64/common)
-        set(ASCEND_RUNTIME_DIR ${ASCEND_DIR}/fwkacllib/lib64)
+        set(ASCEND_ATC_DIR ${ASCEND_DIR}/atc/lib64)
 
-        find_module(slog libslog.so ${ASCEND_DRIVER_DIR})
-        find_module(mmpa libmmpa.so ${ASCEND_DRIVER_DIR})
-        find_module(error_manager liberror_manager.so ${ASCEND_RUNTIME_DIR})
+        find_module(slog libslog.so ${ASCEND_ATC_DIR})
+        find_module(mmpa libmmpa.so ${ASCEND_ATC_DIR})
+        find_module(error_manager liberror_manager.so ${ASCEND_ATC_DIR})
     endif()
 
     if (NOT DEFINED METADEF_DIR)
