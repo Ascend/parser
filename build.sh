@@ -164,7 +164,7 @@ generate_package()
   rm -rf ${OUTPUT_PATH:?}/${FWK_PATH}/
   rm -rf ${OUTPUT_PATH:?}/${ACL_PATH}/
   rm -rf ${OUTPUT_PATH:?}/${ATC_PATH}/
-  
+
   mk_dir "${OUTPUT_PATH}/${FWK_PATH}"
   mk_dir "${OUTPUT_PATH}/${ATC_PATH}"
   mk_dir "${OUTPUT_PATH}/${ACL_PATH}"
@@ -182,10 +182,11 @@ generate_package()
   for lib in "${COMMON_LIB[@]}";
   do
     find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "$lib" -exec cp -f {} ${OUTPUT_PATH}/${FWK_PATH} \;
-    find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "$lib" -exec cp -f {} ${OUTPUT_PATH}/${ATC_LIB} \;
+    find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "$lib" -exec cp -f {} ${OUTPUT_PATH}/${ATC_PATH} \;
   done
 
-  find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "libc_sec.so" -exec cp -f {} ${OUTPUT_PATH}/${ATC_LIB} \;
+  find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "libc_sec.so" -exec cp -f {} ${OUTPUT_PATH}/${ATC_PATH} \;
+  find ${OUTPUT_PATH}/${METADEF_LIB_PATH} -maxdepth 1 -name "libregister.a" -exec cp -f {} ${OUTPUT_PATH}/${ACL_PATH} \;
   
   tar -cf parser_lib.tar fwkacllib acllib atc
 }
