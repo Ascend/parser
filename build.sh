@@ -86,6 +86,8 @@ checkopts()
 }
 checkopts "$@"
 
+git submodule update --init metadef
+
 mk_dir() {
     local create_dir="$1"  # the target to make
 
@@ -152,12 +154,41 @@ generate_package()
   cd "${BASEPATH}"
 
   PARSER_LIB_PATH="lib"
+  ACL_PATH="acllib/lib64"
+  FWK_PATH="fwkacllib/lib64"
+  ATC_PATH="atc/lib64"
+
+  COMMON_LIB=("libgraph.so" "libregister.so")
+  PARSER_LIB=("lib_caffe_parser.so" "libfmk_onnx_parser.so" "libfmk_parser.so" "libparser_common.so")
+
+  rm -rf ${OUTPUT_PATH:?}/${FWK_PATH}/
+  rm -rf ${OUTPUT_PATH:?}/${ACL_PATH}/
+  rm -rf ${OUTPUT_PATH:?}/${ATC_PATH}/
+
+  mk_dir "${OUTPUT_PATH}/${FWK_PATH}"
+  mk_dir "${OUTPUT_PATH}/${ATC_PATH}"
+  mk_dir "${OUTPUT_PATH}/${ACL_PATH}"
 
   find output/ -name parser_lib.tar -exec rm {} \;
  
   cd "${OUTPUT_PATH}"
 
-  tar -cf parser_lib.tar "${PARSER_LIB_PATH}"
+  for lib in "${PARSER_LIB[@]}";
+  do
+    find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "$lib" -exec cp -f {} ${OUTPUT_PATH}/${FWK_PATH} \;
+    find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "$lib" -exec cp -f {} ${OUTPUT_PATH}/${ACL_PATH} \;
+  done
+
+  for lib in "${COMMON_LIB[@]}";
+  do
+    find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "$lib" -exec cp -f {} ${OUTPUT_PATH}/${FWK_PATH} \;
+    find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "$lib" -exec cp -f {} ${OUTPUT_PATH}/${ATC_PATH} \;
+  done
+
+  find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "libc_sec.so" -exec cp -f {} ${OUTPUT_PATH}/${ATC_PATH} \;
+  find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "libregister.a" -exec cp -f {} ${OUTPUT_PATH}/${ACL_PATH} \;
+
+  tar -cf parser_lib.tar fwkacllib acllib atc
 }
 
 if [[ "X$ENABLE_GE_UT" = "Xoff" ]]; then
