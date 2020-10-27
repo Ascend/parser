@@ -20,6 +20,7 @@
 #include <iostream>
 #include <sstream>
 #include <memory>
+#include <algorithm>
 #include "parser/common/convert/pb2json.h"
 #include "common/debug/log.h"
 #include "parser/common/acl_graph_parser_util.h"
@@ -1539,6 +1540,34 @@ void CaffeModelParser::SaveOrigionLayerTops(domi::caffe::LayerParameter &layer) 
   return;
 }
 
+Status CaffeModelParser::SaveDataLayerTops(const domi::caffe::LayerParameter &layer) {
+  string name = layer.name();
+  if (node_map.find(name) == node_map.end()) {
+    GELOGE(FAILED, "Node can not be found by layer name: %s", name.c_str());
+    return FAILED;
+  }
+
+  ge::NodePtr node = node_map[name];
+  GE_CHECK_NOTNULL(node);
+
+  if (node->GetType() == ge::parser::DATA) {
+    if (layer.top_size() != 1) {
+      GELOGE(FAILED, "Data layer[%s] top size must be 1, real size: %d", name.c_str(), layer.top_size());
+      return FAILED;
+    }
+
+    string top_name = layer.top(0);
+    auto data_top_names = ge::GetParserContext().data_top_names;
+    if (find(data_top_names.begin(), data_top_names.end(), top_name) != data_top_names.end()) {
+      GELOGE(FAILED, "Different data can not have same top name: %s.", top_name.c_str());
+      return FAILED;
+    }
+    ge::GetParserContext().data_top_names.push_back(top_name);
+  }
+
+  return SUCCESS;
+}
+
 Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &graph) {
   bool has_error = false;
   GE_CHECK_NOTNULL(model_path);
@@ -1610,6 +1639,7 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
   // Map of operator name and occurrence times
   std::map<std::string, int32_t> layer_name_map;
 
+  GetParserContext().data_top_names.clear();
   // <layername,paramnames>
   std::map<std::string, std::vector<std::string>> layer_params_map;
   // same param name set <paramnames,layernames>
@@ -1656,6 +1686,10 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
 
     GE_RETURN_WITH_LOG_IF_ERROR(AddBlobsToMap(layer, inplace_blob_name_remapping),
                                 "Caffe parser add blobs to map ret fail.");
+    if (SaveDataLayerTops(layer) != SUCCESS) {
+      GELOGE(FAILED, "Caffe parse: save data layer tops failed.");
+      return FAILED;
+    }
   }
   // Find a layer with the same param name and save it to graph
   GE_RETURN_WITH_LOG_IF_ERROR(FindShareParamLayers(layer_params_map),
