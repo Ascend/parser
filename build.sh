@@ -186,8 +186,8 @@ generate_package()
   done
 
   find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "libc_sec.so" -exec cp -f {} ${OUTPUT_PATH}/${ATC_PATH} \;
-  find ${OUTPUT_PATH}/${METADEF_LIB_PATH} -maxdepth 1 -name "libregister.a" -exec cp -f {} ${OUTPUT_PATH}/${ACL_PATH} \;
-  
+  find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "libregister.a" -exec cp -f {} ${OUTPUT_PATH}/${ACL_PATH} \;
+
   tar -cf parser_lib.tar fwkacllib acllib atc
 }
 
