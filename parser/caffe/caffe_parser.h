@@ -343,6 +343,8 @@ class CaffeModelParser : public domi::ModelParser {
 
   Status ParseOutputNodeTopInfo(const domi::caffe::NetParameter &proto_message);
 
+  Status SaveDataLayerTops(const domi::caffe::LayerParameter &layer);
+
   std::map<std::string, ge::NodePtr> node_map;
 
   // key: blob name, value: layer name and index
