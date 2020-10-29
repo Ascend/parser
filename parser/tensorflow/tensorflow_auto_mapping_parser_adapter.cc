@@ -16,7 +16,6 @@
 
 #include "tensorflow_auto_mapping_parser_adapter.h"
 
-#include "framework/omg/parser/parser_types.h"
 #include "common/util.h"
 #include "framework/common/debug/ge_log.h"
 #include "parser/common/op_parser_factory.h"
@@ -25,9 +24,6 @@
 
 
 using domi::TENSORFLOW;
-using namespace ge::parser;
-
-using ge::parser::PLACEHOLDERWITHDEFAULT;
 
 namespace ge {
 namespace {

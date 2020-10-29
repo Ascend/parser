@@ -20,7 +20,6 @@
 #include "common/op/ge_op_utils.h"
 #include "framework/common/debug/ge_log.h"
 #include "parser/tensorflow/tensorflow_parser.h"
-#include "framework/omg/parser/parser_types.h"
 
 #include <iostream>
 #include <cstdlib>
@@ -114,21 +113,21 @@ static map<string, string> tensorflow_fusionop_map = {
 
 // <Types of fusion operators, Number of children operators>
 static map<string, vector<int>> tensorflow_fusionop_children_nums_map = {
-    {ge::parser::CLIPBOXES, {8}},
-    {ge::parser::FASTRCNNPREDICTIONS, {118, 119, 120, 123, 125}},
-    {ge::parser::RPNPROPOSALS, {75, 85, 97}},
-    {ge::parser::DECODEBBOX, {24, 28}},
-    {ge::parser::ROIALIGN, {82, 83, 84}},
-    {ge::parser::FUSIONBATCHNORM, {8}},
-    {ge::parser::GETSPAN, {81, 71, 91}},  // The pbtxt only has 62 nodes when test GetSpan sub net. However the
-    {ge::parser::HUBERLOSSGRAD, {8, 9, 10, 20, 21}},
+    {CLIPBOXES, {8}},
+    {FASTRCNNPREDICTIONS, {118, 119, 120, 123, 125}},
+    {RPNPROPOSALS, {75, 85, 97}},
+    {DECODEBBOX, {24, 28}},
+    {ROIALIGN, {82, 83, 84}},
+    {FUSIONBATCHNORM, {8}},
+    {GETSPAN, {81, 71, 91}},  // The pbtxt only has 62 nodes when test GetSpan sub net. However the
+    {HUBERLOSSGRAD, {8, 9, 10, 20, 21}},
 };
 
 // <Types of fusion operators, Name of children operators(Remove the prefixes and/)>
 static map<string, vector<string>> tensorflow_fusionop_children_names_map = {
-    {ge::parser::FUSIONBATCHNORM, {"add/y", "add", "Rsqrt", "mul", "mul_1", "mul_2", "sub", "add_1"}},
-    {ge::parser::GETSPAN, {}},
-    {ge::parser::HUBERLOSSGRAD, {}},
+    {FUSIONBATCHNORM, {"add/y", "add", "Rsqrt", "mul", "mul_1", "mul_2", "sub", "add_1"}},
+    {GETSPAN, {}},
+    {HUBERLOSSGRAD, {}},
 };
 
 // ----------------------------Index table of input and output of fusion operator--------------
@@ -138,23 +137,23 @@ static map<string, vector<string>> tensorflow_fusionop_children_names_map = {
 // Generally, the old index is 0. If the new index value is kFusionDisableIndex, the edge can be ignored.
 // If it is control edge input, the index is graph::kControlSlot(-1).
 static map<string, vector<std::pair<string, vector<int32_t>>>> tensorflow_fusionop_inputs_map = {
-    {ge::parser::FUSIONBATCHNORM,
+    {FUSIONBATCHNORM,
      {{"mul_1", {0, kFusionDisableIndex}},
       {"mul", {1, 1}},
       {"sub", {2, kFusionDisableIndex}},
       {"mul_2", {3, kFusionDisableIndex}},
       {"add", {4, kFusionDisableIndex}}}},
-    {ge::parser::GETSPAN, {{"transpose", {0}}, {"TensorArray", {1}}, {"transpose_1", {2}}}},
-    {ge::parser::HUBERLOSSGRAD, {{"Sub_1_grad/Neg", {1}}, {"Abs_grad/Sign", {0}}}},
+    {GETSPAN, {{"transpose", {0}}, {"TensorArray", {1}}, {"transpose_1", {2}}}},
+    {HUBERLOSSGRAD, {{"Sub_1_grad/Neg", {1}}, {"Abs_grad/Sign", {0}}}},
 };
 
 static map<string, vector<std::pair<string, vector<int32_t>>>> tensorflow_fusionop_outputs_map = {
-    {ge::parser::FUSIONBATCHNORM, {{"add_1", {0}}}},
-    {ge::parser::GETSPAN, {{"while/Exit_1", {0}}, {"while/Exit_2", {1}}}},
-    {ge::parser::HUBERLOSSGRAD, {{"Abs_grad/mul", {0}}}},
+    {FUSIONBATCHNORM, {{"add_1", {0}}}},
+    {GETSPAN, {{"while/Exit_1", {0}}, {"while/Exit_2", {1}}}},
+    {HUBERLOSSGRAD, {{"Abs_grad/mul", {0}}}},
 };
 map<string, vector<std::pair<string, uint32_t>>> tensorflow_fusionop_input_const_weight_index_map = {
-    {ge::parser::FUSIONBATCHNORM, {{"mul", 0}, {"sub", 1}, {"mul_2", 2}, {"add", 3}}},
+    {FUSIONBATCHNORM, {{"mul", 0}, {"sub", 1}, {"mul_2", 2}, {"add", 3}}},
 };
 
 // Can a string be converted to an integer

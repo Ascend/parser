@@ -18,17 +18,16 @@
 #include <memory>
 #include <vector>
 #include "common/debug/log.h"
-#include "parser/common/acl_graph_parser_util.h"
+#include "common/ge/ge_util.h"
 #include "common/util.h"
 #include "framework/common/debug/ge_log.h"
 #include "framework/omg/omg_inner_types.h"
-#include "framework/omg/parser/parser_types.h"
 #include "graph/utils/graph_utils.h"
 #include "parser/common/op_parser_factory.h"
 #include "register/op_registry.h"
 
-using domi::ParseParamByOpFunc;
 using domi::ParseParamFunc;
+using domi::ParseParamByOpFunc;
 using std::vector;
 
 namespace ge {
@@ -55,8 +54,8 @@ Status CaffeCustomParserAdapter::ParseParams(const Message *op_src, ge::OpDescPt
 }
 
 Status CaffeCustomParserAdapter::ParseParams(const Operator &op_src, ge::OpDescPtr &op_dest) {
-  GELOGI("Caffe custom op begin to params: layer name = %s, layer type= %s ", op_src.GetName().c_str(),
-         op_src.GetOpType().c_str());
+  GELOGI("Caffe custom op begin to params: layer name = %s, layer type= %s ",
+         op_src.GetName().c_str(), op_src.GetOpType().c_str());
   GE_CHECK_NOTNULL(op_dest);
 
   ParseParamByOpFunc custom_op_parser = domi::OpRegistry::Instance()->GetParseParamByOperatorFunc(op_src.GetOpType());
@@ -86,7 +85,7 @@ Status CaffeCustomParserAdapter::ParseWeights(const Message *op_src, ge::NodePtr
   bool update_in_turn = (static_cast<int64_t >(op->GetAllInputsSize()) == (layer->bottom_size() + layer->blobs_size()));
   int start_pos = layer->bottom_size();
   for (int i = 0; i < layer->blobs_size(); ++i) {
-    ge::GeTensorPtr weight = ge::parser::MakeShared<ge::GeTensor>();
+    ge::GeTensorPtr weight = ge::MakeShared<ge::GeTensor>();
     GE_CHECK_NOTNULL(weight);
     GE_CHK_STATUS_RET(ConvertWeight(layer->blobs(i), layer->name(), weight), "Convert blobs(%d) for layer %s failed", i,
                       layer->name().c_str());
@@ -98,14 +97,14 @@ Status CaffeCustomParserAdapter::ParseWeights(const Message *op_src, ge::NodePtr
                     bias_en = fc_params_src.bias_term(););
     auto bias_shape = weight->MutableTensorDesc().GetShape();
     // The num 0, 1, 2, 3 represet the dim index.
-    bool matched = bias_en && bias_shape.GetDimNum() == static_cast<size_t>(ge::parser::DIM_DEFAULT_SIZE) &&
+    bool matched = bias_en && bias_shape.GetDimNum() == static_cast<size_t>(ge::DIM_DEFAULT_SIZE) &&
                    bias_shape.GetDim(0) == 1 && bias_shape.GetDim(1) == 1 && bias_shape.GetDim(2) == 1;
     if (matched) {
       weight->MutableTensorDesc().SetShape(ge::GeShape({bias_shape.GetDim(3)}));
     }
     matched = layer->type() == kInnerProduct && i == 0 &&
-              bias_shape.GetDimNum() == static_cast<size_t>(ge::parser::DIM_DEFAULT_SIZE) &&
-              bias_shape.GetDim(0) == 1 && bias_shape.GetDim(1) == 1;
+              bias_shape.GetDimNum() == static_cast<size_t>(ge::DIM_DEFAULT_SIZE) && bias_shape.GetDim(0) == 1 &&
+              bias_shape.GetDim(1) == 1;
     if (matched) {
       weight->MutableTensorDesc().SetShape(ge::GeShape({bias_shape.GetDim(2), bias_shape.GetDim(3)}));
     }

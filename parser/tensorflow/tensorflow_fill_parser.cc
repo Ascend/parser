@@ -20,11 +20,6 @@
 #include "parser/common/op_def/fill_op.h"
 #include "common/util.h"
 #include "parser/tensorflow/tensorflow_parser_register.h"
-#include "framework/omg/parser/parser_types.h"
-
-using ge::parser::ALPHA_DEFAULT_VALUE;
-using ge::parser::BETA_DEFAULT_VALUE;
-using ge::parser::FILL;
 
 namespace ge {
 /*
@@ -58,8 +53,8 @@ domi::Status ParseParams(const NodeDef *node, FillOperator *op) {
 
   op->DataType(type);
 
-  op->Alpha(ge::parser::ALPHA_DEFAULT_VALUE);
-  op->Beta(ge::parser::BETA_DEFAULT_VALUE);
+  op->Alpha(ge::ALPHA_DEFAULT_VALUE);
+  op->Beta(ge::BETA_DEFAULT_VALUE);
 
   return domi::SUCCESS;
 }

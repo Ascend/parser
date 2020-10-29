@@ -23,7 +23,7 @@
 #include "graph/ge_tensor.h"
 #include "graph/buffer.h"
 #include "framework/common/debug/ge_log.h"
-#include "framework/omg/parser/parser_types.h"
+#include "framework/common/types.h"
 #include "framework/common/util.h"
 
 namespace ge {
@@ -98,7 +98,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY domi::Status ConvertToOpDesc(co
   GE_CHK_BOOL_RET_STATUS(op.GetSchema(), domi::PARAM_INVALID, "Op schema is null, op type: %s", op.GetType().c_str());
   op_def->SetName(op.GetName());
   op_def->SetType(op.GetType());
-  GE_IF_BOOL_EXEC(op.GetType() == ge::parser::YOLO, op_def->SetType(ge::parser::REGION));
+  GE_IF_BOOL_EXEC(op.GetType() == ge::YOLO, op_def->SetType(ge::REGION));
 
   UpdateTensorForOpDesc(op, op_def);
   GELOGD("Convert to op desc: name:%s, input size: %zu, output size:%zu", op_def->GetName().c_str(),

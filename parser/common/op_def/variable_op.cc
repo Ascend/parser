@@ -19,7 +19,7 @@
 #include "graph/debug/ge_attr_define.h"
 
 namespace ge {
-VariableOperator::VariableOperator() : ParserOperator(ge::parser::VARIABLE) {}
+VariableOperator::VariableOperator() : ParserOperator(ge::VARIABLE) {}
 
 VariableOperator::~VariableOperator() {}
 

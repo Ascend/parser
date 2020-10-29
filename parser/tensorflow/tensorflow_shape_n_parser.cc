@@ -26,7 +26,6 @@ using domi::tensorflow::AttrValue;
 using domi::tensorflow::DataType;
 using domi::tensorflow::DT_FLOAT;
 using domi::tensorflow::DT_INT32;
-using namespace ge::parser;
 
 namespace {
     const std::string kShapeAttrDtype = "out_type";

@@ -29,9 +29,7 @@ LOCAL_C_INCLUDES := \
     $(TOPDIR)inc/external \
     $(TOPDIR)inc/external/graph \
     $(TOPDIR)inc/framework \
-    $(TOPDIR)parser \
-    $(TOPDIR)parser/parser \
-    $(TOPDIR)graphengine/ge \
+    $(TOPDIR)framework/domi/parser \
     libc_sec/include \
     third_party/protobuf/include \
     third_party/json/include \
@@ -45,6 +43,7 @@ LOCAL_SHARED_LIBRARIES := \
     libparser_common \
     libgraph \
     libregister \
+    libge_common \
 
 LOCAL_LDFLAGS := -lrt
 

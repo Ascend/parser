@@ -20,7 +20,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "framework/omg/parser/parser_types.h"
+#include "common/types.h"
 #include "graph/anchor.h"
 #include "graph/compute_graph.h"
 #include "graph/node.h"
@@ -46,9 +46,8 @@ class ParserGraphOptimizer {
   domi::Status FusionFmkop();
 
   inline bool IsHCOMOp(const string &op_type) {
-    return (op_type == ge::parser::HCOMALLREDUCE) || (op_type == ge::parser::HCOMALLGATHER) ||
-           (op_type == ge::parser::HCOMBROADCAST) || (op_type == ge::parser::HCOMSEND) ||
-           (op_type == ge::parser::HCOMRECEIVE) || (op_type == "HcomReduceScatter");
+    return (op_type == ge::HCOMALLREDUCE) || (op_type == ge::HCOMALLGATHER) || (op_type == ge::HCOMBROADCAST) ||
+           (op_type == ge::HCOMSEND) || (op_type == ge::HCOMRECEIVE) || (op_type == "HcomReduceScatter");
   }
 
   void SetLocalFmkopFlag(bool isLocalFmkopFlag) { local_fmk_op_flag_ = isLocalFmkopFlag; }
@@ -104,11 +103,11 @@ class ParserGraphOptimizer {
   domi::Status UpdateGraph(vector<ge::NodePtr> &nodes);
 
   domi::Status InsertNode(ge::ComputeGraphPtr sub_graph, vector<ge::NodePtr> &nodes,
-                          vector<ge::InDataAnchorPtr> &input_anchors, vector<ge::OutDataAnchorPtr> &output_anchors,
-                          map<ge::OutDataAnchorPtr, vector<ge::InDataAnchorPtr>> &output_in_map,
-                          vector<ge::InControlAnchorPtr> &input_control_anchors,
-                          vector<ge::OutControlAnchorPtr> &output_control_anchors,
-                          unordered_map<string, ge::NodePtr> &node_map);
+                    vector<ge::InDataAnchorPtr> &input_anchors, vector<ge::OutDataAnchorPtr> &output_anchors,
+                    map<ge::OutDataAnchorPtr, vector<ge::InDataAnchorPtr>> &output_in_map,
+                    vector<ge::InControlAnchorPtr> &input_control_anchors,
+                    vector<ge::OutControlAnchorPtr> &output_control_anchors,
+                    unordered_map<string, ge::NodePtr> &node_map);
 
   domi::Status LinkInnerAnchor(unordered_map<string, ge::NodePtr> &node_map);
 
@@ -124,5 +123,5 @@ class ParserGraphOptimizer {
 
   domi::Status MakeTfProtoDef();
 };
-}  // namespace ge
+}  // namespace domi
 #endif  // GE_GRAPH_OPTIMIZE_GRAPH_OPTIMIZER_H_

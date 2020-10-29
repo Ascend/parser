@@ -18,8 +18,7 @@
 #include <iostream>
 #include "common/fmk_error_codes.h"
 #include "graph/debug/ge_attr_define.h"
-#include "framework/omg/parser/parser_types.h"
-#include "parser/common/acl_graph_parser_util.h"
+#include "common/types.h"
 #include "common/types_map.h"
 #include "common/util.h"
 #include "graph/op_desc.h"
@@ -219,7 +218,7 @@ domi::Status GraphToFunctionDef::RecordResult(ge::ComputeGraphPtr graph,
 
     string op_name = anchor->GetOwnerNode()->GetName() + "_" + to_string(anchor->GetIdx()) + "_retval";
     ge::OpDescPtr op = nullptr;
-    GE_MAKE_SHARED(op = std::make_shared<ge::OpDesc>(op_name, ge::parser::NETOUTPUT), return FAILED);
+    GE_MAKE_SHARED(op = std::make_shared<ge::OpDesc>(op_name, ge::NETOUTPUT), return FAILED);
     graphStatus status = op->AddInputDesc(ge::GeTensorDesc());
     if (status != GRAPH_SUCCESS) {
       GELOGE(FAILED, "Add input desc for op:%s failed.", op->GetName().c_str());
@@ -282,7 +281,7 @@ domi::Status GraphToFunctionDef::RecordArg(ge::ComputeGraphPtr graph, const vect
     string op_name = anchor->GetPeerOutAnchor()->GetOwnerNode()->GetName() + "_" +
                      to_string(anchor->GetPeerOutAnchor()->GetIdx()) + "_arg";
     ge::OpDescPtr op = nullptr;
-    GE_MAKE_SHARED(op = std::make_shared<ge::OpDesc>(op_name, ge::parser::DATA), return FAILED);
+    GE_MAKE_SHARED(op = std::make_shared<ge::OpDesc>(op_name, ge::DATA), return FAILED);
     graphStatus status = op->AddOutputDesc(ge::GeTensorDesc());
     if (status != GRAPH_SUCCESS) {
       GELOGE(FAILED, "Add output desc for op:%s failed.", op->GetName().c_str());
@@ -330,7 +329,7 @@ domi::Status GraphToFunctionDef::DavGraphToFunctionDef(ge::ComputeGraphPtr graph
 
   for (const ge::NodePtr &node : graph->GetDirectNode()) {
     GE_CHECK_NOTNULL(node);
-    if (node->GetOpDesc()->GetType() == ge::parser::DATA) {
+    if (node->GetOpDesc()->GetType() == ge::DATA) {
       int64_t index = 0;
 
       int64_t type = 1;
@@ -351,7 +350,7 @@ domi::Status GraphToFunctionDef::DavGraphToFunctionDef(ge::ComputeGraphPtr graph
       continue;
     }
 
-    if (node->GetOpDesc()->GetType() == ge::parser::NETOUTPUT) {
+    if (node->GetOpDesc()->GetType() == ge::NETOUTPUT) {
       int64_t index = 0;
       int64_t type = 1;
 
@@ -475,7 +474,7 @@ domi::Status GraphToFunctionDef::BuildFunctionDef(ge::ComputeGraphPtr &graph, co
   GE_CHECK_NOTNULL(library);
   GE_CHECK_NOTNULL(call_node_def);
   // Current date / time base on the current system
-  string now_time = ge::parser::CurrentTimeInStr();
+  string now_time = ge::CurrentTimeInStr();
   static int i = 0;
   const string name = name_in + now_time + to_string(i);
   i++;

@@ -17,45 +17,49 @@
 #include "parser/tensorflow/tensorflow_parser.h"
 #include <algorithm>
 #include <iostream>
-#include "parser/common/convert/pb2json.h"
+#include "common/convert/pb2json.h"
 #include "common/debug/log.h"
-#include "parser/common/acl_graph_parser_util.h"
+#include "common/fp16_t.h"
+#include "common/ge/ge_util.h"
+#include "common/ge/ge_util.h"
+#include "common/model_saver.h"
+#include "common/thread_pool.h"
+#include "common/util.h"
 #include "common/util/error_manager/error_manager.h"
 #include "external/graph/operator_factory.h"
 #include "external/parser/tensorflow_parser.h"
-#include "external/register/scope/scope_fusion_pass_register.h"
 #include "framework/common/debug/ge_log.h"
-#include "framework/omg/parser/parser_api.h"
-#include "framework/omg/parser/parser_inner_ctx.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/optimize/common/params.h"
 #include "graph/passes/variable_format_pass.h"
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/node_utils.h"
 #include "graph/utils/type_utils.h"
+#include "graph/common/ge_call_wrapper.h"
+#include "inc/pass_manager.h"
 #include "iterator_fusion_pass.h"
 #include "omg/omg.h"
 #include "omg/parser/op_parser.h"
 #include "omg/parser/parser_factory.h"
-#include "parser/common/acl_graph_parser_util.h"
-#include "parser/common/model_saver.h"
+#include "framework/omg/parser/parser_inner_ctx.h"
 #include "parser/common/op_map.h"
 #include "parser/common/op_parser_factory.h"
-#include "parser/common/parser_fp16_t.h"
-#include "parser/common/pass_manager.h"
 #include "parser/common/pre_checker.h"
-#include "parser/common/thread_pool.h"
-#include "parser/tensorflow/tensorflow_custom_parser_adapter.h"
-#include "parser/tensorflow/tensorflow_fusion_custom_parser_adapter.h"
+#include "parser/common/acl_graph_parser_util.h"
 #include "parser/tensorflow/tensorflow_fusion_op_parser.h"
 #include "parser/tensorflow/tensorflow_fusionop_util.h"
 #include "parser/tensorflow/tensorflow_op_parser.h"
 #include "parser/tensorflow/tensorflow_util.h"
+#include "parser/tensorflow/tensorflow_custom_parser_adapter.h"
+#include "parser/tensorflow/tensorflow_fusion_custom_parser_adapter.h"
 #include "register/op_registry.h"
+#include "external/register/scope/scope_fusion_pass_register.h"
 #include "register/scope/scope_graph_impl.h"
 #include "register/scope/scope_pass_registry_impl.h"
 
 using ge::const_op_update_vec;
+using ge::fp16_t;
+using ge::ModelSaver;
 using ge::OpParserFactory;
 using ge::Pb2Json;
 using ge::PreChecker;
@@ -80,17 +84,15 @@ using ge::TENSORFLOWF_NODE_OP_TRANSPOSE;
 using ge::TENSORFLOWF_TENSOR_NCHW;
 using ge::TENSORFLOWF_TENSOR_NHWC;
 using ge::TensorFlowFunsionOPUtil;
-using ge::TensorFlowFusionCustomParserAdapter;
 using ge::TensorFlowFusionOpParser;
 using ge::TensorFlowOpParser;
 using ge::ThreadPool;
-using ge::parser::fp16_t;
-using ge::parser::ModelSaver;
+using ge::TensorFlowFusionCustomParserAdapter;
 
 namespace ge {
 graphStatus aclgrphParseTensorFlow(const char *model_file, ge::Graph &graph) {
   GE_CHECK_NOTNULL(model_file);
-  GetParserContext().type = domi::TENSORFLOW;
+  domi::GetContext().type = domi::TENSORFLOW;
   std::map<string, string> options;
   options.insert(std::pair<string, string>(string(ge::FRAMEWORK_TYPE), to_string(ge::TENSORFLOW)));
 
@@ -99,7 +101,7 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, ge::Graph &graph) {
   (void)acl_graph_parse_util.AclParserInitialize(options);
 
   // Create an empty computegraph
-  ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>("tmpGraph");
+  ge::ComputeGraphPtr compute_graph = ge::MakeShared<ge::ComputeGraph>("tmpGraph");
   GE_CHECK_NOTNULL(compute_graph);
 
   graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
@@ -120,7 +122,7 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, ge::Graph &graph) {
   GELOGI("Parser graph %s success.", graph.GetName().c_str());
   return ge::SUCCESS;
 }
-}  // namespace ge
+}
 
 namespace ge {
 namespace {
@@ -131,21 +133,20 @@ const int kInputNumInt = 2;
 const int32_t kControlSlot = -1;
 const size_t kSoftmaxMultiple = 2;
 const set<string> kTfBlackFields = {"tensor_content"};
-const std::vector<std::string> kSkipCheckoutInputSizeNodes = {ge::parser::DATA, ge::parser::VARIABLE,
-                                                              ge::parser::FRAMEWORKOP, ge::parser::LAYERNORM};
-const std::vector<std::string> kMakeOperatorNotByIr = {ge::parser::ARG, ge::parser::VARIABLE, ge::parser::VARHANDLEOP,
-                                                       ge::parser::FRAMEWORKOP, ge::parser::DATA};
-const std::map<string, domiTensorFormat_t> kNeedMarkFormatNodes = {
-    {"ExtractImagePatches", domi::DOMI_TENSOR_NHWC},
-    {"ExtractVolumePatches", domi::DOMI_TENSOR_NHWC},
-    {"LogSoftmax", domi::DOMI_TENSOR_NHWC},
-    {"ResizeBilinear", domi::DOMI_TENSOR_NHWC},
-    {"ResizeBilinearGrad", domi::DOMI_TENSOR_NHWC},
-    {"ResizeNearestNeighbor", domi::DOMI_TENSOR_NHWC},
-    {"Softmax", domi::DOMI_TENSOR_NHWC},
-    {"SoftmaxCrossEntropyWithLogits", domi::DOMI_TENSOR_NHWC},
-    {"SoftmaxGrad", domi::DOMI_TENSOR_NHWC},
-    {"SpaceToBatch", domi::DOMI_TENSOR_NHWC}};
+const std::vector<std::string> kSkipCheckoutInputSizeNodes = {ge::DATA, ge::VARIABLE, ge::FRAMEWORKOP, ge::LAYERNORM};
+const std::vector<std::string> kMakeOperatorNotByIr = {ge::ARG, ge::VARIABLE, ge::VARHANDLEOP, ge::FRAMEWORKOP,
+                                                       ge::DATA};
+const std::map<string, domiTensorFormat_t> kNeedMarkFormatNodes = {{"ExtractImagePatches", domi::DOMI_TENSOR_NHWC},
+                                                                   {"ExtractVolumePatches", domi::DOMI_TENSOR_NHWC},
+                                                                   {"LogSoftmax", domi::DOMI_TENSOR_NHWC},
+                                                                   {"ResizeBilinear", domi::DOMI_TENSOR_NHWC},
+                                                                   {"ResizeBilinearGrad", domi::DOMI_TENSOR_NHWC},
+                                                                   {"ResizeNearestNeighbor", domi::DOMI_TENSOR_NHWC},
+                                                                   {"Softmax", domi::DOMI_TENSOR_NHWC},
+                                                                   {"SoftmaxCrossEntropyWithLogits",
+                                                                    domi::DOMI_TENSOR_NHWC},
+                                                                   {"SoftmaxGrad", domi::DOMI_TENSOR_NHWC},
+                                                                   {"SpaceToBatch", domi::DOMI_TENSOR_NHWC}};
 const char *const kDpop = "DPOP";
 const char *const kFuncDefLibraryFilePath = "graph_def_library.pbtxt";
 const char *const kAttrNameIsScopeInnerNode = "_is_scope_inner_node";
@@ -172,7 +173,7 @@ Status GenSubgraphParseTasks(const ge::ComputeGraphPtr &parent_graph, std::deque
 
       // A function may be referenced multiple times in TF, change the graph name to ensure it is unique in GE
       auto unique_name = node->GetName() + std::to_string(i) + subgraph_iname;
-      auto subgraph = ge::parser::MakeShared<ge::ComputeGraph>(unique_name);
+      auto subgraph = ge::MakeShared<ge::ComputeGraph>(unique_name);
       if (subgraph == nullptr) {
         GELOGE(OUT_OF_MEMORY, "Failed to alloc subgraph %s", subgraph_iname.c_str());
         return OUT_OF_MEMORY;
@@ -240,13 +241,13 @@ Status TensorFlowModelParser::DefunToPartitionedCall(const domi::tensorflow::Nod
   domi::tensorflow::AttrValue attr_call_inference;
   if (!ge::TensorFlowUtil::FindAttrValue(node_def, "_disable_call_shape_inference", attr_call_inference)) {
     ErrorManager::GetInstance().ATCReportErrMessage(
-        "E19014", {"opname", "value", "reason"},
-        {node_def->name(), "attr [_disable_call_shape_inference]", "is not exist in nodedef"});
+        "E19014", {"opname", "value", "reason"}, {node_def->name(), "attr [_disable_call_shape_inference]",
+        "is not exist in nodedef"});
     GELOGE(FAILED, "In NodeDef %s attr [_disable_call_shape_inference] not exist.", op_name.c_str());
     return FAILED;
   }
 
-  op = ge::parser::MakeShared<ge::OpDesc>(op_name, ge::parser::PARTITIONEDCALL);
+  op = ge::MakeShared<ge::OpDesc>(op_name, ge::PARTITIONEDCALL);
   GE_CHECK_NOTNULL(op);
 
   size_t input_tensor_num = 0;
@@ -282,9 +283,9 @@ Status TensorFlowModelParser::TransNodeToOpDesc(const domi::tensorflow::NodeDef 
   GE_CHECK_NOTNULL(node_def);
   string node_name = node_def->name();
   ge::Operator op_factory = ge::OperatorFactory::CreateOperator(node_name, op_type);
-  if (op_factory.GetName() != node_name || op_type == ge::parser::DATA) {
+  if (op_factory.GetName() != node_name || op_type == ge::DATA) {
     if (std::find(kMakeOperatorNotByIr.begin(), kMakeOperatorNotByIr.end(), op_type) != kMakeOperatorNotByIr.end()) {
-      op = ge::parser::MakeShared<ge::OpDesc>(node_name, op_type);
+      op = ge::MakeShared<ge::OpDesc>(node_name, op_type);
       GE_CHECK_NOTNULL(op);
     } else if (node_name == op_type) {
       // Trans @tensorflow.python.framework.Defun(...) to PartitionedCall.
@@ -309,8 +310,8 @@ Status TensorFlowModelParser::TransNodeToOpDesc(const domi::tensorflow::NodeDef 
   return SUCCESS;
 }
 
-Status TensorFlowModelParser::ParseOpParams(const domi::tensorflow::NodeDef *node_def, ge::OpDescPtr &op,
-                                            shared_ptr<OpParser> &op_parser) {
+Status TensorFlowModelParser::ParseOpParams(const domi::tensorflow::NodeDef *node_def,
+                                            ge::OpDescPtr &op, shared_ptr<OpParser> &op_parser) {
   GE_CHECK_NOTNULL(node_def);
   GE_CHECK_NOTNULL(op);
   GE_CHECK_NOTNULL(op_parser);
@@ -336,7 +337,7 @@ Status TensorFlowModelParser::ParseOpParams(const domi::tensorflow::NodeDef *nod
       return status;
     }
     std::shared_ptr<ge::TensorFlowCustomParserAdapter> tf_custom_op_parser =
-        std::dynamic_pointer_cast<ge::TensorFlowCustomParserAdapter>(op_parser);
+            std::dynamic_pointer_cast<ge::TensorFlowCustomParserAdapter>(op_parser);
     GE_CHECK_NOTNULL(tf_custom_op_parser);
     status = tf_custom_op_parser->ParseParams(op_src, op);
     if (status != SUCCESS) {
@@ -501,10 +502,10 @@ Status TensorFlowModelParser::CheckoutInputNum(ge::OpDescPtr &op_desc, const dom
   // get input and output tensor number from op desc
   size_t factory_input_size = op_desc->GetInputsSize();
   if (input_tensor_num != factory_input_size) {
-    ErrorManager::GetInstance().ATCReportErrMessage(
-        "E19014", {"opname", "value", "reason"},
-        {op_desc->GetName(), "input number of tensorflow[" + std::to_string(input_tensor_num) + "]",
-         "should be equal to factory size[" + std::to_string(factory_input_size) + "]"});
+  ErrorManager::GetInstance().ATCReportErrMessage(
+      "E19014", {"opname", "value", "reason"}, {op_desc->GetName(),
+      "input number of tensorflow[" + std::to_string(input_tensor_num) + "]",
+      "should be equal to factory size[" + std::to_string(factory_input_size) + "]"});
     GELOGE(FAILED, "op [%s], type[%s], The input number of tensorflow[%zu] should be equal to factory size[%zu]",
            op_desc->GetName().c_str(), op_desc->GetType().c_str(), input_tensor_num, factory_input_size);
     return FAILED;
@@ -570,7 +571,7 @@ Status TensorFlowModelParser::AddTensorDescToOpDesc(ge::OpDescPtr &op_desc, cons
   domi::tensorflow::AttrValue input_attr_value;
   domi::tensorflow::AttrValue output_attr_value;
   ParserOperator temp_op;
-  if (ge::TensorFlowUtil::FindAttrValue(node, ge::parser::ATTR_NAME_INPUT_TENSOR_DESC, input_attr_value)) {
+  if (ge::TensorFlowUtil::FindAttrValue(node, ge::ATTR_NAME_INPUT_TENSOR_DESC, input_attr_value)) {
     GE_CHK_STATUS_RET(ge::TensorFlowUtil::TransTensorDescriptor(input_attr_value, &temp_op,
                                                                 TENSORFLOW_NORMAL_INPUT_TENSOR_FLAG, type),
                       "trans input_attr_value failed, op: %s", node->name().c_str());
@@ -713,8 +714,7 @@ Status TensorFlowModelParser::CheckOpShapeDim(const domi::tensorflow::NodeDef *n
                                               bool &valid) {
   GE_CHECK_NOTNULL(node_def);
   domi::tensorflow::AttrValue input_attr_value;
-  bool is_attr_exist =
-      ge::TensorFlowUtil::FindAttrValue(node_def, ge::parser::ATTR_NAME_INPUT_TENSOR_DESC, input_attr_value);
+  bool is_attr_exist = ge::TensorFlowUtil::FindAttrValue(node_def, ge::ATTR_NAME_INPUT_TENSOR_DESC, input_attr_value);
   GE_IF_BOOL_EXEC(!is_attr_exist, return SUCCESS);
   GE_CHK_BOOL_EXEC(input_attr_value.has_list(), return PARAM_INVALID, "output attr value vector is empty");
 
@@ -741,26 +741,24 @@ Status TensorFlowModelParser::CheckOpType(const domi::tensorflow::NodeDef *node_
   string node_name = node_def->name();
 
   std::map<std::string, set<int>> check_dims = {
-      {ge::parser::SPARSESOFTMAXCROSSENTROPYWITHLOGITS, {10}},
+      {ge::SPARSESOFTMAXCROSSENTROPYWITHLOGITS, {10}},
   };
 
   GE_IF_BOOL_EXEC(
-      op_type == ge::parser::SPARSESOFTMAXCROSSENTROPYWITHLOGITS,
+      op_type == ge::SPARSESOFTMAXCROSSENTROPYWITHLOGITS,
       GE_CHK_STATUS_RET(CheckOpShapeDim(node_def, check_dims[op_type], valid), "failed to check op shape");
-      GE_IF_BOOL_EXEC(!valid, op_type = ge::parser::FRAMEWORKOP; GELOGI("Set op %s to frameworkop", node_name.c_str());
+      GE_IF_BOOL_EXEC(!valid, op_type = ge::FRAMEWORKOP; GELOGI("Set op %s to frameworkop", node_name.c_str());
                       framework_ops_[node_name] = node_def;););
 
-  GE_IF_BOOL_EXEC(
-      op_type == ge::parser::ADD || op_type == ge::parser::MULTIPLY || op_type == ge::parser::MEAN,
-      for (const string &input_name
-           : node_def->input()) {
-        string tmp_input_name;
-        GE_RETURN_IF_ERROR(CheckInputNodeName(input_name, &tmp_input_name, nullptr, nullptr));
-        GELOGD("Add or Mul op %s input name is %s", node_name.c_str(), input_name.c_str());
-        GE_IF_BOOL_EXEC(framework_ops_.find(tmp_input_name) != framework_ops_.end(),
-                        GELOGI("Set op %s to frameworkop", node_name.c_str());
-                        op_type = ge::parser::FRAMEWORKOP;);
-      });
+  GE_IF_BOOL_EXEC(op_type == ge::ADD || op_type == ge::MULTIPLY || op_type == ge::MEAN, for (const string &input_name
+                                                                                             : node_def->input()) {
+    string tmp_input_name;
+    GE_RETURN_IF_ERROR(CheckInputNodeName(input_name, &tmp_input_name, nullptr, nullptr));
+    GELOGD("Add or Mul op %s input name is %s", node_name.c_str(), input_name.c_str());
+    GE_IF_BOOL_EXEC(framework_ops_.find(tmp_input_name) != framework_ops_.end(),
+                    GELOGI("Set op %s to frameworkop", node_name.c_str());
+                    op_type = ge::FRAMEWORKOP;);
+  });
 
   return SUCCESS;
 }
@@ -795,13 +793,13 @@ Status TensorFlowModelParser::ParseNodeDef(TensorFlowModelParser *parser, ge::Co
   string op_type = iterator->second;
   // Log printing for determining operator type
   domi::ImplyType implyType = domi::OpRegistry::Instance()->GetImplyType(op_type);
-  GE_IF_BOOL_EXEC((implyType == domi::ImplyType::TVM) && (op_type != ge::parser::FRAMEWORKOP),
+  GE_IF_BOOL_EXEC((implyType == domi::ImplyType::TVM) && (op_type != ge::FRAMEWORKOP),
                   GELOGD("TBE %s parsering", node_op.c_str()););
-  GE_IF_BOOL_EXEC((implyType == domi::ImplyType::CCE) && (op_type != ge::parser::FRAMEWORKOP),
+  GE_IF_BOOL_EXEC((implyType == domi::ImplyType::CCE) && (op_type != ge::FRAMEWORKOP),
                   GELOGD("CCE %s parsering", node_op.c_str()););
-  GE_IF_BOOL_EXEC((implyType == domi::ImplyType::HCCL) && (op_type != ge::parser::FRAMEWORKOP),
+  GE_IF_BOOL_EXEC((implyType == domi::ImplyType::HCCL) && (op_type != ge::FRAMEWORKOP),
                   GELOGD("HCCL %s parsering", node_op.c_str()););
-  GE_IF_BOOL_EXEC(op_type == ge::parser::FRAMEWORKOP, GELOGD("FRAMEWORKOP %s parsering", node_op.c_str()););
+  GE_IF_BOOL_EXEC(op_type == ge::FRAMEWORKOP, GELOGD("FRAMEWORKOP %s parsering", node_op.c_str()););
   GELOGD("TF op node name = %s, op type= %s, trans to op type %s", node_name.c_str(), node_op.c_str(), op_type.c_str());
 
   // Construct operator by IR
@@ -809,7 +807,7 @@ Status TensorFlowModelParser::ParseNodeDef(TensorFlowModelParser *parser, ge::Co
   ge::Operator op_factory = ge::OperatorFactory::CreateOperator(node_name, op_type);
   if (op_factory.GetName() != node_name) {
     if (std::find(kMakeOperatorNotByIr.begin(), kMakeOperatorNotByIr.end(), op_type) != kMakeOperatorNotByIr.end()) {
-      op = ge::parser::MakeShared<ge::OpDesc>(node_name, op_type);
+      op = ge::MakeShared<ge::OpDesc>(node_name, op_type);
       GE_CHECK_NOTNULL(op);
     } else if (node_name == op_type) {
       GE_RETURN_IF_ERROR(parser->DefunToPartitionedCall(node_def, op));
@@ -906,7 +904,7 @@ Status TensorFlowModelParser::AdaptOpType(const domi::tensorflow::NodeDef *node_
     op_type = tensorflow_train_op_map.at(node_op);
     GE_CHK_STATUS_RET(CheckOpType(node_def, op_type), "Failed to check op type");
   } else {
-    op_type = ge::parser::FRAMEWORKOP;
+    op_type = ge::FRAMEWORKOP;
     domi::tensorflow::AttrValue attr_call_inference;
     if ((node_name == node_op) &&
         ge::TensorFlowUtil::FindAttrValue(node_def, "_disable_call_shape_inference", attr_call_inference)) {
@@ -914,7 +912,7 @@ Status TensorFlowModelParser::AdaptOpType(const domi::tensorflow::NodeDef *node_
     }
   }
 
-  GE_IF_BOOL_EXEC(isDatasetInit, op_type = ge::parser::FRAMEWORKOP);
+  GE_IF_BOOL_EXEC(isDatasetInit, op_type = ge::FRAMEWORKOP);
   adaptedOpTypeMap_[node_name] = op_type;
 
   return SUCCESS;
@@ -939,7 +937,7 @@ Status TensorFlowModelParser::AddFmkNode(ge::ComputeGraphPtr &graph, shared_ptr<
   ThreadPool executor(kThreadNum);
   std::mutex graphMutex;
   std::vector<std::future<Status>> vectorFuture(op_node_list_size);
-  ge::ComputeGraphPtr graph_tmp = ge::parser::MakeShared<ge::ComputeGraph>("tmpGraph");
+  ge::ComputeGraphPtr graph_tmp = ge::MakeShared<ge::ComputeGraph>("tmpGraph");
   GE_CHECK_NOTNULL(graph_tmp);
   for (size_t j = 0; j < op_node_list_size; j++) {
     const string op_node_name = op_node_name_list[j];
@@ -1007,11 +1005,11 @@ Status TensorFlowModelParser::ExcuteScopeFusionPasses(domi::tensorflow::GraphDef
   // Identifying scope fusion operators based on scope rules
   GE_CHECK_NOTNULL(graph_def);
   ScopePassManager passmanager;
-  PARSER_TIMESTAMP_START(BuildScopeGraph);
+  GE_TIMESTAMP_START(BuildScopeGraph);
   scope_graph = passmanager.BuildScopeGraph(graph_def);
   GE_CHECK_NOTNULL(scope_graph);
-  PARSER_TIMESTAMP_END(BuildScopeGraph, "TensorFlowModelParser::BuildScopeGraph");
-  PARSER_TIMESTAMP_START(ScopeGraphPass);
+  GE_TIMESTAMP_END(BuildScopeGraph, "TensorFlowModelParser::BuildScopeGraph");
+  GE_TIMESTAMP_START(ScopeGraphPass);
   // Validate the non-general scope fusion pass.
   // The parameter is set to the name of the fusion rule.
   // Multiple names can be set and separated by ",".
@@ -1037,7 +1035,7 @@ Status TensorFlowModelParser::ExcuteScopeFusionPasses(domi::tensorflow::GraphDef
     GELOGE(ret, "Run scope fusion failed, ret:%u.", ret);
     return ret;
   }
-  PARSER_TIMESTAMP_END(ScopeGraphPass, "TensorFlowModelParser::ScopeGraphPass");
+  GE_TIMESTAMP_END(ScopeGraphPass, "TensorFlowModelParser::ScopeGraphPass");
 
   return SUCCESS;
 }
@@ -1049,11 +1047,11 @@ Status TensorFlowModelParser::ParseFromMemory(const char *data, uint32_t size, g
   // Store objects parsed from pb files
   domi::tensorflow::GraphDef OriDef;
 
-  bool read = ge::parser::ReadProtoFromArray(data, static_cast<int>(size), &OriDef);
+  bool read = ge::ReadProtoFromArray(data, static_cast<int>(size), &OriDef);
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(!read, return INTERNAL_ERROR, "read_proto_from_binary failed.");
 
   domi::tensorflow::GraphDef graph_def;
-  if (ge::GetParserContext().input_dims.empty() && ge::GetParserContext().out_nodes_map.empty()) {
+  if (domi::GetContext().input_dims.empty() && domi::GetContext().out_nodes_map.empty()) {
     graph_def = OriDef;
   } else {
     GELOGI("Before Trim, the Graph Node size is:%d", OriDef.node_size());
@@ -1115,14 +1113,14 @@ Status TensorFlowModelParser::ParseFromMemory(const char *data, uint32_t size, g
   GELOGD("[TF ParseFromMemory] get op nodes context from graph success");
 
   // Infer input formats
-  ge::GetParserContext().format = InferInputFormats();
+  domi::GetContext().format = InferInputFormats();
   GELOGD("[TF ParseFromMemory] infer input formats success");
 
   // Building input-output relationship between fusionop and common op
   GE_RETURN_IF_ERROR(UpdateAllNodeOpContext(scope_graph, graph_def, op_node_name_list));
 
   ret = AddFusionNodeDef(scope_graph, op_node_name_list);
-  if (ret != SUCCESS) {
+  if(ret != SUCCESS) {
     GELOGE(ret, "Add fusion NodeDef failed.");
     DeleteFuisonNodeDef();
     return ret;
@@ -1170,7 +1168,7 @@ Status TensorFlowModelParser::GetFunctionProto(const string &file,
   string graph_def_path = (pos == -1) ? kFuncDefLibraryFilePath : file.substr(0, pos) + "/" + kFuncDefLibraryFilePath;
   GELOGI("Function def libraray path is %s.", graph_def_path.c_str());
 
-  bool read = ge::parser::ReadProtoFromText(graph_def_path.c_str(), &graph_def_library);
+  bool read = ge::ReadProtoFromText(graph_def_path.c_str(), &graph_def_library);
   if (!read) {
     GELOGE(INTERNAL_ERROR,
            "Get subgraph library failed. "
@@ -1206,12 +1204,12 @@ Status TensorFlowModelParser::Parse(const char *model_path, ge::ComputeGraphPtr 
   GELOGI("Parse file %s", model_path);
   // Store objects parsed from pb files
   domi::tensorflow::GraphDef ori_def;
-  bool read = ge::parser::ReadProtoFromBinaryFile(model_path, &ori_def);
+  bool read = ge::ReadProtoFromBinaryFile(model_path, &ori_def);
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(!read, return INTERNAL_ERROR, "read_proto_from_binary failed.");
 
   // Trim graph by user input and output.
   domi::tensorflow::GraphDef graph_def;
-  if (ge::GetParserContext().input_dims.empty() && ge::GetParserContext().out_nodes_map.empty()) {
+  if (domi::GetContext().input_dims.empty() && domi::GetContext().out_nodes_map.empty()) {
     graph_def = ori_def;
   } else {
     GELOGI("Before Trim, the Graph Node size is:%d", ori_def.node_size());
@@ -1304,12 +1302,14 @@ Status TensorFlowModelParser::ParseAllGraph(const google::protobuf::Message *pro
     GE_RETURN_WITH_LOG_IF_ERROR(PreChecker::Instance().AddOp(&node, node.name(), node.op()),
                                 "Add node_def to PreChecker failed, node name: %s.", node.name().c_str());
 
-    GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(PreChecker::Instance().CheckName(&node) != SUCCESS, return FAILED,
-                                   "Check op[%s] failed, name repeat in tensorflow pb file.", node.name().c_str());
+    GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(PreChecker::Instance().CheckName(&node) != SUCCESS,
+                                   return FAILED, "Check op[%s] failed, name repeat in tensorflow pb file.",
+                                          node.name().c_str());
     GE_CHK_BOOL_EXEC_NOLOG(
         node.op() == TENSORFLOWF_NODE_OP_IDENTITY,
-        GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(PreChecker::Instance().CheckType(&node, true) != SUCCESS, return FAILED,
-                                       "Check op[%s]'s optype failed, type is not supported.", node.name().c_str());)
+        GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
+            PreChecker::Instance().CheckType(&node, true) != SUCCESS,
+            return FAILED, "Check op[%s]'s optype failed, type is not supported.", node.name().c_str());)
   }
 
   bool has_error = false;
@@ -1346,7 +1346,7 @@ Status TensorFlowModelParser::ParseAllGraph(const google::protobuf::Message *pro
   GELOGD("[TF Parse] get op nodes context from graph success");
 
   // Infer input formats
-  ge::GetParserContext().format = InferInputFormats();
+  domi::GetContext().format = InferInputFormats();
   GELOGD("[TF Parse] infer input formats success");
 
   // Building input-output relationship between fusionop and common op
@@ -1355,13 +1355,13 @@ Status TensorFlowModelParser::ParseAllGraph(const google::protobuf::Message *pro
 
   // set user-designate-inputs-order
   std::vector<std::string> user_inputs_order;
-  for (auto &input : ge::GetParserContext().user_input_dims) {
+  for (auto &input : domi::GetContext().user_input_dims) {
     user_inputs_order.push_back(input.first);
   }
   graph->SetInputsOrder(user_inputs_order);
 
   ret = AddFusionNodeDef(scope_graph, op_node_name_list);
-  if (ret != SUCCESS) {
+  if(ret != SUCCESS) {
     GELOGE(ret, "Add fusion NodeDef failed.");
     DeleteFuisonNodeDef();
     return ret;
@@ -1425,7 +1425,7 @@ Status TensorFlowModelParser::CheckGraphDefValid(const domi::tensorflow::GraphDe
       }
     }
 
-    if (node_def.op() == TENSORFLOWF_NODE_OP_PLACEHOLDER || node_def.op() == ge::parser::ARG) {
+    if (node_def.op() == TENSORFLOWF_NODE_OP_PLACEHOLDER || node_def.op() == ge::ARG) {
       data_node_count++;
     }
   }
@@ -1501,20 +1501,20 @@ Status TensorFlowModelParser::GeStoi(const string &input_node_name, const string
     int32_t tmp_index = static_cast<int32_t>(std::stoi(index_str.c_str(), nullptr, 10));
     *index = tmp_index;
   } catch (std::invalid_argument &) {
-    ErrorManager::GetInstance().ATCReportErrMessage("E10014", {"parameter", "value"},
-                                                    {"input_node_name(" + input_node_name + ")", index_str});
+    ErrorManager::GetInstance().ATCReportErrMessage(
+        "E10014", {"parameter", "value"}, {"input_node_name(" + input_node_name + ")", index_str});
     GELOGE(INTERNAL_ERROR, "stl[stoi] input_node_name[%s] indexstr[%s] is invalid argument!", input_node_name.c_str(),
            index_str.c_str());
     return INTERNAL_ERROR;
   } catch (std::out_of_range &) {
-    ErrorManager::GetInstance().ATCReportErrMessage("E10013", {"parameter", "value"},
-                                                    {"input_node_name(" + input_node_name + ")", index_str});
+    ErrorManager::GetInstance().ATCReportErrMessage(
+        "E10013", {"parameter", "value"}, {"input_node_name(" + input_node_name + ")", index_str});
     GELOGE(INTERNAL_ERROR, "stl[stoi] input_node_name[%s] indexstr[%s] is out of range!", input_node_name.c_str(),
            index_str.c_str());
     return INTERNAL_ERROR;
   } catch (...) {
-    ErrorManager::GetInstance().ATCReportErrMessage("E10015", {"parameter", "value"},
-                                                    {"input_node_name(" + input_node_name + ")", index_str});
+    ErrorManager::GetInstance().ATCReportErrMessage(
+        "E10015", {"parameter", "value"}, {"input_node_name(" + input_node_name + ")", index_str});
     GELOGE(INTERNAL_ERROR, "stl[stoi] input_node_name[%s] indexstr[%s] is bad argument!", input_node_name.c_str(),
            index_str.c_str());
     return INTERNAL_ERROR;
@@ -1610,21 +1610,19 @@ bool TensorFlowModelParser::MaybeFusionOp(shared_ptr<ge::ScopeGraph> &scope_grap
   auto &impl = scope_graph->impl_;
   if (TensorFlowFunsionOPUtil::MaybeFusionOp(node_def->name(), &info) ||
       impl->IsFusionOpChild(node_def->name(), info_list)) {
-    GE_IF_BOOL_EXEC(
-        info_list.size() > 0, for (size_t i = 0; i < info_list.size(); ++i) {
-          fusion_op_type_map_[info_list[i].fusion_node_name].push_back(info_list[i].fusion_op_type);
-          fusion_op_type_map_[info_list[i].fusion_node_name].push_back(info_list[i].description);
-          fusion_op_nodedef_map_[info_list[i].fusion_node_name].push_back(node_def);
-          if (info_list[i].fusion_op_type == "Dropout" &&
-              (node_def->op() == "Add" || node_def->op() == "RandomUniform")) {
-            fusion_op_nodedef_map_[info_list[i].fusion_node_name].push_back(nodedef_map_[node_def->input(0)]);
-          }
-          if (info_list[i].fusion_op_type == "LayerNorm" && node_def->op() == "Mean") {
-            fusion_op_nodedef_map_[info_list[i].fusion_node_name].push_back(nodedef_map_[node_def->input(1)]);
-          }
-          fusion_op_policy_[info_list[i].fusion_node_name] = info_list[i].scope_pass;
-          fusion_op_children_[node_def->name()] = info_list[i];
-        });
+    GE_IF_BOOL_EXEC(info_list.size() > 0, for (size_t i = 0; i < info_list.size(); ++i) {
+      fusion_op_type_map_[info_list[i].fusion_node_name].push_back(info_list[i].fusion_op_type);
+      fusion_op_type_map_[info_list[i].fusion_node_name].push_back(info_list[i].description);
+      fusion_op_nodedef_map_[info_list[i].fusion_node_name].push_back(node_def);
+      if (info_list[i].fusion_op_type == "Dropout" && (node_def->op() == "Add" || node_def->op() == "RandomUniform")) {
+        fusion_op_nodedef_map_[info_list[i].fusion_node_name].push_back(nodedef_map_[node_def->input(0)]);
+      }
+      if (info_list[i].fusion_op_type == "LayerNorm" && node_def->op() == "Mean") {
+        fusion_op_nodedef_map_[info_list[i].fusion_node_name].push_back(nodedef_map_[node_def->input(1)]);
+      }
+      fusion_op_policy_[info_list[i].fusion_node_name] = info_list[i].scope_pass;
+      fusion_op_children_[node_def->name()] = info_list[i];
+    });
     GE_IF_BOOL_EXEC(info_list.size() == 0, fusion_op_type_map_[info.fusion_node_name].push_back(info.fusion_op_type);
                     fusion_op_type_map_[info.fusion_node_name].push_back(info.description);
                     fusion_op_nodedef_map_[info.fusion_node_name].push_back(node_def);
@@ -1819,7 +1817,8 @@ Status TensorFlowModelParser::UpdateFusionOpContext(shared_ptr<ge::ScopeGraph> &
 }
 
 Status TensorFlowModelParser::UppdateInputMap(shared_ptr<ge::ScopeGraph> &scope_graph,
-                                              const ge::ScopeFusionOpInfo &info, OpNodeContext &fusion_op_node_context,
+                                              const ge::ScopeFusionOpInfo &info,
+                                              OpNodeContext &fusion_op_node_context,
                                               OpNodeContext &normal_op_node_context) {
   GE_CHECK_NOTNULL(scope_graph);
   for (auto &iter : normal_op_node_context.input_map) {
@@ -1863,7 +1862,8 @@ Status TensorFlowModelParser::UppdateInputMap(shared_ptr<ge::ScopeGraph> &scope_
   return SUCCESS;
 }
 Status TensorFlowModelParser::UppdateOutputMap(shared_ptr<ge::ScopeGraph> &scope_graph,
-                                               const ge::ScopeFusionOpInfo &info, OpNodeContext &fusion_op_node_context,
+                                               const ge::ScopeFusionOpInfo &info,
+                                               OpNodeContext &fusion_op_node_context,
                                                OpNodeContext &normal_op_node_context) {
   GE_CHECK_NOTNULL(scope_graph);
   for (auto &iter : normal_op_node_context.output_map) {
@@ -1936,7 +1936,8 @@ Status TensorFlowModelParser::EraseNormalOpOutputIfChild(shared_ptr<ge::ScopeGra
   return SUCCESS;
 }
 
-Status TensorFlowModelParser::UpdateNormalOpContext(shared_ptr<ge::ScopeGraph> &scope_graph, const string &op_node_name,
+Status TensorFlowModelParser::UpdateNormalOpContext(shared_ptr<ge::ScopeGraph> &scope_graph,
+                                                    const string &op_node_name,
                                                     OpNodeContext &normal_op_node_context) {
   GE_CHECK_NOTNULL(scope_graph);
   std::map<std::string, std::vector<std::pair<int32_t, int32_t>>> tmp_input_map;
@@ -1967,7 +1968,7 @@ Status TensorFlowModelParser::UpdateNormalOpContext(shared_ptr<ge::ScopeGraph> &
   }
 
   Status ret = EraseNormalOpOutputIfChild(scope_graph, op_node_name, normal_op_node_context);
-  if (ret != SUCCESS) {
+  if ( ret != SUCCESS) {
     return ret;
   }
 
@@ -2093,7 +2094,7 @@ Status TensorFlowModelParser::ToJson(const char *model_file, const char *json_fi
   domi::tensorflow::GraphDef graph_def;
   nlohmann::json j;
 
-  GE_RETURN_WITH_LOG_IF_FALSE(ge::parser::ReadProtoFromBinaryFile(model_file, &graph_def),
+  GE_RETURN_WITH_LOG_IF_FALSE(ge::ReadProtoFromBinaryFile(model_file, &graph_def),
                               "ReadProtoFromBinaryFile failed, file:%s.", model_file);
 
   Pb2Json::Message2Json(graph_def, kTfBlackFields, j, true);
@@ -2107,10 +2108,10 @@ Status TensorFlowWeightsParser::ParseFromMemory(const char *data, uint32_t size,
 Status TensorFlowWeightsParser::Parse(const char *file, ge::Graph &graph) { return SUCCESS; }
 
 Status TensorFlowModelParser::ParseProto(const google::protobuf::Message *proto, ge::ComputeGraphPtr &graph) {
-  PARSER_TIMESTAMP_START(ParseProto);
+  GE_TIMESTAMP_START(ParseProto);
   GE_CHECK_NOTNULL(proto);
   GE_CHECK_NOTNULL(graph);
-  ge::GetParserContext().train_flag = true;
+  domi::GetContext().train_flag = true;
 
   const domi::tensorflow::GraphDef *graph_def_in = reinterpret_cast<const domi::tensorflow::GraphDef *>(proto);
   // Make a copy for operation without modifying the original graph def.
@@ -2129,15 +2130,15 @@ Status TensorFlowModelParser::ParseProto(const google::protobuf::Message *proto,
   bool has_error = false;
 
   // Graphdef optimizes identity
-  PARSER_TIMESTAMP_START(GraphDefOptimize);
+  GE_TIMESTAMP_START(GraphDefOptimize);
   GE_RETURN_IF_ERROR(GraphDefOptimize(graph_def));
-  PARSER_TIMESTAMP_END(GraphDefOptimize, "TensorFlowModelParser::GraphDefOptimize");
+  GE_TIMESTAMP_END(GraphDefOptimize, "TensorFlowModelParser::GraphDefOptimize");
   GELOGD("[TF Parser] graph def optimize success");
 
   // Optimization for TVM operator
-  PARSER_TIMESTAMP_START(OptimizeConstNodes4CustomOp);
+  GE_TIMESTAMP_START(OptimizeConstNodes4CustomOp);
   GE_RETURN_IF_ERROR(OptimizeConstNodes4CustomOp(graph_def));
-  PARSER_TIMESTAMP_END(OptimizeConstNodes4CustomOp, "TensorFlowModelParser::OptimizeConstNodes4CustomOp");
+  GE_TIMESTAMP_END(OptimizeConstNodes4CustomOp, "TensorFlowModelParser::OptimizeConstNodes4CustomOp");
   GELOGD("[TF Parser] optimize const nodes for custom op success");
 
   GE_RETURN_IF_ERROR(GetTensorflowGraphInOutMap(graph_def));
@@ -2145,13 +2146,13 @@ Status TensorFlowModelParser::ParseProto(const google::protobuf::Message *proto,
 
   vector<string> op_node_name_list;
   bool isDatasetInit = false;
-  PARSER_TIMESTAMP_START(AddFmkNodeDefToMap);
+  GE_TIMESTAMP_START(AddFmkNodeDefToMap);
   for (int i = 0; i < graph_def->node_size(); i++) {
     const domi::tensorflow::NodeDef *node_def = graph_def->mutable_node(i);
-    if (node_def->op() == ge::parser::IDENTITY && node_def->input_size() == 0) {
+    if (node_def->op() == ge::IDENTITY && node_def->input_size() == 0) {
       continue;
     }
-    if (node_def->op() == ge::parser::SNAPSHOT && node_def->input_size() == 0) {
+    if (node_def->op() == ge::SNAPSHOT && node_def->input_size() == 0) {
       continue;
     }
     GE_IF_BOOL_EXEC(node_def->op() == "MakeIterator", isDatasetInit = true);
@@ -2165,26 +2166,26 @@ Status TensorFlowModelParser::ParseProto(const google::protobuf::Message *proto,
     Status ret = AddFmkNodeDefToMap(*graph_def, node_def, op_node_name_list);
     GE_CHK_STATUS_EXEC(ret, return PARAM_INVALID, "add node_def to map failed");
   }
-  PARSER_TIMESTAMP_END(AddFmkNodeDefToMap, "TensorFlowModelParser::AddFmkNodeDefToMap");
+  GE_TIMESTAMP_END(AddFmkNodeDefToMap, "TensorFlowModelParser::AddFmkNodeDefToMap");
   GELOGI("[TF Parser] TF subgraph isDatasetInit: %d.", isDatasetInit);
 
   // Verify the validity of fusionop
   GE_RETURN_IF_ERROR(CheckFusionOpValid());
 
   // Build input and output relationships for all OP nodes
-  PARSER_TIMESTAMP_START(GetOpNodesContextFromGraph);
+  GE_TIMESTAMP_START(GetOpNodesContextFromGraph);
   GE_RETURN_IF_ERROR(GetOpNodesContextFromGraph(*graph_def));
-  PARSER_TIMESTAMP_END(GetOpNodesContextFromGraph, "TensorFlowModelParser::GetOpNodesContextFromGraph");
+  GE_TIMESTAMP_END(GetOpNodesContextFromGraph, "TensorFlowModelParser::GetOpNodesContextFromGraph");
   GELOGD("[TF Parser] Get op nodes context from graph success");
 
   // Building input-output relationship between fusionop and common op
   GE_RETURN_IF_ERROR(UpdateAllNodeOpContext(scope_graph, *graph_def, op_node_name_list));
 
   GELOGI("[TF Parser] TF op node size = %zu.", op_node_name_list.size());
-  PARSER_TIMESTAMP_START(AddFmkNode);
+  GE_TIMESTAMP_START(AddFmkNode);
   // Loop analysis of op_nodes and map them to nodes in graph
   ret = AddFmkNode(graph, scope_graph, op_node_name_list, isDatasetInit);
-  PARSER_TIMESTAMP_END(AddFmkNode, "TensorFlowModelParser::AddFmkNode");
+  GE_TIMESTAMP_END(AddFmkNode, "TensorFlowModelParser::AddFmkNode");
   GE_CHK_STATUS_EXEC(ret, DeleteFuisonNodeDef(); return ret, "AddFmkNode failed");
   GELOGD("[TF Parser] Add framework node success");
 
@@ -2193,16 +2194,16 @@ Status TensorFlowModelParser::ParseProto(const google::protobuf::Message *proto,
   GE_CHK_STATUS_EXEC(ret, return ret, "AddEdges failed");
   GELOGD("[TF Parser] Add edges success");
 
-  PARSER_TIMESTAMP_START(RemoveIsolateNode);
+  GE_TIMESTAMP_START(RemoveIsolateNode);
   // Delete isolated nodes
   GE_RETURN_IF_ERROR(RemoveIsolateNode(graph));
 
-  PARSER_TIMESTAMP_END(RemoveIsolateNode, "TensorFlowModelParser::RemoveIsolateNode");
-  PARSER_TIMESTAMP_START(TopologicalSorting);
+  GE_TIMESTAMP_END(RemoveIsolateNode, "TensorFlowModelParser::RemoveIsolateNode");
+  GE_TIMESTAMP_START(TopologicalSorting);
   GE_RETURN_IF_ERROR(graph->TopologicalSorting());
-  PARSER_TIMESTAMP_END(TopologicalSorting, "TensorFlowModelParser::TopologicalSorting");
+  GE_TIMESTAMP_END(TopologicalSorting, "TensorFlowModelParser::TopologicalSorting");
 
-  ge::parser::PassManager iterator_fusion_pass;
+  ge::PassManager iterator_fusion_pass;
   try {
     (void)iterator_fusion_pass.AddPass("ParseProto::IteratorFusionPass",
                                        new ge::IteratorFusionPass(ge::TENSORFLOW, false));
@@ -2222,7 +2223,7 @@ Status TensorFlowModelParser::ParseProto(const google::protobuf::Message *proto,
     return PARAM_INVALID;
   }
   GELOGI("[TF Parser] Parse proto success.");
-  PARSER_TIMESTAMP_END(ParseProto, "TensorFlowModelParser::ParseProto");
+  GE_TIMESTAMP_END(ParseProto, "TensorFlowModelParser::ParseProto");
   return SUCCESS;
 }
 
@@ -2232,7 +2233,7 @@ Status TensorFlowModelParser::ParseProtoWithSubgraph(const google::protobuf::Mes
   GE_CHECK_NOTNULL(callback);
   GE_CHECK_NOTNULL(root_graph);
 
-  PARSER_TIMESTAMP_START(ParseProtoWithSubgraph);
+  GE_TIMESTAMP_START(ParseProtoWithSubgraph);
   std::vector<std::unique_ptr<google::protobuf::Message>> proto_holder;
   std::deque<ParseArg> tasks;
   tasks.push_back({root_proto, "root", nullptr, "", root_graph});
@@ -2272,7 +2273,7 @@ Status TensorFlowModelParser::ParseProtoWithSubgraph(const google::protobuf::Mes
       return ret;
     }
   }
-  PARSER_TIMESTAMP_EVENT_END(ParseProtoWithSubgraph, "TensorFlowModelParser::ParseProtoWithSubgraph");
+  GE_TIMESTAMP_EVENT_END(ParseProtoWithSubgraph, "TensorFlowModelParser::ParseProtoWithSubgraph");
   return SUCCESS;
 }
 
@@ -2369,8 +2370,8 @@ Status TensorFlowModelParser::OptimizeSnapShot(domi::tensorflow::NodeDef *curr_m
       string node_name;
       bool is_control = false;
       if (CheckInputNodeName(input, &node_name, nullptr, &is_control) != SUCCESS) {
-        GELOGE(FAILED, "parse node input info failed, node %s, input %s.", output_node_def->name().c_str(),
-               input.c_str());
+        GELOGE(FAILED, "parse node input info failed, node %s, input %s.",
+               output_node_def->name().c_str(), input.c_str());
         return FAILED;
       }
       if (node_name == curr_node_name) {
@@ -2433,8 +2434,8 @@ Status TensorFlowModelParser::GraphDefOptimizeSnapShot(domi::tensorflow::GraphDe
       int input_index = 0;
       bool is_control = false;
       if (CheckInputNodeName(input, &node_name, &input_index, &is_control) != SUCCESS) {
-        GELOGE(FAILED, "parse SnapShot input info failed, node %s, input %s.", curr_node_def->name().c_str(),
-               input.c_str());
+        GELOGE(FAILED, "parse SnapShot input info failed, node %s, input %s.",
+               curr_node_def->name().c_str(), input.c_str());
         return FAILED;
       }
       if (is_control) {
@@ -2509,7 +2510,7 @@ Status TensorFlowModelParser::GraphDefOptimizeDestroyTemporaryVariable(domi::ten
     GELOGE(FAILED, "input param is nullptr.");
     return FAILED;
   }
-  if (nodeCurrent->op() != ge::parser::DESTROYTEMPORARYVARIABLE) {
+  if (nodeCurrent->op() != ge::DESTROYTEMPORARYVARIABLE) {
     return SUCCESS;
   }
 
@@ -2521,7 +2522,7 @@ Status TensorFlowModelParser::GraphDefOptimizeDestroyTemporaryVariable(domi::ten
 
   for (int j = 0; j < graph_def->node_size(); j++) {
     domi::tensorflow::NodeDef *nodeTmpVar = graph_def->mutable_node(j);
-    GE_IF_BOOL_EXEC(nodeTmpVar->op() != ge::parser::TEMPORARYVARIABLE, continue);
+    GE_IF_BOOL_EXEC(nodeTmpVar->op() != ge::TEMPORARYVARIABLE, continue);
 
     google::protobuf::Map<std::string, domi::tensorflow::AttrValue> *attr_map_tmp = nodeTmpVar->mutable_attr();
     domi::tensorflow::AttrValue var_name_attr_tmp = (*attr_map_tmp)[ge::VAR_ATTR_NAME];
@@ -2557,11 +2558,11 @@ Status GetTransposeInfo(GraphDef *graph_def, std::map<std::string, std::string> 
   GE_CHECK_NOTNULL(graph_def);
   for (int i = 0; i < graph_def->node_size(); ++i) {
     auto node_def = graph_def->mutable_node(i);
-    if (node_def->op() == ge::parser::TRANSPOSE) {
+    if (node_def->op() == ge::TRANSPOSE) {
       DelTransposeInfo transpose;
       transpose.node_def = node_def;
       transposeInfo.insert(std::make_pair(node_def->name(), transpose));
-    } else if (node_def->op() == ge::parser::SOFTMAX) {
+    } else if (node_def->op() == ge::SOFTMAX) {
       softmaxInfo.insert(std::make_pair(node_def->name(), node_def->input(0)));
       GELOGI("softmax name:%s, input name:%s", node_def->name().c_str(), node_def->input(0).c_str());
     }
@@ -2630,7 +2631,7 @@ void TensorFlowModelParser::SoftmaxAddAttr(GraphDef *graph_def) {
   // The caller guarantees that the pointer is not null
   for (int i = 0; i < graph_def->node_size(); ++i) {
     auto node_def = graph_def->mutable_node(i);
-    if (node_def->op() == ge::parser::SOFTMAX) {
+    if (node_def->op() == ge::SOFTMAX) {
       domi::tensorflow::AttrValue attr_value;
       attr_value.set_i(1);
       ge::TensorFlowUtil::AddNodeAttr("axis", attr_value, node_def);
@@ -2654,9 +2655,9 @@ Status TensorFlowModelParser::GraphDefOptimize(domi::tensorflow::GraphDef *graph
     const string &node_name = node_def->name();
     Status ret = AddFmkNodeDefToMap(*graph_def, node_def, op_node_name_list);
     GE_CHK_STATUS_EXEC(ret, return PARAM_INVALID, "add node_def to map failed");
-    if (node_def->op() == ge::parser::IDENTITY || node_def->op() == ge::parser::READVARIABLEOP) {
+    if (node_def->op() == ge::IDENTITY || node_def->op() == ge::READVARIABLEOP) {
       identity_to_optimize.push_back(node_def);
-    } else if (node_def->op() == ge::parser::SNAPSHOT) {
+    } else if (node_def->op() == ge::SNAPSHOT) {
       snapshot_to_optimize.push_back(node_def);
     }
     nodedef_map[node_name] = node_def;
@@ -2687,19 +2688,19 @@ Status TensorFlowModelParser::RemoveIsolateNode(ge::ComputeGraphPtr &graph) {
     if (n->GetName().substr(0, 4) == "dpop") {
       continue;
     }
-    if ((n->GetType() == ge::parser::DATA) ||
-        (ge::GetParserContext().out_nodes_map.find(n->GetName()) != ge::GetParserContext().out_nodes_map.end())) {
+    if ((n->GetType() == DATA) ||
+        (domi::GetContext().out_nodes_map.find(n->GetName()) != domi::GetContext().out_nodes_map.end())){
       GELOGI("Can not remove op [%s] because it is data or out node.", n->GetName().c_str());
       continue;
     }
-    GE_IF_BOOL_EXEC((((n->GetInAllNodes().size() == 0) && (n->GetOutDataNodes().size() == 0)) ||
-                     ((n->GetType() == ge::parser::CONSTANTOP || n->GetType() == ge::parser::CONSTANT) &&
-                      (n->GetOutDataNodes().size() == 0))),
-                    GE_CHK_STATUS_RET(ge::GraphUtils::IsolateNode(n, {}), "Isolate removed node: %s, type: %s failed",
-                                      n->GetName().c_str(), n->GetType().c_str());
-                    GE_CHK_STATUS_RET(ge::GraphUtils::RemoveNodeWithoutRelink(graph, n),
-                                      "Remove node: %s, type: %s without relink failed", n->GetName().c_str(),
-                                      n->GetType().c_str()););
+    GE_IF_BOOL_EXEC(
+        (((n->GetInAllNodes().size() == 0) && (n->GetOutDataNodes().size() == 0)) ||
+         ((n->GetType() == ge::CONSTANTOP || n->GetType() == ge::CONSTANT) && (n->GetOutDataNodes().size() == 0))),
+        GE_CHK_STATUS_RET(ge::GraphUtils::IsolateNode(n, {}), "Isolate removed node: %s, type: %s failed",
+                          n->GetName().c_str(), n->GetType().c_str());
+        GE_CHK_STATUS_RET(ge::GraphUtils::RemoveNodeWithoutRelink(graph, n),
+                          "Remove node: %s, type: %s without relink failed", n->GetName().c_str(),
+                          n->GetType().c_str()););
   }
   return SUCCESS;
 }
@@ -2708,19 +2709,19 @@ Status TensorFlowModelParser::RemoveIsolateNode(ge::ComputeGraphPtr &graph) {
 // if not specified, use InferInputFormats to infer,
 // and if the inference fails, the default NHWC format is used.
 domiTensorFormat_t TensorFlowModelParser::InferInputFormats() {
-  GE_IF_BOOL_EXEC(ge::GetParserContext().format != DOMI_TENSOR_RESERVED, return ge::GetParserContext().format);
+  GE_IF_BOOL_EXEC(domi::GetContext().format != DOMI_TENSOR_RESERVED, return domi::GetContext().format);
 
   domiTensorFormat_t global_input_format = DOMI_TENSOR_RESERVED;
   set<const NodeDef *> visited_node;
   for (auto &node_item : nodedef_map_) {
-    // Infer format for data node and save it to ge::GetParserContext().format.
+    // Infer format for data node and save it to domi::GetContext().format.
     domiTensorFormat_t format = DOMI_TENSOR_RESERVED;
     const NodeDef *node = node_item.second;
     if (node == nullptr) {
       return format;
     }
     auto it = tensorflow_op_map.find(node->op());
-    if (it != tensorflow_op_map.end() && it->second == ge::parser::DATA) {
+    if (it != tensorflow_op_map.end() && it->second == ge::DATA) {
       GE_IF_BOOL_EXEC(GetNodeFormat(node, NO_TRANSPOSE, format, visited_node) != SUCCESS,
                       GELOGW("Cannot infer input format, the NHWC format is used by default, and you can also "
                              "specify format by command line arguments.");
@@ -2746,11 +2747,12 @@ Status TensorFlowModelParser::GetNodeFormat(const NodeDef *node, TfTranspose pre
   GE_IF_BOOL_EXEC(visited_node.find(node) != visited_node.end(), return SUCCESS);
   visited_node.emplace(node);
 
-  GE_IF_BOOL_EXEC(node->op() == TENSORFLOWF_NODE_OP_SWITCH || node->op() == TENSORFLOWF_NODE_OP_MERGE, return SUCCESS);
+  GE_IF_BOOL_EXEC(node->op() == TENSORFLOWF_NODE_OP_SWITCH || node->op() == TENSORFLOWF_NODE_OP_MERGE,
+    return SUCCESS);
 
   // If node has a data_format attribute, format is set according to data_format.
   domi::tensorflow::AttrValue attr;
-  if (ge::TensorFlowUtil::FindAttrValue(node, TENSORFLOW_ATTR_DATA_FORMAT, attr) && node->op() != ge::parser::BIASADD) {
+  if (ge::TensorFlowUtil::FindAttrValue(node, TENSORFLOW_ATTR_DATA_FORMAT, attr) && node->op() != ge::BIASADD) {
     GE_RETURN_IF_ERROR(ge::TensorFlowUtil::CheckAttrHasType(attr, TENSORFLOW_ATTR_TYPE_STRING));
 
     format = (attr.s() == TENSORFLOWF_TENSOR_NCHW) ? domi::DOMI_TENSOR_NCHW : domi::DOMI_TENSOR_NHWC;
@@ -2840,15 +2842,13 @@ Status TensorFlowModelParser::GetFormatTranspose(const NodeDef *transpose_node, 
 
   vector<int64_t> perm_value;
 
-  GE_IF_BOOL_EXEC(
-      type == domi::tensorflow::DT_INT32,
-      const int32_t *data = reinterpret_cast<const int32_t *>(tensor.tensor_content().data());
-      for (int i = 0; i < ge::DIM_DEFAULT_SIZE; i++) { perm_value.push_back(data[i]); });
+  GE_IF_BOOL_EXEC(type == domi::tensorflow::DT_INT32,
+                  const int32_t *data = reinterpret_cast<const int32_t *>(tensor.tensor_content().data());
+                  for (int i = 0; i < ge::DIM_DEFAULT_SIZE; i++) { perm_value.push_back(data[i]); });
 
-  GE_IF_BOOL_EXEC(
-      type == domi::tensorflow::DT_INT64,
-      const int64_t *data = reinterpret_cast<const int64_t *>(tensor.tensor_content().data());
-      for (int i = 0; i < ge::DIM_DEFAULT_SIZE; i++) { perm_value.push_back(data[i]); });
+  GE_IF_BOOL_EXEC(type == domi::tensorflow::DT_INT64,
+                  const int64_t *data = reinterpret_cast<const int64_t *>(tensor.tensor_content().data());
+                  for (int i = 0; i < ge::DIM_DEFAULT_SIZE; i++) { perm_value.push_back(data[i]); });
 
   // 0, 1, 2, 3 present dim num.
   vector<int64_t> perm_to_nchw = {0, 3, 1, 2};
@@ -2862,7 +2862,7 @@ Status TensorFlowModelParser::GetFormatTranspose(const NodeDef *transpose_node, 
 Status TensorFlowModelParser::TrimGraph(const domi::tensorflow::GraphDef &input_graph_def,
                                         domi::tensorflow::GraphDef *output_graph_def) {
   GE_CHECK_NOTNULL(output_graph_def);
-  if (!ge::GetParserContext().input_dims.empty() && ge::GetParserContext().out_nodes_map.empty()) {
+  if (!domi::GetContext().input_dims.empty() && domi::GetContext().out_nodes_map.empty()) {
     return TrimGraphByInput(input_graph_def, output_graph_def);
   } else {
     return TrimGraphByOutput(input_graph_def, output_graph_def);
@@ -2873,7 +2873,7 @@ Status TensorFlowModelParser::TrimGraphByInput(const domi::tensorflow::GraphDef 
   // The caller guarantees that the pointer is not null
   std::set<string> delete_nodes;
   std::set<string> input_nodes;
-  for (auto &iter : ge::GetParserContext().input_dims) {
+  for (auto &iter : domi::GetContext().input_dims) {
     input_nodes.insert(iter.first);
   }
   std::map<string, const NodeDef *> node_lookup;
@@ -2881,7 +2881,7 @@ Status TensorFlowModelParser::TrimGraphByInput(const domi::tensorflow::GraphDef 
     node_lookup[node.name()] = &node;
   }
   std::vector<string> current_inputs;
-  for (auto &iter : ge::GetParserContext().input_dims) {
+  for (auto &iter : domi::GetContext().input_dims) {
     current_inputs.push_back(iter.first);
   }
   while (!current_inputs.empty()) {
@@ -2922,7 +2922,7 @@ Status TensorFlowModelParser::TrimGraphByInput(const domi::tensorflow::GraphDef 
       domi::tensorflow::AttrValue attr_value;
       TensorShapeProto *data_shape = attr_value.mutable_shape();
       GE_CHECK_NOTNULL(data_shape);
-      const ge::ParserContext &ctx = ge::GetParserContext();
+      const ge::OmgContext &ctx = domi::GetContext();
       std::unordered_map<std::string, std::vector<int64_t>> input_dims = ctx.input_dims;
       std::vector<int64_t> designated_dims = input_dims.at(node.name());
       for (int32_t i = 0; i < (int32_t)designated_dims.size(); i++) {
@@ -2944,11 +2944,11 @@ Status TensorFlowModelParser::TrimGraphByOutput(const domi::tensorflow::GraphDef
   // The caller guarantees that the pointer is not null
   std::set<string> required_nodes;
   std::set<string> input_nodes;
-  for (auto &iter : ge::GetParserContext().input_dims) {
+  for (auto &iter : domi::GetContext().input_dims) {
     required_nodes.insert(iter.first);
     input_nodes.insert(iter.first);
   }
-  for (auto &iter : ge::GetParserContext().out_nodes_map) {
+  for (auto &iter : domi::GetContext().out_nodes_map) {
     required_nodes.insert(iter.first);
   }
   std::map<string, const NodeDef *> node_lookup;
@@ -2956,7 +2956,7 @@ Status TensorFlowModelParser::TrimGraphByOutput(const domi::tensorflow::GraphDef
     node_lookup[node.name()] = &node;
   }
   std::vector<string> current_inputs;
-  for (auto &iter : ge::GetParserContext().out_nodes_map) {
+  for (auto &iter : domi::GetContext().out_nodes_map) {
     current_inputs.push_back(iter.first);
   }
   while (!current_inputs.empty()) {
@@ -2995,7 +2995,7 @@ Status TensorFlowModelParser::TrimGraphByOutput(const domi::tensorflow::GraphDef
       domi::tensorflow::AttrValue attr_value;
       TensorShapeProto *data_shape = attr_value.mutable_shape();
       GE_CHECK_NOTNULL(data_shape);
-      const ge::ParserContext &ctx = ge::GetParserContext();
+      const ge::OmgContext &ctx = domi::GetContext();
       std::unordered_map<std::string, std::vector<int64_t>> input_dims = ctx.input_dims;
       std::vector<int64_t> designated_dims = input_dims.at(node.name());
       for (int32_t i = 0; i < (int32_t)designated_dims.size(); i++) {
@@ -3075,7 +3075,7 @@ Status TensorFlowModelParser::FusionNodeParseParams(shared_ptr<OpParser> &op_par
       op_src_vec.push_back(op_src);
     }
     shared_ptr<TensorFlowFusionCustomParserAdapter> tf_custom_fusion_op_paser =
-        std::dynamic_pointer_cast<TensorFlowFusionCustomParserAdapter>(tensorflow_fusion_op_parser);
+            std::dynamic_pointer_cast<TensorFlowFusionCustomParserAdapter>(tensorflow_fusion_op_parser);
     status = tf_custom_fusion_op_paser->ParseParams(op_src_vec, node);
     if (status != SUCCESS) {
       GELOGE(status, "Parse params for fusionop node %s failed", node_def->name().c_str());
@@ -3121,8 +3121,8 @@ Status TensorFlowModelParser::OptimizeConstNodes4CustomOp(domi::tensorflow::Grap
 
     // 2.2 check whether the current op is a TVM op.
     GE_CHK_BOOL_EXEC_INFO(
-        domi::OpRegistry::Instance()->GetImplyTypeByOriOpType(current_op_name) == domi::ImplyType::TVM, continue,
-        "op %s is not TVM op", current_op_name.c_str());
+        domi::OpRegistry::Instance()->GetImplyTypeByOriOpType(current_op_name) == domi::ImplyType::TVM,
+        continue, "op %s is not TVM op", current_op_name.c_str());
     GELOGD("handle tvm op %s", current_op_name.c_str());
 
     // 2.3 copy input to attr
@@ -3310,7 +3310,7 @@ Status TensorFlowModelParser::RemoveIsolateNode(domi::tensorflow::GraphDef *grap
     }
     if ((node_inputs_outputs_map_[node_name].first.empty() && node_inputs_outputs_map_[node_name].second.empty() &&
          node->op() != kDpop) ||
-        (node->op() == ge::parser::CONSTANT && node_inputs_outputs_map_[node_name].second.empty())) {
+        (node->op() == ge::CONSTANT && node_inputs_outputs_map_[node_name].second.empty())) {
       GELOGI("%s will inset to node_to_delete", node_name.c_str());
       node_to_delete.insert(node_name);
     }
@@ -3402,10 +3402,10 @@ Status TensorFlowModelParser::SetOriginNodeContext(NodeDef *node_def, OpNodeCont
   return SUCCESS;
 }
 
-void TensorFlowModelParser::GetFusionInputInfo(
-    const string &fusion_op_name, OpNodeContext &fusion_context,
+void TensorFlowModelParser::GetFusionInputInfo(const string &fusion_op_name, OpNodeContext &fusion_context,
     std::map<string, std::pair<std::string, std::pair<int32_t, int32_t>>> &remap_data_input,
-    std::map<string, std::vector<string>> &remap_ctrl_input, std::set<string> &fusion_input_nodes) {
+    std::map<string, std::vector<string>> &remap_ctrl_input,
+    std::set<string> &fusion_input_nodes) {
   for (const auto &fusion_input : fusion_context.input_map) {
     string fusion_src_name = fusion_input.first;
     for (const auto &fusion_idx_pair : fusion_input.second) {
@@ -3420,10 +3420,10 @@ void TensorFlowModelParser::GetFusionInputInfo(
   }
 }
 
-void TensorFlowModelParser::GetFusionOutputInfo(
-    const string &fusion_op_name, OpNodeContext &fusion_context,
+void TensorFlowModelParser::GetFusionOutputInfo(const string &fusion_op_name, OpNodeContext &fusion_context,
     std::map<string, std::vector<std::pair<std::string, std::pair<int32_t, int32_t>>>> &remap_data_output,
-    std::map<string, std::vector<string>> &remap_ctrl_output, std::set<string> &fusion_output_nodes) {
+    std::map<string, std::vector<string>> &remap_ctrl_output,
+    std::set<string> &fusion_output_nodes) {
   for (const auto &fusion_output : fusion_context.output_map) {
     string fusion_dst_name = fusion_output.first;
     for (const auto &fusion_idx_pair : fusion_output.second) {
@@ -3444,7 +3444,8 @@ void TensorFlowModelParser::UpdateInnerInputMap(const string &fusion_op_name, Op
                                                 std::set<string> &fusion_input_nodes) {
   std::map<string, std::pair<std::string, std::pair<int32_t, int32_t>>> remap_data_input;
   std::map<string, std::vector<string>> remap_ctrl_input;
-  GetFusionInputInfo(fusion_op_name, fusion_context, remap_data_input, remap_ctrl_input, fusion_input_nodes);
+  GetFusionInputInfo(fusion_op_name, fusion_context,
+                     remap_data_input, remap_ctrl_input, fusion_input_nodes);
 
   for (const auto &node_name : inner_nodes_name) {
     auto context_iter = op_node_context_map_.find(node_name);
@@ -3487,12 +3488,14 @@ void TensorFlowModelParser::UpdateInnerInputMap(const string &fusion_op_name, Op
   }
 }
 
+
 void TensorFlowModelParser::UpdateInnerOutputMap(const string &fusion_op_name, OpNodeContext &fusion_context,
                                                  const std::vector<std::string> &inner_nodes_name,
                                                  std::set<string> &fusion_output_nodes) {
   std::map<string, std::vector<std::pair<std::string, std::pair<int32_t, int32_t>>>> remap_data_output;
   std::map<string, std::vector<string>> remap_ctrl_output;
-  GetFusionOutputInfo(fusion_op_name, fusion_context, remap_data_output, remap_ctrl_output, fusion_output_nodes);
+  GetFusionOutputInfo(fusion_op_name, fusion_context,
+                      remap_data_output, remap_ctrl_output, fusion_output_nodes);
   for (const auto &node_name : inner_nodes_name) {
     auto context_iter = op_node_context_map_.find(node_name);
     if (context_iter != op_node_context_map_.end()) {
@@ -3508,8 +3511,8 @@ void TensorFlowModelParser::UpdateInnerOutputMap(const string &fusion_op_name, O
               auto data_outputs = remap_data_output[fusion_op_name + std::to_string(out_pair.second)];
               for (const auto &data : data_outputs) {
                 tmp_output_map[data.first].emplace_back(std::make_pair(out_pair.first, data.second.second));
-                GELOGI("Update inner output, dst:%s, idx:%u->%u.", data.first.c_str(), out_pair.first,
-                       data.second.second);
+                GELOGI("Update inner output, dst:%s, idx:%u->%u.", data.first.c_str(),
+                       out_pair.first, data.second.second);
               }
             }
           }
@@ -3567,7 +3570,8 @@ Status TensorFlowModelParser::UpdateInnerNodeContext(const string &fusion_op_nam
 }
 
 Status TensorFlowModelParser::AddFusionInnerNodeDef(shared_ptr<ge::ScopeGraph> &scope_graph,
-                                                    const string &fusion_op_name, vector<string> &node_name_list) {
+                                                    const string &fusion_op_name,
+                                                    vector<string> &node_name_list) {
   auto &impl_scope_graph = scope_graph->impl_;
   GE_CHECK_NOTNULL(impl_scope_graph);
   ge::FusionScopesResult *fusion_result = impl_scope_graph->GetFusionScopesResults(fusion_op_name);
@@ -3670,7 +3674,7 @@ Status TensorFlowModelParser::AddScopeInnerNode(TensorFlowModelParser *parser, g
     return PARAM_INVALID;
   }
   const ge::Operator *op = iter->second;
-  ge::OpDescPtr op_desc = ge::OpDescUtils::GetOpDescFromOperator(*op);
+  ge::OpDescPtr op_desc =  ge::OpDescUtils::GetOpDescFromOperator(*op);
   GE_CHECK_NOTNULL(op_desc);
   ge::NodePtr node;
   {
@@ -3678,16 +3682,16 @@ Status TensorFlowModelParser::AddScopeInnerNode(TensorFlowModelParser *parser, g
     node = graph->AddNode(op_desc);
   }
   if (node == nullptr) {
-    GELOGE(INTERNAL_ERROR, "Failed to Add scope inner node:%s, type:%s.", op_desc->GetName().c_str(),
-           op_desc->GetType().c_str());
+    GELOGE(INTERNAL_ERROR, "Failed to Add scope inner node:%s, type:%s.",
+           op_desc->GetName().c_str(), op_desc->GetType().c_str());
     return INTERNAL_ERROR;
   }
   {
     std::lock_guard<std::mutex> lock(parser->nodeMapMutex_);
     parser->node_map_[node_name] = node;
   }
-  GELOGI("Add scope inner node successfully, node name:%s, type:%s.", op_desc->GetName().c_str(),
-         op_desc->GetType().c_str());
+  GELOGI("Add scope inner node successfully, node name:%s, type:%s.",
+         op_desc->GetName().c_str(), op_desc->GetType().c_str());
   return SUCCESS;
 }
 
@@ -3695,12 +3699,14 @@ void TensorFlowModelParser::DumpNodeContext(const string &node_name, const OpNod
   GELOGD("phase:%s === Begin to dump context for node:%s ===", phase.c_str(), node_name.c_str());
   for (const auto &input : ctx.input_map) {
     for (const auto &input_idx : input.second) {
-      GELOGD("  Input info: %s:%d --> in_idx %d.", input.first.c_str(), input_idx.first, input_idx.second);
+      GELOGD("  Input info: %s:%d --> in_idx %d.",
+             input.first.c_str(), input_idx.first, input_idx.second);
     }
   }
   for (const auto &output : ctx.output_map) {
     for (const auto &output_idx : output.second) {
-      GELOGD("  Output info: out_idx %d --> %s:%d.", output_idx.first, output.first.c_str(), output_idx.second);
+      GELOGD("  Output info: out_idx %d --> %s:%d.",
+             output_idx.first, output.first.c_str(), output_idx.second);
     }
   }
   GELOGD("phase:%s === End to dump context for node:%s ===", phase.c_str(), node_name.c_str());
@@ -3714,9 +3720,9 @@ void TensorFlowModelParser::DumpAllNodeContext(const string &phase) {
     DumpNodeContext(iter.first, iter.second, phase);
   }
 }
-}  // namespace ge
+}  // namespace domi
 
 namespace domi {
-REGISTER_MODEL_PARSER_CREATOR(TENSORFLOW, ge::TensorFlowModelParser);
-REGISTER_WEIGHTS_PARSER_CREATOR(TENSORFLOW, ge::TensorFlowWeightsParser);
-}  // namespace domi
+  REGISTER_MODEL_PARSER_CREATOR(TENSORFLOW, ge::TensorFlowModelParser);
+  REGISTER_WEIGHTS_PARSER_CREATOR(TENSORFLOW, ge::TensorFlowWeightsParser);
+}

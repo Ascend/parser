@@ -19,7 +19,7 @@
 #include <memory>
 
 #include "common/debug/log.h"
-#include "framework/omg/parser/parser_types.h"
+#include "common/types.h"
 #include "common/util.h"
 #include "graph_optimizer.h"
 #include "framework/common/ge_inner_error_codes.h"

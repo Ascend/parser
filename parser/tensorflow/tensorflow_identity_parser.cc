@@ -17,15 +17,11 @@
 #include "common/op/ge_op_utils.h"
 #include "common/op_def/ir_pb_converter.h"
 #include "parser/common/op_parser_factory.h"
-#include "framework/omg/parser/parser_types.h"
 
 #include "parser/tensorflow/tensorflow_identity_parser.h"
 
 using domi::TENSORFLOW;
-using ge::parser::IDENTITY;
-using ge::parser::READVARIABLEOP;
 
 namespace ge {
 REGISTER_OP_PARSER_CREATOR(TENSORFLOW, IDENTITY, TensorFlowIdentityParser);
-REGISTER_OP_PARSER_CREATOR(TENSORFLOW, READVARIABLEOP, TensorFlowIdentityParser);
 }  // namespace ge

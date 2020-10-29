@@ -19,11 +19,8 @@
 #include "framework/common/debug/log.h"
 #include "graph/debug/ge_attr_define.h"
 #include "parser/common/op_parser_factory.h"
-#include "framework/omg/parser/parser_types.h"
 
 using domi::TENSORFLOW;
-using ge::parser::ENTER;
-using ge::parser::REFENTER;
 
 namespace ge {
 Status TensorFlowEnterParser::ParseParams(const Message *op_src, ge::OpDescPtr &op_desc) {

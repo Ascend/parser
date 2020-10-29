@@ -22,8 +22,6 @@
 #include "parser/tensorflow/tensorflow_op_parser.h"
 #include "parser/tensorflow/tensorflow_parser_register.h"
 
-using namespace ge::parser;
-
 namespace ge {
 Status ParseParams(const Message *op_src, VarIsInitializedOpOperator *op) {
   GE_CHECK_NOTNULL(op_src);

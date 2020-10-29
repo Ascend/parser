@@ -18,15 +18,14 @@
 #include "parser/common/op_def/frameworkop_op.h"
 #include "framework/common/debug/ge_log.h"
 #include "parser/common/op_parser_factory.h"
-#include "framework/omg/parser/parser_types.h"
 #include "parser/tensorflow/tensorflow_op_parser.h"
 #include "parser/tensorflow/tensorflow_parser_register.h"
 #include "proto/tensorflow/tensor_shape.pb.h"
 
 using domi::tensorflow::TensorShapeProto;
 using domi::tensorflow::AttrValue;
+using ge::FRAMEWORKOP;
 using domi::TENSORFLOW;
-using ge::parser::FRAMEWORKOP;
 
 namespace ge {
 Status ParseParams(const Message *op_src, FrameworkOpOperator *op) {

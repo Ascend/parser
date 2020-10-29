@@ -25,7 +25,7 @@
 #include "framework/omg/parser/op_parser.h"
 #include "parser/common/op_def/ir_pb_converter.h"
 #include "parser/common/op_def/operator.h"
-#include "parser/common/acl_graph_parser_util.h"
+#include "common/ge/ge_util.h"
 #include "parser/common/op_parser_factory.h"
 #include "parser/tensorflow/tensorflow_op_parser.h"
 #include "proto/tensorflow/node_def.pb.h"
@@ -72,7 +72,7 @@ class TensorflowParserBuilder : public TensorflowWeightParserBuilder {
   }
 
   bool Finalize() override {
-    auto op_parser_adapter = ge::parser::MakeShared<TensorflowOpParserAdapter<Param>>(*this);
+    auto op_parser_adapter = ge::MakeShared<TensorflowOpParserAdapter<Param>>(*this);
     if (op_parser_adapter == nullptr) {
       GELOGE(FAILED, "Op parser adapter is null.");
     }
@@ -102,7 +102,7 @@ class TensorflowOpParserAdapter : public TensorFlowOpParser {
   Status ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) override {
     const domi::tensorflow::NodeDef *node = static_cast<const domi::tensorflow::NodeDef *>(op_src);
     GE_CHECK_NOTNULL(node);
-    std::shared_ptr<Param> param = ge::parser::MakeShared<Param>();
+    std::shared_ptr<Param> param = ge::MakeShared<Param>();
     if (param == nullptr) {
       GELOGE(domi::FAILED, "Param is null");
       return domi::FAILED;

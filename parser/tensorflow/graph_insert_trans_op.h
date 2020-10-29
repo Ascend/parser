@@ -21,7 +21,7 @@
 #include <vector>
 #include "common/fmk_types.h"
 #include "common/op/ge_op_utils.h"
-#include "framework/omg/parser/parser_types.h"
+#include "common/types.h"
 #include "graph/compute_graph.h"
 #include "graph/node.h"
 #include "graph/types.h"

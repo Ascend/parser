@@ -17,7 +17,7 @@
 #include "framework/omg/parser/parser_api.h"
 #include "common/debug/log.h"
 
-#include "tbe_plugin_loader.h"
+#include "common/ge/tbe_plugin_manager.h"
 #include "framework/common/debug/ge_log.h"
 #include "parser/common/register_tbe.h"
 #include "framework/omg/parser/parser_inner_ctx.h"
@@ -36,7 +36,7 @@ Status ParserInitialize(const std::map<std::string, std::string> &options) {
   }
 
   // load custom op plugin
-  TBEPluginLoader::Instance().LoadPluginSo(options);
+  TBEPluginManager::Instance().LoadPluginSo(options);
 
   std::vector<OpRegistrationData> registrationDatas = domi::OpRegistry::Instance()->registrationDatas;
   GELOGI("The size of registrationDatas in parser is: %zu", registrationDatas.size());
@@ -67,7 +67,7 @@ Status ParserFinalize() {
     return SUCCESS;
   }
 
-  GE_CHK_STATUS(TBEPluginLoader::Instance().Finalize());
+  GE_CHK_STATUS(TBEPluginManager::Instance().Finalize());
   if (parser_initialized) {
     parser_initialized = false;
   }

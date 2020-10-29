@@ -17,7 +17,6 @@
 #include "common/debug/log.h"
 #include "parser/common/op_def/arg_op.h"
 #include "framework/common/debug/ge_log.h"
-#include "framework/omg/parser/parser_inner_ctx.h"
 #include "graph/compute_graph.h"
 #include "graph/ge_tensor.h"
 #include "parser/common/op_parser_factory.h"
@@ -45,7 +44,7 @@ Status ParseParams(const Message *op_src, ArgOpOperator *op) {
                       "trans output_attr_value failed, op: %s", node->name().c_str());
 
     domi::tensorflow::AttrValue_ListValue attr_list = output_attr_value.list();
-    GetParserContext().format =
+    domi::GetContext().format =
       static_cast<domi::tagDomiTensorFormat>(attr_list.func(0).attr().at(kSerializeFormat).i());
   } else {
     /// _Arg constructed from inference function do not has input_tensor_dec
@@ -65,5 +64,5 @@ Status ParseParams(const Message *op_src, ArgOpOperator *op) {
   return SUCCESS;
 }
 
-DOMI_REGISTER_TENSORFLOW_PARSER(ge::parser::ARG, ArgOpOperator).SetParseParamsFn(ParseParams);
+DOMI_REGISTER_TENSORFLOW_PARSER(ge::ARG, ArgOpOperator).SetParseParamsFn(ParseParams);
 }  // namespace ge

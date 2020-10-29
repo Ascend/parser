@@ -26,7 +26,7 @@
 #include "external/graph/attr_value.h"
 #include "external/graph/graph.h"
 #include "external/graph/operator.h"
-#include "framework/omg/parser/parser_types.h"
+#include "framework/common/types.h"
 #include "framework/omg/omg_inner_types.h"
 #include "graph/compute_graph.h"
 #include "graph/ge_tensor.h"

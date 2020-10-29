@@ -26,7 +26,6 @@ using domi::tensorflow::DT_FLOAT;
 using domi::tensorflow::AttrValue;
 using domi::tensorflow::NodeDef;
 using domi::TENSORFLOW;
-using namespace ge::parser;
 
 namespace ge {
 // AUTO GEN PLEASE DO NOT MODIFY IT
