@@ -176,7 +176,7 @@ generate_package()
   for lib in "${PARSER_LIB[@]}";
   do
     find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "$lib" -exec cp -f {} ${OUTPUT_PATH}/${FWK_PATH} \;
-    find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "$lib" -exec cp -f {} ${OUTPUT_PATH}/${ACL_PATH} \;
+    find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "$lib" -exec cp -f {} ${OUTPUT_PATH}/${ATC_PATH} \;
   done
 
   for lib in "${COMMON_LIB[@]}";
