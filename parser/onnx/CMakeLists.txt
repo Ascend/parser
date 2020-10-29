@@ -29,24 +29,12 @@ target_include_directories(fmk_onnx_parser PRIVATE
     ${PARSER_DIR}
     ${PARSER_DIR}/inc
     ${PARSER_DIR}/parser
-    ${PARSER_DIR}/../ge
-    ${PARSER_DIR}/../inc
-    ${PARSER_DIR}/../inc/common/util
-    ${PARSER_DIR}/../inc/framework
-    ${PARSER_DIR}/../inc/external
-    ${PARSER_DIR}/../third_party/fwkacllib/inc
     ${METADEF_DIR}/inc
     ${METADEF_DIR}/inc/graph
     ${METADEF_DIR}/inc/register
     ${METADEF_DIR}/inc/external
     ${METADEF_DIR}/inc/external/graph
     ${METADEF_DIR}/inc/external/register
-    #### independent compile #####
-    ${METADEF_DIR}/third_party/graphengine/ge
-    ${METADEF_DIR}/third_party/graphengine/inc
-    ${METADEF_DIR}/third_party/graphengine/inc/framework
-    ${METADEF_DIR}/third_party/graphengine/inc/external
-    ${METADEF_DIR}/third_party/fwkacllib/inc
     #### temp ####
     ${PARSER_DIR}/../graphengine/inc/common/util
     ${PARSER_DIR}/../graphengine/inc/external
@@ -55,6 +43,19 @@ target_include_directories(fmk_onnx_parser PRIVATE
     ${PARSER_DIR}/../graphengine/ge
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/proto/ge
+    #### blue zone compile #####
+    ${PARSER_DIR}/../ge
+    ${PARSER_DIR}/../inc
+    ${PARSER_DIR}/../inc/common/util
+    ${PARSER_DIR}/../inc/framework
+    ${PARSER_DIR}/../inc/external
+    ${PARSER_DIR}/../third_party/fwkacllib/inc
+    #### independent compile #####
+    ${METADEF_DIR}/third_party/graphengine/ge
+    ${METADEF_DIR}/third_party/graphengine/inc
+    ${METADEF_DIR}/third_party/graphengine/inc/framework
+    ${METADEF_DIR}/third_party/graphengine/inc/external
+    ${METADEF_DIR}/third_party/fwkacllib/inc
 )
 
 target_link_libraries(fmk_onnx_parser PRIVATE
