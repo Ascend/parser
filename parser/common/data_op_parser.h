@@ -21,7 +21,7 @@
 #include <vector>
 #include "common/debug/log.h"
 #include "common/op/attr_value_util.h"
-#include "framework/omg/parser/parser_types.h"
+#include "common/types.h"
 #include "omg/omg_inner_types.h"
 #include "proto/om.pb.h"
 

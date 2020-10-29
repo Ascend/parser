@@ -20,13 +20,12 @@
 #include <string>
 #include <vector>
 
-#include "framework/omg/parser/parser_types.h"
+#include "framework/common/types.h"
 #include "register/op_registry.h"
 
 using std::map;
 using std::string;
 using std::vector;
-using namespace ge::parser;
 
 namespace ge {
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY std::map<std::string, std::string> caffe_op_map = {
@@ -98,7 +97,6 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY map<string, string> tensorflow_
     {"VarHandleOp", VARHANDLEOP},
     {"VarIsInitializedOp", VARISINITIALIZEDOP},
     {"IsVariableInitialized", ISVARIABLEINITIALIZED},
-    {"ReadVariableOp", READVARIABLEOP},
     {"Reshape", RESHAPE},
     {"Squeeze", SQUEEZE},
     {"NoOp", NOOP},

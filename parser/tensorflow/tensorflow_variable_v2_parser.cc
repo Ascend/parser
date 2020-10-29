@@ -32,7 +32,6 @@
 using domi::tensorflow::AttrValue;
 using domi::tensorflow::NodeDef;
 using domi::tensorflow::TensorShapeProto;
-using namespace ge::parser;
 
 namespace ge {
 const std::string SERIALIZE_FORMAT = "serialize_format";

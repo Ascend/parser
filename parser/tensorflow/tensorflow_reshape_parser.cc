@@ -22,10 +22,9 @@
 #include "graph/utils/type_utils.h"
 #include "parser/common/op_parser_factory.h"
 #include "parser/tensorflow/tensorflow_util.h"
-#include "parser/common/acl_graph_parser_util.h"
+#include "common/math/math_util.h"
 
 using domi::TENSORFLOW;
-using namespace ge::parser;
 
 namespace ge {
 Status TensorFlowReshapeParser::ParseDesc(const domi::tensorflow::AttrValue &attr_value, ge::GeTensorDesc &ge_desc) {
@@ -48,7 +47,7 @@ Status TensorFlowReshapeParser::ParseDesc(const domi::tensorflow::AttrValue &att
     GE_IF_BOOL_EXEC(tmp_dim < 0, real_size = tmp_dim * (-1) * real_size; continue;);
     real_size *= tmp_dim;
   }
-  PARSER_INT64_MULCHECK(real_size, size_type);
+  FMK_INT64_MULCHECK(real_size, size_type);
   ge::TensorUtils::SetSize(ge_desc, real_size * size_type);
   ge::TensorUtils::SetRealDimCnt(ge_desc, ge_desc.GetShape().GetDimNum());
   GELOGI("after translate tf_desc, datatype: %s, format: %s, real size: %u, size_type: %u",
@@ -68,7 +67,7 @@ Status TensorFlowReshapeParser::ParseParams(const Message *op_src, ge::OpDescPtr
   domi::tensorflow::AttrValue output_attr_value;
 
   GE_IF_BOOL_EXEC(
-      GetParserContext().train_flag == true,
+      domi::GetContext().train_flag == true,
 
       ge::GeTensorDesc input_desc;
       ge::GeTensorDesc output_desc;

@@ -279,12 +279,12 @@ class CaffeModelParser : public domi::ModelParser {
 
   /**
    * @ingroup domi_omg
-   * @brief Add top name information to graph
-   * @param [in|out] proto_message
+   * @brief Add edge information to graph
+   * @param [in|out] graph graph for saving model information
    * @return SUCCESS add successfully
    * @return FAILED add failed
    */
-  Status AddOutputTop(const domi::caffe::NetParameter &proto_message);
+  Status AddEdge4Output(const domi::caffe::NetParameter &proto_message, ge::ComputeGraphPtr &graph);
 
   /**
    * @ingroup domi_omg
@@ -324,7 +324,7 @@ class CaffeModelParser : public domi::ModelParser {
   Status AddTensorDescToOpDescByIr(ge::OpDescPtr &op_desc, const domi::caffe::LayerParameter &layer,
                                    const string &op_type);
 
-  Status AddUserOutNodesTop();
+  Status AddEdgeForUserOutNodes(ge::ComputeGraphPtr &graph);
 
   std::string RemapTopNameByLayer(const domi::caffe::LayerParameter &layer, const std::string &top_name, int index);
 
@@ -335,6 +335,8 @@ class CaffeModelParser : public domi::ModelParser {
   Status ParseOpParam(const domi::caffe::LayerParameter &layer, ge::OpDescPtr &op,
                       std::shared_ptr<ge::OpParser> &op_parser);
 
+  Status GetLeafNodeTops(ge::ComputeGraphPtr &graph);
+
   void SaveOrigionLayerTops(domi::caffe::LayerParameter &layer);
 
   Status ReorderInput(domi::caffe::NetParameter &net);
@@ -342,8 +344,6 @@ class CaffeModelParser : public domi::ModelParser {
   void AddOutputInfoToContext(string layer_name, int32_t top_index);
 
   Status ParseOutputNodeTopInfo(const domi::caffe::NetParameter &proto_message);
-
-  Status SaveDataLayerTops(const domi::caffe::LayerParameter &layer);
 
   std::map<std::string, ge::NodePtr> node_map;
 

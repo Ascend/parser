@@ -18,14 +18,12 @@
 #include <unordered_map>
 #include <utility>
 #include "common/debug/log.h"
-#include "framework/omg/parser/parser_types.h"
+#include "common/types.h"
 #include "common/util.h"
 #include "common/util/error_manager/error_manager.h"
 #include "framework/common/debug/ge_log.h"
-#include "framework/omg/parser/parser_inner_ctx.h"
+#include "omg/omg_inner_types.h"
 #include "parser/common/op_parser_factory.h"
-
-using namespace ge::parser;
 
 namespace ge {
 Status CaffeDataParser::GetOutputDesc(const string &name, int dim_size, const std::vector<int64_t> &input_dims,
@@ -50,10 +48,10 @@ Status CaffeDataParser::ParseParams(const Message *op_src, ge::OpDescPtr &op) {
   GE_CHECK_NOTNULL(layer);
   GELOGD("Caffe layer name = %s, layer type= %s, parse params", layer->name().c_str(), layer->type().c_str());
 
-  if (layer->type() == ge::parser::INPUT_TYPE) {
+  if (layer->type() == ge::INPUT_TYPE) {
     GE_CHK_STATUS_RET(ParseParamsForInput(layer, op), "Caffe layer name = %s, layer type= %s, parse params failed",
                       layer->name().c_str(), layer->type().c_str());
-  } else if(layer->type() == ge::parser::DUMMY_DATA) {
+  } else if(layer->type() == ge::DUMMY_DATA) {
     GE_CHK_STATUS_RET(ParseParamsForDummyData(layer, op), "Caffe layer name = %s, layer type= %s, parse params failed",
                       layer->name().c_str(), layer->type().c_str());
   } else {
@@ -77,12 +75,14 @@ Status CaffeDataParser::ParseParamsForInput(const domi::caffe::LayerParameter *l
     }
     for (int i = 0; i < input_param.shape_size(); i++) {
       const domi::caffe::BlobShape &blob_shape = input_param.shape(i);
+
       vector<int64_t> shape;
-      unordered_map<string, vector<int64_t>> &shape_map = GetParserContext().input_dims;
+      unordered_map<string, vector<int64_t>> &shape_map = domi::GetContext().input_dims;
       std::vector<int64_t> model_dims;
       for (auto &blob_shape_dim_temp : blob_shape.dim()) {
         model_dims.push_back(blob_shape_dim_temp);
       }
+
       string name = layer->name();
       GE_IF_BOOL_EXEC(shape_map.count(name) != 0, model_dims = shape_map.at(name));
       GE_CHK_STATUS_RET(GetOutputDesc(name, model_dims.size(), model_dims, op), "Get output desc failed in layer %s",
@@ -90,7 +90,7 @@ Status CaffeDataParser::ParseParamsForInput(const domi::caffe::LayerParameter *l
     }
   } else {
     // Get from external input
-    const ge::ParserContext &ctx = GetParserContext();
+    const ge::OmgContext &ctx = domi::GetContext();
     std::unordered_map<std::string, std::vector<int64_t>> input_dims = ctx.input_dims;
     string name = layer->name();
     auto search = input_dims.find(name);
@@ -124,7 +124,7 @@ Status CaffeDataParser::ParseParamsForDummyData(const domi::caffe::LayerParamete
       const domi::caffe::BlobShape &blob_shape = dummy_data_param.shape(i);
 
       vector<int64_t> shape;
-      unordered_map<string, vector<int64_t>> &shape_map = GetParserContext().input_dims;
+      unordered_map<string, vector<int64_t>> &shape_map = domi::GetContext().input_dims;
       std::vector<int64_t> model_dims;
       for (auto &blob_shape_dim_temp : blob_shape.dim()) {
         model_dims.push_back(blob_shape_dim_temp);
@@ -137,7 +137,7 @@ Status CaffeDataParser::ParseParamsForDummyData(const domi::caffe::LayerParamete
     }
   } else {
     // Get from external input
-    const ge::ParserContext &ctx = GetParserContext();
+    const ge::OmgContext &ctx = domi::GetContext();
     std::unordered_map<std::string, std::vector<int64_t>> input_dims = ctx.input_dims;
     string name = layer->name();
     auto search = input_dims.find(name);

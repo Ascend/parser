@@ -23,13 +23,13 @@
 #include "cce/cce.h"
 #include "cce/dnn.h"
 #include "common/debug/log.h"
-#include "parser/common/acl_graph_parser_util.h"
+#include "common/math/math_util.h"
 #include "common/op/ge_op_utils.h"
 #include "common/op_map.h"
+#include "common/types.h"
 #include "common/types_map.h"
+#include "common/util.h"
 #include "framework/common/debug/ge_log.h"
-#include "framework/omg/parser/parser_inner_ctx.h"
-#include "framework/omg/parser/parser_types.h"
 #include "graph/common/omg_util.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/ge_tensor.h"
@@ -39,7 +39,6 @@
 #include "graph/utils/tensor_utils.h"
 #include "graph/utils/type_utils.h"
 #include "graph_functiondef.h"
-#include "parser/common/acl_graph_parser_util.h"
 #include "proto/tensorflow/attr_value.pb.h"
 #include "register/op_registry.h"
 
@@ -92,137 +91,117 @@ const char RRTVAL_NODE_NAME_SUFFIX[] = "_RetVal";
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY std::map<string, OpSupportTranInfo> g_OpSupportTranInfo = {};
 
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::CAST, InFmtSupportElewise, InDtSupportAll, OutFmtSupportAsInput,
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::CAST, InFmtSupportElewise, InDtSupportAll, OutFmtSupportAsInput,
                             OutDtSupportUndefined)
-TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::parser::CAST, InFmtSupportElewise, InDtSupportAll, OutFmtSupportAsInput,
+TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::CAST, InFmtSupportElewise, InDtSupportAll, OutFmtSupportAsInput,
                             OutDtSupportUndefined)
-TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::parser::ADDN, InFmtSupportElewise, InDtSupportAll, OutFmtSupportAsInput,
+TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::ADDN, InFmtSupportElewise, InDtSupportAll, OutFmtSupportAsInput,
                             OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::ADDN, InFmtSupportElewise, InDtSupportAll, OutFmtSupportAsInput,
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::ADDN, InFmtSupportElewise, InDtSupportAll, OutFmtSupportAsInput,
                             OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::parser::ADD, InFmtSupportElewise, InDtSupportAll, OutFmtSupportAsInput,
+TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::ADD, InFmtSupportElewise, InDtSupportAll, OutFmtSupportAsInput,
                             OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::ADD, InFmtSupportElewise, InDtSupportAll, OutFmtSupportAsInput,
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::ADD, InFmtSupportElewise, InDtSupportAll, OutFmtSupportAsInput,
                             OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::MUL,
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::MUL,
                             std::vector<ge::Format>({ge::FORMAT_FRACTAL_Z, ge::FORMAT_NCHW, ge::FORMAT_NHWC,
                                                      ge::FORMAT_HWCN, ge::FORMAT_NC1HWC0}),
                             InDtSupportAll, OutFmtSupportAsInput, OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::parser::L2LOSS,
+TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::L2LOSS,
                             std::vector<ge::Format>({ge::FORMAT_FRACTAL_Z, ge::FORMAT_NC1HWC0, ge::FORMAT_NHWC,
                                                      ge::FORMAT_HWCN}),  // inputformats
                             ge::DT_FLOAT, ge::FORMAT_NC1HWC0, ge::DT_FLOAT)
 
-TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::parser::CONVGRADFILTER, InFmtSupportUndefined, InDtSupportUndefined,
-                            ge::FORMAT_FRACTAL_Z, ge::DT_FLOAT)
-TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::parser::CONV2DBACKPROPINPUT, InFmtSupportUndefined, InDtSupportUndefined,
-                            ge::FORMAT_NC1HWC0, ge::DT_FLOAT16)
-TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::parser::BIASADDGRAD, ge::FORMAT_NC1HWC0, ge::DT_FLOAT16, ge::FORMAT_NC1HWC0,
+TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::CONVGRADFILTER, InFmtSupportUndefined, InDtSupportUndefined, ge::FORMAT_FRACTAL_Z,
                             ge::DT_FLOAT)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::BIASADD, ge::FORMAT_NCHW, ge::DT_FLOAT, ge::FORMAT_NCHW, ge::DT_FLOAT)
+TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::CONV2DBACKPROPINPUT, InFmtSupportUndefined, InDtSupportUndefined,
+                            ge::FORMAT_NC1HWC0, ge::DT_FLOAT16)
+TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::BIASADDGRAD, ge::FORMAT_NC1HWC0, ge::DT_FLOAT16, ge::FORMAT_NC1HWC0, ge::DT_FLOAT)
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::BIASADD, ge::FORMAT_NCHW, ge::DT_FLOAT, ge::FORMAT_NCHW, ge::DT_FLOAT)
 
-TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::parser::ACTIVATION, ge::FORMAT_NC1HWC0, ge::DT_FLOAT16, ge::FORMAT_NC1HWC0,
+TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::ACTIVATION, ge::FORMAT_NC1HWC0, ge::DT_FLOAT16, ge::FORMAT_NC1HWC0, ge::DT_FLOAT16)
+TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::ACTIVATIONGRAD, ge::FORMAT_NC1HWC0, ge::DT_FLOAT16, ge::FORMAT_NC1HWC0,
                             ge::DT_FLOAT16)
-TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::parser::ACTIVATIONGRAD, ge::FORMAT_NC1HWC0, ge::DT_FLOAT16, ge::FORMAT_NC1HWC0,
-                            ge::DT_FLOAT16)
-TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::parser::SOFTMAX, ge::FORMAT_NC1HWC0, ge::DT_FLOAT16, ge::FORMAT_NC1HWC0,
-                            ge::DT_FLOAT16)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::SOFTMAX, InFmtSupport4D, InDtSupportAll, OutFmtSupportAsInput,
-                            OutDtSupportAsInput)
+TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::SOFTMAX, ge::FORMAT_NC1HWC0, ge::DT_FLOAT16, ge::FORMAT_NC1HWC0, ge::DT_FLOAT16)
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::SOFTMAX, InFmtSupport4D, InDtSupportAll, OutFmtSupportAsInput, OutDtSupportAsInput)
 
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::DEPTHWISECONV2DBACKPROPFILTER, ge::FORMAT_NC1HWC0, ge::DT_FLOAT16,
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::DEPTHWISECONV2DBACKPROPFILTER, ge::FORMAT_NC1HWC0, ge::DT_FLOAT16,
                             ge::FORMAT_C1HWNCoC0, ge::DT_FLOAT)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::DEPTHWISECONV2DBACKPORPINPUT, InFmtSupportUndefined, InDtSupportUndefined,
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::DEPTHWISECONV2DBACKPORPINPUT, InFmtSupportUndefined, InDtSupportUndefined,
                             OutFmtSupportAsInput, OutDtSupportUndefined)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::DEPTHWISECONV2DFORWARDNATIVE, InFmtSupportUndefined, InDtSupportUndefined,
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::DEPTHWISECONV2DFORWARDNATIVE, InFmtSupportUndefined, InDtSupportUndefined,
                             OutFmtSupportAsInput, OutDtSupportUndefined)
-TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::parser::FUSEDBATCHNORM, InFmtSupportUndefined, InDtSupportUndefined,
+TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::FUSEDBATCHNORM, InFmtSupportUndefined, InDtSupportUndefined, OutFmtSupportAsInput,
+                            OutDtSupportUndefined)
+TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::FUSEDBATCHNORMGRAD, InFmtSupportUndefined, InDtSupportUndefined,
                             OutFmtSupportAsInput, OutDtSupportUndefined)
-TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::parser::FUSEDBATCHNORMGRAD, InFmtSupportUndefined, InDtSupportUndefined,
-                            OutFmtSupportAsInput, OutDtSupportUndefined)
-TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::parser::CONV2D, InFmtSupportUndefined, InDtSupportUndefined, OutFmtSupportAsInput,
+TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::CONV2D, InFmtSupportUndefined, InDtSupportUndefined, OutFmtSupportAsInput,
                             OutDtSupportUndefined)
 
-TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::parser::RESHAPE, ge::FORMAT_NHWC, InDtSupportAll, ge::FORMAT_NHWC,
-                            OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::parser::SPARSESOFTMAXCROSSENTROPYWITHLOGITS, InFmtSupport5D, ge::DT_FLOAT16,
+TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::RESHAPE, ge::FORMAT_NHWC, InDtSupportAll, ge::FORMAT_NHWC, OutDtSupportAsInput)
+TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::SPARSESOFTMAXCROSSENTROPYWITHLOGITS, InFmtSupport5D, ge::DT_FLOAT16,
                             OutFmtSupportAsInput, OutDtSupportAsInput)
 TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::TF_MAXIMUM_GRAD, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput,
                             OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::APPLYRMSPROP,
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::APPLYRMSPROP,
                             std::vector<ge::Format>({ge::FORMAT_FRACTAL_Z, ge::FORMAT_NCHW, ge::FORMAT_NHWC,
                                                      ge::FORMAT_HWCN, ge::FORMAT_NC1HWC0}),
                             ge::DT_FLOAT, OutFmtSupportAsInput, OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::DROPOUTDOMASK, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput,
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::DROPOUTDOMASK, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput,
                             OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::LOG, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput,
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::LOG, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput, OutDtSupportAsInput)
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::SQRTGRAD, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput, OutDtSupportAsInput)
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::SIGMOIDGRAD, InFmtSupport4D, InDtSupportAll, OutFmtSupportAsInput,
                             OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::SQRTGRAD, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput,
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::SIGMOID, InFmtSupport4D, InDtSupportAll, OutFmtSupportAsInput, OutDtSupportAsInput)
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::ARGMAX, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput, OutDtSupportAsInput)
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::AVGPOOLGRAD, InFmtSupport5D, ge::DT_FLOAT16, OutFmtSupportAsInput,
                             OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::SIGMOIDGRAD, InFmtSupport4D, InDtSupportAll, OutFmtSupportAsInput,
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::NEG, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput, OutDtSupportAsInput)
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::RECIPROCAL, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput,
                             OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::SIGMOID, InFmtSupport4D, InDtSupportAll, OutFmtSupportAsInput,
-                            OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::ARGMAX, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput,
-                            OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::AVGPOOLGRAD, InFmtSupport5D, ge::DT_FLOAT16, OutFmtSupportAsInput,
-                            OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::NEG, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput,
-                            OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::RECIPROCAL, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput,
-                            OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::SQUARE, InFmtSupport4D, InDtSupportAll, OutFmtSupportAsInput,
-                            OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::SUB, InFmtSupport4D, InDtSupportAll, OutFmtSupportAsInput,
-                            OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::SUM, InFmtSupport4D, InDtSupportAll, OutFmtSupportAsInput,
-                            OutDtSupportAsInput)
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::SQUARE, InFmtSupport4D, InDtSupportAll, OutFmtSupportAsInput, OutDtSupportAsInput)
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::SUB, InFmtSupport4D, InDtSupportAll, OutFmtSupportAsInput, OutDtSupportAsInput)
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::SUM, InFmtSupport4D, InDtSupportAll, OutFmtSupportAsInput, OutDtSupportAsInput)
 TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::TF_MATMUL, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput, OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::GATHERV2, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput,
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::GATHERV2, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput, OutDtSupportAsInput)
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::GREATEREQUAL, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput,
                             OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::GREATEREQUAL, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput,
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::REALDIV, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput, OutDtSupportAsInput)
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::SQRT, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput, OutDtSupportAsInput)
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::STRIDEDSLICE, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput,
                             OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::REALDIV, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput,
-                            OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::SQRT, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput,
-                            OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::STRIDEDSLICE, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput,
-                            OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::TILE, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput,
-                            OutDtSupportAsInput)
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::TILE, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput, OutDtSupportAsInput)
 TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::TFRELU6, InFmtSupportElewise, InDtSupportAll, OutFmtSupportAsInput,
                             OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::RELU6GRAD, InFmtSupportElewise, InDtSupportAll, OutFmtSupportAsInput,
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::RELU6GRAD, InFmtSupportElewise, InDtSupportAll, OutFmtSupportAsInput,
                             OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::EQUAL, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput,
-                            OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::GREATER, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput,
-                            OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::SELECT, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput,
-                            OutDtSupportAsInput)
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::EQUAL, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput, OutDtSupportAsInput)
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::GREATER, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput, OutDtSupportAsInput)
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::SELECT, InFmtSupport4D, ge::DT_FLOAT, OutFmtSupportAsInput, OutDtSupportAsInput)
 TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::TF_BATCH_MATMUL, ge::FORMAT_NHWC, InDtSupportAll, OutFmtSupportAsInput,
                             OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::parser::TRANSPOSE, ge::FORMAT_NHWC, InDtSupportAll, OutFmtSupportAsInput,
+TBE_SET_FORMAT_DATAYPE_INFO(TBE, ge::TRANSPOSE, ge::FORMAT_NHWC, InDtSupportAll, OutFmtSupportAsInput,
                             OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::parser::STREAMMERGE,
+TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::STREAMMERGE,
                             std::vector<ge::Format>({ge::FORMAT_NCHW, ge::FORMAT_NHWC, ge::FORMAT_NC1HWC0}),
                             InDtSupportAll, OutFmtSupportAsInput, OutDtSupportAsInput)
-TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::parser::MEMCPYASYNC,
+TBE_SET_FORMAT_DATAYPE_INFO(CCE, ge::MEMCPYASYNC,
                             std::vector<ge::Format>({ge::FORMAT_NCHW, ge::FORMAT_NHWC, ge::FORMAT_NC1HWC0}),
                             InDtSupportAll, OutFmtSupportAsInput, OutDtSupportAsInput)
 
 bool GetCceTbeTransInfo(string opType, OpSupportTranInfo &opSupportInfo) {
   static bool fmtInited = false;
   GE_IF_BOOL_EXEC(
-      !fmtInited, fmtInited = true;
-      if (domi::OpRegistry().Instance()->GetImplyType(ge::parser::DEPTHWISEWEIGHT4D26D) == domi::ImplyType::TVM) {
-        auto it = g_OpSupportTranInfo.find(string("TBE:") + ge::parser::MUL);
-        if (it != g_OpSupportTranInfo.end()) {
-          auto &fmts = it->second.inputFormats;
-          auto itFmt = std::find(fmts.begin(), fmts.end(), ge::FORMAT_NC1HWC0);
-          fmts.erase(itFmt);
-        }
-      })
+    !fmtInited, fmtInited = true;
+    if (domi::OpRegistry().Instance()->GetImplyType(ge::DEPTHWISEWEIGHT4D26D) == domi::ImplyType::TVM) {
+      auto it = g_OpSupportTranInfo.find(string("TBE:") + ge::MUL);
+      if (it != g_OpSupportTranInfo.end()) {
+        auto &fmts = it->second.inputFormats;
+        auto itFmt = std::find(fmts.begin(), fmts.end(), ge::FORMAT_NC1HWC0);
+        fmts.erase(itFmt);
+      }
+    })
   string cceTbeOpType = "TBE";
   GE_IF_BOOL_EXEC(domi::OpRegistry().Instance()->GetImplyType(opType) == domi::ImplyType::BUILDIN,
                   cceTbeOpType = "CCE";)
@@ -807,7 +786,7 @@ Status CreateNodeDefBytes(ge::NodePtr n, string originalType, map<string, PIOLis
     for (uint32_t j = 0; j < ge_desc->GetShape().GetDimNum(); ++j) {
       tmp_dim = ge_desc->GetShape().GetDim(j);
       GE_CHECK_GE(tmp_dim, 0);
-      PARSER_INT64_MULCHECK(real_size, tmp_dim);
+      FMK_INT64_MULCHECK(real_size, tmp_dim);
       real_size *= tmp_dim;
     }
     ge::TensorUtils::SetSize(*ge_desc, real_size * size_type);
@@ -1198,7 +1177,7 @@ Status CreateFuncDefBytes(ge::NodePtr n, string original_type, string func_bin_p
 
   char *buf = nullptr;
   int32_t len = 0;
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(!ge::parser::ReadBytesFromBinaryFile(file.c_str(), &buf, len), return false,
+  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(!ge::ReadBytesFromBinaryFile(file.c_str(), &buf, len), return false,
                                  "read bytes file error!");
 
   GELOGI("len =%d\n", len);
@@ -1229,7 +1208,7 @@ Status ParserGraphOptimizer::MakeTfProtoDef() {
   CreateIOListFuncMap(mOpIOListFuncMap);
 
   for (ge::NodePtr n : graph_->GetDirectNode()) {
-    if (n->GetType() != ge::parser::FRAMEWORKOP) continue;
+    if (n->GetType() != ge::FRAMEWORKOP) continue;
     std::string original_type;
     GE_LOGI_IF(ge::AttrUtils::GetStr(n->GetOpDesc(), ge::ATTR_NAME_FRAMEWORK_ORIGINAL_TYPE, original_type) != true,
                "get original type failed.");
@@ -1290,9 +1269,9 @@ Status ParserGraphOptimizer::MarkForFusion(unordered_map<string, vector<NodePtr>
   bool hasGetNext = false;
   for (auto node : graph_->GetDirectNode()) {
     GE_CHECK_NOTNULL(node);
-    GE_IF_BOOL_EXEC(node->GetOpDesc()->GetType() != ge::parser::FRAMEWORK_OP_TYPE, continue);
+    GE_IF_BOOL_EXEC(node->GetOpDesc()->GetType() != ge::FRAMEWORK_OP_TYPE, continue);
     string type = "";
-    GE_CHK_STATUS_RET(ge::parser::GetOriginalType(node, type));
+    GE_CHK_STATUS_RET(GetOriginalType(node, type));
     if (type == "IteratorGetNext") {
       hasGetNext = true;
       break;
@@ -1300,9 +1279,9 @@ Status ParserGraphOptimizer::MarkForFusion(unordered_map<string, vector<NodePtr>
   }
   for (auto node : graph_->GetDirectNode()) {
     GE_CHECK_NOTNULL(node);
-    GE_IF_BOOL_EXEC(node->GetOpDesc()->GetType() != ge::parser::FRAMEWORK_OP_TYPE, continue)
+    GE_IF_BOOL_EXEC(node->GetOpDesc()->GetType() != ge::FRAMEWORK_OP_TYPE, continue)
     string type = "";
-    GE_CHK_STATUS_RET(ge::parser::GetOriginalType(node, type));
+    GE_CHK_STATUS_RET(GetOriginalType(node, type));
     if (type == "IteratorGetNext") {
       vector<NodePtr> temp_node_cluser;
       for (auto in_anchor : node->GetAllInDataAnchors()) {
@@ -1338,9 +1317,9 @@ Status ParserGraphOptimizer::FindFmkNodeCluser(unordered_map<string, vector<Node
     GE_CHECK_NOTNULL(node);
     OpDescPtr temp_node_desc_ptr = node->GetOpDesc();
     GE_CHECK_NOTNULL(temp_node_desc_ptr);
-    GE_IF_BOOL_EXEC(temp_node_desc_ptr->GetType() == ge::parser::DATA_TYPE, continue);
+    GE_IF_BOOL_EXEC(temp_node_desc_ptr->GetType() == ge::DATA_TYPE, continue);
 
-    if (temp_node_desc_ptr->GetType() == ge::parser::FRAMEWORK_OP_TYPE &&
+    if (temp_node_desc_ptr->GetType() == ge::FRAMEWORK_OP_TYPE &&
         (temp_node_desc_ptr->GetName().find(RRTVAL_NODE_NAME_SUFFIX) == string::npos)) {
       temp_node_cluser.push_back(node);
     } else {
@@ -1421,7 +1400,7 @@ Status ParserGraphOptimizer::UpdateGraph(vector<NodePtr> &nodes) {
       return FAILED);
 
   std::string type = "";
-  GE_CHK_STATUS_RET(ge::parser::GetOriginalType(nodes[0], type));
+  GE_CHK_STATUS_RET(GetOriginalType(nodes[0], type));
   (void)AttrUtils::SetStr(fusion_node_opdef, ge::ATTR_NAME_FRAMEWORK_ORIGINAL_TYPE, type);
 
   (void)AttrUtils::SetZeroCopyBytes(
@@ -1431,7 +1410,7 @@ Status ParserGraphOptimizer::UpdateGraph(vector<NodePtr> &nodes) {
       fusion_node_opdef, ge::ATTR_NAME_FRAMEWORK_NODE_DEF,
       Buffer::CopyFrom(reinterpret_cast<const uint8_t *>(nodefStr.data()), nodefStr.length()));
 
-  (void)AttrUtils::SetInt(fusion_node_opdef, ge::ATTR_NAME_FRAMEWORK_FWK_TYPE, ge::GetParserContext().type);
+  (void)AttrUtils::SetInt(fusion_node_opdef, ge::ATTR_NAME_FRAMEWORK_FWK_TYPE, domi::GetContext().type);
 
   // reconstruct fusion_node and edges
   GE_CHK_STATUS_RET(RebuildOutputAnchors(output_anchors, fusion_node_opdef),
@@ -1481,19 +1460,17 @@ Status ParserGraphOptimizer::InsertNode(ge::ComputeGraphPtr sub_graph, vector<ge
     }
 
     InControlAnchorPtr node_in_control = node->GetInControlAnchor();
-    GE_IF_BOOL_EXEC(
-        node_in_control != nullptr, for (auto peer_out_anchor
-                                         : node_in_control->GetPeerOutControlAnchors()) {
-          vector<ge::NodePtr>::iterator iter = find(nodes.begin(), nodes.end(), peer_out_anchor->GetOwnerNode());
-          GE_IF_BOOL_EXEC(iter == nodes.end(), input_control_anchors.emplace_back(node_in_control));
-        });
+    GE_IF_BOOL_EXEC(node_in_control != nullptr, for (auto peer_out_anchor
+                                                     : node_in_control->GetPeerOutControlAnchors()) {
+      vector<ge::NodePtr>::iterator iter = find(nodes.begin(), nodes.end(), peer_out_anchor->GetOwnerNode());
+      GE_IF_BOOL_EXEC(iter == nodes.end(), input_control_anchors.emplace_back(node_in_control));
+    });
     OutControlAnchorPtr node_out_control = node->GetOutControlAnchor();
-    GE_IF_BOOL_EXEC(
-        node_out_control != nullptr, for (auto peer_in_control_anchor
-                                          : node_out_control->GetPeerInControlAnchors()) {
-          vector<ge::NodePtr>::iterator iter = find(nodes.begin(), nodes.end(), peer_in_control_anchor->GetOwnerNode());
-          GE_IF_BOOL_EXEC(iter == nodes.end(), output_control_anchors.emplace_back(node_out_control));
-        });
+    GE_IF_BOOL_EXEC(node_out_control != nullptr, for (auto peer_in_control_anchor
+                                                      : node_out_control->GetPeerInControlAnchors()) {
+      vector<ge::NodePtr>::iterator iter = find(nodes.begin(), nodes.end(), peer_in_control_anchor->GetOwnerNode());
+      GE_IF_BOOL_EXEC(iter == nodes.end(), output_control_anchors.emplace_back(node_out_control));
+    });
   }
   return SUCCESS;
 }
@@ -1518,19 +1495,18 @@ Status ParserGraphOptimizer::LinkInnerAnchor(unordered_map<string, ge::NodePtr> 
     }
 
     InControlAnchorPtr node_in_control = node->GetInControlAnchor();
-    GE_IF_BOOL_EXEC(
-        node_in_control != nullptr, for (auto peer_out_ctl_anchor
-                                         : node_in_control->GetPeerOutControlAnchors()) {
-          GE_IF_BOOL_EXEC(node_map.count(peer_out_ctl_anchor->GetOwnerNode()->GetName()) == 0, continue);
-          NodePtr src_ctrl = node_map[peer_out_ctl_anchor->GetOwnerNode()->GetName()];
-          GE_IF_BOOL_EXEC(
-              ge::GraphUtils::AddEdge(src_ctrl->GetOutControlAnchor(), dst->GetInControlAnchor()) != GRAPH_SUCCESS,
-              GELOGE(FAILED,
-                     "LinkInnerAnchor Link control anchor failed, src node: "
-                     "%s, dst node: %s.",
-                     src_ctrl->GetName().c_str(), dst->GetName().c_str());
-              return FAILED);
-        });
+    GE_IF_BOOL_EXEC(node_in_control != nullptr, for (auto peer_out_ctl_anchor
+                                                     : node_in_control->GetPeerOutControlAnchors()) {
+      GE_IF_BOOL_EXEC(node_map.count(peer_out_ctl_anchor->GetOwnerNode()->GetName()) == 0, continue);
+      NodePtr src_ctrl = node_map[peer_out_ctl_anchor->GetOwnerNode()->GetName()];
+      GE_IF_BOOL_EXEC(
+          ge::GraphUtils::AddEdge(src_ctrl->GetOutControlAnchor(), dst->GetInControlAnchor()) != GRAPH_SUCCESS,
+          GELOGE(FAILED,
+                 "LinkInnerAnchor Link control anchor failed, src node: "
+                 "%s, dst node: %s.",
+                 src_ctrl->GetName().c_str(), dst->GetName().c_str());
+          return FAILED);
+    });
   }
   return SUCCESS;
 }
@@ -1881,24 +1857,24 @@ OpDescPtr ParserGraphOptimizer::CreateTranslateOp(enum ge::Format inFormat, enum
   static uint32_t transop_count = 0;
   OpDescPtr op_def = nullptr;
   std::stringstream sstmp;
-  sstmp << "translate_" << ge::parser::TRANSDATA << "_" << transop_count++;
-  GE_MAKE_SHARED(op_def = std::make_shared<OpDesc>(sstmp.str().c_str(), ge::parser::TRANSLATE), op_def = nullptr;
+  sstmp << "translate_" << ge::TRANSDATA << "_" << transop_count++;
+  GE_MAKE_SHARED(op_def = std::make_shared<OpDesc>(sstmp.str().c_str(), ge::TRANSLATE), op_def = nullptr;
                  return op_def);
   GELOGI(
-      "create translate op:%s, input format:%s, input datatype:%s, output "
-      "format:%s, output datatype:%s.",
-      op_def->GetName().c_str(), ge::TypeUtils::FormatToSerialString(inFormat).c_str(),
-      ge::TypeUtils::DataTypeToSerialString(inDatatype).c_str(), ge::TypeUtils::FormatToSerialString(outFormat).c_str(),
-      ge::TypeUtils::DataTypeToSerialString(outDatatype).c_str());
+    "create translate op:%s, input format:%s, input datatype:%s, output "
+    "format:%s, output datatype:%s.",
+    op_def->GetName().c_str(), ge::TypeUtils::FormatToSerialString(inFormat).c_str(),
+    ge::TypeUtils::DataTypeToSerialString(inDatatype).c_str(), ge::TypeUtils::FormatToSerialString(outFormat).c_str(),
+    ge::TypeUtils::DataTypeToSerialString(outDatatype).c_str());
 
-  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_def, ge::ATTR_NAME_INPUT_FORMAT, inFormat), return nullptr,
-                   "SetInt ATTR_NAME_INPUT_FORMAT failed.");
-  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_def, ATTR_NAME_INPUT_DATATYPE, inDatatype), return nullptr,
-                   "SetInt ATTR_NAME_INPUT_DATATYPE failed.");
-  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_def, ge::ATTR_NAME_OUTPUT_FORMAT, outFormat), return nullptr,
-                   "SetInt ATTR_NAME_INPUT_DATATYPE failed.");
-  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_def, ATTR_NAME_OUTPUT_DATATYPE, outDatatype), return nullptr,
-                   "SetInt ATTR_NAME_INPUT_DATATYPE failed.");
+  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_def, ge::ATTR_NAME_INPUT_FORMAT, inFormat),
+                   return nullptr, "SetInt ATTR_NAME_INPUT_FORMAT failed.");
+  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_def, ATTR_NAME_INPUT_DATATYPE, inDatatype),
+                   return nullptr, "SetInt ATTR_NAME_INPUT_DATATYPE failed.");
+  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_def, ge::ATTR_NAME_OUTPUT_FORMAT, outFormat),
+                   return nullptr, "SetInt ATTR_NAME_INPUT_DATATYPE failed.");
+  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_def, ATTR_NAME_OUTPUT_DATATYPE, outDatatype),
+                   return nullptr, "SetInt ATTR_NAME_INPUT_DATATYPE failed.");
   if (inDatatype != ge::DT_FLOAT16) {
     GE_CHK_BOOL_EXEC(SUCCESS == op_def->AddInputDesc(GeTensorDesc(GeShape(), inFormat)), return nullptr,
                      "create translate op:add input desc fail.");
@@ -1920,17 +1896,17 @@ OpDescPtr ParserGraphOptimizer::CreatePermuteOp(enum ge::Format input_format, en
   static uint32_t transop_count = 0;
 
   std::stringstream sstmp;
-  sstmp << "transdata_" << ge::parser::PERMUTE << "_" << transop_count++;
+  sstmp << "transdata_" << ge::PERMUTE << "_" << transop_count++;
 
   OpDescPtr op_desc = nullptr;
-  GE_MAKE_SHARED(op_desc = std::make_shared<OpDesc>(sstmp.str().c_str(), ge::parser::PERMUTE), op_desc = nullptr;
+  GE_MAKE_SHARED(op_desc = std::make_shared<OpDesc>(sstmp.str().c_str(), ge::PERMUTE), op_desc = nullptr;
                  return op_desc);
   GELOGI("create permute op:%s", op_desc->GetName().c_str());
 
-  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_desc, ge::ATTR_NAME_INPUT_FORMAT, (int64_t)input_format), return nullptr,
-                   "SetInt ATTR_NAME_INPUT_FORMAT failed.");
-  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_desc, ge::ATTR_NAME_OUTPUT_FORMAT, (int64_t)output_format), return nullptr,
-                   "SetInt ATTR_NAME_OUTPUT_FORMAT failed.");
+  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_desc, ge::ATTR_NAME_INPUT_FORMAT, (int64_t)input_format),
+                   return nullptr, "SetInt ATTR_NAME_INPUT_FORMAT failed.");
+  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_desc, ge::ATTR_NAME_OUTPUT_FORMAT, (int64_t)output_format),
+                    return nullptr, "SetInt ATTR_NAME_OUTPUT_FORMAT failed.");
 
   GE_IF_BOOL_EXEC(input_format == FORMAT_NCHW, (void)AttrUtils::SetInt(op_desc, "NCHW_to_NHWC", (int64_t)1));
   GE_IF_BOOL_EXEC(input_format == FORMAT_NHWC, (void)AttrUtils::SetInt(op_desc, "NHWC_to_NCHW", (int64_t)1));
@@ -1947,11 +1923,10 @@ OpDescPtr ParserGraphOptimizer::CreateCastOp(enum ge::DataType input_data_type, 
                                              enum ge::Format format) {
   static uint32_t transop_count = 0;
   std::stringstream sstmp;
-  sstmp << "transdata_" << ge::parser::CAST << "_" << transop_count++;
+  sstmp << "transdata_" << ge::CAST << "_" << transop_count++;
 
   OpDescPtr op_desc = nullptr;
-  GE_MAKE_SHARED(op_desc = std::make_shared<OpDesc>(sstmp.str().c_str(), ge::parser::CAST), op_desc = nullptr;
-                 return op_desc);
+  GE_MAKE_SHARED(op_desc = std::make_shared<OpDesc>(sstmp.str().c_str(), ge::CAST), op_desc = nullptr; return op_desc);
   GELOGI("create cast op:%s, input datatype:%s, out datatype:%s", op_desc->GetName().c_str(),
          ge::TypeUtils::DataTypeToSerialString(input_data_type).c_str(),
          ge::TypeUtils::DataTypeToSerialString(output_data_type).c_str());
@@ -1975,10 +1950,10 @@ OpDescPtr ParserGraphOptimizer::CreateCastOp(enum ge::DataType input_data_type, 
 OpDescPtr ParserGraphOptimizer::CreateTransDataOp(enum ge::Format input_format) {
   static uint32_t transop_count = 0;
   std::stringstream sstmp;
-  sstmp << "transdata_" << ge::parser::TRANSDATA << "_" << transop_count++;
+  sstmp << "transdata_" << ge::TRANSDATA << "_" << transop_count++;
 
   OpDescPtr op_desc = nullptr;
-  GE_MAKE_SHARED(op_desc = std::make_shared<OpDesc>(sstmp.str().c_str(), ge::parser::TRANSDATA), op_desc = nullptr;
+  GE_MAKE_SHARED(op_desc = std::make_shared<OpDesc>(sstmp.str().c_str(), ge::TRANSDATA), op_desc = nullptr;
                  return op_desc);
 
   GELOGI("create transdata op:%s, input format:%s.", op_desc->GetName().c_str(),
@@ -1989,10 +1964,10 @@ OpDescPtr ParserGraphOptimizer::CreateTransDataOp(enum ge::Format input_format) 
     output_format = FORMAT_NCHW;
   }
 
-  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_desc, ge::ATTR_NAME_INPUT_FORMAT, (int64_t)input_format), return nullptr,
-                   "SetInt of ATTR_NAME_INPUT_FORMAT failed.");
-  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_desc, ge::ATTR_NAME_OUTPUT_FORMAT, (int64_t)output_format), return nullptr,
-                   "SetInt of ATTR_NAME_OUTPUT_FORMAT failed.");
+  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_desc, ge::ATTR_NAME_INPUT_FORMAT, (int64_t)input_format),
+                   return nullptr, "SetInt of ATTR_NAME_INPUT_FORMAT failed.");
+  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_desc, ge::ATTR_NAME_OUTPUT_FORMAT, (int64_t)output_format),
+                   return nullptr, "SetInt of ATTR_NAME_OUTPUT_FORMAT failed.");
   GE_CHK_BOOL_EXEC(SUCCESS == op_desc->AddInputDesc(GeTensorDesc(GeShape(), input_format)), return nullptr,
                    "create transdata op:add input desc fail.");
   GE_CHK_BOOL_EXEC(SUCCESS == op_desc->AddOutputDesc(GeTensorDesc(GeShape(), output_format)), return nullptr,
@@ -2000,4 +1975,4 @@ OpDescPtr ParserGraphOptimizer::CreateTransDataOp(enum ge::Format input_format) 
 
   return op_desc;
 }
-}  // namespace ge
+}  // namespace domi

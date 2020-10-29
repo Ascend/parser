@@ -18,25 +18,23 @@
 #include <algorithm>
 #include <iostream>
 #include "common/convert/pb2json.h"
+#include "common/model_saver.h"
 #include "common/util.h"
 #include "external/graph/operator_factory.h"
 #include "external/register/register_error_codes.h"
 #include "framework/omg/parser/parser_inner_ctx.h"
-#include "framework/omg/parser/parser_types.h"
 #include "omg/parser/parser_factory.h"
 #include "onnx_op_parser.h"
 #include "onnx_util.h"
 #include "parser/common/op_parser_factory.h"
 #include "parser/common/pre_checker.h"
-#include "parser/common/acl_graph_parser_util.h"
-#include "parser/common/model_saver.h"
 #include "parser/onnx/onnx_util.h"
 #include "register/op_registry.h"
 
 namespace ge {
 namespace {
 std::map<std::string, std::string> kOnnxOpMap = {
-    {ge::kOpTypeInput, ge::parser::DATA}, {ge::kOpTypeConstant, ge::parser::CONSTANT},
+    {ge::kOpTypeInput, ge::DATA}, {ge::kOpTypeConstant, ge::CONSTANT},
 };
 }
 
@@ -438,7 +436,7 @@ Status OnnxModelParser::Parse(const char *file, ge::Graph &graph) {
 
   // 1. Get graph from onnx model file.
   ge::onnx::ModelProto onnx_model;
-  if (!ge::parser::ReadProtoFromBinaryFile(file, &onnx_model)) {
+  if (!ge::ReadProtoFromBinaryFile(file, &onnx_model)) {
     GELOGE(PARAM_INVALID, "Read onnx model file failed.");
     return FAILED;
   }
@@ -552,12 +550,12 @@ Status OnnxModelParser::ToJson(const char *model_file, const char *json_file) {
   }
 
   ge::onnx::ModelProto onnx_model;
-  GE_RETURN_WITH_LOG_IF_FALSE(ge::parser::ReadProtoFromBinaryFile(model_file, &onnx_model),
+  GE_RETURN_WITH_LOG_IF_FALSE(ge::ReadProtoFromBinaryFile(model_file, &onnx_model),
                               "ReadProtoFromBinaryFile failed, file:%s.", model_file);
   ge::onnx::GraphProto graph_proto = onnx_model.graph();
   nlohmann::json j;
   ge::Pb2Json::Message2Json(graph_proto, std::set<std::string>(), j, true);
-  return ge::parser::ModelSaver::SaveJsonToFile(json_file, j);
+  return ge::ModelSaver::SaveJsonToFile(json_file, j);
 }
 
 ge::DataType OnnxModelParser::ConvertToGeDataType(const uint32_t type) {

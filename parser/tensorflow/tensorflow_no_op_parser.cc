@@ -22,7 +22,6 @@
 #include "parser/common/op_parser_factory.h"
 
 using domi::TENSORFLOW;
-using namespace ge::parser;
 
 namespace ge {
 Status TensorFlowNoOpParser::ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) {

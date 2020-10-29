@@ -18,40 +18,34 @@ COMMON_LOCAL_SRC_FILES := \
     register_tbe.cc \
     parser_api.cc \
     parser_inner_ctx.cc \
+    acl_graph_parser_util.cc\
     proto_file_parser.cc \
-    acl_graph_parser_util.cc \
-    tbe_plugin_loader.cc \
-    model_saver.cc \
+    ../../graph/passes/pass_manager.cc \
+    ../../graph/common/omg_util.cc \
     ../tensorflow/tensorflow_custom_parser_adapter.cc \
     ../tensorflow/tensorflow_fusion_custom_parser_adapter.cc \
     ../tensorflow/tensorflow_fusion_op_parser.cc \
     ../tensorflow/tensorflow_util.cc \
-    convert/pb2json.cc \
+    ../../common/convert/pb2json.cc \
     op_def/ir_pb_converter.cc \
     op_def/defs.cc \
     op_def/op_schema.cc \
     op_def/operator.cc \
     op_map.cc \
-    parser_types.cc \
-    pass_manager.cc \
-    parser_fp16_t.cc \
-    thread_pool.cc \
 
 FMK_COMMON_SRC_FILES := \
-#     ../../common/fmk_error_codes.cc \
-    ../../common/auth/cipher.cc \
-    ../../common/context/ctx.cc \
-    ../../graph/passes/pass_manager.cc \
-    ../../graph/common/omg_util.cc \
     ../../common/types.cc \
-    ../../common/auth/file_saver.cc \
     ../../common/util.cc \
     ../../common/model_saver.cc \
+    ../../common/fmk_error_codes.cc \
     ../../common/fp16_t.cc \
     ../../common/thread_pool.cc \
+    ../../common/auth/file_saver.cc \
+    ../../common/auth/cipher.cc \
+    ../../common/context/ctx.cc \
 
 LOCAL_SRC_FILES := $(COMMON_LOCAL_SRC_FILES)
-LOCAL_SRC_FILES += $(FMK_COMMON_SRC_FILES)
+#LOCAL_SRC_FILES += $(FMK_COMMON_SRC_FILES)
 
 LOCAL_C_INCLUDES := \
     proto/om.proto \
@@ -73,10 +67,9 @@ LOCAL_C_INCLUDES := \
     $(TOPDIR)inc/external/graph \
     $(TOPDIR)inc/framework \
     $(TOPDIR)inc/common/util \
-    $(TOPDIR)graphengine/ge \
-    $(TOPDIR)graphengine/ge/common \
-    $(TOPDIR)parser/parser \
-    $(TOPDIR)parser   \
+    $(TOPDIR)framework/domi \
+    $(TOPDIR)framework/domi/common \
+    $(TOPDIR)framework/domi/parser \
     $(TOPDIR)third_party/json/include \
     $(TOPDIR)third_party/protobuf/include \
     libc_sec/include \
@@ -90,6 +83,7 @@ LOCAL_SHARED_LIBRARIES := \
     libc_sec \
     liberror_manager \
     libregister \
+    libge_common \
 
 LOCAL_LDFLAGS := -lrt -ldl
 

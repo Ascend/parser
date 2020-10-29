@@ -17,7 +17,7 @@
 #include "onnx_constant_parser.h"
 #include <map>
 #include <vector>
-#include "parser/common/acl_graph_parser_util.h"
+#include "common/ge/ge_util.h"
 #include "common/util.h"
 #include "framework/omg/parser/parser_inner_ctx.h"
 #include "graph/ge_tensor.h"
@@ -30,7 +30,6 @@ using ge::onnx::TensorProto;
 using domi::ONNX;
 using GeShape = ge::GeShape;
 using GeTensorDesc = ge::GeTensorDesc;
-using namespace ge::parser;
 
 namespace ge {
 Status OnnxConstantParser::ParseConvertData(const ge::onnx::TensorProto &tensor_proto, ge::Tensor &tensor, int count) {

@@ -19,14 +19,11 @@
 #include "common/debug/log.h"
 #include "common/util.h"
 #include "framework/common/debug/ge_log.h"
-#include "framework/omg/parser/parser_inner_ctx.h"
 #include "parser/common/op_parser_factory.h"
-#include "framework/omg/parser/parser_types.h"
 
 using domi::tensorflow::AttrValue;
 using domi::tensorflow::NodeDef;
 using domi::TENSORFLOW;
-using ge::parser::DATA;
 
 namespace ge {
 namespace {
@@ -100,7 +97,7 @@ Status TensorFlowDataParser::ParseInputFromModel(const Message *op_src, ge::OpDe
 Status TensorFlowDataParser::ParseInputFromUser(const Message *op_src, const ge::OpDescPtr &op_def) {
   GE_CHECK_NOTNULL(op_def);
   (void)op_src;
-  const ge::ParserContext &ctx = GetParserContext();
+  const ge::OmgContext &ctx = domi::GetContext();
   std::unordered_map<std::string, std::vector<int64_t>> input_dims = ctx.input_dims;
   // User not designate the input_shape
   std::string name = op_def->GetName();
@@ -134,7 +131,7 @@ Status TensorFlowDataParser::ParseInputFromUser(const Message *op_src, const ge:
 }
 
 Status TensorFlowDataParser::CheckInputShape(const std::string &name) {
-  const ge::ParserContext &ctx = GetParserContext();
+  const ge::OmgContext &ctx = domi::GetContext();
   if (!ctx.is_dynamic_input) {
     for (uint32_t i = 0; i < user_input_dims_v.size(); i++) {
       // if input_shape has some placeholders, user should designate them.

@@ -27,7 +27,6 @@
 #include "common/types.h"
 #include "common/util.h"
 #include "common/debug/log.h"
-#include "parser/common/acl_graph_parser_util.h"
 #include "ge/ge_api_types.h"
 #include "framework/common/debug/ge_log.h"
 
@@ -159,7 +158,7 @@ bool SaveIdentifierOpMapInfo(const string &line,  std::map<int, std::pair<string
 }
 
 bool CheckRealPath(const char *file_path) {
-  string dest_path = ge::parser::RealPath(file_path);
+  string dest_path = ge::RealPath(file_path);
   if (dest_path.empty()) {
     GELOGW("Path [%s] is not real existed.", file_path);
     return false;
@@ -185,7 +184,7 @@ Status ProtoFileParser::CreatProtoFile() {
     fusion_proto_path += "/" + CreatTmpName(kTmpFileNameLen);
   }
 
-  int fd = open(fusion_proto_path.c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP);
+  int fd = open(fusion_proto_path.c_str(), O_RDWR | O_CREAT | O_TRUNC, 0640);
   if (fd < kOpenRetValue) {
     GELOGE(FAILED, "creat tmp proto file[%s] failed.", fusion_proto_path.c_str());
     return FAILED;

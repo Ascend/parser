@@ -18,7 +18,7 @@
 #ifndef DOMI_OP_SHAPE_N_OP_H_
 #define DOMI_OP_SHAPE_N_OP_H_
 #include "parser/common/op_def/operator.h"
-#include "framework/omg/parser/parser_types.h"
+#include "framework/common/types.h"
 
 namespace ge {
 class ShapeNOperator : public ParserOperator {

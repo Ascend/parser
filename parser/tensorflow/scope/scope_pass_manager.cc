@@ -15,7 +15,7 @@
  */
 
 #include "parser/tensorflow/scope/scope_pass_manager.h"
-#include "parser/common/acl_graph_parser_util.h"
+#include "common/ge/ge_util.h"
 #include "common/util.h"
 #include "common/util/error_manager/error_manager.h"
 #include "framework/common/debug/ge_log.h"
@@ -25,7 +25,7 @@
 namespace ge {
 shared_ptr<ScopeGraph> ScopePassManager::BuildScopeGraph(domi::tensorflow::GraphDef *graph_def) {
   GE_CHK_BOOL_EXEC(graph_def != nullptr, return nullptr, "graph_def is nullptr");
-  scope_graph_ = ge::parser::MakeShared<ScopeGraph>();
+  scope_graph_ = ge::MakeShared<ScopeGraph>();
   if (scope_graph_ == nullptr) {
     GELOGE(FAILED, "Scope graph make shared failed.");
     return nullptr;

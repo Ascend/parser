@@ -23,7 +23,6 @@
 #include "framework/common/debug/ge_log.h"
 #include "omg/omg.h"
 #include "parser/common/op_parser_factory.h"
-#include "parser/common/model_saver.h"
 #include "register/op_registry.h"
 
 namespace ge {
@@ -56,7 +55,7 @@ void PreChecker::Init() {
   fmk_op_types_ = nullptr;
 
   // Currently only Caffe and tensorflow are supported
-  domi::FrameworkType fmk_type = GetParserContext().type;
+  domi::FrameworkType fmk_type = domi::GetContext().type;
   if (fmk_type == domi::CAFFE)
     fmk_op_types_ = &caffe_op_map;
   else if (fmk_type == domi::TENSORFLOW)
@@ -119,8 +118,8 @@ FMK_FUNC_HOST_VISIBILITY Status PreChecker::CheckType(OpId id, bool is_tensorflo
 
   // If the user explicitly specifies the mapping relationship of the operator type through
   // the -- OP_name_map parameter, the type specified by the user is used.
-  auto op_map_iter = GetParserContext().op_conf_map.find(type);
-  if (op_map_iter != GetParserContext().op_conf_map.end()) {
+  auto op_map_iter = domi::GetContext().op_conf_map.find(type);
+  if (op_map_iter != domi::GetContext().op_conf_map.end()) {
     type = op_map_iter->second;
   }
 
@@ -233,7 +232,7 @@ Status PreChecker::Save(string file) {
   }
 
   // Save JSON data to a file
-  GE_RETURN_WITH_LOG_IF_ERROR(ge::parser::ModelSaver::SaveJsonToFile(file.c_str(), model), "Save failed.");
+  GE_RETURN_WITH_LOG_IF_ERROR(ModelSaver::SaveJsonToFile(file.c_str(), model), "Save failed.");
 
   return SUCCESS;
 }

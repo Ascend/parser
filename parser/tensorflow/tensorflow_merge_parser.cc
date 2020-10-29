@@ -20,10 +20,8 @@
 #include "framework/common/util.h"
 #include "graph/debug/ge_attr_define.h"
 #include "parser/common/op_parser_factory.h"
-#include "framework/omg/parser/parser_types.h"
 
 using domi::TENSORFLOW;
-using ge::parser::MERGE;
 
 namespace ge {
 Status TensorFlowMergeParser::ParseParams(const Message *op_src, ge::OpDescPtr &op_desc) {

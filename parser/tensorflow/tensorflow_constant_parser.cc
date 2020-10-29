@@ -19,7 +19,7 @@
 #include <memory>
 #include <vector>
 #include "common/debug/log.h"
-#include "parser/common/acl_graph_parser_util.h"
+#include "common/ge/ge_util.h"
 #include "common/op/ge_op_utils.h"
 #include "parser/common/op_def/constant_op.h"
 #include "parser/common/op_def/ir_pb_converter.h"
@@ -27,12 +27,10 @@
 #include "graph/ge_tensor.h"
 #include "graph/utils/attr_utils.h"
 #include "parser/common/op_parser_factory.h"
-#include "framework/omg/parser/parser_types.h"
 #include "register/tensor_assign.h"
 
 using domi::tensorflow::NodeDef;
 using domi::TENSORFLOW;
-using ge::parser::CONSTANTOP;
 
 namespace ge {
 Status TensorFlowConstantParser::ParseDType(const domi::tensorflow::NodeDef *node, ConstantOperator *op) {
@@ -68,7 +66,7 @@ Status TensorFlowConstantParser::ParseValue(const domi::tensorflow::NodeDef *nod
 
   const domi::tensorflow::TensorProto &tensor = attr_value.tensor();
 
-  GeTensorPtr weight = ge::parser::MakeShared<ge::GeTensor>();
+  GeTensorPtr weight = ge::MakeShared<ge::GeTensor>();
   GE_CHECK_NOTNULL(weight);
   int64_t dataType = 0;
   GE_CHK_BOOL_RET_STATUS(ge::AttrUtils::GetInt(opDesc, TENSORFLOW_ATTR_DTYPE, dataType), INTERNAL_ERROR,

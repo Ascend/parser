@@ -18,9 +18,6 @@
 #include <memory>
 #include "parser/common/op_parser_factory.h"
 #include "common/util/error_manager/error_manager.h"
-#include "framework/omg/parser/parser_types.h"
-
-using namespace ge::parser;
 
 using domi::CAFFE;
 

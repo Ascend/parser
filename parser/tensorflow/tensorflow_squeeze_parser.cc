@@ -22,16 +22,14 @@
 #include "framework/common/op/attr_value_util.h"
 #include "framework/common/op/op_parser_util.h"
 #include "framework/common/util.h"
-#include "framework/omg/parser/parser_inner_ctx.h"
 #include "graph/utils/type_utils.h"
 #include "parser/common/op_parser_factory.h"
-#include "parser/common/acl_graph_parser_util.h"
+#include "common/math/math_util.h"
 
 using domi::tensorflow::AttrValue;
 using std::vector;
 using std::shared_ptr;
 using domi::TENSORFLOW;
-using namespace ge::parser;
 
 namespace ge {
 Status TensorFlowSqueezeParser::ParseDesc(const domi::tensorflow::AttrValue &attr_value, ge::GeTensorDesc &ge_desc) {
@@ -52,10 +50,10 @@ Status TensorFlowSqueezeParser::ParseDesc(const domi::tensorflow::AttrValue &att
   for (uint32_t j = 0; j < ge_desc.GetShape().GetDimNum(); ++j) {
     tmp_dim = ge_desc.GetShape().GetDim(j);
     GE_IF_BOOL_EXEC(tmp_dim < 0, real_size = tmp_dim * (-1) * real_size; continue;);
-    PARSER_INT64_MULCHECK(real_size, tmp_dim);
+    FMK_INT64_MULCHECK(real_size, tmp_dim);
     real_size *= tmp_dim;
   }
-  PARSER_INT64_MULCHECK(real_size, size_type);
+  FMK_INT64_MULCHECK(real_size, size_type);
   ge::TensorUtils::SetSize(ge_desc, real_size * size_type);
   ge::TensorUtils::SetRealDimCnt(ge_desc, ge_desc.GetShape().GetDimNum());
   GELOGD("after translate tf_desc, datatype: %s, format: %s, real size: %u, size_type: %u",
@@ -112,7 +110,7 @@ Status TensorFlowSqueezeParser::ParseParams(const Message *op_src, ge::OpDescPtr
   domi::tensorflow::AttrValue output_attr_value;
 
   GE_IF_BOOL_EXEC(
-      GetParserContext().train_flag == true, ge::GeTensorDesc input_desc; ge::GeTensorDesc output_desc;
+      domi::GetContext().train_flag == true, ge::GeTensorDesc input_desc; ge::GeTensorDesc output_desc;
 
       if (TensorFlowUtil::FindAttrValue(node, ge::ATTR_NAME_INPUT_TENSOR_DESC, input_attr_value)) {
         GE_CHK_BOOL_RET_STATUS(ParseDesc(input_attr_value, input_desc) == SUCCESS, FAILED, "parse input desc failed");

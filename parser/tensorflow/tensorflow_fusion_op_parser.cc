@@ -17,11 +17,11 @@
 #include "parser/tensorflow/tensorflow_fusion_op_parser.h"
 #include <memory>
 #include "common/debug/log.h"
-#include "parser/common/acl_graph_parser_util.h"
+#include "common/fp16_t.h"
+#include "common/ge/ge_util.h"
 #include "common/util.h"
 #include "framework/common/debug/ge_log.h"
 #include "omg/omg.h"
-#include "parser/common/parser_fp16_t.h"
 #include "parser/tensorflow/tensorflow_op_parser.h"
 #include "register/tensor_assign.h"
 
@@ -115,7 +115,7 @@ Status TensorFlowFusionOpParser::ParseHalfFromConst(const NodeDef *node_def, flo
     auto val_vec = tensor.half_val();
     int32_t val_size = val_vec.size();
     if (index < val_size) {
-      ge::parser::fp16_t fp16_value = static_cast<parser::fp16_t>(val_vec.Get(index));
+      fp16_t fp16_value = static_cast<fp16_t>(val_vec.Get(index));
       param = fp16_value.ToFloat();
     } else {
       GELOGE(domi::PARAM_INVALID, "Const data size is smaller than index:%d, not supported.", index);
@@ -132,7 +132,7 @@ Status TensorFlowFusionOpParser::ParseWeightFromConst(const NodeDef *node_def, g
   GE_CHECK_NOTNULL(node_def);
   TensorProto tensor;
   GE_CHK_STATUS_RET(GetTensorFromNode(node_def, tensor), "get tensor failed.");
-  weight = ge::parser::MakeShared<ge::GeTensor>();
+  weight = ge::MakeShared<ge::GeTensor>();
   GE_CHECK_NOTNULL(weight);
   domi::tensorflow::DataType data_type = tensor.dtype();
   GE_CHK_STATUS_RET(

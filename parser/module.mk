@@ -1,6 +1,6 @@
 
 LOCAL_PATH := $(call my-dir)
-include $(LOCAL_PATH)/stub/Makefile
+include $(LOCAL_PATH)/../stub/Makefile
 COMMON_LOCAL_C_INCLUDES := \
     proto/om.proto \
     proto/insert_op.proto \
@@ -39,9 +39,7 @@ COMMON_LOCAL_C_INCLUDES := \
     $(TOPDIR)inc/external/graph \
     $(TOPDIR)inc/external/parser \
     $(TOPDIR)inc/framework \
-    $(TOPDIR)parser/parser \
-    $(TOPDIR)parser        \
-    $(TOPDIR)graphengine/ge \
+    $(TOPDIR)framework/domi/parser \
     libc_sec/include \
     third_party/protobuf/include \
     third_party/json/include \
@@ -115,6 +113,7 @@ LOCAL_SHARED_LIBRARIES := \
     libparser_common \
     libgraph \
     libregister \
+    libge_common \
     lib_caffe_parser \
 
 LOCAL_LDFLAGS := -lrt
@@ -134,8 +133,8 @@ endif
 
 LOCAL_C_INCLUDES := $(COMMON_LOCAL_C_INCLUDES)
 
-LOCAL_SRC_FILES := ../../out/parser/lib64/stub/tensorflow_parser.cc
-LOCAL_SRC_FILES += ../../out/parser/lib64/stub/caffe_parser.cc
+LOCAL_SRC_FILES := ../../../out/ge/lib64/stub/tensorflow_parser.cc
+LOCAL_SRC_FILES += ../../../out/ge/lib64/stub/caffe_parser.cc
 
 
 LOCAL_SHARED_LIBRARIES :=

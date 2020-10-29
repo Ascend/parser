@@ -18,7 +18,7 @@
 #include <cstdlib>
 #include "common/debug/log.h"
 #include "common/op/ge_op_utils.h"
-#include "parser/common/acl_graph_parser_util.h"
+#include "common/math/math_util.h"
 #include "common/util.h"
 #include "graph/utils/type_utils.h"
 #include "omg/omg.h"
@@ -36,7 +36,7 @@ FMK_FUNC_HOST_VISIBILITY Status DataOpParser::ParseShape(const vector<int64_t> &
   GE_RETURN_WITH_LOG_IF_FALSE(op != nullptr, "ParseShape failed for data_op, op is null");
 
   const string &data_op_name = op->GetName();
-  GetParserContext().input_dims.emplace(data_op_name, shape);
+  domi::GetContext().input_dims.emplace(data_op_name, shape);
 
   int64_t attr_type = 0;
   ge::DataType data_type;
@@ -51,7 +51,7 @@ FMK_FUNC_HOST_VISIBILITY Status DataOpParser::ParseShape(const vector<int64_t> &
 
   ge::GeTensorDesc i_tensor_desc;
   ge::GeTensorDesc o_tensor_desc;
-  const unordered_map<string, domiTensorFormat_t> &input_nodes_format_map = GetParserContext().input_nodes_format_map;
+  const unordered_map<string, domiTensorFormat_t> &input_nodes_format_map = domi::GetContext().input_nodes_format_map;
   auto map_iter = input_nodes_format_map.find(data_op_name);
   if (map_iter != input_nodes_format_map.end() && map_iter->second == domi::DOMI_TENSOR_NC1HWC0) {
     // Input 5D NC1HWC0
@@ -80,9 +80,9 @@ FMK_FUNC_HOST_VISIBILITY Status DataOpParser::ParseShape(const vector<int64_t> &
                                   "Init ND Output Tensor failed");
     }
   }
-  i_tensor_desc.SetFormat(ge::TypeUtils::DomiFormatToFormat(GetParserContext().format));
-  i_tensor_desc.SetOriginFormat(ge::TypeUtils::DomiFormatToFormat(GetParserContext().format));
-  o_tensor_desc.SetFormat(ge::TypeUtils::DomiFormatToFormat(GetParserContext().format));
+  i_tensor_desc.SetFormat(ge::TypeUtils::DomiFormatToFormat(domi::GetContext().format));
+  i_tensor_desc.SetOriginFormat(ge::TypeUtils::DomiFormatToFormat(domi::GetContext().format));
+  o_tensor_desc.SetFormat(ge::TypeUtils::DomiFormatToFormat(domi::GetContext().format));
   if (op->AddInputDesc(i_tensor_desc) != ge::GRAPH_SUCCESS) {
     GELOGE(domi::INTERNAL_ERROR, "AddInputDesc failed for op %s.", op->GetName().c_str());
     return FAILED;
@@ -128,10 +128,10 @@ Status DataOpParser::InitNDTensor(const vector<int64_t> &shape, ge::DataType dat
   }
   uint32_t type_size = 0;
   if (ge::TypeUtils::GetDataTypeLength(data_type, type_size)) {
-    PARSER_INT64_UINT32_MULCHECK(size, type_size);
+    FMK_INT64_UINT32_MULCHECK(size, type_size);
     size *= type_size;
   } else {
-    PARSER_INT64_UINT32_MULCHECK(size, static_cast<uint32_t>(sizeof(float)));
+    FMK_INT64_UINT32_MULCHECK(size, static_cast<uint32_t>(sizeof(float)));
     size *= sizeof(float);
   }
   ge::TensorUtils::SetSize(tensor_desc, size);
@@ -169,7 +169,7 @@ Status DataOpParser::InitInputTensor(const vector<int64_t> &shape, ge::GeTensorD
   if (input.GetShape().GetDim(0) != -1) {
     size = input.GetShape().GetShapeSize();
   }
-  PARSER_INT64_UINT32_MULCHECK(size, static_cast<uint32_t>(sizeof(float)));
+  FMK_INT64_UINT32_MULCHECK(size, static_cast<uint32_t>(sizeof(float)));
   ge::TensorUtils::SetSize(input, size * sizeof(float));
 
   return SUCCESS;

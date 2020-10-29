@@ -20,7 +20,7 @@
 #include <vector>
 
 namespace ge {
-VarIsInitializedOpOperator::VarIsInitializedOpOperator() : ParserOperator(ge::parser::VARISINITIALIZEDOP) {}
+VarIsInitializedOpOperator::VarIsInitializedOpOperator() : ParserOperator(ge::VARISINITIALIZEDOP) {}
 
 VarIsInitializedOpOperator::~VarIsInitializedOpOperator() {}
 

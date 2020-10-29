@@ -19,7 +19,7 @@
 #include <memory>
 #include <string>
 #include "common/debug/log.h"
-#include "parser/common/acl_graph_parser_util.h"
+#include "common/ge/ge_util.h"
 #include "common/op/ge_op_utils.h"
 #include "common/op_map.h"
 #include "common/util.h"
@@ -38,6 +38,8 @@ FMK_FUNC_HOST_VISIBILITY OpRegistrationTbe *OpRegistrationTbe::Instance() {
 }
 
 bool OpRegistrationTbe::Finalize(const OpRegistrationData &reg_data, bool is_train) {
+  ge::OpTypeContainer::Instance()->Register(reg_data.GetOmOptype());
+
   static std::map<domi::FrameworkType, std::map<std::string, std::string> *> op_map = {{CAFFE, &caffe_op_map}};
   if (is_train) {
     op_map[domi::TENSORFLOW] = &tensorflow_train_op_map;
@@ -55,7 +57,8 @@ bool OpRegistrationTbe::Finalize(const OpRegistrationData &reg_data, bool is_tra
         continue;
       } else {
         (*fmk_op_map)[tmp] = reg_data.GetOmOptype();
-        GELOGD("First register in parser initialize, original type: %s, om_optype: %s, imply type: %s.", tmp.c_str(),
+        GELOGD("First register in parser initilize, original type: %s, om_optype: %s, imply type: %s.",
+               tmp.c_str(),
                reg_data.GetOmOptype().c_str(), TypeUtils::ImplyTypeToSerialString(reg_data.GetImplyType()).c_str());
       }
     }
@@ -79,7 +82,7 @@ bool OpRegistrationTbe::RegisterParser(const OpRegistrationData &reg_data) {
         return false;
       }
       std::shared_ptr<TensorFlowCustomParserAdapter> tf_parser_adapter =
-          ge::parser::MakeShared<TensorFlowCustomParserAdapter>();
+          ge::MakeShared<TensorFlowCustomParserAdapter>();
       if (tf_parser_adapter == nullptr) {
         GELOGE(PARAM_INVALID, "Create tf parser adapter failed.");
         return false;
@@ -94,20 +97,22 @@ bool OpRegistrationTbe::RegisterParser(const OpRegistrationData &reg_data) {
         return false;
       }
       GELOGI("Register fusion custom op parser: %s", reg_data.GetOmOptype().c_str());
-      std::shared_ptr<TensorFlowFusionCustomParserAdapter> tf_fusion_parser_adapter =
-          ge::parser::MakeShared<TensorFlowFusionCustomParserAdapter>();
+      std::shared_ptr<TensorFlowFusionCustomParserAdapter>
+          tf_fusion_parser_adapter = ge::MakeShared<TensorFlowFusionCustomParserAdapter>();
       if (tf_fusion_parser_adapter == nullptr) {
         GELOGE(PARAM_INVALID, "Create tf fusion parser adapter failed.");
         return false;
       }
       OpParserRegisterar registerar __attribute__((unused)) = OpParserRegisterar(
           domi::TENSORFLOW, reg_data.GetOmOptype(),
-          [=]() -> std::shared_ptr<OpParser> { return tf_fusion_parser_adapter; }, true);
+          [=]() -> std::shared_ptr<OpParser> { return tf_fusion_parser_adapter; },
+          true);
     }
   } else {
     std::shared_ptr<OpParserFactory> factory = OpParserFactory::Instance(reg_data.GetFrameworkType());
     if (factory == nullptr) {
-      GELOGE(INTERNAL_ERROR, "Get op parser factory for %s failed.",
+      GELOGE(INTERNAL_ERROR,
+             "Get op parser factory for %s failed.",
              TypeUtils::FmkTypeToSerialString(reg_data.GetFrameworkType()).c_str());
       return false;
     }
@@ -119,12 +124,14 @@ bool OpRegistrationTbe::RegisterParser(const OpRegistrationData &reg_data) {
 
     PARSER_CREATOR_FN func = CustomParserAdapterRegistry::Instance()->GetCreateFunc(reg_data.GetFrameworkType());
     if (func == nullptr) {
-      GELOGE(INTERNAL_ERROR, "Get custom parser adapter failed for fmk type %s.",
+      GELOGE(INTERNAL_ERROR,
+             "Get custom parser adapter failed for fmk type %s.",
              TypeUtils::FmkTypeToSerialString(reg_data.GetFrameworkType()).c_str());
       return false;
     }
     OpParserFactory::Instance(reg_data.GetFrameworkType())->RegisterCreator(reg_data.GetOmOptype(), func);
-    GELOGD("Register custom parser adapter for op %s of fmk type %s success.", reg_data.GetOmOptype().c_str(),
+    GELOGD("Register custom parser adapter for op %s of fmk type %s success.",
+           reg_data.GetOmOptype().c_str(),
            TypeUtils::FmkTypeToSerialString(reg_data.GetFrameworkType()).c_str());
   }
   return true;

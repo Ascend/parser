@@ -17,7 +17,7 @@
 // AUTO GEN PLEASE DO NOT MODIFY IT
 #include "common/op_def/shape_n_op.h"
 #include "graph/debug/ge_attr_define.h"
-#include "framework/omg/parser/parser_types.h"
+#include "framework/common/types.h"
 
 namespace ge {
 FMK_FUNC_HOST_VISIBILITY ShapeNOperator::ShapeNOperator() : ParserOperator("ShapeN") {}

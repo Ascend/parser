@@ -19,7 +19,7 @@
 
 #include <string>
 #include <vector>
-#include "framework/omg/parser/parser_types.h"
+#include "common/types.h"
 #include "omg/omg_inner_types.h"
 
 namespace ge {

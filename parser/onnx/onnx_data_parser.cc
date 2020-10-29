@@ -22,7 +22,6 @@
 #include "parser/onnx/onnx_util.h"
 
 using domi::ONNX;
-using namespace ge::parser;
 
 namespace ge {
 Status OnnxDataParser::ParseParams(const Message *op_src, ge::Operator &op_def) {

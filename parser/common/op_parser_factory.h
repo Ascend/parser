@@ -23,8 +23,8 @@
 #include <mutex>
 #include <string>
 #include <vector>
-#include "parser/common/acl_graph_parser_util.h"
-#include "framework/omg/parser/parser_types.h"
+#include "common/ge/ge_util.h"
+#include "common/types.h"
 #include "framework/common/debug/ge_log.h"
 #include "omg/omg_inner_types.h"
 #include "external/register/register.h"
@@ -162,7 +162,7 @@ class CustomParserAdapterRegistrar {
  */
 #define REGISTER_OP_PARSER_CREATOR(framework, op_type, clazz)                              \
   std::shared_ptr<OpParser> Creator_##framework##_##op_type##_Op_Parser() {                \
-    std::shared_ptr<clazz> ptr = ge::parser::MakeShared<clazz>();                                  \
+    std::shared_ptr<clazz> ptr = ge::MakeShared<clazz>();                                  \
     if (ptr == nullptr) {                                                                  \
       GELOGW("MakeShared failed, result is nullptr.");                                     \
     }                                                                                      \
@@ -173,7 +173,7 @@ class CustomParserAdapterRegistrar {
 
 #define REGISTER_FUSION_OP_PARSER_CREATOR(framework, op_type, clazz)               \
   std::shared_ptr<OpParser> Creator_##framework##_##op_type##_Fusion_Op_Parser() { \
-    std::shared_ptr<clazz> ptr = ge::parser::MakeShared<clazz>();                          \
+    std::shared_ptr<clazz> ptr = ge::MakeShared<clazz>();                          \
     if (ptr == nullptr) {                                                          \
       GELOGW("MakeShared failed, result is nullptr.");                             \
     }                                                                              \
@@ -187,7 +187,7 @@ class CustomParserAdapterRegistrar {
 /// @param [in] clazz        CaffeCustomParserAdapter adaptation class
 #define REGISTER_CUSTOM_PARSER_ADAPTER_CREATOR(framework, clazz)         \
   std::shared_ptr<OpParser> Creator_##framework##_Op_Parser_Adapter() { \
-    std::shared_ptr<clazz> ptr = ge::parser::MakeShared<clazz>();               \
+    std::shared_ptr<clazz> ptr = ge::MakeShared<clazz>();               \
     if (ptr == nullptr) {                                               \
       GELOGW("MakeShared failed, result is nullptr.");                  \
     }                                                                   \
