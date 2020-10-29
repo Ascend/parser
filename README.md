@@ -22,13 +22,14 @@ parser以动态库的方式被调用。
 ```
 git clone https://gitee.com/ascend/parser.git
 cd parser
+git submodule init && git submodule update
 ```
 
 #### 源码编译
 
 在parser根目录执行以下命令编译：
 ```
-// 正在补充
+bash build.sh
 ```
 
 ## 贡献
