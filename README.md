@@ -29,7 +29,7 @@ git submodule init && git submodule update
 
 在parser根目录执行以下命令编译：
 ```
-export ASCEND_CUSTOM_PATH=910基础安装包的安装路径
+export ASCEND_CUSTOM_PATH=昇腾910基础安装包的安装路径
 bash build.sh
 ```
 
