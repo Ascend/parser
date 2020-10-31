@@ -23,7 +23,7 @@ export BUILD_PATH="${BASEPATH}/build/"
 usage()
 {
   echo "Usage:"
-  echo "sh build.sh [-j[n]] [-h] [-v] [-s] [-t] [-u] [-c]"
+  echo "sh build.sh [-j[n]] [-h] [-v] [-s] [-t] [-u] [-c] [-S on|off]"
   echo ""
   echo "Options:"
   echo "    -h Print usage"
@@ -33,7 +33,19 @@ usage()
   echo "    -t Build and execute ut"
   echo "    -c Build ut with coverage tag"
   echo "    -v Display build command"
+  echo "    -S Enable enable download cmake compile dependency from gitee , default off"
   echo "to be continued ..."
+}
+
+# check value of input is 'on' or 'off'
+# usage: check_on_off arg_value arg_name
+check_on_off()
+{
+  if [[ "X$1" != "Xon" && "X$1" != "Xoff" ]]; then
+    echo "Invalid value $1 for option -$2"
+    usage
+    exit 1
+  fi
 }
 
 # parse and set options
@@ -46,8 +58,9 @@ checkopts()
   ENABLE_GE_ST="off"
   ENABLE_GE_COV="off"
   GE_ONLY="on"
+  ENABLE_GITEE="off"
   # Process the options
-  while getopts 'ustchj:v' opt
+  while getopts 'ustchj:vS:' opt
   do
     OPTARG=$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')
     case "${opt}" in
@@ -76,6 +89,11 @@ checkopts()
         ;;
       v)
         VERBOSE="VERBOSE=1"
+        ;;
+      S)
+        check_on_off $OPTARG S
+        ENABLE_GITEE="$OPTARG"
+        echo "enable download from gitee"
         ;;
       *)
         echo "Undefined option: ${opt}"
@@ -117,6 +135,10 @@ build_parser()
 
   if [[ "X$ENABLE_GE_ST" = "Xon" ]]; then
     CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_GE_ST=ON"
+  fi
+
+  if [[ "X$ENABLE_GITEE" = "Xon" ]]; then
+    CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_GITEE=ON"
   fi
 
   CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_OPEN_SRC=True -DCMAKE_INSTALL_PREFIX=${OUTPUT_PATH}"
@@ -186,7 +208,6 @@ generate_package()
   done
 
   find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "libc_sec.so" -exec cp -f {} ${OUTPUT_PATH}/${ATC_PATH} \;
-  find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "libregister.a" -exec cp -f {} ${OUTPUT_PATH}/${ACL_PATH} \;
 
   tar -cf parser_lib.tar fwkacllib acllib atc
 }
