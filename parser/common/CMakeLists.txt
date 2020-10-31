@@ -8,8 +8,7 @@ set(SRC_LIST
     "parser_inner_ctx.cc"
     "proto_file_parser.cc"
     "acl_graph_parser_util.cc"
-    "tbe_plugin_loader.cc"
-    "model_saver.cc"
+    "../../../ge/common/model_saver.cc"
     "../tensorflow/tensorflow_custom_parser_adapter.cc"
     "../tensorflow/tensorflow_fusion_custom_parser_adapter.cc"
     "../tensorflow/tensorflow_fusion_op_parser.cc"
@@ -20,10 +19,8 @@ set(SRC_LIST
     "op_def/op_schema.cc"
     "op_def/operator.cc"
     "op_map.cc"
-    "parser_types.cc"
-    "pass_manager.cc"
-    "parser_fp16_t.cc"
-    "thread_pool.cc"
+    "../../../ge/graph/passes/pass_manager.cc"
+    "../../../ge/common/thread_pool.cc"
 )
 
 ############ libparser_common.so ############
