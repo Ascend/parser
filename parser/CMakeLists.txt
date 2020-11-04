@@ -131,7 +131,7 @@ target_compile_options(fmk_parser_stub PRIVATE
 )
 
 target_compile_definitions(fmk_parser_stub PRIVATE
-    $<$<STREQUAL:${PRODUCT_SIDE},host>:FMK_SUPPORT_DUMP>
+    $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:FMK_SUPPORT_DUMP>
     PROTOBUF_INLINE_NOT_IN_HEADERS=0
     REUSE_MEMORY=1
     FMK_HOST_INFER
