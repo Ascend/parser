@@ -1543,6 +1543,7 @@ void CaffeModelParser::SaveOrigionLayerTops(domi::caffe::LayerParameter &layer) 
 Status CaffeModelParser::SaveDataLayerTops(const domi::caffe::LayerParameter &layer) {
   string name = layer.name();
   if (node_map.find(name) == node_map.end()) {
+    ErrorManager::GetInstance().ATCReportErrMessage("E11034", {"opname"}, {name});
     GELOGE(FAILED, "Node can not be found by layer name: %s", name.c_str());
     return FAILED;
   }
@@ -1552,6 +1553,8 @@ Status CaffeModelParser::SaveDataLayerTops(const domi::caffe::LayerParameter &la
 
   if (node->GetType() == ge::parser::DATA) {
     if (layer.top_size() != 1) {
+      ErrorManager::GetInstance().ATCReportErrMessage("E11035", {"opname", "size"},
+        {name, std::to_string(layer.top_size())});
       GELOGE(FAILED, "Data layer[%s] top size must be 1, real size: %d", name.c_str(), layer.top_size());
       return FAILED;
     }
@@ -1559,7 +1562,8 @@ Status CaffeModelParser::SaveDataLayerTops(const domi::caffe::LayerParameter &la
     string top_name = layer.top(0);
     auto data_top_names = ge::GetParserContext().data_top_names;
     if (find(data_top_names.begin(), data_top_names.end(), top_name) != data_top_names.end()) {
-      GELOGE(FAILED, "Different data can not have same top name: %s.", top_name.c_str());
+      ErrorManager::GetInstance().ATCReportErrMessage("E11036", {"topname"}, {top_name});
+      GELOGE(FAILED, "Different data node can not have same top name: %s.", top_name.c_str());
       return FAILED;
     }
     ge::GetParserContext().data_top_names.push_back(top_name);
