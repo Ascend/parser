@@ -22,6 +22,7 @@ target_compile_options(fmk_onnx_parser PRIVATE
 
 target_compile_definitions(fmk_onnx_parser PRIVATE
     PROTOBUF_INLINE_NOT_IN_HEADERS=0
+    google=ascend_private
 )
 
 target_include_directories(fmk_onnx_parser PRIVATE
@@ -61,7 +62,7 @@ target_include_directories(fmk_onnx_parser PRIVATE
 target_link_libraries(fmk_onnx_parser PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     -Wl,--no-as-needed
-    protobuf
+    ascend_protobuf
     register
     c_sec
     parser_common 

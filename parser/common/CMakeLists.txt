@@ -35,6 +35,7 @@ target_compile_options(parser_common PRIVATE
 
 target_compile_definitions(parser_common PRIVATE
     PROTOBUF_INLINE_NOT_IN_HEADERS=0
+    google=ascend_private
 )
 
 target_include_directories(parser_common PRIVATE
@@ -74,7 +75,7 @@ target_link_libraries(parser_common PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     -Wl,--no-as-needed
     graph
-    protobuf
+    ascend_protobuf
     register
     c_sec
     slog
