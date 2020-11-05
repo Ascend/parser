@@ -52,7 +52,7 @@ include $(CLEAR_VARS)
 LOCAL_MODULE := libfmk_parser
 
 LOCAL_CFLAGS += -DPROTOBUF_INLINE_NOT_IN_HEADERS=0
-LOCAL_CFLAGS += -Werror
+LOCAL_CFLAGS += -Werror -Dgoogle=ascend_private
 ifeq ($(DEBUG), 1)
 LOCAL_CFLAGS += -g -O0
 endif
@@ -107,7 +107,7 @@ LOCAL_SRC_FILES += $(FMK_COMMON_SRC_FILES)
 LOCAL_C_INCLUDES := $(COMMON_LOCAL_C_INCLUDES)
 
 LOCAL_SHARED_LIBRARIES := \
-    libprotobuf \
+    libascend_protobuf \
     libslog \
     libmmpa \
     libc_sec \
