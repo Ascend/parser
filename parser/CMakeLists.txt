@@ -52,6 +52,7 @@ target_compile_options(fmk_parser PRIVATE
 
 target_compile_definitions(fmk_parser PRIVATE
     PROTOBUF_INLINE_NOT_IN_HEADERS=0
+    google=ascend_private
 )
 
 target_include_directories(fmk_parser PRIVATE
@@ -91,7 +92,7 @@ target_include_directories(fmk_parser PRIVATE
 target_link_libraries(fmk_parser
     $<BUILD_INTERFACE:intf_pub>
     -Wl,--no-as-needed
-    protobuf
+    ascend_protobuf
     error_manager
     parser_common
     graph

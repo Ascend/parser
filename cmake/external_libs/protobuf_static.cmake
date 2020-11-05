@@ -16,7 +16,7 @@ else()
     set(MD5 "3d9e32700639618a4d2d342c99d4507a")
 endif ()
 
-set(protobuf_CXXFLAGS "-Wno-maybe-uninitialized -Wno-unused-parameter -fPIC -fstack-protector-all -D_FORTIFY_SOURCE=2 -D_GLIBCXX_USE_CXX11_ABI=0 -O2")
+set(protobuf_CXXFLAGS "-Wno-maybe-uninitialized -Wno-unused-parameter -fPIC -fstack-protector-all -D_FORTIFY_SOURCE=2 -D_GLIBCXX_USE_CXX11_ABI=0 -O2 -Dgoogle=ascend_private")
 set(protobuf_LDFLAGS "-Wl,-z,relro,-z,now,-z,noexecstack")
 set(PROTOBUF_STATIC_PKG_DIR ${CMAKE_INSTALL_PREFIX}/protobuf_static)
 ExternalProject_Add(protobuf_static_build
@@ -38,14 +38,14 @@ ExternalProject_Add(protobuf_static_build
 )
 include(GNUInstallDirs)
 
-add_library(protobuf_static_lib STATIC IMPORTED)
+add_library(ascend_protobuf_static_lib STATIC IMPORTED)
 
-set_target_properties(protobuf_static_lib PROPERTIES
-                      IMPORTED_LOCATION ${PROTOBUF_STATIC_PKG_DIR}/${CMAKE_INSTALL_LIBDIR}/libprotobuf.a
+set_target_properties(ascend_protobuf_static_lib PROPERTIES
+                      IMPORTED_LOCATION ${PROTOBUF_STATIC_PKG_DIR}/${CMAKE_INSTALL_LIBDIR}/libascend_protobuf.a
 )
 
-add_library(protobuf_static INTERFACE)
-target_include_directories(protobuf_static INTERFACE ${PROTOBUF_STATIC_PKG_DIR}/include)
-target_link_libraries(protobuf_static INTERFACE protobuf_static_lib)
+add_library(ascend_protobuf_static INTERFACE)
+target_include_directories(ascend_protobuf_static INTERFACE ${PROTOBUF_STATIC_PKG_DIR}/include)
+target_link_libraries(ascend_protobuf_static INTERFACE ascend_protobuf_static_lib)
 
-add_dependencies(protobuf_static protobuf_static_build)
+add_dependencies(ascend_protobuf_static protobuf_static_build)

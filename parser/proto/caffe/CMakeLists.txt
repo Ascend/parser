@@ -7,6 +7,10 @@ protobuf_generate(ge PROTO_SRCS PROTO_HDRS ${PROTO_LIST})
 ############ lib_caffe_parser.so ############
 add_library(_caffe_parser SHARED ${PROTO_SRCS})
 
+target_compile_definitions(_caffe_parser PRIVATE
+    google=ascend_private
+)
+
 target_include_directories(_caffe_parser PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
 )
@@ -14,7 +18,7 @@ target_include_directories(_caffe_parser PRIVATE
 target_link_libraries(_caffe_parser PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     -Wl,--no-as-needed
-    protobuf
+    ascend_protobuf
     -Wl,--as-needed
 )
 
