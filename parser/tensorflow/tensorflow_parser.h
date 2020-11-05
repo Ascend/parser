@@ -603,6 +603,7 @@ class TensorFlowModelParser : public domi::ModelParser {
   void DumpAllNodeContext(const string &phase);
 
   Status ParseOpParams(const domi::tensorflow::NodeDef *node_def, ge::OpDescPtr &op, shared_ptr<OpParser> &op_parser);
+  Status CheckAndUpdateInputDesc(ge::ComputeGraphPtr &compute_graph);
 
     /**
    * save <node_name, node_def>
