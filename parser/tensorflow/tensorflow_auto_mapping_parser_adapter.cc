@@ -69,6 +69,30 @@ Status TensorFlowAutoMappingParserAdapter::ParseParams(const Message *op_src, ge
            op_dest->GetType().c_str(), dynamic_tensor_num);
   }
 
+  // add nodedef for shape insert by adapter when online_infer_dynamic
+  if (op_dest->GetType() == SHAPE) {
+    std::shared_ptr<NodeDef> pkg_node = ge::parser::MakeShared<NodeDef>();
+    GE_CHECK_NOTNULL(pkg_node);
+    pkg_node->CopyFrom(*node);
+
+    // Get the property opdef, if the property does not exist, return failure
+    pkg_node->mutable_attr()->erase(ge::ATTR_NAME_FRAMEWORK_OP_DEF);
+    pkg_node->mutable_attr()->erase(ge::ATTR_NAME_OUTPUT_TENSOR_DESC);
+    pkg_node->mutable_attr()->erase(ge::ATTR_NAME_INPUT_TENSOR_DESC);
+    pkg_node->mutable_attr()->erase(ge::VAR_ATTR_NAME);
+
+    // Serialize nodedef into string and package as a whole
+    string serialized_node;
+    GE_IF_BOOL_EXEC(!pkg_node->SerializeToString(&serialized_node),
+                    GELOGE(PARAM_INVALID, "In FrameworkOp trans NodeDef to string failed.");
+                    return PARAM_INVALID);
+
+    (void)AttrUtils::SetZeroCopyBytes(
+        op_dest, ge::ATTR_NAME_FRAMEWORK_NODE_DEF,
+        Buffer::CopyFrom(reinterpret_cast<const uint8_t *>(serialized_node.data()), serialized_node.length()));
+    GELOGI("node_def of %s is %s.", op_dest->GetName().c_str(), serialized_node.c_str());
+  }
+
   return SUCCESS;
 }
 
