@@ -77,6 +77,7 @@ LOCAL_C_INCLUDES := \
     $(TOPDIR)graphengine/ge/common \
     $(TOPDIR)parser/parser \
     $(TOPDIR)parser   \
+    $(TOPDIR)libc_sec/include \
     $(TOPDIR)third_party/json/include \
     $(TOPDIR)third_party/protobuf/include \
     libc_sec/include \
