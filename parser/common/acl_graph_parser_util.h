@@ -17,14 +17,18 @@
 #ifndef ACL_GRAPH_PARSE_UTIL_
 #define ACL_GRAPH_PARSE_UTIL_
 
-#include <map>
-#include <string>
 #include <google/protobuf/text_format.h>
+
+#include <map>
 #include <sstream>
+#include <string>
+#include <unordered_map>
+#include <vector>
 
 #include "framework/omg/parser/parser_types.h"
-#include "register/register_error_codes.h"
+#include "graph/ascend_string.h"
 #include "graph/utils/graph_utils.h"
+#include "register/register_error_codes.h"
 
 namespace ge {
 
@@ -37,13 +41,39 @@ class AclGrphParseUtil {
   domi::Status LoadOpsProtoLib();
   void SaveCustomCaffeProtoPath();
   domi::Status AclParserInitialize(const std::map<std::string, std::string> &options);
-  domi::Status SetDefaultOutputNode(ge::Graph &graph);
+  domi::Status SetOutputNodeInfo(ge::Graph &graph, const std::map<AscendString, AscendString> &parser_params);
+  domi::Status ParseParamsBeforeGraph(const std::map<AscendString, AscendString> &parser_params,
+                                      std::string &graph_name);
+  domi::Status ParseParamsAfterGraph(ge::Graph &graph, const std::map<AscendString, AscendString> &parser_params);
+  domi::Status ParseOutputInfo(ge::Graph &graph, const std::map<AscendString, AscendString> &parser_params);
 
  private:
   bool parser_initialized = false;
+  domi::Status CheckOptions(const std::map<AscendString, AscendString> &parser_params);
   domi::Status GetOutputLeaf(NodePtr node, std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info);
   void GetOutputNodesNameAndIndex(std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info,
                                   std::vector<std::string> &output_nodes_name);
+  domi::Status ParseAclLogLevel(const std::string &log);
+  bool CheckAclInputFormat(string &input_format);
+  domi::Status ParseAclFormat(std::string &input_format);
+  bool ParseInputShape(const std::string &input_shape, std::unordered_map<std::string, vector<int64_t>> &shape_map,
+                       vector<pair<std::string, vector<int64_t>>> &user_shape_map, bool is_dynamic_input);
+  domi::Status ParseAclShape(const std::string &input_shape, bool is_dynamic_input);
+  domi::Status ParseAclOutputNodes(const std::string &out_nodes);
+  domi::Status ParseAclOutputFp16NodesFormat(const std::string &is_output_fp16);
+  domi::Status ParseAclOpConf(const std::string &op_conf);
+  domi::Status ParseAclEnableScope(const std::string &enable_scope_fusion_passes);
+  static void AddAttrsForInputNodes(const vector<string> &adjust_fp16_format_vec, const string &fp16_nodes_name,
+                                    uint32_t index, OpDescPtr &op_desc);
+  domi::Status ParseAclInputFp16Nodes(const ComputeGraphPtr &graph, const string &input_fp16_nodes,
+                                      const string &is_input_adjust_hw_layout);
+  domi::Status ParseAclWeightCompressConf(const ComputeGraphPtr &graph, const string &compress_weight_conf);
+  domi::Status ParseAclOutputType(const std::string &output_type,
+                                  std::map<std::string, vector<std::string>> &output_node_dt_map);
+  domi::Status GetDefaultOutInfo(ge::ComputeGraphPtr &compute_graph,
+                                 std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info);
+  domi::Status CheckAclInputShapeNode(const ComputeGraphPtr &graph, const bool is_dynamic_input);
+  domi::Status CheckAclOpNameMap(const ComputeGraphPtr &graph, const std::string &op_conf);
 };
 
 namespace parser {

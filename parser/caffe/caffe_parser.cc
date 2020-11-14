@@ -108,10 +108,65 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file, 
     return ret;
   }
   GELOGI("Weights parse success. graph: %s", graph.GetName().c_str());
-  if (acl_graph_parse_util.SetDefaultOutputNode(graph) != ge::SUCCESS) {
+  std::map<AscendString, AscendString> parser_params;
+  if (acl_graph_parse_util.SetOutputNodeInfo(graph, parser_params) != ge::SUCCESS) {
     GELOGE(ret, "Set graph %s default output node failed.", graph.GetName().c_str());
     return ge::FAILED;
   }
+  return ge::SUCCESS;
+}
+
+graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file,
+                              const std::map<AscendString, AscendString> &parser_params, ge::Graph &graph) {
+  GE_CHECK_NOTNULL(model_file);
+  GetParserContext().type = domi::CAFFE;
+  std::map<string, string> options;
+  options.insert(std::pair<string, string>(string(ge::FRAMEWORK_TYPE), to_string(ge::CAFFE)));
+
+  // load custom plugin so and proto
+  AclGrphParseUtil acl_graph_parse_util;
+  (void)acl_graph_parse_util.AclParserInitialize(options);
+
+  string output_name;
+  if (acl_graph_parse_util.ParseParamsBeforeGraph(parser_params, output_name) != ge::SUCCESS) {
+    GELOGE(ge::FAILED, "Parser params before graph failed.");
+    return ge::FAILED;
+  }
+  // Create an empty computegraph
+  string graph_name = output_name.empty() ? "tmpGraph" : output_name;
+  ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>(graph_name);
+  GE_CHECK_NOTNULL(compute_graph);
+
+  graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
+  auto model_parser = domi::ModelParserFactory::Instance()->CreateModelParser(domi::CAFFE);
+  GE_CHECK_NOTNULL(model_parser);
+
+  // parse caffe model_file and weights_file to GE graph
+  ge::graphStatus ret = model_parser->Parse(model_file, graph);
+  if (ret != ge::SUCCESS) {
+    GELOGE(ret, "Parser graph %s failed.", graph.GetName().c_str());
+    return ge::FAILED;
+  }
+  GELOGI("Parser graph %s success.", graph.GetName().c_str());
+
+  if (acl_graph_parse_util.ParseParamsAfterGraph(graph, parser_params) != ge::SUCCESS) {
+    GELOGE(ge::FAILED, "Parser params after graph failed.");
+    return ge::FAILED;
+  }
+
+  auto weights_parser = domi::WeightsParserFactory::Instance()->CreateWeightsParser(domi::CAFFE);
+  ret = weights_parser->Parse(weights_file, graph);
+  if (ret != ge::SUCCESS) {
+    GELOGE(ret, "Weights parse failed. graph: %s", graph.GetName().c_str());
+    return ret;
+  }
+  GELOGI("Weights parse success. graph: %s", graph.GetName().c_str());
+
+  if (acl_graph_parse_util.SetOutputNodeInfo(graph, parser_params) != ge::SUCCESS) {
+    GELOGE(ge::FAILED, "Set graph %s default output node failed.", graph.GetName().c_str());
+    return ge::FAILED;
+  }
+  GELOGI("AclgrphParse graph %s success.", graph.GetName().c_str());
   return ge::SUCCESS;
 }
 } // namespace ge

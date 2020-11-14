@@ -21,12 +21,16 @@
 #include <string>
 #include <vector>
 
+#include "graph/ascend_string.h"
 #include "graph/ge_error_codes.h"
-#include "graph/types.h"
 #include "graph/graph.h"
+#include "graph/types.h"
 
 namespace ge {
 graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file, ge::Graph &graph);
+
+graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file,
+                              const std::map<ge::AscendString, ge::AscendString> &parser_params, ge::Graph &graph);
 }  // namespace ge
 
 #endif  // INC_EXTERNAL_ACL_GRAPH_CAFFE_H_

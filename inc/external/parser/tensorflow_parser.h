@@ -22,12 +22,15 @@
 #include <string>
 #include <vector>
 
+#include "graph/ascend_string.h"
 #include "graph/ge_error_codes.h"
-#include "graph/types.h"
 #include "graph/graph.h"
+#include "graph/types.h"
 
 namespace ge {
 graphStatus aclgrphParseTensorFlow(const char *model_file, ge::Graph &graph);
+graphStatus aclgrphParseTensorFlow(const char *model_file,
+                                   const std::map<ge::AscendString, ge::AscendString> &parser_params, ge::Graph &graph);
 }  // namespace ge
 
 #endif  // INC_EXTERNAL_ACL_PARSER_TENSORFLOW_H_
