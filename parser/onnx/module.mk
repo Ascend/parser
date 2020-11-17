@@ -26,9 +26,15 @@ LOCAL_C_INCLUDES := \
     $(LOCAL_PATH) \
     $(LOCAL_PATH)/../../ \
     $(TOPDIR)inc \
+    $(TOPDIR)metadef/inc \
+    $(TOPDIR)graphengine/inc \
+    $(TOPDIR)parser/inc \
     $(TOPDIR)inc/external \
-    $(TOPDIR)inc/external/graph \
-    $(TOPDIR)inc/framework \
+    $(TOPDIR)metadef/inc/external \
+    $(TOPDIR)graphengine/inc/external \
+    $(TOPDIR)parser/inc/external \
+    $(TOPDIR)metadef/inc/external/graph \
+    $(TOPDIR)graphengine/inc/framework \
     $(TOPDIR)parser \
     $(TOPDIR)parser/parser \
     $(TOPDIR)graphengine/ge \
