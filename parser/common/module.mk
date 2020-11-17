@@ -69,10 +69,16 @@ LOCAL_C_INCLUDES := \
     proto/tensorflow/versions.proto \
     $(LOCAL_PATH) \
     $(TOPDIR)inc \
+    $(TOPDIR)metadef/inc \
+    $(TOPDIR)graphengine/inc \
+    $(TOPDIR)parser/inc \
     $(TOPDIR)inc/external \
-    $(TOPDIR)inc/external/graph \
-    $(TOPDIR)inc/framework \
-    $(TOPDIR)inc/common/util \
+    $(TOPDIR)metadef/inc/external \
+    $(TOPDIR)graphengine/inc/external \
+    $(TOPDIR)parser/inc/external \
+    $(TOPDIR)metadef/inc/external/graph \
+    $(TOPDIR)graphengine/inc/framework \
+    $(TOPDIR)metadef/inc/common/util \
     $(TOPDIR)graphengine/ge \
     $(TOPDIR)graphengine/ge/common \
     $(TOPDIR)parser/parser \
