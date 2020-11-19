@@ -24,6 +24,7 @@ set(SRC_LIST
     "pass_manager.cc"
     "parser_fp16_t.cc"
     "thread_pool.cc"
+    "parser_utils.cc"
 )
 
 ############ libparser_common.so ############

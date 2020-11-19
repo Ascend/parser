@@ -36,6 +36,7 @@ COMMON_LOCAL_SRC_FILES := \
     pass_manager.cc \
     parser_fp16_t.cc \
     thread_pool.cc \
+    parser_utils.cc \
 
 FMK_COMMON_SRC_FILES := \
 #     ../../common/fmk_error_codes.cc \
