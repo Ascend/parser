@@ -88,6 +88,7 @@ REGISTER_OPTYPE_DEFINE(TF_BATCH_MATMUL, "BatchMatmul");
 namespace ge {
 namespace {
 const char RRTVAL_NODE_NAME_SUFFIX[] = "_RetVal";
+const char *const kShapeNodeName = "Shape";
 }  // namespace
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY std::map<string, OpSupportTranInfo> g_OpSupportTranInfo = {};
@@ -1313,6 +1314,18 @@ Status ParserGraphOptimizer::MarkForFusion(unordered_map<string, vector<NodePtr>
         temp_node_cluser.push_back(src_node);
       }
       temp_node_cluser.push_back(node);
+      for (auto out_anchor : node->GetAllOutDataAnchors()) {
+        GE_CHECK_NOTNULL(out_anchor);
+        for (auto in_anchor : out_anchor->GetPeerInDataAnchors()) {
+          GE_CHECK_NOTNULL(in_anchor);
+          NodePtr dst_node = in_anchor->GetOwnerNode();
+          GE_CHECK_NOTNULL(dst_node);
+          GE_CHECK_NOTNULL(dst_node->GetOpDesc());
+          if (dst_node->GetOpDesc()->GetType() == kShapeNodeName) {
+            temp_node_cluser.emplace_back(dst_node);
+          }
+        }
+      }
       if (temp_node_cluser.size() > 1) {
         vector<NodePtr> node_cluser;
         node_cluser.assign(temp_node_cluser.begin(), temp_node_cluser.end());
