@@ -75,13 +75,13 @@ target_include_directories(parser_common PRIVATE
 
 target_link_libraries(parser_common PRIVATE
     $<BUILD_INTERFACE:intf_pub>
+    static_mmpa
     -Wl,--no-as-needed
     graph
     ascend_protobuf
     register
     c_sec
     slog
-    mmpa
     error_manager
     -Wl,--as-needed
     json

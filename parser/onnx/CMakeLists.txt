@@ -62,6 +62,7 @@ target_include_directories(fmk_onnx_parser PRIVATE
 
 target_link_libraries(fmk_onnx_parser PRIVATE
     $<BUILD_INTERFACE:intf_pub>
+    static_mmpa
     -Wl,--no-as-needed
     ascend_protobuf
     register
@@ -69,10 +70,10 @@ target_link_libraries(fmk_onnx_parser PRIVATE
     parser_common 
     graph
     slog
-    mmpa
     -Wl,--as-needed
     json
     -lrt
+    -ldl
 )
 
 ############ install ############

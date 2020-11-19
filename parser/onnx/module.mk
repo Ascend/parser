@@ -46,12 +46,13 @@ LOCAL_C_INCLUDES := \
 LOCAL_SHARED_LIBRARIES := \
     libascend_protobuf \
     libslog \
-    libmmpa \
     libc_sec \
     libparser_common \
     libgraph \
     libregister \
 
-LOCAL_LDFLAGS := -lrt
+ LOCAL_STATIC_LIBRARIES += libmmpa   
+
+LOCAL_LDFLAGS := -lrt -ldl
 
 include $(BUILD_HOST_SHARED_LIBRARY)

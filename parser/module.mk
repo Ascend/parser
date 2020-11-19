@@ -115,7 +115,6 @@ LOCAL_C_INCLUDES := $(COMMON_LOCAL_C_INCLUDES)
 LOCAL_SHARED_LIBRARIES := \
     libascend_protobuf \
     libslog \
-    libmmpa \
     libc_sec \
     liberror_manager \
     libparser_common \
@@ -123,7 +122,9 @@ LOCAL_SHARED_LIBRARIES := \
     libregister \
     lib_caffe_parser \
 
-LOCAL_LDFLAGS := -lrt
+LOCAL_STATIC_LIBRARIES += libmmpa
+
+LOCAL_LDFLAGS := -lrt -ldl
 
 include $(BUILD_HOST_SHARED_LIBRARY)
 
