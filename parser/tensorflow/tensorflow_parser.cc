@@ -181,17 +181,6 @@ const std::vector<std::string> kSkipCheckoutInputSizeNodes = {ge::parser::DATA, 
                                                               ge::parser::FRAMEWORKOP, ge::parser::LAYERNORM};
 const std::vector<std::string> kMakeOperatorNotByIr = {ge::parser::ARG, ge::parser::VARIABLE, ge::parser::VARHANDLEOP,
                                                        ge::parser::FRAMEWORKOP, ge::parser::DATA};
-const std::map<string, domiTensorFormat_t> kNeedMarkFormatNodes = {
-    {"ExtractImagePatches", domi::DOMI_TENSOR_NHWC},
-    {"ExtractVolumePatches", domi::DOMI_TENSOR_NHWC},
-    {"LogSoftmax", domi::DOMI_TENSOR_NHWC},
-    {"ResizeBilinear", domi::DOMI_TENSOR_NHWC},
-    {"ResizeBilinearGrad", domi::DOMI_TENSOR_NHWC},
-    {"ResizeNearestNeighbor", domi::DOMI_TENSOR_NHWC},
-    {"Softmax", domi::DOMI_TENSOR_NHWC},
-    {"SoftmaxCrossEntropyWithLogits", domi::DOMI_TENSOR_NHWC},
-    {"SoftmaxGrad", domi::DOMI_TENSOR_NHWC},
-    {"SpaceToBatch", domi::DOMI_TENSOR_NHWC}};
 const char *const kDpop = "DPOP";
 const char *const kFuncDefLibraryFilePath = "graph_def_library.pbtxt";
 const char *const kAttrNameIsScopeInnerNode = "_is_scope_inner_node";
@@ -1026,23 +1015,6 @@ Status TensorFlowModelParser::AddNodeToGraphAndMarkFormat(ge::ComputeGraphPtr &g
     GE_CHECK_NOTNULL(iterator->second);
     GE_CHK_STATUS_RET(iterator->second->SetOwnerComputeGraph(graph), "set owner compute graph failed");
     graph->AddNode(iterator->second);
-  }
-
-  // mark format with default one explained in tf documents for some nodes
-  for (auto &node : graph->GetDirectNode()) {
-    auto nodeType = node->GetType();
-    auto iter = kNeedMarkFormatNodes.find(nodeType);
-    if (iter != kNeedMarkFormatNodes.end()) {
-      GE_CHECK_NOTNULL(node->GetOpDesc());
-      for (auto &input_desc : node->GetOpDesc()->GetAllInputsDescPtr()) {
-        input_desc->SetOriginFormat((ge::Format)iter->second);
-        input_desc->SetFormat((ge::Format)iter->second);
-      }
-      for (auto &output_desc : node->GetOpDesc()->GetAllOutputsDescPtr()) {
-        output_desc->SetOriginFormat((ge::Format)iter->second);
-        output_desc->SetFormat((ge::Format)iter->second);
-      }
-    }
   }
 
   return SUCCESS;
