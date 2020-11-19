@@ -51,7 +51,7 @@ LOCAL_SHARED_LIBRARIES := \
     libgraph \
     libregister \
 
- LOCAL_STATIC_LIBRARIES += libmmpa   
+LOCAL_STATIC_LIBRARIES += libmmpa   
 
 LOCAL_LDFLAGS := -lrt -ldl
 
