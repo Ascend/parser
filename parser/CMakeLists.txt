@@ -92,6 +92,7 @@ target_include_directories(fmk_parser PRIVATE
 
 target_link_libraries(fmk_parser
     $<BUILD_INTERFACE:intf_pub>
+    static_mmpa
     -Wl,--no-as-needed
     ascend_protobuf
     error_manager
@@ -101,10 +102,10 @@ target_link_libraries(fmk_parser
     _caffe_parser
     c_sec
     slog
-    mmpa
     -Wl,--as-needed
     json
     -lrt
+    -ldl
 )
 
 ##################################################################

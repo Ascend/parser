@@ -538,7 +538,7 @@ Status CaffeModelParser::ReadModelWithoutWarning(const char *model_path, google:
     return FAILED;
   }
 
-  int32_t fd = mmOpen(kDevNull, O_RDWR);
+  int32_t fd = mmOpen(kDevNull, M_RDWR);
   if (fd < 0) {
     (void)mmClose(copy_fd);
     ErrorManager::GetInstance().ATCReportErrMessage("E19001", {"file", "errmsg"}, {kDevNull, strerror(errno)});

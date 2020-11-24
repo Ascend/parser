@@ -94,10 +94,11 @@ LOCAL_SHARED_LIBRARIES := \
     libascend_protobuf \
     libslog \
     libgraph \
-    libmmpa \
     libc_sec \
     liberror_manager \
     libregister \
+
+LOCAL_STATIC_LIBRARIES += libmmpa
 
 LOCAL_LDFLAGS := -lrt -ldl
 
