@@ -233,12 +233,17 @@ Status PostOpProcessForSubgraph(const ParseArg &arg) {
   if (arg.parent_node == nullptr) {
     return SUCCESS;
   }
-
-  auto post_func = domi::OpRegistry::Instance()->GetParseSubgraphPostFunc(arg.parent_node->GetType());
+  std::string op_type = arg.parent_node->GetType();
+  std::string op_name = arg.parent_node->GetName();
+  domi::ParseSubgraphFuncV2 parse_func_v2 = nullptr;
+  auto post_func = domi::OpRegistry::Instance()->GetParseSubgraphPostFunc(op_type);
   if (post_func == nullptr) {
-    GELOGW("The subgraph post func for node %s type %s is null", arg.parent_node->GetName().c_str(),
-           arg.parent_node->GetType().c_str());
-    return SUCCESS;
+    GELOGW("The subgraph post func for node %s type %s is null", op_name.c_str(), op_type.c_str());
+    if (domi::OpRegistry::Instance()->GetParseSubgraphPostFunc(op_type, parse_func_v2) != SUCCESS ||
+        parse_func_v2 == nullptr) {
+      GELOGW("The subgraph post func v2 for node %s type %s is null", op_name.c_str(), op_type.c_str());
+      return SUCCESS;
+    }
   }
 
   GELOGD("Post process for subgraph %s node %s type %s subgraph name %s", arg.function_name.c_str(),
@@ -253,13 +258,17 @@ Status PostOpProcessForSubgraph(const ParseArg &arg) {
   }
 
   auto graph = ge::GraphUtils::CreateGraphFromComputeGraph(arg.graph);
-  auto ret = post_func(arg.subgraph_name, graph);
+  Status ret = FAILED;
+  if (post_func != nullptr) {
+    ret = post_func(arg.subgraph_name, graph);
+  } else if (parse_func_v2 != nullptr) {
+    ret = parse_func_v2(arg.subgraph_name.c_str(), graph);
+  }
   if (ret != SUCCESS) {
     GELOGE(FAILED, "Failed to post-process subgraph %s on node %s type %s subgraph name %s", arg.function_name.c_str(),
            arg.parent_node->GetName().c_str(), arg.parent_node->GetType().c_str(), arg.subgraph_name.c_str());
     return FAILED;
   }
-
   return SUCCESS;
 }
 }  // namespace
