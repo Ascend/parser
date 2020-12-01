@@ -9,7 +9,7 @@ parser以动态库的方式被调用。
 
 ### 源码安装
 
-进行源码编译前，确保系统满足以下要求：
+parser支持源码编译，进行源码编译前，首先确保你有昇腾910AI处理器的环境，同时确保系统满足以下要求：
 
 - GCC >= 7.3.0
 - CMake >= 3.14.0
@@ -20,15 +20,19 @@ parser以动态库的方式被调用。
 #### 下载源码
 
 ```
-git clone https://gitee.com/ascend/parser.git
+git clone --recursive 
+https://gitee.com/ascend/parser.git -b development
 cd parser
+chmod +x build.sh
 ```
 
 #### 源码编译
 
 在parser根目录执行以下命令编译：
 ```
-// 正在补充
+bash build.sh
+
+编译完成之后，相应的动态库文件会生成在output文件夹中
 ```
 
 ## 贡献
