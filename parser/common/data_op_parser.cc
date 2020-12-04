@@ -23,7 +23,6 @@
 #include "graph/utils/type_utils.h"
 #include "omg/omg.h"
 
-using namespace cce;
 namespace {
 const int kDataMemAlignSize = 32;
 const int kTwoTimesAlign = 2;
