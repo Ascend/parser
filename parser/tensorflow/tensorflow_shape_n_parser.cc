@@ -33,8 +33,6 @@ namespace {
 }  // namespace
 
 namespace ge {
-// AUTO GEN PLEASE DO NOT MODIFY IT
-
 Status TensorFlowShapeNParser::ParseInType(const domi::tensorflow::NodeDef *node, ShapeNOperator *op) {
   // The upper caller guarantees the input params is not empty.
   domi::tensorflow::AttrValue attr;
