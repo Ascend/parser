@@ -419,7 +419,7 @@ domi::Status AclGrphParseUtil::ParseAclFormat(string &input_format) {
 
 bool AclGrphParseUtil::ParseInputShape(const string &input_shape,
                                        std::unordered_map<string, vector<int64_t>> &shape_map,
-                                       vector<pair<string, vector<int64_t>>> &user_shape_map, bool is_dynamic_input) {
+                                       vector<pair<string, vector<int64_t>>> &user_shape_map) {
   vector<string> shape_vec = StringUtils::Split(input_shape, ';');
   const int DEFAULT_SHAPE_PAIR_SIZE = 2;
   for (const auto &shape : shape_vec) {
@@ -483,15 +483,6 @@ bool AclGrphParseUtil::ParseInputShape(const string &input_shape,
         return false;
       }
       int64_t result = left_result;
-      // - 1 is not currently supported
-      if (!is_dynamic_input && result <= 0) {
-        ErrorManager::GetInstance().ATCReportErrMessage("E10011", {"shape", "result"}, {shape, std::to_string(result)});
-        GELOGW(
-            "Input parameter[input_shape]â€™s shape value[%s] is invalid, "
-            "expect positive integer, but value is %ld.",
-            shape.c_str(), result);
-        return false;
-      }
       shape_values.push_back(result);
     }
 
@@ -503,18 +494,16 @@ bool AclGrphParseUtil::ParseInputShape(const string &input_shape,
 }
 
 // Parse user input shape info
-domi::Status AclGrphParseUtil::ParseAclShape(const string &input_shape, bool is_dynamic_input) {
+domi::Status AclGrphParseUtil::ParseAclShape(const string &input_shape) {
   ge::GetParserContext().input_dims.clear();
   ge::GetParserContext().user_input_dims.clear();
-  ge::GetParserContext().is_dynamic_input = is_dynamic_input;
 
   if (input_shape.empty()) {
     return SUCCESS;
   }
 
   std::unordered_map<string, vector<int64_t>> &shape_map = ge::GetParserContext().input_dims;
-  if (!ParseInputShape(input_shape, ge::GetParserContext().input_dims, ge::GetParserContext().user_input_dims,
-                       is_dynamic_input) ||
+  if (!ParseInputShape(input_shape, ge::GetParserContext().input_dims, ge::GetParserContext().user_input_dims) ||
       shape_map.empty()) {
     GELOGE(PARAM_INVALID, "Failed to parse input shape: %s", input_shape.c_str());
     return PARAM_INVALID;
@@ -1004,28 +993,7 @@ domi::Status AclGrphParseUtil::CheckOptions(const std::map<AscendString, AscendS
   return SUCCESS;
 }
 
-domi::Status AclGrphParseUtil::CheckAclInputShapeNode(const ComputeGraphPtr &graph, const bool is_dynamic_input) {
-  if (!is_dynamic_input) {
-    for (auto node : graph->GetDirectNode()) {
-      if (node->GetType() == ge::parser::DATA) {
-        auto data_op_desc = node->GetOpDesc();
-        GE_CHECK_NOTNULL(data_op_desc);
-        auto tensor_desc = data_op_desc->MutableInputDesc(0);
-        GE_CHECK_NOTNULL(tensor_desc);
-        for (auto dim : tensor_desc->GetShape().GetDims()) {
-          if (dim < 0) {
-            GELOGE(PARAM_INVALID,
-                   "Input op [%s] shape %ld is negative, maybe you should set input_shape to specify its shape",
-                   node->GetName().c_str(), dim);
-            const string reason = "maybe you should set input_shape to specify its shape";
-            ErrorManager::GetInstance().ATCReportErrMessage("E10001", {"parameter", "value", "reason"},
-                                                            {node->GetName(), to_string(dim), reason});
-            return PARAM_INVALID;
-          }
-        }
-      }
-    }
-  }
+domi::Status AclGrphParseUtil::CheckAclInputShapeNode(const ComputeGraphPtr &graph) {
   for (auto it : ge::GetParserContext().user_input_dims) {
     std::string node_name = it.first;
     ge::NodePtr node = graph->FindNode(node_name);
@@ -1076,7 +1044,7 @@ domi::Status AclGrphParseUtil::ParseParamsBeforeGraph(const std::map<AscendStrin
   GELOGI("Parse graph user options start.");
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(CheckOptions(parser_params) != SUCCESS, return PARAM_INVALID,
                                  "Parse paragrams invalid.");
-  // support paragrams: log, input_format, is_dynamic_input, input_shape, out_nodes
+  // support paragrams: log, input_format, input_shape, out_nodes
   //                    is_output_adjust_hw_layout, output, op_name_map, enable_scope_fusion_passes
   string log_level;
   GetAclParams(parser_params, ge::ir_option::LOG_LEVEL, log_level);
@@ -1088,16 +1056,9 @@ domi::Status AclGrphParseUtil::ParseParamsBeforeGraph(const std::map<AscendStrin
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(ParseAclFormat(input_format) != SUCCESS, return PARAM_INVALID,
                                  "Parse input_format failed");
 
-  string dynamic_input_str;
-  GetAclParams(parser_params, ge::ir_option::IS_DYNAMIC_INPUT, dynamic_input_str);
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
-      !dynamic_input_str.empty() && !CheckInputTrueOrFalse(dynamic_input_str, "is_dynamic_input"), return PARAM_INVALID,
-      "Parse is_dynamic_input failed");
-  bool is_dynamic_input = dynamic_input_str == "true" ? true : false;
-
   string input_shape;
   GetAclParams(parser_params, ge::ir_option::INPUT_SHAPE, input_shape);
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(ParseAclShape(input_shape, is_dynamic_input) != SUCCESS, return PARAM_INVALID,
+  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(ParseAclShape(input_shape) != SUCCESS, return PARAM_INVALID,
                                  "Parse input_shape failed");
 
   string out_nodes;
@@ -1141,8 +1102,7 @@ domi::Status AclGrphParseUtil::ParseParamsAfterGraph(ge::Graph &graph,
       ParseAclInputFp16Nodes(compute_graph, input_fp16_nodes, is_input_adjust_hw_layout) != SUCCESS,
       return PARAM_INVALID, "Parse input_fp16_nodes failed");
 
-  bool is_dynamic_input = ge::GetParserContext().is_dynamic_input;
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(CheckAclInputShapeNode(compute_graph, is_dynamic_input) != SUCCESS,
+  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(CheckAclInputShapeNode(compute_graph) != SUCCESS,
                                  return PARAM_INVALID, "Check nodes input_shape info failed");
 
   string compress_weight_conf;
