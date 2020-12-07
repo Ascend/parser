@@ -52,6 +52,7 @@ target_compile_options(fmk_parser PRIVATE
 
 target_compile_definitions(fmk_parser PRIVATE
     PROTOBUF_INLINE_NOT_IN_HEADERS=0
+    $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
 )
 
 target_include_directories(fmk_parser PRIVATE
@@ -135,6 +136,7 @@ target_compile_definitions(fmk_parser_stub PRIVATE
     PROTOBUF_INLINE_NOT_IN_HEADERS=0
     REUSE_MEMORY=1
     FMK_HOST_INFER
+    $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
 )
 
 target_include_directories(fmk_parser_stub PRIVATE
