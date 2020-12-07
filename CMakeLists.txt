@@ -3,6 +3,10 @@ project (Parser[CXX])
 
 set(PARSER_DIR ${CMAKE_CURRENT_LIST_DIR})
 
+if (DEFINED ENV{D_PKG_SERVER})
+    set(PARSER_PB_PKG $ENV{D_PKG_SERVER})
+endif()
+
 option(ENABLE_OPEN_SRC "Enable graphengine compile in opensource." FALSE)
 
 if (ENABLE_OPEN_SRC)
