@@ -19,6 +19,7 @@
 #include <iostream>
 #include "common/convert/pb2json.h"
 #include "common/util.h"
+#include "common/util/error_manager/error_manager.h"
 #include "external/graph/operator_factory.h"
 #include "external/register/register_error_codes.h"
 #include "framework/omg/parser/parser_inner_ctx.h"
@@ -44,6 +45,7 @@ std::map<std::string, std::string> kOnnxOpMap = {
 Status OnnxModelParser::ParseInput(ge::onnx::GraphProto &onnx_graph,
                                    std::map<std::string, ge::onnx::TensorProto> &initializer_name_tensor) {
   if (onnx_graph.input_size() == 0) {
+    ErrorManager::GetInstance().ATCReportErrMessage("E16001");
     GELOGE(FAILED, "Onnx graph has zero input");
     return FAILED;
   }
@@ -213,6 +215,7 @@ Status OnnxModelParser::AdapterOpType(const ge::onnx::NodeProto *node_proto, std
   }
 
   if (!domi::OpRegistry::Instance()->GetOmTypeByOriOpType(ori_type, op_type)) {
+    ErrorManager::GetInstance().ATCReportErrMessage("E16002", {"optype"}, {ori_type});
     GELOGE(PARAM_INVALID, "Get omType according ori_type : %s failed.", ori_type.c_str());
     return PARAM_INVALID;
   }
@@ -227,6 +230,7 @@ Status OnnxModelParser::TransNodeToOperator(const ge::onnx::NodeProto *node_prot
   string node_name = node_proto->name();
   op = ge::OperatorFactory::CreateOperator(node_name, op_type);
   if (op.GetName() != node_name) {
+    ErrorManager::GetInstance().ATCReportErrMessage("E16003", {"opname", "optype"}, {node_name, op_type});
     GELOGE(INTERNAL_ERROR, "IR for op[%s] optype[%s] is not registered.", node_name.c_str(), op_type.c_str());
     return INTERNAL_ERROR;
   }
@@ -440,10 +444,13 @@ Status OnnxModelParser::Parse(const char *file, ge::Graph &graph) {
   // 1. Get graph from onnx model file.
   ge::onnx::ModelProto onnx_model;
   if (!ge::parser::ReadProtoFromBinaryFile(file, &onnx_model)) {
+    ErrorManager::GetInstance().ATCReportErrMessage(
+        "E19021", {"reason"}, {"Read onnx model file failed."});
     GELOGE(PARAM_INVALID, "Read onnx model file failed.");
     return FAILED;
   }
   if (!onnx_model.has_graph()) {
+    ErrorManager::GetInstance().ATCReportErrMessage("E16004");
     GELOGE(PARAM_INVALID, "Onnx model do not has graph.");
     return FAILED;
   }
