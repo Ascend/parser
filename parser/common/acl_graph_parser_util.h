@@ -57,8 +57,8 @@ class AclGrphParseUtil {
   bool CheckAclInputFormat(string &input_format);
   domi::Status ParseAclFormat(std::string &input_format);
   bool ParseInputShape(const std::string &input_shape, std::unordered_map<std::string, vector<int64_t>> &shape_map,
-                       vector<pair<std::string, vector<int64_t>>> &user_shape_map, bool is_dynamic_input);
-  domi::Status ParseAclShape(const std::string &input_shape, bool is_dynamic_input);
+                       vector<pair<std::string, vector<int64_t>>> &user_shape_map);
+  domi::Status ParseAclShape(const std::string &input_shape);
   domi::Status ParseAclOutputNodes(const std::string &out_nodes);
   domi::Status ParseAclOutputFp16NodesFormat(const std::string &is_output_fp16);
   domi::Status ParseAclOpConf(const std::string &op_conf);
@@ -72,7 +72,7 @@ class AclGrphParseUtil {
                                   std::map<std::string, vector<std::string>> &output_node_dt_map);
   domi::Status GetDefaultOutInfo(ge::ComputeGraphPtr &compute_graph,
                                  std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info);
-  domi::Status CheckAclInputShapeNode(const ComputeGraphPtr &graph, const bool is_dynamic_input);
+  domi::Status CheckAclInputShapeNode(const ComputeGraphPtr &graph);
   domi::Status CheckAclOpNameMap(const ComputeGraphPtr &graph, const std::string &op_conf);
 };
 
