@@ -74,6 +74,7 @@ target_link_libraries(fmk_onnx_parser PRIVATE
     json
     -lrt
     -ldl
+    error_manager
 )
 
 ############ install ############
