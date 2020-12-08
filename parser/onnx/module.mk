@@ -50,6 +50,7 @@ LOCAL_SHARED_LIBRARIES := \
     libparser_common \
     libgraph \
     libregister \
+    liberror_manager \
 
 LOCAL_STATIC_LIBRARIES += libmmpa   
 
