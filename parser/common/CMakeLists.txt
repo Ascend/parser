@@ -21,6 +21,7 @@ set(SRC_LIST
     "op_map.cc"
     "../../../ge/graph/passes/pass_manager.cc"
     "../../../ge/common/thread_pool.cc"
+    "parser_utils.cc"
 )
 
 ############ libparser_common.so ############
