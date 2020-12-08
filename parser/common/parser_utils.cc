@@ -18,20 +18,18 @@
 #include "external/ge/ge_api_types.h"
 #include "framework/common/debug/ge_log.h"
 #include "framework/common/util.h"
-#include "framework/omg/parser/parser_types.h"
 #include "graph/anchor.h"
 #include "graph/compute_graph.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/graph_utils.h"
-#include "graph/utils/node_adapter.h"
 #include "graph/utils/op_desc_utils.h"
 #include "register/op_registry.h"
 
 namespace ge {
 Status ParserUtils::ExpandOneToManyGraph(Graph &graph) {
   GELOGD("Begin run ParserUtils::ExpandOneToManyGraph.");
-  for (const auto &gn : graph.GetDirectNode()) {
-    NodePtr n = NodeAdapter::GNode2Node(gn);
+  ComputeGraphPtr compute_graph = GraphUtils::GetComputeGraph(graph);
+  for (const auto &n : compute_graph->GetDirectNode()) {
     GE_CHECK_NOTNULL(n);
     std::string ori_type;
     (void)AttrUtils::GetStr(n->GetOpDesc(), ATTR_NAME_FRAMEWORK_ORIGINAL_TYPE, ori_type);
@@ -79,7 +77,7 @@ Status ParserUtils::ExpandNodeToSubgraph(const Graph &subgraph, const NodePtr &n
       return FAILED;
     }
 
-    if (new_node->GetType() == ge::parser::DATA) {
+    if (new_node->GetType() == "Data") {
       input_nodes.emplace_back(new_node);
     }
   }
