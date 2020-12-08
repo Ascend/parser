@@ -28,6 +28,7 @@
 #include "onnx_util.h"
 #include "parser/common/op_parser_factory.h"
 #include "parser/common/pre_checker.h"
+#include "parser/common/parser_utils.h"
 #include "parser/onnx/onnx_util.h"
 #include "register/op_registry.h"
 
@@ -532,6 +533,8 @@ Status OnnxModelParser::Parse(const char *file, ge::Graph &graph) {
     return ret;
   }
   graph.SetInputs(input_ops).SetOutputs(output_indexs);
+
+  GE_RETURN_IF_ERROR(ParserUtils::ExpandOneToManyGraph(graph));
 
   UpdateFormat(graph);
 

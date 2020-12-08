@@ -32,6 +32,7 @@ COMMON_LOCAL_SRC_FILES := \
     op_def/op_schema.cc \
     op_def/operator.cc \
     op_map.cc \
+    parser_utils.cc \
 
 FMK_COMMON_SRC_FILES := \
     ../../common/types.cc \

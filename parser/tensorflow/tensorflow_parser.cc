@@ -46,6 +46,7 @@
 #include "parser/common/op_parser_factory.h"
 #include "parser/common/pre_checker.h"
 #include "parser/common/acl_graph_parser_util.h"
+#include "parser/common/parser_utils.h"
 #include "parser/tensorflow/tensorflow_fusion_op_parser.h"
 #include "parser/tensorflow/tensorflow_fusionop_util.h"
 #include "parser/tensorflow/tensorflow_op_parser.h"
@@ -167,8 +168,8 @@ Status GenSubgraphParseTasks(const ge::ComputeGraphPtr &parent_graph, std::deque
       auto i = subgraph_name_to_index.second;
       auto subgraph_iname = op_desc->GetSubgraphInstanceName(i);
       if (subgraph_iname.empty()) {
-        GELOGE(PARAM_INVALID, "The subgraph index %u of node %s is empty", i, node->GetName().c_str());
-        return PARAM_INVALID;
+        GELOGW("The subgraph index %u of node %s is empty", i, node->GetName().c_str());
+        continue;
       }
 
       // A function may be referenced multiple times in TF, change the graph name to ensure it is unique in GE
@@ -1396,6 +1397,8 @@ Status TensorFlowModelParser::ParseAllGraph(const google::protobuf::Message *pro
   DeleteFuisonNodeDef();
 
   GE_RETURN_IF_ERROR(AddEdges(graph));
+  Graph dest_graph = GraphUtils::CreateGraphFromComputeGraph(graph);
+  GE_RETURN_IF_ERROR(ParserUtils::ExpandOneToManyGraph(dest_graph));
   GE_RETURN_IF_ERROR(RemoveIsolateNode(graph));
   GE_RETURN_IF_ERROR(graph->TopologicalSorting());
 
@@ -2190,6 +2193,10 @@ Status TensorFlowModelParser::ParseProto(const google::protobuf::Message *proto,
   GELOGD("[TF Parser] Add framework node success");
 
   ret = AddEdges(graph);
+
+  Graph dest_graph = GraphUtils::CreateGraphFromComputeGraph(graph);
+  GE_RETURN_IF_ERROR(ParserUtils::ExpandOneToManyGraph(dest_graph));
+
   DeleteFuisonNodeDef();
   GE_CHK_STATUS_EXEC(ret, return ret, "AddEdges failed");
   GELOGD("[TF Parser] Add edges success");
