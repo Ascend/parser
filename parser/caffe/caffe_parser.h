@@ -54,6 +54,9 @@ class CaffeModelParser : public domi::ModelParser {
    */
   Status Parse(const char *file, ge::Graph &graph) override;
   Status ParseFromMemory(const char *data, uint32_t size, ge::ComputeGraphPtr &graph) override;
+  virtual Status ParseFromMemory(const char *data, uint32_t size, ge::Graph &graph) {
+	  return domi::SUCCESS;
+  }
 
   /**
    * @ingroup domi_omg
