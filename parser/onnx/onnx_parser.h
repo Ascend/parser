@@ -40,7 +40,7 @@ class OnnxModelParser : public domi::ModelParser {
 
   Status ParseFromMemory(const char *data, uint32_t size, ge::ComputeGraphPtr &graph) override { return domi::SUCCESS; }
   virtual Status ParseFromMemory(const char *data, uint32_t size, ge::Graph &graph) {
-	  return domi::SUCCESS;
+    return domi::SUCCESS;
   }
 
   Status ParseProto(const google::protobuf::Message *proto, ge::ComputeGraphPtr &graph) override {
