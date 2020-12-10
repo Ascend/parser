@@ -92,7 +92,7 @@ class TensorFlowModelParser : public domi::ModelParser {
 
   Status ParseFromMemory(const char *data, uint32_t size, ge::ComputeGraphPtr &graph) override;
   virtual Status ParseFromMemory(const char *data, uint32_t size, ge::Graph &graph) {
-	  return domi::SUCCESS;
+	return domi::SUCCESS;
   }
 
   /**
