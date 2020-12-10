@@ -139,8 +139,7 @@ Status TensorFlowDataParser::CheckInputShape(const std::string &name) {
     // dim i = 0, means empty tensor.
     // dim i = -1 or -2, means unknown shape.
     GE_CHK_BOOL_RET_STATUS(user_input_dims_v[i] >= kValidShapeMinValue, domi::PARAM_INVALID,
-                            "parse data node %s: shape contains placeholder ,but not designated by user",
-                            name.c_str());
+        "parse data node %s: shape contains placeholder ,but not designated by user", name.c_str());
   }
   return SUCCESS;
 }
