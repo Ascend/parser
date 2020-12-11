@@ -31,7 +31,8 @@ class ParserUtils {
   static Status HandleInputContext(const NodePtr &node,
                                    const std::vector<NodePtr> &input_nodes,
                                    const ComputeGraphPtr &compute_graph);
-  static Status HandleOutputContext(const NodePtr &node, const std::vector<std::pair<NodePtr, int32_t>> &out_node_index);
+  static Status HandleOutputContext(const NodePtr &node, 
+                                    const std::vector<std::pair<NodePtr, int32_t>> &out_node_index);
 };
 }  // namespace ge
 #endif  // PARSER_COMMON_PARSER_UTILS_H_
