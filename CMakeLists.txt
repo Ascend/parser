@@ -10,7 +10,7 @@ endif()
 option(ENABLE_OPEN_SRC "Enable graphengine compile in opensource." FALSE)
 
 if (ENABLE_OPEN_SRC)
-    set(HI_PYTHON python3.7)
+    set(HI_PYTHON python3)
 
     include(cmake/external_libs/protobuf_shared.cmake)
     include(cmake/external_libs/protoc.cmake)
