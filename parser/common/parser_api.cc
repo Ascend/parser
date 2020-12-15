@@ -19,6 +19,7 @@
 
 #include "common/ge/tbe_plugin_manager.h"
 #include "framework/common/debug/ge_log.h"
+#include "graph/utils/type_utils.h"
 #include "parser/common/register_tbe.h"
 #include "framework/omg/parser/parser_inner_ctx.h"
 #include "external/ge/ge_api_types.h"
@@ -38,10 +39,18 @@ Status ParserInitialize(const std::map<std::string, std::string> &options) {
   // load custom op plugin
   TBEPluginManager::Instance().LoadPluginSo(options);
 
+  std::string fmk_type = ge::TypeUtils::FmkTypeToSerialString(domi::TENSORFLOW);
+  auto it = options.find(ge::FRAMEWORK_TYPE);
+  if (it != options.end()) {
+   fmk_type = it->second;
+  }
+  GELOGD("frameworkType is %s", fmk_type.c_str());
   std::vector<OpRegistrationData> registrationDatas = domi::OpRegistry::Instance()->registrationDatas;
   GELOGI("The size of registrationDatas in parser is: %zu", registrationDatas.size());
   for (OpRegistrationData &reg_data : registrationDatas) {
-    (void)OpRegistrationTbe::Instance()->Finalize(reg_data, true);
+    if (ge::TypeUtils::FmkTypeToSerialString(reg_data.GetFrameworkType()) == fmk_type) {
+      (void)OpRegistrationTbe::Instance()->Finalize(reg_data, true);
+    }
   }
 
   auto iter = options.find(ge::OPTION_EXEC_ENABLE_SCOPE_FUSION_PASSES);
