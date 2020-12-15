@@ -1092,6 +1092,7 @@ domi::Status AclGrphParseUtil::ParseParamsAfterGraph(ge::Graph &graph,
                                                      const std::map<AscendString, AscendString> &parser_params) {
   // support paragrams: input_fp16_nodes, is_input_adjust_hw_layout, compress_weight_conf,
   ComputeGraphPtr compute_graph = GraphUtils::GetComputeGraph(graph);
+  GE_CHECK_NOTNULL(compute_graph);
 
   string input_fp16_nodes;
   GetAclParams(parser_params, ge::ir_option::INPUT_FP16_NODES, input_fp16_nodes);
