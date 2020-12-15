@@ -217,7 +217,7 @@ domi::Status AclGrphParseUtil::AclParserInitialize(const std::map<std::string, s
   std::vector<OpRegistrationData> registrationDatas = op_registry->registrationDatas;
   GELOGI("The size of registrationDatas in parser is: %zu", registrationDatas.size());
   for (OpRegistrationData &reg_data : registrationDatas) {
-    if (ge::TypeUtils::FmkTypeToSerialString(reg_data.GetFrameworkType()) == fmk_type) {
+    if (std::to_string(reg_data.GetFrameworkType()) == fmk_type) {
       (void)OpRegistrationTbe::Instance()->Finalize(reg_data, false);
       (void)domi::OpRegistry::Instance()->Register(reg_data);
     }
