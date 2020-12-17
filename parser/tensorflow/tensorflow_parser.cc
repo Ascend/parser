@@ -97,7 +97,11 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, ge::Graph &graph) {
 
   // load custom plugin so and proto
   AclGrphParseUtil acl_graph_parse_util;
-  (void)acl_graph_parse_util.AclParserInitialize(options);
+  domi::Status status = acl_graph_parse_util.AclParserInitialize(options);
+  if (status != domi::SUCCESS) {
+    GELOGE(GRAPH_FAILED, "Parser Initialize failed.");
+    return GRAPH_FAILED;
+  }
 
   // Create an empty computegraph
   ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>("tmpGraph");
@@ -132,7 +136,11 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, const std::map<Ascend
 
   // load custom plugin so and proto
   AclGrphParseUtil acl_graph_parse_util;
-  (void)acl_graph_parse_util.AclParserInitialize(options);
+  domi::Status status = acl_graph_parse_util.AclParserInitialize(options);
+  if (status != domi::SUCCESS) {
+    GELOGE(GRAPH_FAILED, "Parser Initialize failed.");
+    return GRAPH_FAILED;
+  }
 
   string output_name;
   if (acl_graph_parse_util.ParseParamsBeforeGraph(parser_params, output_name) != ge::SUCCESS) {

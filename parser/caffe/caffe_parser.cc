@@ -83,7 +83,11 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file, 
 
   // load custom plugin so and proto
   AclGrphParseUtil acl_graph_parse_util;
-  (void)acl_graph_parse_util.AclParserInitialize(options);
+  domi::Status status = acl_graph_parse_util.AclParserInitialize(options);
+  if (status != domi::SUCCESS) {
+    GELOGE(GRAPH_FAILED, "Parser Initialize failed.");
+    return GRAPH_FAILED;
+  }
 
   // Create an empty computegraph
   ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>("tmpGraph");
@@ -102,6 +106,7 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file, 
   GELOGI("Parser graph %s success.", graph.GetName().c_str());
 
   auto weights_parser = domi::WeightsParserFactory::Instance()->CreateWeightsParser(domi::CAFFE);
+  GE_CHECK_NOTNULL(weights_parser);
   ret = weights_parser->Parse(weights_file, graph);
   if (ret != ge::SUCCESS) {
     GELOGE(ret, "Weights parse failed. graph: %s", graph.GetName().c_str());
@@ -125,7 +130,11 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file,
 
   // load custom plugin so and proto
   AclGrphParseUtil acl_graph_parse_util;
-  (void)acl_graph_parse_util.AclParserInitialize(options);
+  domi::Status status = acl_graph_parse_util.AclParserInitialize(options);
+  if (status != domi::SUCCESS) {
+    GELOGE(GRAPH_FAILED, "Parser Initialize failed.");
+    return GRAPH_FAILED;
+  }
 
   string output_name;
   if (acl_graph_parse_util.ParseParamsBeforeGraph(parser_params, output_name) != ge::SUCCESS) {
@@ -155,6 +164,7 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file,
   }
 
   auto weights_parser = domi::WeightsParserFactory::Instance()->CreateWeightsParser(domi::CAFFE);
+  GE_CHECK_NOTNULL(weights_parser);
   ret = weights_parser->Parse(weights_file, graph);
   if (ret != ge::SUCCESS) {
     GELOGE(ret, "Weights parse failed. graph: %s", graph.GetName().c_str());

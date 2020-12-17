@@ -32,6 +32,8 @@ using ge::parser::PLACEHOLDERWITHDEFAULT;
 namespace ge {
 namespace {
 const char *const kTfAttrT = "T";
+const char *const kShapeAttrOutType = "out_type";
+const char *const kShapeAttrDtype = "dtype";
 }  // namespace
 
 Status TensorFlowAutoMappingParserAdapter::ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) {
@@ -71,6 +73,14 @@ Status TensorFlowAutoMappingParserAdapter::ParseParams(const Message *op_src, ge
 
   // add nodedef for shape insert by adapter when online_infer_dynamic
   if (op_dest->GetType() == SHAPE) {
+    ge::DataType out_type = DT_INT32;
+    if (AttrUtils::GetDataType(op_dest, kShapeAttrOutType, out_type)) {
+      if (!AttrUtils::SetInt(op_dest, kShapeAttrDtype, static_cast<int64_t>(out_type))) {
+        GELOGE(FAILED, "Set attr dtype for op:%s failed.", op_dest->GetName().c_str());
+        return FAILED;
+      }
+    }
+
     std::shared_ptr<NodeDef> pkg_node = ge::parser::MakeShared<NodeDef>();
     GE_CHECK_NOTNULL(pkg_node);
     pkg_node->CopyFrom(*node);
