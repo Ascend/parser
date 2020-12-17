@@ -124,8 +124,7 @@ bool OpRegistrationTbe::RegisterParser(const OpRegistrationData &reg_data) {
 
     PARSER_CREATOR_FN func = CustomParserAdapterRegistry::Instance()->GetCreateFunc(reg_data.GetFrameworkType());
     if (func == nullptr) {
-      GELOGE(INTERNAL_ERROR,
-             "Get custom parser adapter failed for fmk type %s.",
+      GELOGW("Get custom parser adapter failed for fmk type %s.",
              TypeUtils::FmkTypeToSerialString(reg_data.GetFrameworkType()).c_str());
       return false;
     }

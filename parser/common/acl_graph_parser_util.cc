@@ -27,7 +27,6 @@
 
 #include "ge/ge_api_types.h"
 #include "graph/opsproto_manager.h"
-#include "graph/utils/type_utils.h"
 #include "omg/parser/parser_inner_ctx.h"
 #include "framework/common/debug/ge_log.h"
 #include "parser/common/register_tbe.h"
@@ -207,20 +206,11 @@ domi::Status AclGrphParseUtil::AclParserInitialize(const std::map<std::string, s
     return FAILED;
   }
 
-  auto it = options.find(ge::FRAMEWORK_TYPE);
-  if (it == options.end()) {
-    GELOGE(FAILED, "Can not find ge.frameworkType in options");
-    return FAILED;
-  }
-  std::string fmk_type = it->second;
-  GELOGD("frameworkType is %s", fmk_type.c_str());
   std::vector<OpRegistrationData> registrationDatas = op_registry->registrationDatas;
   GELOGI("The size of registrationDatas in parser is: %zu", registrationDatas.size());
   for (OpRegistrationData &reg_data : registrationDatas) {
-    if (std::to_string(reg_data.GetFrameworkType()) == fmk_type) {
-      (void)OpRegistrationTbe::Instance()->Finalize(reg_data, false);
-      (void)domi::OpRegistry::Instance()->Register(reg_data);
-    }
+    (void)OpRegistrationTbe::Instance()->Finalize(reg_data, false);
+    domi::OpRegistry::Instance()->Register(reg_data);
   }
 
   // set init status
