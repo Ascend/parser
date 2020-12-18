@@ -90,10 +90,22 @@ class TensorFlowModelParser : public domi::ModelParser {
    */
   Status Parse(const char *file, ge::Graph &graph) override;
 
+  /**
+   * @ingroup domi_omg
+   * @brief Parse the relevant data from memory and save it to graph
+   * @param [in] memory buffer of model file
+   * @param [in] buffer size
+   * @param [in|out] graph graph for saving model information
+   * @return SUCCESS parse successfully
+   * @return FAILED parse failed
+   */
   Status ParseFromMemory(const char *data, uint32_t size, ge::ComputeGraphPtr &graph) override;
-  virtual Status ParseFromMemory(const char *data, uint32_t size, ge::Graph &graph) {
+
+#ifndef ONLY_COMPILE_OPEN_SRC
+  Status ParseFromMemory(const char *data, uint32_t size, ge::Graph &graph) override {
     return domi::SUCCESS;
   }
+#endif
 
   /**
    * @ingroup domi_omg

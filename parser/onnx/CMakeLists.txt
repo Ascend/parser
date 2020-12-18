@@ -31,6 +31,7 @@ target_include_directories(fmk_onnx_parser PRIVATE
     ${PARSER_DIR}
     ${PARSER_DIR}/inc
     ${PARSER_DIR}/parser
+    ${PARSER_DIR}/parser/inc
     ${METADEF_DIR}/inc
     ${METADEF_DIR}/inc/graph
     ${METADEF_DIR}/inc/register
@@ -77,10 +78,65 @@ target_link_libraries(fmk_onnx_parser PRIVATE
     error_manager
 )
 
+##################################################################
+add_custom_command(
+    OUTPUT ${CMAKE_CURRENT_BINARY_DIR}/stub_onnx_parser.cc
+    COMMAND echo "Generating stub files."
+    && ${HI_PYTHON} ${CMAKE_CURRENT_LIST_DIR}/../stub/gen_stubapi.py ${PARSER_DIR}/inc/external ${CMAKE_CURRENT_BINARY_DIR}
+    && mv onnx_parser.cc stub_onnx_parser.cc
+    &&  echo "Generating stub files end."
+    #WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
+    #DEPENDS ../stub/gen_stubapi.py ${TOP_DIR}/inc/external ${CMAKE_CURRENT_BINARY_DIR}
+)
+##################################################################
+
+############ stub/libfmk_onnx_parser.so ############
+add_library(fmk_onnx_parser_stub SHARED
+    ${CMAKE_CURRENT_BINARY_DIR}/stub_onnx_parser.cc
+)
+
+target_compile_options(fmk_onnx_parser_stub PRIVATE
+    -O2
+)
+
+target_compile_definitions(fmk_onnx_parser_stub PRIVATE
+    $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:FMK_SUPPORT_DUMP>
+    PROTOBUF_INLINE_NOT_IN_HEADERS=0
+    REUSE_MEMORY=1
+    FMK_HOST_INFER
+    $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
+)
+
+target_include_directories(fmk_onnx_parser_stub PRIVATE
+    ${CMAKE_CURRENT_LIST_DIR}
+    ${PARSER_DIR}
+    ${PARSER_DIR}/inc
+    ${PARSER_DIR}/inc/external
+    ${PARSER_DIR}/parser
+    ${PARSER_DIR}/../inc
+    ${METADEF_DIR}/inc
+    ${METADEF_DIR}/inc/graph
+    ${METADEF_DIR}/inc/external
+    ${METADEF_DIR}/inc/external/graph
+)
+
+target_link_libraries(fmk_onnx_parser_stub PRIVATE
+    $<BUILD_INTERFACE:intf_pub>
+)
+
+set_target_properties(fmk_onnx_parser_stub PROPERTIES
+    OUTPUT_NAME fmk_onnx_parser
+    LIBRARY_OUTPUT_DIRECTORY stub
+)
+
 ############ install ############
 set(INSTALL_BASE_DIR "")
 set(INSTALL_LIBRARY_DIR lib)
 
 install(TARGETS fmk_onnx_parser OPTIONAL
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}
+)
+
+install(TARGETS fmk_onnx_parser_stub OPTIONAL
+    LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}/stub
 )
