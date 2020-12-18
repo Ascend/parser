@@ -55,6 +55,16 @@ Status TensorFlowAutoMappingParserAdapter::ParseParams(const Message *op_src, ge
     return FAILED;
   }
   op.BreakConnect();
+  if (op_dest->GetType() == EMPTY) {
+    domi::tensorflow::AttrValue attr;
+    if (TensorFlowUtil::FindAttrValue(node, kShapeAttrDtype, attr)) {
+      ge::DataType data_type = domi::TensorAssign::ConvertTensorflowDataType(static_cast<uint32_t>(attr.type()));
+      AttrUtils::SetInt(op_dest, kShapeAttrDtype, data_type);
+      GELOGD("Get dtype:%d success.", data_type);
+    } else {
+      GELOGW("Get dtype failed!");
+    }
+  }
 
   // add dynamic input/output
   if (op_dest->GetType() == IDENTITYN) {
