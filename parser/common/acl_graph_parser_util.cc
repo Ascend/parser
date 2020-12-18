@@ -220,11 +220,19 @@ domi::Status AclGrphParseUtil::AclParserInitialize(const std::map<std::string, s
     return FAILED;
   }
 
+  auto it = options.find(ge::FRAMEWORK_TYPE);
+  if (it == options.end()) {
+    GELOGE(FAILED, "Can not find ge.frameworkType in options");
+    return FAILED;
+  }
+  std::string fmk_type = it->second;
   std::vector<OpRegistrationData> registrationDatas = op_registry->registrationDatas;
   GELOGI("The size of registrationDatas in parser is: %zu", registrationDatas.size());
   for (OpRegistrationData &reg_data : registrationDatas) {
-    (void)OpRegistrationTbe::Instance()->Finalize(reg_data, false);
-    domi::OpRegistry::Instance()->Register(reg_data);
+    if (std::to_string(reg_data.GetFrameworkType()) == fmk_type) {
+      (void)OpRegistrationTbe::Instance()->Finalize(reg_data, false);
+      (void)domi::OpRegistry::Instance()->Register(reg_data);
+    }
   }
 
   // set init status
