@@ -239,9 +239,9 @@ domi::Status AclGrphParseUtil::AclParserInitialize(const std::map<std::string, s
 
 void AclGrphParseUtil::SetDefaultFormat() {
   if (ge::GetParserContext().type == domi::TENSORFLOW) {
-    ge::GetParserContext().format = "NHWC";
+    ge::GetParserContext().format = domi::DOMI_TENSOR_NHWC;
   } else {
-    ge::GetParserContext().format = "NCHW";
+    ge::GetParserContext().format = domi::DOMI_TENSOR_NCHW;
   }
 }
 
