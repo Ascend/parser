@@ -39,9 +39,10 @@ class OnnxModelParser : public domi::ModelParser {
   ge::DataType ConvertToGeDataType(const uint32_t type) override;
 
   Status ParseFromMemory(const char *data, uint32_t size, ge::ComputeGraphPtr &graph) override { return domi::SUCCESS; }
-  virtual Status ParseFromMemory(const char *data, uint32_t size, ge::Graph &graph) {
-    return domi::SUCCESS;
-  }
+
+#ifndef ONLY_COMPILE_OPEN_SRC
+  Status ParseFromMemory(const char *data, uint32_t size, ge::Graph &graph) override;
+#endif
 
   Status ParseProto(const google::protobuf::Message *proto, ge::ComputeGraphPtr &graph) override {
     return domi::SUCCESS;
@@ -62,8 +63,6 @@ class OnnxModelParser : public domi::ModelParser {
   Status ParseInput(ge::onnx::GraphProto &onnx_graph,
                     std::map<std::string, ge::onnx::TensorProto> &initializer_name_tensor);
 
-  Status ParseOutput(const ge::onnx::GraphProto &onnx_graph);
-
   Status ParseInitializer(ge::onnx::GraphProto &onnx_graph,
                           std::map<std::string, ge::onnx::TensorProto> &initializer_name_tensor);
 
@@ -79,10 +78,17 @@ class OnnxModelParser : public domi::ModelParser {
 
   Status SetOperatorInputs();
 
-  Status GetGraphInputsOutputs(std::vector<ge::Operator> &input_ops,
-                               std::vector<std::pair<ge::Operator, std::vector<size_t>>> output_indexs);
+  Status GetGraphInputs(std::vector<ge::Operator> &input_ops);
 
   Status Prechecker(ge::onnx::GraphProto &onnx_graph);
+  
+  Status GetModelFromFile(const char *file, ge::onnx::ModelProto &onnx_model);
+
+#ifndef ONLY_COMPILE_OPEN_SRC
+  Status GetModelFromMemory(const char *data, uint32_t size, ge::onnx::ModelProto &onnx_model);
+#endif
+
+  Status ModelParseToGraph(const ge::onnx::ModelProto &onnx_model, ge::Graph &graph);
 
   void UpdateFormat(ge::Graph &graph);
 
@@ -93,8 +99,6 @@ class OnnxModelParser : public domi::ModelParser {
   std::map<std::string, ge::Operator> name_operator_;
 
   std::vector<std::string> input_node_names_;
-
-  std::vector<std::string> output_node_names_;
 
   std::unordered_map<std::string, std::vector<std::pair<std::string, int>>> inputs_map_;
 
