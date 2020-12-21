@@ -71,7 +71,7 @@ LOCAL_C_INCLUDES := \
     $(TOPDIR)metadef/inc/external/graph \
     libc_sec/include \
 
-LOCAL_MODULE := stub/libfmk_parser
+LOCAL_MODULE := stub/libfmk_onnx_parser
 
 LOCAL_CFLAGS += -DPROTOBUF_INLINE_NOT_IN_HEADERS=0 -DREUSE_MEMORY=1 -O2
 LOCAL_CFLAGS += -DFMK_HOST_INFER -DFMK_SUPPORT_DUMP
