@@ -38,10 +38,17 @@ Status ParserInitialize(const std::map<std::string, std::string> &options) {
   // load custom op plugin
   TBEPluginLoader::Instance().LoadPluginSo(options);
 
+  std::string fmk_type = std::to_string(domi::TENSORFLOW);
+  auto it = options.find(ge::FRAMEWORK_TYPE);
+  if (it != options.end()) {
+   fmk_type = it->second;
+  }
   std::vector<OpRegistrationData> registrationDatas = domi::OpRegistry::Instance()->registrationDatas;
   GELOGI("The size of registrationDatas in parser is: %zu", registrationDatas.size());
   for (OpRegistrationData &reg_data : registrationDatas) {
-    (void)OpRegistrationTbe::Instance()->Finalize(reg_data, true);
+    if (std::to_string(reg_data.GetFrameworkType()) == fmk_type) {
+      (void)OpRegistrationTbe::Instance()->Finalize(reg_data, true);
+    }
   }
 
   auto iter = options.find(ge::OPTION_EXEC_ENABLE_SCOPE_FUSION_PASSES);
