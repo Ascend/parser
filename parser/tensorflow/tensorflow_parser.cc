@@ -670,23 +670,15 @@ Status TensorFlowModelParser::AddEdges(ge::ComputeGraphPtr &graph) {
           GELOGD("Start add contorl edge: from %s to %s.", src->GetName().c_str(), dest->GetName().c_str());
           ge::InControlAnchorPtr in_archor_ptr = dest->GetInControlAnchor();
           GE_CHECK_NOTNULL(in_archor_ptr);
-          GE_IF_BOOL_EXEC(nodedef_map_[src_op_name]->op() != TENSORFLOWF_NODE_OP_SWITCH,
-                          ge::OutControlAnchorPtr out_archor_ptr = src->GetOutControlAnchor();
-                          GE_CHECK_NOTNULL(out_archor_ptr); GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
-                              ge::GraphUtils::AddEdge(out_archor_ptr, in_archor_ptr) != ge::GRAPH_SUCCESS,
-                              ErrorManager::GetInstance().ATCReportErrMessage("E12014", {"opname1", "opname2"},
-                                                                              {src->GetName(), dest->GetName()});
-                              return INTERNAL_ERROR, "Add link failed from op[%s] to op[%s].", src->GetName().c_str(),
-                                     dest->GetName().c_str()););
-
-          GE_IF_BOOL_EXEC(nodedef_map_[src_op_name]->op() == TENSORFLOWF_NODE_OP_SWITCH,
-                          ge::OutDataAnchorPtr out_data_archor_ptr = src->GetOutDataAnchor(outputpair.first);
-                          GE_CHECK_NOTNULL(out_data_archor_ptr); GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
-                              ge::GraphUtils::AddEdge(out_data_archor_ptr, in_archor_ptr) != ge::GRAPH_SUCCESS,
-                              ErrorManager::GetInstance().ATCReportErrMessage("E12014", {"opname1", "opname2"},
-                                                                              {src->GetName(), dest->GetName()});
-                              return INTERNAL_ERROR, "Add link failed from op[%s] to op[%s].", src->GetName().c_str(),
-                                     dest->GetName().c_str()););
+          ge::OutControlAnchorPtr out_archor_ptr = src->GetOutControlAnchor();
+          GE_CHECK_NOTNULL(out_archor_ptr);
+          GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
+              ge::GraphUtils::AddEdge(out_archor_ptr, in_archor_ptr) != ge::GRAPH_SUCCESS,
+              ErrorManager::GetInstance().ATCReportErrMessage("E12014", {"opname1", "opname2"},
+                                                              {src->GetName(), dest->GetName()});
+              return INTERNAL_ERROR, "Add link failed from op[%s] to op[%s].", src->GetName().c_str(),
+                     dest->GetName().c_str()
+          );
         }
       }
       dest_input_map.erase(input_iter);
