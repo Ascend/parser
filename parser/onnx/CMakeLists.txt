@@ -70,7 +70,7 @@ target_link_libraries(fmk_onnx_parser PRIVATE
     c_sec
     parser_common 
     graph
-    slog
+    alog
     -Wl,--as-needed
     json
     -lrt
