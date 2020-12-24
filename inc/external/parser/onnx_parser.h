@@ -17,17 +17,21 @@
 #ifndef INC_EXTERNAL_PARSER_ONNX_PARSER_H_
 #define INC_EXTERNAL_PARSER_ONNX_PARSER_H_
 
+#include <memory>
+#include <map>
+
 #include "graph/ascend_string.h"
 #include "graph/ge_error_codes.h"
-#include "graph/graph.h"
 #include "graph/types.h"
+#include "graph/graph.h"
 
 namespace ge {
 graphStatus aclgrphParseONNX(const char *model_file,
-                             const std::map<ge::AscendString, ge::AscendString> &parser_params, ge::Graph &graph);
+                             std::map<ge::AscendString, ge::AscendString> &parser_params,
+                             ge::Graph &graph);
 
-graphStatus aclgrphParseONNXFromMem(const char *buffer, size_t size,
-                                    const std::map<ge::AscendString, ge::AscendString> &parser_params,
+graphStatus aclgrphParseONNXFromMem(const char *buffer, size_t buffer_size,
+                                    std::map<ge::AscendString, ge::AscendString> &parser_params,
                                     ge::Graph &graph);
 }  // namespace ge
 
