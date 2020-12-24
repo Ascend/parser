@@ -16,7 +16,6 @@
 
 #include "framework/omg/parser/parser_api.h"
 #include "common/debug/log.h"
-
 #include "tbe_plugin_loader.h"
 #include "framework/common/debug/ge_log.h"
 #include "parser/common/register_tbe.h"
@@ -41,7 +40,7 @@ Status ParserInitialize(const std::map<std::string, std::string> &options) {
   std::string fmk_type = std::to_string(domi::TENSORFLOW);
   auto it = options.find(ge::FRAMEWORK_TYPE);
   if (it != options.end()) {
-   fmk_type = it->second;
+    fmk_type = it->second;
   }
   std::vector<OpRegistrationData> registrationDatas = domi::OpRegistry::Instance()->registrationDatas;
   GELOGI("The size of registrationDatas in parser is: %zu", registrationDatas.size());

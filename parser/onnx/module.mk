@@ -52,7 +52,7 @@ LOCAL_SHARED_LIBRARIES := \
     libregister \
     liberror_manager \
 
-LOCAL_STATIC_LIBRARIES += libmmpa   
+LOCAL_STATIC_LIBRARIES += libmmpa
 
 LOCAL_LDFLAGS := -lrt -ldl
 
@@ -62,7 +62,6 @@ include $(BUILD_HOST_SHARED_LIBRARY)
 include $(CLEAR_VARS)
 
 LOCAL_C_INCLUDES := \
-    $(TOPDIR)inc \
     $(TOPDIR)metadef/inc \
     $(TOPDIR)parser/inc \
     $(TOPDIR)inc/external \
@@ -88,4 +87,3 @@ LOCAL_SHARED_LIBRARIES :=
 LOCAL_LDFLAGS := -lrt -ldl
 
 include $(BUILD_HOST_SHARED_LIBRARY)
-

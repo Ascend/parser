@@ -784,7 +784,6 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadProtoFromBinaryFile(co
   google::protobuf::io::CodedInputStream coded_stream(&istream);
 
   bool ret = ReadProtoFromCodedInputStream(coded_stream, proto);
-
   fs.close();
 
   if (!ret) {

@@ -115,7 +115,6 @@ target_include_directories(fmk_onnx_parser_stub PRIVATE
     ${PARSER_DIR}/parser
     ${PARSER_DIR}/../inc
     ${METADEF_DIR}/inc
-    ${METADEF_DIR}/inc/graph
     ${METADEF_DIR}/inc/external
     ${METADEF_DIR}/inc/external/graph
 )
