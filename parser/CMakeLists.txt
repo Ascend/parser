@@ -102,7 +102,7 @@ target_link_libraries(fmk_parser
     register
     _caffe_parser
     c_sec
-    alog
+    slog
     -Wl,--as-needed
     json
     -lrt
