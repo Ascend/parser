@@ -81,7 +81,7 @@ target_link_libraries(parser_common PRIVATE
     ascend_protobuf
     register
     c_sec
-    alog
+    slog
     error_manager
     -Wl,--as-needed
     json
