@@ -667,7 +667,7 @@ Status TensorFlowModelParser::AddEdges(ge::ComputeGraphPtr &graph) {
                                          return INTERNAL_ERROR, "Add link failed from op[%s] to op[%s].",
                                                 src->GetName().c_str(), dest->GetName().c_str());
         } else {
-          GELOGD("Start add contorl edge: from %s to %s.", src->GetName().c_str(), dest->GetName().c_str());
+          GELOGD("Start add control edge: from %s to %s.", src->GetName().c_str(), dest->GetName().c_str());
           ge::InControlAnchorPtr in_archor_ptr = dest->GetInControlAnchor();
           GE_CHECK_NOTNULL(in_archor_ptr);
           ge::OutControlAnchorPtr out_archor_ptr = src->GetOutControlAnchor();
