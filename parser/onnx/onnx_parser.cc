@@ -268,11 +268,15 @@ Status OnnxModelParser::ConstructOriType(const ge::onnx::NodeProto *node_proto, 
       return PARAM_INVALID;
     }
   } else {
-    if (domain_verseion_.size() == 1){
+    size_t domain_version_size = domain_verseion_.size();
+    if (domain_version_size == 1) {
       domain = domain_verseion_.begin()->first;
       version = domain_verseion_.begin()->second;
     } else {
-      GELOGE(PARAM_INVALID, "The opset size %zu is bigger than one.", domain_verseion_.size());
+      GELOGE(PARAM_INVALID, "The size of domain_version[%zu] should be equal to one.", domain_version_size);
+      ErrorManager::GetInstance().ATCReportErrMessage("E16005",
+                                                      {"domain_version_size"},
+                                                      {to_string(domain_version_size)});
       return PARAM_INVALID;
     }
   }
@@ -350,9 +354,11 @@ Status OnnxModelParser::SetOperatorInputs() {
   for (auto in_iter = inputs_map_.begin(); in_iter != inputs_map_.end(); in_iter++) {
     auto out_iter = outputs_map_.find(in_iter->first);
     if (out_iter == outputs_map_.end()) {
-      GELOGE(INTERNAL_ERROR, "Unknown input: %s:%d in node: %s", in_iter->first.c_str(), in_iter->second[0].second,
+      GELOGW("Unknown input: %s:%d for node: %s, which maybe option input.",
+             in_iter->first.c_str(),
+             in_iter->second[0].second,
              in_iter->second[0].first.c_str());
-      return INTERNAL_ERROR;
+      continue;
     }
 
     std::vector<std::pair<std::string, int>> &input_node_indexs = in_iter->second;
