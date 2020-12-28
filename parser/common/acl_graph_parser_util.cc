@@ -594,7 +594,7 @@ domi::Status AclGrphParseUtil::ParseParamsBeforeGraph(const std::map<AscendStrin
 
 domi::Status AclGrphParseUtil::ParseParamsAfterGraph(ge::Graph &graph,
                                                      const std::map<AscendString, AscendString> &parser_params) {
-  // support paragrams: input_fp16_nodes, is_input_adjust_hw_layout, compress_weight_conf,
+  // support paragrams: input_fp16_nodes, is_input_adjust_hw_layout
   ComputeGraphPtr compute_graph = GraphUtils::GetComputeGraph(graph);
   GE_CHECK_NOTNULL(compute_graph);
 
