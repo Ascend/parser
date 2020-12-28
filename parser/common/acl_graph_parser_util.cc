@@ -406,53 +406,6 @@ domi::Status AclGrphParseUtil::ParseAclInputFp16Nodes(const ComputeGraphPtr &gra
   return SUCCESS;
 }
 
-domi::Status AclGrphParseUtil::ParseAclWeightCompressConf(const ComputeGraphPtr &graph,
-                                                          const string &compress_weight_conf) {
-  GE_CHECK_NOTNULL(graph);
-  if (compress_weight_conf.empty()) {
-    return SUCCESS;
-  }
-  std::string real_path = ge::parser::RealPath(compress_weight_conf.c_str());
-  if (real_path.empty()) {
-    ErrorManager::GetInstance().ATCReportErrMessage("E10016", {"parameter", "opname"},
-                                                    {"compress_weight_conf", compress_weight_conf});
-    GELOGE(PARAM_INVALID, "Can not get real path for %s.", compress_weight_conf.c_str());
-    return PARAM_INVALID;
-  }
-  std::ifstream ifs(real_path);
-  if (!ifs.is_open()) {
-    ErrorManager::GetInstance().ATCReportErrMessage("E10016", {"parameter", "opname"},
-                                                    {"compress_weight_conf", compress_weight_conf});
-    GELOGE(FAILED, "Open file %s failed", compress_weight_conf.c_str());
-    return FAILED;
-  }
-
-  std::string compress_nodes;
-  ifs >> compress_nodes;
-  ifs.close();
-  if (compress_nodes.empty()) {
-    GELOGW("Compress weight of nodes info is empty");
-    return SUCCESS;
-  }
-  GELOGI("Compress weight of nodes: %s", compress_nodes.c_str());
-
-  vector<string> compress_node_vec = StringUtils::Split(compress_nodes, ';');
-  for (size_t i = 0; i < compress_node_vec.size(); ++i) {
-    ge::NodePtr node = graph->FindNode(compress_node_vec[i]);
-    if (node == nullptr) {
-      GELOGW("Node %s is not in graph", compress_node_vec[i].c_str());
-      continue;
-    }
-    auto op_desc = node->GetOpDesc();
-    GE_CHECK_NOTNULL(op_desc);
-    if (!ge::AttrUtils::SetBool(op_desc, ge::ATTR_NAME_COMPRESS_WEIGHT, true)) {
-      GELOGE(domi::FAILED, "Node %s SetBool failed.", compress_node_vec[i].c_str());
-      return domi::FAILED;
-    }
-  }
-  return SUCCESS;
-}
-
 void AclGrphParseUtil::GetOutputNodesNameAndIndex(std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info,
                                                   std::vector<std::string> &output_nodes_name) {
   output_nodes_name.clear();
@@ -641,7 +594,7 @@ domi::Status AclGrphParseUtil::ParseParamsBeforeGraph(const std::map<AscendStrin
 
 domi::Status AclGrphParseUtil::ParseParamsAfterGraph(ge::Graph &graph,
                                                      const std::map<AscendString, AscendString> &parser_params) {
-  // support paragrams: input_fp16_nodes, is_input_adjust_hw_layout, compress_weight_conf,
+  // support paragrams: input_fp16_nodes, is_input_adjust_hw_layout,
   ComputeGraphPtr compute_graph = GraphUtils::GetComputeGraph(graph);
   GE_CHECK_NOTNULL(compute_graph);
 
@@ -653,11 +606,6 @@ domi::Status AclGrphParseUtil::ParseParamsAfterGraph(ge::Graph &graph,
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
       ParseAclInputFp16Nodes(compute_graph, input_fp16_nodes, is_input_adjust_hw_layout) != SUCCESS,
       return PARAM_INVALID, "Parse input_fp16_nodes failed");
-
-  string compress_weight_conf;
-  GetAclParams(parser_params, ge::ir_option::COMPRESS_WEIGHT_CONF, compress_weight_conf);
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(ParseAclWeightCompressConf(compute_graph, compress_weight_conf) != SUCCESS,
-                                 return PARAM_INVALID, "Parse compress_weight_conf failed");
 
   return SUCCESS;
 }

@@ -60,7 +60,6 @@ class AclGrphParseUtil {
                                     uint32_t index, OpDescPtr &op_desc);
   domi::Status ParseAclInputFp16Nodes(const ComputeGraphPtr &graph, const string &input_fp16_nodes,
                                       const string &is_input_adjust_hw_layout);
-  domi::Status ParseAclWeightCompressConf(const ComputeGraphPtr &graph, const string &compress_weight_conf);
   domi::Status GetDefaultOutInfo(ge::ComputeGraphPtr &compute_graph,
                                  std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info);
 };
