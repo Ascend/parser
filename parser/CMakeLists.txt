@@ -49,6 +49,7 @@ add_library(fmk_parser SHARED ${SRC_LIST} ${PROTO_SRCS})
 target_compile_options(fmk_parser PRIVATE
     -Werror
     -Wno-deprecated-declarations
+    -fno-common
 )
 
 target_compile_definitions(fmk_parser PRIVATE
