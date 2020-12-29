@@ -33,6 +33,7 @@ add_library(parser_common SHARED ${SRC_LIST})
 target_compile_options(parser_common PRIVATE
     -Werror
     -Wno-deprecated-declarations
+    -fno-common
 )
 
 target_compile_definitions(parser_common PRIVATE

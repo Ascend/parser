@@ -19,6 +19,7 @@ add_library(fmk_onnx_parser SHARED ${SRC_LIST} ${PROTO_HDRS})
 target_compile_options(fmk_onnx_parser PRIVATE
     -Werror
     -Wno-deprecated-declarations
+    -fno-common
 )
 
 target_compile_definitions(fmk_onnx_parser PRIVATE
