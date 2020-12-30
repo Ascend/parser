@@ -68,8 +68,8 @@ graphStatus PrepareBeforeParse(AclGrphParseUtil &acl_graph_parse_util,
 }
 
 graphStatus HandleAfterParse(AclGrphParseUtil &acl_graph_parse_util,
-                               const std::map<AscendString, AscendString> &parser_params,
-                               ge::Graph &graph) {
+                             const std::map<AscendString, AscendString> &parser_params,
+                             ge::Graph &graph) {
   if (acl_graph_parse_util.ParseParamsAfterGraph(graph, parser_params) != ge::SUCCESS) {
     GELOGE(ge::FAILED, "Parser params after graph failed.");
     return ge::FAILED;
