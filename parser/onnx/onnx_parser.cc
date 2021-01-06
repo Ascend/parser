@@ -40,7 +40,9 @@
 
 namespace ge {
 graphStatus aclgrphParseONNX(const char *model_file,
-                             std::map<AscendString, AscendString> &parser_params, ge::Graph &graph) {
+                             const std::map<AscendString,
+                             AscendString> &parser_params,
+                             ge::Graph &graph) {
   GE_CHECK_NOTNULL(model_file);
   GetParserContext().type = domi::ONNX;
   std::map<string, string> options;
@@ -86,7 +88,9 @@ graphStatus aclgrphParseONNX(const char *model_file,
 }
 
 graphStatus aclgrphParseONNXFromMem(const char *buffer, size_t buffer_size,
-                                    std::map<AscendString, AscendString> &parser_params, ge::Graph &graph) {
+                                    const std::map<AscendString,
+                                    AscendString> &parser_params,
+                                    ge::Graph &graph) {
   GE_CHECK_NOTNULL(buffer);
   GetParserContext().type = domi::ONNX;
   std::map<string, string> options;
