@@ -27,11 +27,13 @@
 
 namespace ge {
 graphStatus aclgrphParseONNX(const char *model_file,
-                             std::map<ge::AscendString, ge::AscendString> &parser_params,
+                             const std::map<ge::AscendString,
+                             ge::AscendString> &parser_params,
                              ge::Graph &graph);
 
 graphStatus aclgrphParseONNXFromMem(const char *buffer, size_t buffer_size,
-                                    std::map<ge::AscendString, ge::AscendString> &parser_params,
+                                    const std::map<ge::AscendString,
+                                    ge::AscendString> &parser_params,
                                     ge::Graph &graph);
 }  // namespace ge
 
