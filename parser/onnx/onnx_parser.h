@@ -40,9 +40,7 @@ class OnnxModelParser : public domi::ModelParser {
 
   Status ParseFromMemory(const char *data, uint32_t size, ge::ComputeGraphPtr &graph) override { return domi::SUCCESS; }
 
-#ifndef ONLY_COMPILE_OPEN_SRC
   Status ParseFromMemory(const char *data, uint32_t size, ge::Graph &graph) override;
-#endif
 
   Status ParseProto(const google::protobuf::Message *proto, ge::ComputeGraphPtr &graph) override {
     return domi::SUCCESS;
@@ -84,9 +82,7 @@ class OnnxModelParser : public domi::ModelParser {
   
   Status GetModelFromFile(const char *file, ge::onnx::ModelProto &onnx_model);
 
-#ifndef ONLY_COMPILE_OPEN_SRC
   Status GetModelFromMemory(const char *data, uint32_t size, ge::onnx::ModelProto &onnx_model);
-#endif
 
   Status ModelParseToGraph(const ge::onnx::ModelProto &onnx_model, ge::Graph &graph);
 

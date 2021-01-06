@@ -83,8 +83,7 @@ graphStatus HandleAfterParse(AclGrphParseUtil &acl_graph_parse_util,
 }
 
 graphStatus aclgrphParseONNX(const char *model_file,
-                             const std::map<AscendString, AscendString> &parser_params, ge::Graph &graph) {
-#ifndef ONLY_COMPILE_OPEN_SRC								 
+                             const std::map<AscendString, AscendString> &parser_params, ge::Graph &graph) {							 
   GE_CHECK_NOTNULL(model_file);
   // load custom plugin so and proto
   AclGrphParseUtil acl_graph_parse_util;
@@ -110,13 +109,11 @@ graphStatus aclgrphParseONNX(const char *model_file,
   }
 
   GELOGI("AclgrphParse graph %s success.", graph.GetName().c_str());
-#endif
   return ge::SUCCESS;
 }
 
 graphStatus aclgrphParseONNXFromMem(const char *buffer, size_t size,
                                     const std::map<AscendString, AscendString> &parser_params, ge::Graph &graph) {
-#ifndef ONLY_COMPILE_OPEN_SRC
   GE_CHECK_NOTNULL(buffer);
   // load custom plugin so and proto
   AclGrphParseUtil acl_graph_parse_util;
@@ -140,7 +137,6 @@ graphStatus aclgrphParseONNXFromMem(const char *buffer, size_t size,
     return ge::FAILED;
   }
     GELOGI("AclgrphParse graph %s success.", graph.GetName().c_str());
-#endif
     return ge::SUCCESS;
 }
 } // namespace ge
@@ -535,7 +531,6 @@ Status OnnxModelParser::GetModelFromFile(const char *file, ge::onnx::ModelProto 
   return SUCCESS;
 }
 
-#ifndef ONLY_COMPILE_OPEN_SRC
 Status OnnxModelParser::GetModelFromMemory(const char *data, uint32_t size, ge::onnx::ModelProto &onnx_model) {
   GE_CHECK_NOTNULL(data);
 
@@ -548,7 +543,6 @@ Status OnnxModelParser::GetModelFromMemory(const char *data, uint32_t size, ge::
   }
   return SUCCESS;
 }
-#endif
 
 Status OnnxModelParser::ModelParseToGraph(const ge::onnx::ModelProto &onnx_model, ge::Graph &graph) {
   if (!onnx_model.has_graph()) {
@@ -661,7 +655,6 @@ Status OnnxModelParser::Parse(const char *file, ge::Graph &graph) {
   return SUCCESS;
 }
 
-#ifndef ONLY_COMPILE_OPEN_SRC
 Status OnnxModelParser::ParseFromMemory(const char *data, uint32_t size, ge::Graph &graph) {
   ge::onnx::ModelProto onnx_model;
   Status ret = GetModelFromMemory(data, size, onnx_model);
@@ -676,7 +669,6 @@ Status OnnxModelParser::ParseFromMemory(const char *data, uint32_t size, ge::Gra
   }
   return SUCCESS;
 }
-#endif
 
 Status OnnxModelParser::ToJson(const char *model_file, const char *json_file) {
   if (model_file == nullptr) {
