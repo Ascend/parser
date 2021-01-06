@@ -541,7 +541,15 @@ class TensorFlowModelParser : public domi::ModelParser {
    * @return false remove failed
    *
    */
-  Status RemoveInputs(domi::tensorflow::NodeDef *node_def, const set<uint32_t> &remove_index_set);
+  Status RemoveInputs(domi::tensorflow::GraphDef *graph_def,
+                      domi::tensorflow::NodeDef *node_def,
+                      const set<uint32_t> &remove_index_set,
+                      const map<string, NodeDef *> &all_node_map);
+
+  Status AddControlEdgeAfterRemoveInputs(domi::tensorflow::GraphDef *graph_def,
+                                         domi::tensorflow::NodeDef *node_def,
+                                         const map<string, NodeDef *> &all_node_map,
+                                         const vector<string> &removed_inputs_vec);
 
   void RemoveInputAttr(domi::tensorflow::NodeDef *node_def, const map<string, vector<int>> &remove_inputs_map);
 
