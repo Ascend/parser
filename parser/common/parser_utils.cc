@@ -26,6 +26,29 @@
 #include "register/op_registry.h"
 
 namespace ge {
+namespace {
+Status HandleNewOp(const NodePtr &node, const ComputeGraphPtr &compute_graph, const NodePtr &new_node) {
+  GE_CHECK_NOTNULL(node);
+  GE_CHECK_NOTNULL(new_node);
+  if (new_node->SetOwnerComputeGraph(compute_graph) != GRAPH_SUCCESS) {
+    GELOGE(FAILED, "Set owner graph for node:%s failed.", new_node->GetName().c_str());
+    return FAILED;
+  }
+  auto op_desc = new_node->GetOpDesc();
+  static std::atomic_long new_node_index(0);
+  auto new_name = "PartitionedCall_" + new_node->GetName() + "_" + to_string(new_node_index++);
+  op_desc->SetName(new_name);
+  bool ret = ge::AttrUtils::SetListStr(op_desc,
+                                       ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES,
+                                       std::move(std::vector<std::string>{node->GetName()}));
+  if (!ret) {
+    GELOGW("Set %s to %s fail.", ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES.c_str(), op_desc->GetName().c_str());
+  }
+  GELOGD("Handle new op[%s] for node[%s] success.", new_node->GetName().c_str(), node->GetName().c_str());
+  return SUCCESS;
+}
+}
+
 Status ParserUtils::ExpandOneToManyGraph(Graph &graph) {
   GELOGD("Begin run ParserUtils::ExpandOneToManyGraph.");
   ComputeGraphPtr compute_graph = GraphUtils::GetComputeGraph(graph);
@@ -66,14 +89,12 @@ Status ParserUtils::ExpandNodeToSubgraph(const Graph &subgraph, const NodePtr &n
   GE_CHECK_NOTNULL(compute_graph);
 
   // add subgraph node to graph.
-  std::unordered_map<std::string, NodePtr> all_new_nodes;
   std::vector<NodePtr> input_nodes;
   for (const auto &n : sub_compute_graph->GetDirectNode()) {
     auto new_node = compute_graph->AddNode(n);
     GE_CHECK_NOTNULL(new_node);
-    all_new_nodes[new_node->GetName()] = new_node;
-    if (new_node->SetOwnerComputeGraph(compute_graph) != GRAPH_SUCCESS) {
-      GELOGE(FAILED, "Set owner graph for node:%s failed.", new_node->GetName().c_str());
+    if (HandleNewOp(node, compute_graph, new_node) != SUCCESS) {
+      GELOGE(FAILED, "Handle new op[%s] for node[%s] failed.", new_node->GetName().c_str(), node->GetName().c_str());
       return FAILED;
     }
 
