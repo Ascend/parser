@@ -334,9 +334,11 @@ Status OnnxModelParser::SetOperatorInputs() {
   for (auto in_iter = inputs_map_.begin(); in_iter != inputs_map_.end(); in_iter++) {
     auto out_iter = outputs_map_.find(in_iter->first);
     if (out_iter == outputs_map_.end()) {
-      GELOGE(INTERNAL_ERROR, "Unknown input: %s:%d in node: %s", in_iter->first.c_str(), in_iter->second[0].second,
+      GELOGW("Unknown input: %s:%d for node: %s, which maybe option input.",
+             in_iter->first.c_str(),
+             in_iter->second[0].second,
              in_iter->second[0].first.c_str());
-      return INTERNAL_ERROR;
+      continue;
     }
 
     std::vector<std::pair<std::string, int>> &input_node_indexs = in_iter->second;
