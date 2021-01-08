@@ -47,11 +47,11 @@ class Pb2Json {
   static void Message2Json(const ProtobufMsg &message, const std::set<std::string> &black_fields, Json &json,
                            bool enum2str = false);
 
- protected:
   static void RepeatedMessage2Json(const ProtobufMsg &message, const ProtobufFieldDescriptor *field,
                                    const ProtobufReflection *reflection, const std::set<std::string> &black_fields,
                                    Json &json, bool enum2str);
 
+ protected:
   static void Enum2Json(const ProtobufEnumValueDescriptor *enum_value_desc, const ProtobufFieldDescriptor *field,
                         bool enum2str, Json &json);
 
