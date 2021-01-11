@@ -225,6 +225,17 @@ static void ParsePlacement(const domi::tensorflow::NodeDef *node, VariableOperat
   }
 }
 
+static void ParseMemType(const domi::tensorflow::NodeDef *node, VariableOperator *op) {
+  // The upper caller guarantees input params is not empty.
+  string node_src_name = node->name();
+  domi::tensorflow::AttrValue attr_value;
+  GELOGI("Start to parse mem_type, %s", node_src_name.c_str());
+  if (TensorFlowUtil::FindAttrValue(node, ge::ATTR_OUTPUT_MEMORY_TYPE, attr_value)) {
+    uint32_t mem_type = attr_value.i();
+    op->MemType(mem_type);
+  }
+}
+
 Status ParseParams(const Message *op_src, VariableOperator *op) {
   GE_CHECK_NOTNULL(op_src);
   const NodeDef *node = reinterpret_cast<const NodeDef *>(op_src);
@@ -241,6 +252,7 @@ Status ParseParams(const Message *op_src, VariableOperator *op) {
   GE_RETURN_IF_ERROR(ParseSrcType(node, op));
   GE_RETURN_IF_ERROR(ParseVarShape(node, op));
   ParsePlacement(node, op);
+  ParseMemType(node, op);
 
   GELOGD("VariabeV2 OP parser params success.op name : %s.", node->name().c_str());
 

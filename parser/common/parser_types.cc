@@ -347,7 +347,9 @@ const char *HCOMREDUCESCATTER = "HcomReduceScatter";
 const char *HCOMSEND = "HcomSend";
 const char *HCOMRECEIVE = "HcomReceive";
 const char *HCOMREMOTEREAD = "HcomRemoteRead";
+const char *HCOMREMOTEREFREAD = "HcomRemoteRefRead";
 const char *HCOMREMOTEWRITE = "HcomRemoteWrite";
+const char *HCOMREMOTESCATTERWRITE = "HcomRemoteScatterWrite";
 
 const char *VARASSIGN = "VarAssign";
 const char *VARISINITIALIZEDOP = "VarIsInitializedOp";

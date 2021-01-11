@@ -35,6 +35,8 @@ class VariableOperator : public ParserOperator {
 
   VariableOperator &Placement(const std::string &placement);
 
+  VariableOperator &MemType(const uint32_t &mem_type);
+
   VariableOperator &SrcType(const int64_t &dtype);
 
   VariableOperator &VarShape(const std::vector<int64_t> &shape_value);

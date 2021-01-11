@@ -43,6 +43,11 @@ VariableOperator &VariableOperator::Placement(const std::string &placement) {
   return *this;
 }
 
+VariableOperator &VariableOperator::MemType(const uint32_t &mem_type) {
+  Attr(ATTR_OUTPUT_MEMORY_TYPE, mem_type);
+  return *this;
+}
+
 VariableOperator &VariableOperator::SrcType(const int64_t &dtype) {
   Attr(VAR_ATTR_DTYPE, dtype);
   return *this;
