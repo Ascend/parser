@@ -81,8 +81,9 @@ Status TensorFlowDataParser::ParseInputFromModel(const Message *op_src, ge::OpDe
   }
 
   if (!TensorFlowUtil::FindAttrValue(node, TENSORFLOW_ATTR_SHAPE, attr_value)) {
-    GELOGE(domi::PARAM_INVALID, "input data node %s do not find shape.", node->name().c_str());
-    return domi::PARAM_INVALID;
+    // in some case, data could be without shape and is updated by `input_shape` option in following process
+    GELOGW("input data node %s do not find shape.", node->name().c_str());
+    return SUCCESS;
   }
 
   // Check shape attribute must be shape
