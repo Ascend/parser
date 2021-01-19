@@ -157,7 +157,6 @@ Status OnnxModelParser::ParseInput(ge::onnx::GraphProto &onnx_graph,
   }
 
   // get input value info map
-  std::map<std::string, ge::onnx::TensorProto> input_name_tensor;
   for (int i = 0; i < onnx_graph.input_size(); i++) {
     ge::onnx::ValueInfoProto value_info = onnx_graph.input(i);
     GELOGI("The index of %d input name : %s.", i, value_info.name().c_str());
@@ -165,7 +164,6 @@ Status OnnxModelParser::ParseInput(ge::onnx::GraphProto &onnx_graph,
     // The input are possibly initialized by a default value found in ‘initializer.’
     auto initializer_iter = initializer_name_tensor.find(value_info.name());
     if (initializer_iter != initializer_name_tensor.end()) {
-      input_name_tensor[value_info.name()] = initializer_iter->second;
       initializer_name_tensor.erase(initializer_iter);
       continue;
     }
@@ -188,27 +186,21 @@ Status OnnxModelParser::ParseInput(ge::onnx::GraphProto &onnx_graph,
         }
       }
     }
-    input_name_tensor[value_info.name()] = tensor_tmp;
-  }
-
-  // Construct node for input
-  int64_t index = 0;
-  for (auto it : input_name_tensor) {
+    // Construct node for input
     ge::onnx::NodeProto *input_node = onnx_graph.add_node();
-    input_node->set_name(it.first);
+    input_node->set_name(value_info.name());
     input_node->set_op_type(ge::kOpTypeInput);
-    input_node->add_output(it.first);
+    input_node->add_output(value_info.name());
     // add tensor
     ge::onnx::AttributeProto *attribute = input_node->add_attribute();
     attribute->set_name(ge::kAttrNameInput);
     ge::onnx::TensorProto *attribute_tensor = attribute->mutable_t();
-    *attribute_tensor = it.second;
+    *attribute_tensor = tensor_tmp;
     // add index
     ge::onnx::AttributeProto *attribute_index = input_node->add_attribute();
     attribute_index->set_name(ge::kAttrNameIndex);
-    attribute_index->set_i(index++);
-
-    input_node_names_.emplace_back(it.first);
+    attribute_index->set_i(i);
+    input_node_names_.emplace_back(value_info.name());
   }
   return SUCCESS;
 }
