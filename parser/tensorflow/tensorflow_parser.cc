@@ -294,8 +294,11 @@ Status TensorFlowModelParser::DefunToPartitionedCall(const domi::tensorflow::Nod
   if (!ge::TensorFlowUtil::FindAttrValue(node_def, "_disable_call_shape_inference", attr_call_inference)) {
     ErrorManager::GetInstance().ATCReportErrMessage(
         "E19014", {"opname", "value", "reason"},
-        {node_def->name(), "attr [_disable_call_shape_inference]", "is not exist in nodedef"});
-    GELOGE(FAILED, "In NodeDef %s attr [_disable_call_shape_inference] not exist.", op_name.c_str());
+        {node_def->name(), "attr [_disable_call_shape_inference]",
+         "may has no ir definition, if it is not a common decorate function operator"});
+    GELOGE(FAILED,
+           "Op %s has no ir definition, or has no attr [_disable_call_shape_inference] "
+           "if it is a common decorate function operator.", op_name.c_str());
     return FAILED;
   }
 
