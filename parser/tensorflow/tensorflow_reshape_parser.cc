@@ -51,7 +51,7 @@ Status TensorFlowReshapeParser::ParseDesc(const domi::tensorflow::AttrValue &att
   PARSER_INT64_MULCHECK(real_size, size_type);
   ge::TensorUtils::SetSize(ge_desc, real_size * size_type);
   ge::TensorUtils::SetRealDimCnt(ge_desc, ge_desc.GetShape().GetDimNum());
-  GELOGI("after translate tf_desc, datatype: %s, format: %s, real size: %u, size_type: %u",
+  GELOGI("after translate tf_desc, datatype: %s, format: %s, real size: %ld, size_type: %u",
          ge::TypeUtils::DataTypeToSerialString(ge_desc.GetDataType()).c_str(),
          ge::TypeUtils::FormatToSerialString(ge_desc.GetFormat()).c_str(), real_size * size_type, size_type);
   return SUCCESS;

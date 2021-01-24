@@ -875,7 +875,7 @@ Status CaffeModelParser::ParseOutputNodeTopInfo(const domi::caffe::NetParameter 
         GELOGE(PARAM_INVALID, "Cannot find top_name[%s], which is invalid", top_name.c_str());
         return PARAM_INVALID;
     }
-    GELOGD("Node[%s] find top_name[%s], top_index[%ld]", layer_name.c_str(), top_name.c_str(), top_index);
+    GELOGD("Node[%s] find top_name[%s], top_index[%d]", layer_name.c_str(), top_name.c_str(), top_index);
     AddOutputInfoToContext(layer_name, top_index);
   }
   return SUCCESS;
@@ -1333,7 +1333,7 @@ Status CaffeModelParser::AddUserOutNodesTop() {
              std::to_string((layer_iter->second).size()), std::to_string(index),
              std::to_string(net_output_num)});
         GELOGE(INTERNAL_ERROR,
-               "Add op %s to NetOutput faild, current node output index:%d should < %u. NetOutput"
+               "Add op %s to NetOutput faild, current node output index:%d should < %zu. NetOutput"
                "input_index:%d should < %u.",
                out_pair.first.c_str(), out_pair.second, (layer_iter->second).size(), index,
                net_output_num);
