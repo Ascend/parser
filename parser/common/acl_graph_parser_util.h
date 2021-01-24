@@ -223,7 +223,7 @@ inline domi::Status CheckInt64Uint32MulOverflow(int64_t a, uint32_t b) {
 
 #define PARSER_INT64_UINT32_MULCHECK(a, b)                                                                         \
   if (ge::parser::CheckInt64Uint32MulOverflow((a), (b)) != SUCCESS) {                                              \
-    GELOGW("Int64 %ld and UINT32 %u multiplication can result in overflow!", static_cast<uint32_t>(a), \
+    GELOGW("Int64 %ld and Uint32 %u multiplication can result in overflow!", static_cast<uint64_t>(a),             \
            static_cast<uint32_t>(b));                                                                              \
     return INTERNAL_ERROR;                                                                                         \
   }

@@ -201,7 +201,7 @@ Status ParserUtils::HandleOutputContext(const NodePtr &node,
 
     NodePtr out_node = out_node_index[index].first;
     int32_t out_index = out_node_index[index].second;
-    GELOGD("Begin to handle output node:%s[%zu] with index:%zu", out_node->GetName().c_str(), out_index, index);
+    GELOGD("Begin to handle output node:%s[%d] with index:%zu", out_node->GetName().c_str(), out_index, index);
     auto src_out_anchor = out_node->GetOutDataAnchor(out_index); // get out node's out anchor.
     GE_CHECK_NOTNULL(src_out_anchor);
     for (const auto &dest_in_anchor : node_out_anchor->GetPeerInDataAnchors()) {
