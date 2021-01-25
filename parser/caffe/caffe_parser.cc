@@ -719,12 +719,12 @@ Status CaffeModelParser::ParseField(const google::protobuf::Reflection *reflecti
                                     int depth, ge::Operator &ops) {
   GELOGD("Start to parse field: %s.", field->name().c_str());
   switch (field->cpp_type()) {
-#define CASE_FIELD_TYPE(cpptype, method, valuetype, logtype)               \
-  case google::protobuf::FieldDescriptor::CPPTYPE_##cpptype: {             \
-    valuetype value = reflection->Get##method(*message, field);            \
-    GELOGD("Parse result(%s : %##logtype)", field->name().c_str(), value); \
-    (void)ops.SetAttr(field->name(), value);                               \
-    break;                                                                 \
+#define CASE_FIELD_TYPE(cpptype, method, valuetype, logtype)                  \
+  case google::protobuf::FieldDescriptor::CPPTYPE_##cpptype: {                \
+    valuetype value = reflection->Get##method(*message, field);               \
+    GELOGD("Parse result(%s : %" #logtype ")", field->name().c_str(), value); \
+    (void)ops.SetAttr(field->name(), value);                                  \
+    break;                                                                    \
   }
     CASE_FIELD_TYPE(INT32, Int32, int32_t, d);
     CASE_FIELD_TYPE(UINT32, UInt32, uint32_t, u);
