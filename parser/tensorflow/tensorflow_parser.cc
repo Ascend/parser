@@ -3241,12 +3241,12 @@ Status TensorFlowModelParser::AddControlEdgeAfterRemoveInputs(domi::tensorflow::
       return FAILED;
     }
     NodeDef *input_node_def = it->second;
-    if (input_node_def->op() == SWITCH || input_node_def->op() == REFSWITCH) {
+    if (input_node_def->op() == parser::SWITCH || input_node_def->op() == parser::REFSWITCH) {
       NodeDef *identity_node_def = graph_def->add_node();
       GE_CHECK_NOTNULL(identity_node_def);
       input_node_name = input_node_name + "identity";
       identity_node_def->set_name(input_node_name);
-      identity_node_def->set_op(IDENTITY);
+      identity_node_def->set_op(parser::IDENTITY);
       identity_node_def->add_input(remove_input);
     }
     string control_input = "^" + input_node_name;
