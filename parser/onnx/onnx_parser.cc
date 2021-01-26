@@ -161,10 +161,10 @@ Status OnnxModelParser::ParseInput(ge::onnx::GraphProto &onnx_graph,
     ge::onnx::ValueInfoProto value_info = onnx_graph.input(i);
     GELOGI("The index of %d input name : %s.", i, value_info.name().c_str());
 
-    // The input are possibly initialized by a default value found in ‘initializer.’
+    /// if the input is initialized by a default value found in ‘initializer’,
+    /// it will be considered as a const node.
     auto initializer_iter = initializer_name_tensor.find(value_info.name());
     if (initializer_iter != initializer_name_tensor.end()) {
-      initializer_name_tensor.erase(initializer_iter);
       continue;
     }
 
