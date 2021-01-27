@@ -112,7 +112,7 @@ domi::Status ComputeArgRange(const domi::tensorflow::NodeDef &node_def, const do
   return SUCCESS;
 }
 
-using NameRangeMap = std::unordered_map<string, std::pair<int, int>>;
+using NameRangeMap = std::map<string, std::pair<int, int>>;
 
 domi::Status NameRangesHelper(const domi::tensorflow::NodeDef &node_def,
                               const google::protobuf::RepeatedPtrField<domi::tensorflow::OpDef_ArgDef> &args,
@@ -136,8 +136,8 @@ domi::Status NameRangesForNode(const domi::tensorflow::NodeDef &node_def, const 
 }
 
 domi::Status RemapFunctionDef(FunctionDef *fdef, const string &name, NameMapHelper &node_names,
-                              std::unordered_map<string, string> &tensor_renaming,
-                              std::unordered_map<string, string> &return_values) {
+                              std::map<string, string> &tensor_renaming,
+                              std::map<string, string> &return_values) {
   GE_CHECK_NOTNULL(fdef);
   // Detect missing function inputs..
   for (int i = 0; i < fdef->signature().input_arg_size(); ++i) {
@@ -324,8 +324,8 @@ domi::Status GraphToFunctionDef::DavGraphToFunctionDef(ge::ComputeGraphPtr graph
   GE_CHECK_NOTNULL(fdef);
   fdef->mutable_signature()->set_name(name);
 
-  std::unordered_map<string, string> tensor_renaming;
-  std::unordered_map<string, string> return_values;
+  std::map<string, string> tensor_renaming;
+  std::map<string, string> return_values;
   NameMapHelper node_names;
 
   for (const ge::NodePtr &node : graph->GetDirectNode()) {

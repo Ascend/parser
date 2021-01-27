@@ -20,7 +20,7 @@
 #include "parser/tensorflow/tensorflow_op_parser.h"
 
 namespace ge {
-class TensorFlowAutoMappingParserAdapter : public TensorFlowOpParser {
+class PARSER_FUNC_VISIBILITY TensorFlowAutoMappingParserAdapter : public TensorFlowOpParser {
  public:
   Status ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) override;
 };

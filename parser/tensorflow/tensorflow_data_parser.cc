@@ -102,7 +102,7 @@ Status TensorFlowDataParser::ParseInputFromUser(const Message *op_src, const ge:
   GE_CHECK_NOTNULL(op_def);
   (void)op_src;
   const ge::ParserContext &ctx = GetParserContext();
-  std::unordered_map<std::string, std::vector<int64_t>> input_dims = ctx.input_dims;
+  std::map<std::string, std::vector<int64_t>> input_dims = ctx.input_dims;
   // User not designate the input_shape
   std::string name = op_def->GetName();
   if (input_dims.count(name) == 0) {

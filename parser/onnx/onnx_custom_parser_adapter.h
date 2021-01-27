@@ -20,7 +20,7 @@
 #include "parser/onnx/onnx_op_parser.h"
 
 namespace ge {
-class OnnxCustomParserAdapter : public OnnxOpParser {
+class PARSER_FUNC_VISIBILITY OnnxCustomParserAdapter : public OnnxOpParser {
  public:
   /// @brief Parsing model file information
   /// @param [in] op_src model data to be parsed

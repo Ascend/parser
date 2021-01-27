@@ -23,7 +23,7 @@
 #include "parser/onnx/onnx_op_parser.h"
 
 namespace ge {
-class OnnxDataParser : public OnnxOpParser {
+class PARSER_FUNC_VISIBILITY OnnxDataParser : public OnnxOpParser {
  public:
   Status ParseParams(const Message *op_src, ge::Operator &op_def) override;
 

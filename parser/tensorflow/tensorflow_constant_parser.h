@@ -25,7 +25,7 @@
 using domi::tensorflow::NodeDef;
 
 namespace ge {
-class TensorFlowConstantParser : public TensorFlowOpParser {
+class PARSER_FUNC_VISIBILITY TensorFlowConstantParser : public TensorFlowOpParser {
  public:
   Status ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) override;
 

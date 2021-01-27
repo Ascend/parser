@@ -2962,7 +2962,7 @@ Status TensorFlowModelParser::TrimGraphByInput(const domi::tensorflow::GraphDef 
       TensorShapeProto *data_shape = attr_value.mutable_shape();
       GE_CHECK_NOTNULL(data_shape);
       const ge::ParserContext &ctx = ge::GetParserContext();
-      std::unordered_map<std::string, std::vector<int64_t>> input_dims = ctx.input_dims;
+      std::map<std::string, std::vector<int64_t>> input_dims = ctx.input_dims;
       std::vector<int64_t> designated_dims = input_dims.at(node.name());
       for (int32_t i = 0; i < (int32_t)designated_dims.size(); i++) {
         data_shape->add_dim()->set_size(designated_dims[i]);
@@ -3035,7 +3035,7 @@ Status TensorFlowModelParser::TrimGraphByOutput(const domi::tensorflow::GraphDef
       TensorShapeProto *data_shape = attr_value.mutable_shape();
       GE_CHECK_NOTNULL(data_shape);
       const ge::ParserContext &ctx = ge::GetParserContext();
-      std::unordered_map<std::string, std::vector<int64_t>> input_dims = ctx.input_dims;
+      std::map<std::string, std::vector<int64_t>> input_dims = ctx.input_dims;
       std::vector<int64_t> designated_dims = input_dims.at(node.name());
       for (int32_t i = 0; i < (int32_t)designated_dims.size(); i++) {
         data_shape->add_dim()->set_size(designated_dims[i]);

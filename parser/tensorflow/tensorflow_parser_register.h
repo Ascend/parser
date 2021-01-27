@@ -33,13 +33,13 @@
 using domi::tensorflow::NodeDef;
 
 namespace ge {
-class TensorflowFinalizeable {
+class PARSER_FUNC_VISIBILITY TensorflowFinalizeable {
  public:
   virtual bool Finalize() = 0;
   virtual ~TensorflowFinalizeable() {}
 };
 
-class TensorflowReceiver {
+class PARSER_FUNC_VISIBILITY TensorflowReceiver {
  public:
   TensorflowReceiver(TensorflowFinalizeable &f) { f.Finalize(); }
   ~TensorflowReceiver() {}
@@ -49,7 +49,7 @@ namespace tensorflow_parser {
 template <typename Param>
 class TensorflowParserBuilder;
 
-class TensorflowWeightParserBuilder : public TensorflowFinalizeable {
+class PARSER_FUNC_VISIBILITY TensorflowWeightParserBuilder : public TensorflowFinalizeable {
  public:
   virtual ~TensorflowWeightParserBuilder() {}
 };
@@ -58,7 +58,7 @@ template <typename Param>
 class TensorflowOpParserAdapter;
 
 template <typename Param>
-class TensorflowParserBuilder : public TensorflowWeightParserBuilder {
+class PARSER_FUNC_VISIBILITY TensorflowParserBuilder : public TensorflowWeightParserBuilder {
  public:
   using ParseParamsFn = std::function<domi::Status(const domi::tensorflow::NodeDef *, Param *)>;
 
@@ -91,7 +91,7 @@ class TensorflowParserBuilder : public TensorflowWeightParserBuilder {
 };
 
 template <typename Param>
-class TensorflowOpParserAdapter : public TensorFlowOpParser {
+class PARSER_FUNC_VISIBILITY TensorflowOpParserAdapter : public TensorFlowOpParser {
   using ParseParamsFn = std::function<domi::Status(const domi::tensorflow::NodeDef *, Param *)>;
 
  public:

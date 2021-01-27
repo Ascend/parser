@@ -17,6 +17,20 @@
 #ifndef PARSER_CAFFE_CAFFE_PARSER_H_
 #define PARSER_CAFFE_CAFFE_PARSER_H_
 
+#if defined(_MSC_VER)
+#ifdef FUNC_VISIBILITY
+#define PARSER_FUNC_VISIBILITY _declspec(dllexport)
+#else
+#define PARSER_FUNC_VISIBILITY
+#endif
+#else
+#ifdef FUNC_VISIBILITY
+#define PARSER_FUNC_VISIBILITY __attribute__((visibility("default")))
+#else
+#define PARSER_FUNC_VISIBILITY
+#endif
+#endif
+
 #include <map>
 #include <set>
 #include <string>
@@ -39,7 +53,7 @@ using std::unordered_map;
 using std::vector;
 static std::map<std::vector<std::string>, std::vector<std::string>> params_share_map;
 
-class CaffeModelParser : public domi::ModelParser {
+class PARSER_FUNC_VISIBILITY CaffeModelParser : public domi::ModelParser {
  public:
   CaffeModelParser() {}
   virtual ~CaffeModelParser() {}
@@ -362,10 +376,10 @@ class CaffeModelParser : public domi::ModelParser {
   std::map<std::string, ge::NodePtr> node_map;
 
   // key: blob name, value: layer name and index
-  std::unordered_map<std::string, std::vector<std::pair<std::string, int32_t>>> bottom_blobs_map_;
+  std::map<std::string, std::vector<std::pair<std::string, int32_t>>> bottom_blobs_map_;
 
   // key: blob name, value: layer name and index
-  std::unordered_map<std::string, std::vector<std::pair<std::string, int32_t>>> top_blobs_map_;
+  std::map<std::string, std::vector<std::pair<std::string, int32_t>>> top_blobs_map_;
 
   std::vector<ge::Operator> custom_operator_;
   std::map<std::string, std::vector<std::string>> layer_tops_map_;
@@ -375,7 +389,7 @@ class CaffeModelParser : public domi::ModelParser {
  * @ingroup domi_omg
  * @brief Caffe weight parser
  */
-class CaffeWeightsParser : public domi::WeightsParser {
+class PARSER_FUNC_VISIBILITY CaffeWeightsParser : public domi::WeightsParser {
  public:
   /**
    * @ingroup domi_omg

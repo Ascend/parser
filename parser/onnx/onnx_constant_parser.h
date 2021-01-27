@@ -24,7 +24,7 @@
 using ge::onnx::NodeProto;
 
 namespace ge {
-class OnnxConstantParser : public OnnxOpParser {
+class PARSER_FUNC_VISIBILITY OnnxConstantParser : public OnnxOpParser {
  public:
   Status ParseParams(const Message *op_src, ge::Operator &op_def) override;
 

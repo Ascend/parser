@@ -17,6 +17,20 @@
 #ifndef PARSER_ONNX_ONNX_PARSER_H_
 #define PARSER_ONNX_ONNX_PARSER_H_
 
+#if defined(_MSC_VER)
+#ifdef FUNC_VISIBILITY
+#define PARSER_FUNC_VISIBILITY _declspec(dllexport)
+#else
+#define PARSER_FUNC_VISIBILITY
+#endif
+#else
+#ifdef FUNC_VISIBILITY
+#define PARSER_FUNC_VISIBILITY __attribute__((visibility("default")))
+#else
+#define PARSER_FUNC_VISIBILITY
+#endif
+#endif
+
 #include <map>
 #include <string>
 #include <vector>
@@ -27,7 +41,7 @@
 #include "proto/onnx/ge_onnx.pb.h"
 
 namespace ge {
-class OnnxModelParser : public domi::ModelParser {
+class PARSER_FUNC_VISIBILITY OnnxModelParser : public domi::ModelParser {
  public:
   OnnxModelParser() {}
   virtual ~OnnxModelParser() {}
@@ -96,12 +110,12 @@ class OnnxModelParser : public domi::ModelParser {
 
   std::vector<std::string> input_node_names_;
 
-  std::unordered_map<std::string, std::vector<std::pair<std::string, int>>> inputs_map_;
+  std::map<std::string, std::vector<std::pair<std::string, int>>> inputs_map_;
 
-  std::unordered_map<std::string, std::vector<std::pair<std::string, int>>> outputs_map_;
+  std::map<std::string, std::vector<std::pair<std::string, int>>> outputs_map_;
 };
 
-class OnnxWeightsParser : public domi::WeightsParser {
+class PARSER_FUNC_VISIBILITY OnnxWeightsParser : public domi::WeightsParser {
  public:
   Status Parse(const char *file, ge::Graph &graph) override { return domi::SUCCESS; }
 

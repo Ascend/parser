@@ -20,7 +20,7 @@
 #include "parser/tensorflow/tensorflow_op_parser.h"
 
 namespace ge {
-class TensorFlowIdentityParser : public TensorFlowOpParser {};
+class PARSER_FUNC_VISIBILITY TensorFlowIdentityParser : public TensorFlowOpParser {};
 }  // namespace ge
 
 #endif  // GE_PARSER_TENSORFLOW_TENSORFLOW_IDENTITY_H_

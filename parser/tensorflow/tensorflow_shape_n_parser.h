@@ -23,7 +23,7 @@
 using domi::tensorflow::NodeDef;
 
 namespace ge {
-class TensorFlowShapeNParser : public TensorFlowOpParser {
+class PARSER_FUNC_VISIBILITY TensorFlowShapeNParser : public TensorFlowOpParser {
   // AUTO GEN PLEASE DO NOT MODIFY IT
  public:
   Status ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) override;

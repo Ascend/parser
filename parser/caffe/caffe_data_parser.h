@@ -23,7 +23,7 @@
 #include "parser/common/data_op_parser.h"
 
 namespace ge {
-class CaffeDataParser : public CaffeOpParser, public DataOpParser {
+class PARSER_FUNC_VISIBILITY CaffeDataParser : public CaffeOpParser, public DataOpParser {
  public:
   /**
    * @ingroup domi_omg
