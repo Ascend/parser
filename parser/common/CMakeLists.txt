@@ -74,6 +74,10 @@ target_include_directories(parser_common PRIVATE
     ${METADEF_DIR}/third_party/fwkacllib/inc
 )
 
+target_link_options(parser_common PRIVATE
+    -Wl,-Bsymbolic
+)
+
 target_link_libraries(parser_common PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     static_mmpa

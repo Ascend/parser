@@ -50,12 +50,14 @@ target_compile_options(fmk_parser PRIVATE
     -Werror
     -Wno-deprecated-declarations
     -fno-common
+    -fvisibility=hidden
 )
 
 target_compile_definitions(fmk_parser PRIVATE
     PROTOBUF_INLINE_NOT_IN_HEADERS=0
     google=ascend_private
     $<$<STREQUAL:${ENABLE_OPEN_SRC},True>:ONLY_COMPILE_OPEN_SRC>
+    FUNC_VISIBILITY
 )
 
 target_include_directories(fmk_parser PRIVATE
@@ -90,6 +92,10 @@ target_include_directories(fmk_parser PRIVATE
     ${METADEF_DIR}/third_party/graphengine/inc/framework
     ${METADEF_DIR}/third_party/graphengine/inc/external
     ${METADEF_DIR}/third_party/fwkacllib/inc
+)
+
+target_link_options(fmk_parser PRIVATE
+    -Wl,-Bsymbolic
 )
 
 target_link_libraries(fmk_parser

@@ -83,7 +83,7 @@ class NameMapHelper {
   string GetUniqueName(const string &name);
 
   std::set<string> used_names_;
-  std::unordered_map<string, string> name_mapping_;
+  std::map<string, string> name_mapping_;
 };
 }  // namespace ge
 

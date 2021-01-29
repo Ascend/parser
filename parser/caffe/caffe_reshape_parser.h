@@ -20,7 +20,7 @@
 #include "parser/caffe/caffe_op_parser.h"
 
 namespace ge {
-class CaffeReshapeParser : public CaffeOpParser {
+class PARSER_FUNC_VISIBILITY CaffeReshapeParser : public CaffeOpParser {
  public:
   /**
    * @ingroup domi_omg

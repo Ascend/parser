@@ -74,7 +74,7 @@ struct OpNodeContext {
 };
 
 struct DelTransposeInfo;
-class TensorFlowModelParser : public domi::ModelParser {
+class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
  public:
   TensorFlowModelParser() {}
   virtual ~TensorFlowModelParser() {}
@@ -649,15 +649,15 @@ class TensorFlowModelParser : public domi::ModelParser {
   /**
    * save <node_name, nodeDefList>
    */
-  unordered_map<string, vector<const NodeDef *>> fusion_op_nodedef_map_;
+  map<string, vector<const NodeDef *>> fusion_op_nodedef_map_;
   // Policy types of fusion operators,true:scope_pass match，false：prefix match
-  unordered_map<string, bool> fusion_op_policy_;
+  map<string, bool> fusion_op_policy_;
   // The names of all children operators and the description of fusion operators
   unordered_map<string, ge::ScopeFusionOpInfo> fusion_op_children_;
   /**
    * save <node_name, {fusionOpName,description}>
    */
-  unordered_map<string, vector<string>> fusion_op_type_map_;
+  map<string, vector<string>> fusion_op_type_map_;
   /**
    * save nodedef of the fusion operator
    */
@@ -665,17 +665,17 @@ class TensorFlowModelParser : public domi::ModelParser {
   /**
    * control edge，{Key=NodeName,Value=index}
    */
-  unordered_map<string, vector<int32_t>> edges_control_map;
+  map<string, vector<int32_t>> edges_control_map;
 
   unordered_map<string, const domi::tensorflow::NodeDef *> framework_ops_;
 
   /**
    * save <node_name, op_type>
    */
-  unordered_map<string, string> adaptedOpTypeMap_;
+  map<string, string> adaptedOpTypeMap_;
 
   // { node_name  <{input_node_name}, {output_node_name}> }
-  unordered_map<string, std::pair<set<string>, set<string>>> node_inputs_outputs_map_;
+  map<string, std::pair<set<string>, set<string>>> node_inputs_outputs_map_;
 
   unordered_map<string, const ge::Operator *> scope_inner_node_map_;
 };
@@ -684,7 +684,7 @@ class TensorFlowModelParser : public domi::ModelParser {
  * @ingroup domi_omg
  * @brief Tensorflow weight parse
  */
-class TensorFlowWeightsParser : public domi::WeightsParser {
+class PARSER_FUNC_VISIBILITY TensorFlowWeightsParser : public domi::WeightsParser {
  public:
   /**
    * @ingroup domi_omg

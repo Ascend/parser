@@ -17,16 +17,30 @@
 #ifndef INC_EXTERNAL_PARSER_ONNX_PARSER_H_
 #define INC_EXTERNAL_PARSER_ONNX_PARSER_H_
 
+#if defined(_MSC_VER)
+#ifdef FUNC_VISIBILITY
+#define PARSER_FUNC_VISIBILITY _declspec(dllexport)
+#else
+#define PARSER_FUNC_VISIBILITY
+#endif
+#else
+#ifdef FUNC_VISIBILITY
+#define PARSER_FUNC_VISIBILITY __attribute__((visibility("default")))
+#else
+#define PARSER_FUNC_VISIBILITY
+#endif
+#endif
+
 #include "graph/ascend_string.h"
 #include "graph/ge_error_codes.h"
 #include "graph/graph.h"
 #include "graph/types.h"
 
 namespace ge {
-graphStatus aclgrphParseONNX(const char *model_file,
+PARSER_FUNC_VISIBILITY graphStatus aclgrphParseONNX(const char *model_file,
                              const std::map<ge::AscendString, ge::AscendString> &parser_params, ge::Graph &graph);
 
-graphStatus aclgrphParseONNXFromMem(const char *buffer, size_t size,
+PARSER_FUNC_VISIBILITY graphStatus aclgrphParseONNXFromMem(const char *buffer, size_t size,
                                     const std::map<ge::AscendString, ge::AscendString> &parser_params,
                                     ge::Graph &graph);
 }  // namespace ge

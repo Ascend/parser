@@ -17,6 +17,20 @@
 #ifndef PARSER_CAFFE_CAFFE_OP_PARSER_H_
 #define PARSER_CAFFE_CAFFE_OP_PARSER_H_
 
+#if defined(_MSC_VER)
+#ifdef FUNC_VISIBILITY
+#define PARSER_FUNC_VISIBILITY _declspec(dllexport)
+#else
+#define PARSER_FUNC_VISIBILITY
+#endif
+#else
+#ifdef FUNC_VISIBILITY
+#define PARSER_FUNC_VISIBILITY __attribute__((visibility("default")))
+#else
+#define PARSER_FUNC_VISIBILITY
+#endif
+#endif
+
 #include <vector>
 #include "graph/debug/ge_attr_define.h"
 #include "common/util.h"
@@ -54,7 +68,7 @@ namespace ge {
  * @ingroup ge_omg
  * @brief Used to parse Caffe operator information
  */
-class CaffeOpParser : public OpParser {
+class PARSER_FUNC_VISIBILITY CaffeOpParser : public OpParser {
  public:
   Status ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) override;
 

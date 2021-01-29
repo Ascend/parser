@@ -23,7 +23,7 @@
 using domi::tensorflow::NodeDef;
 
 namespace ge {
-class TensorFlowRefSwitchParser : public TensorFlowOpParser {
+class PARSER_FUNC_VISIBILITY TensorFlowRefSwitchParser : public TensorFlowOpParser {
   // AUTO GEN PLEASE DO NOT MODIFY IT
  public:
   /**

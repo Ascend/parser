@@ -37,7 +37,7 @@ namespace ge {
  * @ingroup domi_omg
  * @brief Used to parse TensorFlow operator information
  */
-class TensorFlowFusionOpParser : public TensorFlowOpParser {
+class PARSER_FUNC_VISIBILITY TensorFlowFusionOpParser : public TensorFlowOpParser {
  public:
   /**
    * @ingroup domi_omg

@@ -17,6 +17,20 @@
 #ifndef OMG_PARSER_TENSORFLOW_TENSORFLOW_OP_PARSER_H_
 #define OMG_PARSER_TENSORFLOW_TENSORFLOW_OP_PARSER_H_
 
+#if defined(_MSC_VER)
+#ifdef FUNC_VISIBILITY
+#define PARSER_FUNC_VISIBILITY _declspec(dllexport)
+#else
+#define PARSER_FUNC_VISIBILITY
+#endif
+#else
+#ifdef FUNC_VISIBILITY
+#define PARSER_FUNC_VISIBILITY __attribute__((visibility("default")))
+#else
+#define PARSER_FUNC_VISIBILITY
+#endif
+#endif
+
 #include <string>
 #include <vector>
 #include "framework/common/op/attr_value_util.h"
@@ -52,7 +66,7 @@ namespace ge {
  * @ingroup domi_omg
  * @brief used to parse TensorFlow operator information
  */
-class TensorFlowOpParser : public OpParser {
+class PARSER_FUNC_VISIBILITY TensorFlowOpParser : public OpParser {
  public:
 
   /**

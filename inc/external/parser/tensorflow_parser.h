@@ -17,6 +17,20 @@
 #ifndef INC_EXTERNAL_ACL_PARSER_TENSORFLOW_H_
 #define INC_EXTERNAL_ACL_PARSER_TENSORFLOW_H_
 
+#if defined(_MSC_VER)
+#ifdef FUNC_VISIBILITY
+#define PARSER_FUNC_VISIBILITY _declspec(dllexport)
+#else
+#define PARSER_FUNC_VISIBILITY
+#endif
+#else
+#ifdef FUNC_VISIBILITY
+#define PARSER_FUNC_VISIBILITY __attribute__((visibility("default")))
+#else
+#define PARSER_FUNC_VISIBILITY
+#endif
+#endif
+
 #include <atomic>
 #include <memory>
 #include <string>
@@ -28,8 +42,8 @@
 #include "graph/types.h"
 
 namespace ge {
-graphStatus aclgrphParseTensorFlow(const char *model_file, ge::Graph &graph);
-graphStatus aclgrphParseTensorFlow(const char *model_file,
+PARSER_FUNC_VISIBILITY graphStatus aclgrphParseTensorFlow(const char *model_file, ge::Graph &graph);
+PARSER_FUNC_VISIBILITY graphStatus aclgrphParseTensorFlow(const char *model_file,
                                    const std::map<ge::AscendString, ge::AscendString> &parser_params, ge::Graph &graph);
 }  // namespace ge
 

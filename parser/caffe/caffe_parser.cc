@@ -330,7 +330,7 @@ Status CaffeModelParser::ParseInput(domi::caffe::NetParameter &proto_message, bo
       }
     } else {
       const ge::ParserContext &ctx = ge::GetParserContext();
-      std::unordered_map<std::string, std::vector<int64_t>> input_dims = ctx.input_dims;
+      std::map<std::string, std::vector<int64_t>> input_dims = ctx.input_dims;
       for (int i = 0; i < proto_message.input_size(); i++) {
         string name = proto_message.input(i);
         if (input_dims.count(name) == 0) {  // Input defined by model does not exist in input of external input

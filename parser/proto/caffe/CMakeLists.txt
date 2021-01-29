@@ -15,6 +15,10 @@ target_include_directories(_caffe_parser PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
 )
 
+target_link_options(_caffe_parser PRIVATE
+    -Wl,-Bsymbolic
+)
+
 target_link_libraries(_caffe_parser PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     -Wl,--no-as-needed

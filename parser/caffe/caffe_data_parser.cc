@@ -78,7 +78,7 @@ Status CaffeDataParser::ParseParamsForInput(const domi::caffe::LayerParameter *l
     for (int i = 0; i < input_param.shape_size(); i++) {
       const domi::caffe::BlobShape &blob_shape = input_param.shape(i);
       vector<int64_t> shape;
-      unordered_map<string, vector<int64_t>> &shape_map = GetParserContext().input_dims;
+      std::map<string, vector<int64_t>> &shape_map = GetParserContext().input_dims;
       std::vector<int64_t> model_dims;
       for (auto &blob_shape_dim_temp : blob_shape.dim()) {
         model_dims.push_back(blob_shape_dim_temp);
@@ -91,7 +91,7 @@ Status CaffeDataParser::ParseParamsForInput(const domi::caffe::LayerParameter *l
   } else {
     // Get from external input
     const ge::ParserContext &ctx = GetParserContext();
-    std::unordered_map<std::string, std::vector<int64_t>> input_dims = ctx.input_dims;
+    std::map<std::string, std::vector<int64_t>> input_dims = ctx.input_dims;
     string name = layer->name();
     auto search = input_dims.find(name);
     if (search == input_dims.end()) {
@@ -124,7 +124,7 @@ Status CaffeDataParser::ParseParamsForDummyData(const domi::caffe::LayerParamete
       const domi::caffe::BlobShape &blob_shape = dummy_data_param.shape(i);
 
       vector<int64_t> shape;
-      unordered_map<string, vector<int64_t>> &shape_map = GetParserContext().input_dims;
+      std::map<string, vector<int64_t>> &shape_map = GetParserContext().input_dims;
       std::vector<int64_t> model_dims;
       for (auto &blob_shape_dim_temp : blob_shape.dim()) {
         model_dims.push_back(blob_shape_dim_temp);
@@ -138,7 +138,7 @@ Status CaffeDataParser::ParseParamsForDummyData(const domi::caffe::LayerParamete
   } else {
     // Get from external input
     const ge::ParserContext &ctx = GetParserContext();
-    std::unordered_map<std::string, std::vector<int64_t>> input_dims = ctx.input_dims;
+    std::map<std::string, std::vector<int64_t>> input_dims = ctx.input_dims;
     string name = layer->name();
     auto search = input_dims.find(name);
     if (search == input_dims.end()) {

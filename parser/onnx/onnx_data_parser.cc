@@ -94,7 +94,7 @@ Status OnnxDataParser::ParseInputFromModel(const Message *op_src, ge::Operator &
 }
 
 Status OnnxDataParser::ParseInputFromUser(const ge::Operator &op_def) {
-  std::unordered_map<std::string, std::vector<int64_t>> input_dims = GetParserContext().input_dims;
+  std::map<std::string, std::vector<int64_t>> input_dims = GetParserContext().input_dims;
   // User not designate the input_shape
   std::string name = op_def.GetName();
   if (input_dims.count(name) == 0) {

@@ -20,7 +20,7 @@
 #include "parser/tensorflow/tensorflow_fusion_op_parser.h"
 
 namespace ge {
-class TensorFlowFusionCustomParserAdapter : public TensorFlowFusionOpParser {
+class PARSER_FUNC_VISIBILITY TensorFlowFusionCustomParserAdapter : public TensorFlowFusionOpParser {
  public:
   /**
   * @ingroup domi_parser

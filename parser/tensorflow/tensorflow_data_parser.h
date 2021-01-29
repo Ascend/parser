@@ -23,7 +23,7 @@
 #include "parser/tensorflow/tensorflow_op_parser.h"
 
 namespace ge {
-class TensorFlowDataParser : public TensorFlowOpParser, public DataOpParser {
+class PARSER_FUNC_VISIBILITY TensorFlowDataParser : public TensorFlowOpParser, public DataOpParser {
  public:
   /**
   * @ingroup domi_omg

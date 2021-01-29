@@ -17,6 +17,20 @@
 #ifndef GE_PARSER_ONNX_ONNX_OP_PARSER_H_
 #define GE_PARSER_ONNX_ONNX_OP_PARSER_H_
 
+#if defined(_MSC_VER)
+#ifdef FUNC_VISIBILITY
+#define PARSER_FUNC_VISIBILITY _declspec(dllexport)
+#else
+#define PARSER_FUNC_VISIBILITY
+#endif
+#else
+#ifdef FUNC_VISIBILITY
+#define PARSER_FUNC_VISIBILITY __attribute__((visibility("default")))
+#else
+#define PARSER_FUNC_VISIBILITY
+#endif
+#endif
+
 #include <string>
 #include <vector>
 #include "framework/common/op/attr_value_util.h"
@@ -28,7 +42,7 @@
 using Status = domi::Status;
 
 namespace ge {
-class OnnxOpParser : public OpParser {
+class PARSER_FUNC_VISIBILITY OnnxOpParser : public OpParser {
  public:
   /// @brief parse params
   /// @param [in] op_src        op to be parsed

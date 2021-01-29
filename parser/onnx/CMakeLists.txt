@@ -20,11 +20,13 @@ target_compile_options(fmk_onnx_parser PRIVATE
     -Werror
     -Wno-deprecated-declarations
     -fno-common
+    -fvisibility=hidden
 )
 
 target_compile_definitions(fmk_onnx_parser PRIVATE
     PROTOBUF_INLINE_NOT_IN_HEADERS=0
     google=ascend_private
+    FUNC_VISIBILITY
 )
 
 target_include_directories(fmk_onnx_parser PRIVATE
@@ -62,6 +64,10 @@ target_include_directories(fmk_onnx_parser PRIVATE
     ${METADEF_DIR}/third_party/fwkacllib/inc
 )
 
+target_link_options(fmk_onnx_parser PRIVATE
+    -Wl,-Bsymbolic
+)
+
 target_link_libraries(fmk_onnx_parser PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     static_mmpa
@@ -69,7 +75,7 @@ target_link_libraries(fmk_onnx_parser PRIVATE
     ascend_protobuf
     register
     c_sec
-    parser_common 
+    parser_common
     graph
     slog
     -Wl,--as-needed
