@@ -43,6 +43,7 @@
 #include "parser/common/pre_checker.h"
 #include "parser/common/thread_pool.h"
 #include "parser/common/parser_utils.h"
+#include "parser/common/util.h"
 #include "parser/tensorflow/tensorflow_custom_parser_adapter.h"
 #include "parser/tensorflow/tensorflow_fusion_custom_parser_adapter.h"
 #include "parser/tensorflow/tensorflow_fusion_op_parser.h"
@@ -2871,7 +2872,7 @@ Status TensorFlowModelParser::GetFormatTranspose(const NodeDef *transpose_node, 
                   return FAILED);
   const TensorProto &tensor = attr_value.tensor();
   const TensorShapeProto &tensor_shape = tensor.tensor_shape();
-  GE_IF_BOOL_EXEC(tensor_shape.dim_size() != 1 || tensor_shape.dim(0).size() != ge::DIM_DEFAULT_SIZE, return SUCCESS);
+  GE_IF_BOOL_EXEC(tensor_shape.dim_size() != 1 || tensor_shape.dim(0).size() != parser::DIM_DEFAULT_SIZE, return SUCCESS);
   GE_IF_BOOL_EXEC(tensor.tensor_content().empty(), return SUCCESS);
 
   vector<int64_t> perm_value;
@@ -2879,12 +2880,12 @@ Status TensorFlowModelParser::GetFormatTranspose(const NodeDef *transpose_node, 
   GE_IF_BOOL_EXEC(
       type == domi::tensorflow::DT_INT32,
       const int32_t *data = reinterpret_cast<const int32_t *>(tensor.tensor_content().data());
-      for (int i = 0; i < ge::DIM_DEFAULT_SIZE; i++) { perm_value.push_back(data[i]); });
+      for (int i = 0; i < parser::DIM_DEFAULT_SIZE; i++) { perm_value.push_back(data[i]); });
 
   GE_IF_BOOL_EXEC(
       type == domi::tensorflow::DT_INT64,
       const int64_t *data = reinterpret_cast<const int64_t *>(tensor.tensor_content().data());
-      for (int i = 0; i < ge::DIM_DEFAULT_SIZE; i++) { perm_value.push_back(data[i]); });
+      for (int i = 0; i < parser::DIM_DEFAULT_SIZE; i++) { perm_value.push_back(data[i]); });
 
   // 0, 1, 2, 3 present dim num.
   vector<int64_t> perm_to_nchw = {0, 3, 1, 2};

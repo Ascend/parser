@@ -16,10 +16,10 @@
 
 #include "parser/common/data_op_parser.h"
 #include <cstdlib>
-#include "common/op/ge_op_utils.h"
 #include "parser/common/acl_graph_parser_util.h"
 #include "omg/parser/parser_inner_ctx.h"
 #include "common/util.h"
+#include "graph/debug/ge_attr_define.h"
 #include "graph/utils/type_utils.h"
 
 namespace {

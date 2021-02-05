@@ -18,7 +18,6 @@
 #include <memory>
 #include <vector>
 #include "framework/common/debug/ge_log.h"
-#include "framework/common/op/attr_value_util.h"
 #include "common/util.h"
 #include "framework/omg/parser/parser_inner_ctx.h"
 #include "graph/utils/type_utils.h"

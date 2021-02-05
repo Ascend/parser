@@ -19,7 +19,6 @@
 #include <memory>
 #include <string>
 #include "parser/common/acl_graph_parser_util.h"
-#include "common/op/ge_op_utils.h"
 #include "common/op_map.h"
 #include "common/util.h"
 #include "framework/common/debug/ge_log.h"

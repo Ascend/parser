@@ -19,7 +19,7 @@
 
 #include <vector>
 
-#include "inc/graph_pass.h"
+#include "common/graph_pass.h"
 
 using std::vector;
 

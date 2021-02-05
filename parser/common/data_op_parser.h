@@ -19,7 +19,6 @@
 
 #include <google/protobuf/text_format.h>
 #include <vector>
-#include "common/op/attr_value_util.h"
 #include "framework/omg/parser/parser_types.h"
 #include "omg/omg_inner_types.h"
 #include "proto/om.pb.h"

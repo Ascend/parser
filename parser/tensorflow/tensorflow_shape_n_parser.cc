@@ -17,9 +17,9 @@
 #include "parser/tensorflow/tensorflow_shape_n_parser.h"
 #include "parser/common/op_def/ir_pb_converter.h"
 #include "framework/common/debug/ge_log.h"
-#include "framework/common/op/ge_op_utils.h"
 #include "parser/common/op_parser_factory.h"
 #include "parser/common/op_def/shape_n_op.h"
+#include "parser/common/util.h"
 
 using domi::TENSORFLOW;
 using domi::tensorflow::AttrValue;

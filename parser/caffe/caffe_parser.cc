@@ -271,7 +271,7 @@ Status CaffeModelParser::ParseInput(domi::caffe::NetParameter &proto_message, bo
                                      ErrorManager::GetInstance().ATCReportErrMessage("E11002");
                                      return PARAM_INVALID, "Model has no input.");
 
-      GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((input_dim_size / proto_message.input_size() != ge::DIM_DEFAULT_SIZE ||
+      GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((input_dim_size / proto_message.input_size() != parser::DIM_DEFAULT_SIZE ||
                                       input_dim_size % proto_message.input_size() != 0),
                                      ErrorManager::GetInstance().ATCReportErrMessage(
                                          "E11003", {"input_dim_size", "input_size"},
@@ -291,9 +291,9 @@ Status CaffeModelParser::ParseInput(domi::caffe::NetParameter &proto_message, bo
         domi::caffe::BlobShape *shape = input_param->add_shape();
         GE_CHECK_NOTNULL(shape);
 
-        for (int j = 0; j < ge::DIM_DEFAULT_SIZE; j++) {
+        for (int j = 0; j < parser::DIM_DEFAULT_SIZE; j++) {
           // Can guarantee that it will not cross the border
-          shape->add_dim(static_cast<int64_t>(proto_message.input_dim(j + i * ge::DIM_DEFAULT_SIZE)));
+          shape->add_dim(static_cast<int64_t>(proto_message.input_dim(j + i * parser::DIM_DEFAULT_SIZE)));
         }
         input_data_flag = true;
       }

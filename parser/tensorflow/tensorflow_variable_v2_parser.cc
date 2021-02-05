@@ -15,7 +15,6 @@
  */
 
 #include "framework/common/debug/ge_log.h"
-#include "framework/common/op/ge_op_utils.h"
 #include "graph/compute_graph.h"
 #include "graph/ge_attr_value.h"
 #include "graph/ge_tensor.h"

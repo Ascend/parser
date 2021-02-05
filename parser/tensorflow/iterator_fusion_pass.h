@@ -17,7 +17,7 @@
 #ifndef GE_GRAPH_PASSES_ITERATOR_FUSION_PASS_H_
 #define GE_GRAPH_PASSES_ITERATOR_FUSION_PASS_H_
 
-#include "inc/graph_pass.h"
+#include "common/graph_pass.h"
 #include "register/register_fmk_types.h"
 
 namespace ge {

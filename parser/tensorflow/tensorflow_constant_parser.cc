@@ -19,9 +19,9 @@
 #include <memory>
 #include <vector>
 #include "parser/common/acl_graph_parser_util.h"
-#include "common/op/ge_op_utils.h"
 #include "parser/common/op_def/constant_op.h"
 #include "parser/common/op_def/ir_pb_converter.h"
+#include "parser/common/util.h"
 #include "framework/common/debug/ge_log.h"
 #include "graph/ge_tensor.h"
 #include "graph/utils/attr_utils.h"

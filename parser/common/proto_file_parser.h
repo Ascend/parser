@@ -19,7 +19,6 @@
 
 #include <map>
 #include <string>
-#include "common/types.h"
 #include "ge/ge_api_types.h"
 
 namespace ge {

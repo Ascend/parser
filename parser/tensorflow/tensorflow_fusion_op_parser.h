@@ -18,7 +18,6 @@
 #define OMG_PARSER_TENSORFLOW_TENSORFLOW_FUSION_OP_PARSER_H_
 
 #include <vector>
-#include "common/op/attr_value_util.h"
 #include "graph/ge_tensor.h"
 #include "omg/parser/op_parser.h"
 #include "parser/tensorflow/tensorflow_fusionop_util.h"

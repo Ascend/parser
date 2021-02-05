@@ -17,6 +17,7 @@
 #include "onnx_data_parser.h"
 #include <unordered_map>
 #include "common/util.h"
+#include "graph/debug/ge_attr_define.h"
 #include "parser/common/op_parser_factory.h"
 #include "framework/omg/parser/parser_inner_ctx.h"
 #include "parser/onnx/onnx_util.h"

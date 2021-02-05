@@ -23,10 +23,10 @@
 #include "cce/cce.h"
 #include "cce/dnn.h"
 #include "parser/common/acl_graph_parser_util.h"
-#include "common/op/ge_op_utils.h"
 #include "common/op_map.h"
 #include "common/op_types.h"
 #include "common/types_map.h"
+#include "common/util.h"
 #include "framework/common/debug/ge_log.h"
 #include "framework/omg/parser/parser_inner_ctx.h"
 #include "framework/omg/parser/parser_types.h"
@@ -69,7 +69,6 @@ using ge::local_framework_op_vec;
 using ge::NodePtr;
 using ge::OpDesc;
 using ge::OpDescPtr;
-using ge::OpUtils;
 using ge::OutControlAnchorPtr;
 using ge::OutDataAnchorPtr;
 using ge::TensorUtils;

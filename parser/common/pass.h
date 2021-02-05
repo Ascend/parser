@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright 2019-2020 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,17 +14,29 @@
  * limitations under the License.
  */
 
-#include "common/op_def/ir_pb_converter.h"
-#include "parser/common/op_parser_factory.h"
-#include "framework/omg/parser/parser_types.h"
+#ifndef PARSER_COMMON_PASS_H_
+#define PARSER_COMMON_PASS_H_
 
-#include "parser/tensorflow/tensorflow_identity_parser.h"
+#include <memory>
 
-using domi::TENSORFLOW;
-using ge::parser::IDENTITY;
-using ge::parser::READVARIABLEOP;
+#include "common/fmk_error_codes.h"
 
 namespace ge {
-REGISTER_OP_PARSER_CREATOR(TENSORFLOW, IDENTITY, TensorFlowIdentityParser);
-REGISTER_OP_PARSER_CREATOR(TENSORFLOW, READVARIABLEOP, TensorFlowIdentityParser);
+///
+/// @ingroup domi_omg
+/// @brief pass
+/// @author
+///
+template <typename T>
+class Pass {
+ public:
+  virtual ~Pass() {}
+  ///
+  /// run pass
+  /// @author
+  ///
+  virtual Status Run(std::shared_ptr<T>) = 0;
+};
 }  // namespace ge
+
+#endif  // PARSER_COMMON_PASS_H_
