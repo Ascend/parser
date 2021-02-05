@@ -17,7 +17,7 @@
 #include "parser/tensorflow/tensorflow_merge_parser.h"
 
 #include "framework/common/debug/ge_log.h"
-#include "framework/common/util.h"
+#include "common/util.h"
 #include "graph/debug/ge_attr_define.h"
 #include "parser/common/op_parser_factory.h"
 #include "framework/omg/parser/parser_types.h"

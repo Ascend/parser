@@ -18,7 +18,7 @@
 #include <map>
 #include <vector>
 #include "parser/common/acl_graph_parser_util.h"
-#include "common/util.h"
+
 #include "framework/omg/parser/parser_inner_ctx.h"
 #include "graph/ge_tensor.h"
 #include "graph/utils/tensor_adapter.h"

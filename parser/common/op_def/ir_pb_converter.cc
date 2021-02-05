@@ -24,7 +24,7 @@
 #include "graph/buffer.h"
 #include "framework/common/debug/ge_log.h"
 #include "framework/omg/parser/parser_types.h"
-#include "framework/common/util.h"
+#include "common/util.h"
 
 namespace ge {
 static void ConvertList(const std::pair<std::string, OpAttribute> &op_attr_pair, ge::OpDescPtr op_def) {

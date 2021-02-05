@@ -15,7 +15,7 @@
  */
 
 #include "parser/tensorflow/tensorflow_no_op_parser.h"
-#include "framework/common/util.h"
+#include "common/util.h"
 #include "framework/common/debug/ge_log.h"
 #include "parser/common/op_def/ir_pb_converter.h"
 #include "parser/common/op_def/no_op_op.h"

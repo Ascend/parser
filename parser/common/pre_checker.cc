@@ -21,9 +21,9 @@
 #include "common/util.h"
 #include "common/util/error_manager/error_manager.h"
 #include "framework/common/debug/ge_log.h"
-#include "omg/omg.h"
 #include "parser/common/op_parser_factory.h"
 #include "parser/common/model_saver.h"
+#include "omg/parser/parser_inner_ctx.h"
 #include "register/op_registry.h"
 
 namespace ge {

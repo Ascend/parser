@@ -18,6 +18,7 @@
 #define GE_PARSER_ONNX_ONNX_CONSTANT_PARSER_H_
 
 #include <string>
+#include "common/util.h"
 #include "parser/common/data_op_parser.h"
 #include "parser/onnx/onnx_op_parser.h"
 

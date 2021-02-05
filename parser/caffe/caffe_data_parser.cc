@@ -17,7 +17,6 @@
 #include "parser/caffe/caffe_data_parser.h"
 #include <unordered_map>
 #include <utility>
-#include "common/debug/log.h"
 #include "framework/omg/parser/parser_types.h"
 #include "common/util.h"
 #include "common/util/error_manager/error_manager.h"

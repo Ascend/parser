@@ -17,7 +17,7 @@
 #include "operator.h"
 #include <utility>
 #include "framework/common/fmk_types.h"
-#include "framework/common/util.h"
+#include "common/util.h"
 #include "framework/common/debug/ge_log.h"
 
 using ge::BoolTuple;

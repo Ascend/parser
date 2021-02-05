@@ -16,7 +16,6 @@
 
 #include "parser/tensorflow/tensorflow_data_parser.h"
 #include <unordered_map>
-#include "common/debug/log.h"
 #include "common/util.h"
 #include "framework/common/debug/ge_log.h"
 #include "framework/omg/parser/parser_inner_ctx.h"

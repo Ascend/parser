@@ -19,7 +19,7 @@
 
 #include "parser/common/model_saver.h"
 #include "framework/common/debug/ge_log.h"
-#include "framework/common/debug/log.h"
+#include "common/util.h"
 #include "common/util/error_manager/error_manager.h"
 #include "mmpa/mmpa_api.h"
 

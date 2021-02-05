@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include "common/debug/log.h"
 #include "parser/common/op_def/frameworkop_op.h"
 #include "framework/common/debug/ge_log.h"
 #include "parser/common/op_parser_factory.h"

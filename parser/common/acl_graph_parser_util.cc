@@ -23,7 +23,6 @@
 #include <ctime>
 #include <fstream>
 
-#include "common/debug/log.h"
 #include "common/op/ge_op_utils.h"
 #include "common/string_util.h"
 #include "common/types.h"

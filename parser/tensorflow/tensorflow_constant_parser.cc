@@ -18,7 +18,6 @@
 #include <map>
 #include <memory>
 #include <vector>
-#include "common/debug/log.h"
 #include "parser/common/acl_graph_parser_util.h"
 #include "common/op/ge_op_utils.h"
 #include "parser/common/op_def/constant_op.h"

@@ -23,7 +23,7 @@
 #include <type_traits>
 #include <utility>
 #include <vector>
-#include "framework/common/debug/log.h"
+#include "framework/common/debug/ge_log.h"
 
 namespace ge {
 template <typename ValueType>

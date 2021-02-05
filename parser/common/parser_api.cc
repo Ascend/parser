@@ -15,8 +15,8 @@
  */
 
 #include "framework/omg/parser/parser_api.h"
-#include "common/debug/log.h"
 
+#include "common/util.h"
 #include "tbe_plugin_loader.h"
 #include "framework/common/debug/ge_log.h"
 #include "parser/common/register_tbe.h"

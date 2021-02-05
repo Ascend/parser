@@ -16,12 +16,11 @@
 
 #include "parser/common/data_op_parser.h"
 #include <cstdlib>
-#include "common/debug/log.h"
 #include "common/op/ge_op_utils.h"
 #include "parser/common/acl_graph_parser_util.h"
+#include "omg/parser/parser_inner_ctx.h"
 #include "common/util.h"
 #include "graph/utils/type_utils.h"
-#include "omg/omg.h"
 
 namespace {
 const int kDataMemAlignSize = 32;

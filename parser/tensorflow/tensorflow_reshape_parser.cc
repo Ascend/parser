@@ -16,13 +16,12 @@
 
 #include "parser/tensorflow/tensorflow_reshape_parser.h"
 #include "framework/common/debug/ge_log.h"
-#include "framework/common/debug/log.h"
 #include "framework/common/op/ge_op_utils.h"
-#include "framework/omg/omg.h"
 #include "graph/utils/type_utils.h"
 #include "parser/common/op_parser_factory.h"
 #include "parser/tensorflow/tensorflow_util.h"
 #include "parser/common/acl_graph_parser_util.h"
+#include "omg/parser/parser_inner_ctx.h"
 
 using domi::TENSORFLOW;
 using namespace ge::parser;

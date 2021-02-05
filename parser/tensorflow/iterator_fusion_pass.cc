@@ -18,7 +18,6 @@
 
 #include <memory>
 
-#include "common/debug/log.h"
 #include "framework/omg/parser/parser_types.h"
 #include "common/util.h"
 #include "graph_optimizer.h"

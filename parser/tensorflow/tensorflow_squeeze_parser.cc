@@ -18,10 +18,8 @@
 #include <memory>
 #include <vector>
 #include "framework/common/debug/ge_log.h"
-#include "framework/common/debug/log.h"
 #include "framework/common/op/attr_value_util.h"
-#include "framework/common/op/op_parser_util.h"
-#include "framework/common/util.h"
+#include "common/util.h"
 #include "framework/omg/parser/parser_inner_ctx.h"
 #include "graph/utils/type_utils.h"
 #include "parser/common/op_parser_factory.h"

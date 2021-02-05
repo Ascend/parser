@@ -15,10 +15,8 @@
  */
 
 // Copyright (c) <2018>, <Huawei Technologies Co., Ltd>
-#include "common/debug/log.h"
 #include "common/op/attr_value_util.h"
 #include "parser/common/op_def/fill_op.h"
-#include "common/util.h"
 #include "parser/tensorflow/tensorflow_parser_register.h"
 #include "framework/omg/parser/parser_types.h"
 

@@ -16,9 +16,7 @@
 
 #include "parser/caffe/caffe_reshape_parser.h"
 #include <vector>
-#include "common/debug/log.h"
 #include "parser/common/acl_graph_parser_util.h"
-#include "common/op/op_parser_util.h"
 #include "common/util.h"
 #include "framework/common/debug/ge_log.h"
 #include "graph/utils/graph_utils.h"
@@ -33,6 +31,8 @@ namespace ge {
 namespace {
 const int kAnchorIndexZero = 0;
 const int kAnchorIndexOne = 1;
+const int32_t RESHAPE_AXIS_DEFAULT_VALUE = 0;
+const int32_t RESHAPE_NUM_AXES_DEFAULT_VALUE = -1;
 }  // namespace
 
 Status CaffeReshapeParser::ParseParams(const Message *op_src, ge::OpDescPtr &op) {
