@@ -2872,7 +2872,8 @@ Status TensorFlowModelParser::GetFormatTranspose(const NodeDef *transpose_node, 
                   return FAILED);
   const TensorProto &tensor = attr_value.tensor();
   const TensorShapeProto &tensor_shape = tensor.tensor_shape();
-  GE_IF_BOOL_EXEC(tensor_shape.dim_size() != 1 || tensor_shape.dim(0).size() != parser::DIM_DEFAULT_SIZE, return SUCCESS);
+  GE_IF_BOOL_EXEC(tensor_shape.dim_size() != 1 || tensor_shape.dim(0).size() != parser::DIM_DEFAULT_SIZE,
+                  return SUCCESS);
   GE_IF_BOOL_EXEC(tensor.tensor_content().empty(), return SUCCESS);
 
   vector<int64_t> perm_value;
