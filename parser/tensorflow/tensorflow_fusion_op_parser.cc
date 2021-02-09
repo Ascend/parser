@@ -16,11 +16,9 @@
 
 #include "parser/tensorflow/tensorflow_fusion_op_parser.h"
 #include <memory>
-#include "common/debug/log.h"
 #include "parser/common/acl_graph_parser_util.h"
 #include "common/util.h"
 #include "framework/common/debug/ge_log.h"
-#include "omg/omg.h"
 #include "parser/common/parser_fp16_t.h"
 #include "parser/tensorflow/tensorflow_op_parser.h"
 #include "register/tensor_assign.h"

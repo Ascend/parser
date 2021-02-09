@@ -18,7 +18,6 @@
 #include <iostream>
 #include <utility>
 #include "framework/common/debug/ge_log.h"
-#include "framework/common/debug/log.h"
 
 namespace ge {
 OpSchema::FormalParameter::FormalParameter(const std::string &name, FormalParameterOption param_option)

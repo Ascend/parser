@@ -19,11 +19,10 @@
 
 #include <google/protobuf/text_format.h>
 #include <vector>
-#include "common/debug/log.h"
-#include "common/op/attr_value_util.h"
 #include "framework/omg/parser/parser_types.h"
 #include "omg/omg_inner_types.h"
 #include "proto/om.pb.h"
+#include "ge/ge_api_error_codes.h"
 
 #include "graph/attr_value.h"
 #include "graph/compute_graph.h"

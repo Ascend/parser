@@ -24,9 +24,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include "common/string_util.h"
-#include "common/types.h"
 #include "common/util.h"
-#include "common/debug/log.h"
 #include "parser/common/acl_graph_parser_util.h"
 #include "ge/ge_api_types.h"
 #include "framework/common/debug/ge_log.h"

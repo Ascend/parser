@@ -19,7 +19,6 @@
 #include <iostream>
 #include "common/convert/pb2json.h"
 #include "common/util.h"
-#include "common/ge_types.h"
 #include "common/util/error_manager/error_manager.h"
 #include "external/graph/operator_factory.h"
 #include "external/register/register_error_codes.h"
@@ -37,6 +36,7 @@
 #include "parser/common/parser_utils.h"
 #include "parser/onnx/onnx_util.h"
 #include "register/op_registry.h"
+#include "register/register_fmk_types.h"
 
 namespace ge {
 graphStatus PrepareBeforeParse(AclGrphParseUtil &acl_graph_parse_util,
@@ -44,7 +44,7 @@ graphStatus PrepareBeforeParse(AclGrphParseUtil &acl_graph_parse_util,
                                ge::Graph &graph, std::shared_ptr<domi::ModelParser> &model_parser) {
   GetParserContext().type = domi::ONNX;
   std::map<string, string> options;
-  options.insert(std::pair<string, string>(string(ge::FRAMEWORK_TYPE), to_string(ge::ONNX)));
+  options.insert(std::pair<string, string>(string(ge::FRAMEWORK_TYPE), to_string(domi::ONNX)));
 
   if (acl_graph_parse_util.AclParserInitialize(options) != ge::SUCCESS) {
     GELOGE(ge::FAILED, "Acl parser initialize failed.");

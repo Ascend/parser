@@ -21,7 +21,7 @@
 #include <functional>
 #include <memory>
 #include <string>
-#include "framework/common/util.h"
+#include "common/util.h"
 #include "framework/omg/parser/op_parser.h"
 #include "parser/common/op_def/ir_pb_converter.h"
 #include "parser/common/op_def/operator.h"

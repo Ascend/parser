@@ -33,8 +33,8 @@
 
 #include <string>
 #include <vector>
-#include "framework/common/op/attr_value_util.h"
 #include "framework/omg/parser/op_parser.h"
+#include "graph/debug/ge_attr_define.h"
 #include "graph/ge_tensor.h"
 #include "graph/node.h"
 #include "register/tensor_assign.h"

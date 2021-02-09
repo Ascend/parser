@@ -17,8 +17,8 @@
 #include "parser/tensorflow/tensorflow_parser.h"
 #include <algorithm>
 #include <iostream>
+#include "ge/ge_api_types.h"
 #include "parser/common/convert/pb2json.h"
-#include "common/debug/log.h"
 #include "parser/common/acl_graph_parser_util.h"
 #include "common/util/error_manager/error_manager.h"
 #include "external/graph/operator_factory.h"
@@ -28,13 +28,10 @@
 #include "framework/omg/parser/parser_api.h"
 #include "framework/omg/parser/parser_inner_ctx.h"
 #include "graph/debug/ge_attr_define.h"
-#include "graph/optimize/common/params.h"
-#include "graph/passes/variable_format_pass.h"
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/node_utils.h"
 #include "graph/utils/type_utils.h"
 #include "iterator_fusion_pass.h"
-#include "omg/omg.h"
 #include "omg/parser/op_parser.h"
 #include "omg/parser/parser_factory.h"
 #include "parser/common/acl_graph_parser_util.h"
@@ -46,6 +43,7 @@
 #include "parser/common/pre_checker.h"
 #include "parser/common/thread_pool.h"
 #include "parser/common/parser_utils.h"
+#include "parser/common/util.h"
 #include "parser/tensorflow/tensorflow_custom_parser_adapter.h"
 #include "parser/tensorflow/tensorflow_fusion_custom_parser_adapter.h"
 #include "parser/tensorflow/tensorflow_fusion_op_parser.h"
@@ -93,7 +91,7 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, ge::Graph &graph) {
   GE_CHECK_NOTNULL(model_file);
   GetParserContext().type = domi::TENSORFLOW;
   std::map<string, string> options;
-  options.insert(std::pair<string, string>(string(ge::FRAMEWORK_TYPE), to_string(ge::TENSORFLOW)));
+  options.insert(std::pair<string, string>(string(ge::FRAMEWORK_TYPE), to_string(domi::TENSORFLOW)));
 
   // load custom plugin so and proto
   AclGrphParseUtil acl_graph_parse_util;
@@ -132,7 +130,7 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, const std::map<Ascend
   GE_CHECK_NOTNULL(model_file);
   GetParserContext().type = domi::TENSORFLOW;
   std::map<string, string> options;
-  options.insert(std::pair<string, string>(string(ge::FRAMEWORK_TYPE), to_string(ge::TENSORFLOW)));
+  options.insert(std::pair<string, string>(string(ge::FRAMEWORK_TYPE), to_string(domi::TENSORFLOW)));
 
   // load custom plugin so and proto
   AclGrphParseUtil acl_graph_parse_util;
@@ -2244,7 +2242,7 @@ Status TensorFlowModelParser::ParseProto(const google::protobuf::Message *proto,
   ge::parser::PassManager iterator_fusion_pass;
   try {
     (void)iterator_fusion_pass.AddPass("ParseProto::IteratorFusionPass",
-                                       new ge::IteratorFusionPass(ge::TENSORFLOW, false));
+                                       new ge::IteratorFusionPass(domi::TENSORFLOW, false));
   } catch (std::bad_alloc &e) {
     GELOGE(INTERNAL_ERROR, "Add pass failed, bad memory allocation occurs.");
     return INTERNAL_ERROR;
@@ -2874,7 +2872,8 @@ Status TensorFlowModelParser::GetFormatTranspose(const NodeDef *transpose_node, 
                   return FAILED);
   const TensorProto &tensor = attr_value.tensor();
   const TensorShapeProto &tensor_shape = tensor.tensor_shape();
-  GE_IF_BOOL_EXEC(tensor_shape.dim_size() != 1 || tensor_shape.dim(0).size() != ge::DIM_DEFAULT_SIZE, return SUCCESS);
+  GE_IF_BOOL_EXEC(tensor_shape.dim_size() != 1 || tensor_shape.dim(0).size() != parser::DIM_DEFAULT_SIZE,
+                  return SUCCESS);
   GE_IF_BOOL_EXEC(tensor.tensor_content().empty(), return SUCCESS);
 
   vector<int64_t> perm_value;
@@ -2882,12 +2881,12 @@ Status TensorFlowModelParser::GetFormatTranspose(const NodeDef *transpose_node, 
   GE_IF_BOOL_EXEC(
       type == domi::tensorflow::DT_INT32,
       const int32_t *data = reinterpret_cast<const int32_t *>(tensor.tensor_content().data());
-      for (int i = 0; i < ge::DIM_DEFAULT_SIZE; i++) { perm_value.push_back(data[i]); });
+      for (int i = 0; i < parser::DIM_DEFAULT_SIZE; i++) { perm_value.push_back(data[i]); });
 
   GE_IF_BOOL_EXEC(
       type == domi::tensorflow::DT_INT64,
       const int64_t *data = reinterpret_cast<const int64_t *>(tensor.tensor_content().data());
-      for (int i = 0; i < ge::DIM_DEFAULT_SIZE; i++) { perm_value.push_back(data[i]); });
+      for (int i = 0; i < parser::DIM_DEFAULT_SIZE; i++) { perm_value.push_back(data[i]); });
 
   // 0, 1, 2, 3 present dim num.
   vector<int64_t> perm_to_nchw = {0, 3, 1, 2};

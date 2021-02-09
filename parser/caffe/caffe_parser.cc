@@ -22,17 +22,14 @@
 #include <memory>
 #include <algorithm>
 #include "parser/common/convert/pb2json.h"
-#include "common/debug/log.h"
 #include "parser/common/acl_graph_parser_util.h"
 #include "common/op_map.h"
 #include "common/util/error_manager/error_manager.h"
-#include "common/ge_types.h"
 #include "common/string_util.h"
 #include "external/graph/operator_factory.h"
 #include "external/parser/caffe_parser.h"
 #include "external/ge/ge_api_types.h"
 #include "framework/common/debug/ge_log.h"
-#include "graph/optimize/common/params.h"
 #include "graph/utils/graph_utils.h"
 #include <google/protobuf/compiler/importer.h>
 #include <google/protobuf/descriptor.h>
@@ -52,6 +49,7 @@
 #include "parser/common/acl_graph_parser_util.h"
 #include "parser/common/proto_file_parser.h"
 #include "register/op_registry.h"
+#include "register/register_fmk_types.h"
 
 using domi::caffe::LayerParameter;
 using domi::caffe::NetParameter;
@@ -79,7 +77,7 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file, 
   GE_CHECK_NOTNULL(model_file);
   GetParserContext().type = domi::CAFFE;
   std::map<string, string> options;
-  options.insert(std::pair<string, string>(string(ge::FRAMEWORK_TYPE), to_string(ge::CAFFE)));
+  options.insert(std::pair<string, string>(string(ge::FRAMEWORK_TYPE), to_string(domi::CAFFE)));
 
   // load custom plugin so and proto
   AclGrphParseUtil acl_graph_parse_util;
@@ -126,7 +124,7 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file,
   GE_CHECK_NOTNULL(model_file);
   GetParserContext().type = domi::CAFFE;
   std::map<string, string> options;
-  options.insert(std::pair<string, string>(string(ge::FRAMEWORK_TYPE), to_string(ge::CAFFE)));
+  options.insert(std::pair<string, string>(string(ge::FRAMEWORK_TYPE), to_string(domi::CAFFE)));
 
   // load custom plugin so and proto
   AclGrphParseUtil acl_graph_parse_util;
@@ -273,7 +271,7 @@ Status CaffeModelParser::ParseInput(domi::caffe::NetParameter &proto_message, bo
                                      ErrorManager::GetInstance().ATCReportErrMessage("E11002");
                                      return PARAM_INVALID, "Model has no input.");
 
-      GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((input_dim_size / proto_message.input_size() != ge::DIM_DEFAULT_SIZE ||
+      GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((input_dim_size / proto_message.input_size() != parser::DIM_DEFAULT_SIZE ||
                                       input_dim_size % proto_message.input_size() != 0),
                                      ErrorManager::GetInstance().ATCReportErrMessage(
                                          "E11003", {"input_dim_size", "input_size"},
@@ -293,9 +291,9 @@ Status CaffeModelParser::ParseInput(domi::caffe::NetParameter &proto_message, bo
         domi::caffe::BlobShape *shape = input_param->add_shape();
         GE_CHECK_NOTNULL(shape);
 
-        for (int j = 0; j < ge::DIM_DEFAULT_SIZE; j++) {
+        for (int j = 0; j < parser::DIM_DEFAULT_SIZE; j++) {
           // Can guarantee that it will not cross the border
-          shape->add_dim(static_cast<int64_t>(proto_message.input_dim(j + i * ge::DIM_DEFAULT_SIZE)));
+          shape->add_dim(static_cast<int64_t>(proto_message.input_dim(j + i * parser::DIM_DEFAULT_SIZE)));
         }
         input_data_flag = true;
       }

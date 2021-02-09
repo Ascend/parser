@@ -17,7 +17,7 @@
 #include "parser_utils.h"
 #include "external/ge/ge_api_types.h"
 #include "framework/common/debug/ge_log.h"
-#include "framework/common/util.h"
+#include "common/util.h"
 #include "framework/omg/parser/parser_types.h"
 #include "graph/anchor.h"
 #include "graph/compute_graph.h"

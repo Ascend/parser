@@ -23,10 +23,7 @@
 #include <ctime>
 #include <fstream>
 
-#include "common/debug/log.h"
-#include "common/op/ge_op_utils.h"
 #include "common/string_util.h"
-#include "common/types.h"
 #include "common/util.h"
 #include "common/util/error_manager/error_manager.h"
 #include "external/ge/ge_api_types.h"
@@ -35,6 +32,7 @@
 #include "ge/ge_api_types.h"
 #include "google/protobuf/io/coded_stream.h"
 #include "google/protobuf/io/zero_copy_stream_impl.h"
+#include "graph/debug/ge_attr_define.h"
 #include "graph/opsproto_manager.h"
 #include "graph/utils/type_utils.h"
 #include "omg/parser/parser_inner_ctx.h"

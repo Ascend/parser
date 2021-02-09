@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
+#include "common/util.h"
 #include "parser/common/pass_manager.h"
 #include "framework/omg/parser/parser_types.h"
 #include "parser/common/acl_graph_parser_util.h"
-#include "common/debug/log.h"
 #include "graph/utils/node_utils.h"
 #include "omg/omg_inner_types.h"
 

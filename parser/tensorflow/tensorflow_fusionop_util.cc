@@ -16,9 +16,8 @@
 
 #include "parser/tensorflow/tensorflow_fusionop_util.h"
 #include "common/util/error_manager/error_manager.h"
-#include "common/debug/log.h"
-#include "common/op/ge_op_utils.h"
 #include "framework/common/debug/ge_log.h"
+#include "parser/common/util.h"
 #include "parser/tensorflow/tensorflow_parser.h"
 #include "framework/omg/parser/parser_types.h"
 

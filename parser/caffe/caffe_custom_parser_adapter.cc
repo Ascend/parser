@@ -17,7 +17,6 @@
 #include "parser/caffe/caffe_custom_parser_adapter.h"
 #include <memory>
 #include <vector>
-#include "common/debug/log.h"
 #include "parser/common/acl_graph_parser_util.h"
 #include "common/util.h"
 #include "framework/common/debug/ge_log.h"

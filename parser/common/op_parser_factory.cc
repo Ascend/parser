@@ -15,7 +15,6 @@
  */
 
 #include "parser/common/op_parser_factory.h"
-#include "common/debug/log.h"
 #include "framework/common/debug/ge_log.h"
 #include "graph/utils/type_utils.h"
 

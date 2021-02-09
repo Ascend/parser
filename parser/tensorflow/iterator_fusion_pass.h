@@ -17,13 +17,13 @@
 #ifndef GE_GRAPH_PASSES_ITERATOR_FUSION_PASS_H_
 #define GE_GRAPH_PASSES_ITERATOR_FUSION_PASS_H_
 
-#include "framework/common/ge_types.h"
-#include "inc/graph_pass.h"
+#include "common/graph_pass.h"
+#include "register/register_fmk_types.h"
 
 namespace ge {
 class IteratorFusionPass : public GraphPass {
  public:
-  IteratorFusionPass(ge::FrameworkType type, bool local_fmk_op_flag)
+  IteratorFusionPass(domi::FrameworkType type, bool local_fmk_op_flag)
       : fmk_type_(type), local_fmk_op_flag_(local_fmk_op_flag) {}
 
   virtual ~IteratorFusionPass() {}
@@ -31,7 +31,7 @@ class IteratorFusionPass : public GraphPass {
   Status Run(ge::ComputeGraphPtr graph) final;
 
  private:
-  ge::FrameworkType fmk_type_;
+  domi::FrameworkType fmk_type_;
   bool local_fmk_op_flag_;
 };
 }  // namespace ge

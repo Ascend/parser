@@ -33,7 +33,6 @@
 
 #include <string>
 #include <vector>
-#include "framework/common/op/attr_value_util.h"
 #include "framework/omg/parser/op_parser.h"
 #include "graph/ge_tensor.h"
 #include "graph/node.h"

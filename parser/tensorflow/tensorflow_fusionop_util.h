@@ -20,10 +20,8 @@
 #include <string>
 #include <utility>
 #include <vector>
-#include "common/debug/log.h"
 #include "common/string_util.h"
 #include "framework/omg/parser/parser_types.h"
-#include "common/util.h"
 #include "omg/omg_inner_types.h"
 #include "proto/tensorflow/graph.pb.h"
 #include "external/register/scope/scope_fusion_pass_register.h"

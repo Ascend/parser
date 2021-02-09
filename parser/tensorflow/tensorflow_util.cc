@@ -19,9 +19,9 @@
 #include <cstdlib>
 #include <iostream>
 #include <memory>
+#include "common/string_util.h"
+#include "common/util.h"
 #include "framework/common/debug/ge_log.h"
-#include "framework/common/debug/log.h"
-#include "framework/common/op/ge_op_utils.h"
 #include "framework/omg/parser/parser_types.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/ge_tensor.h"
