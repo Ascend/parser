@@ -575,7 +575,7 @@ void TensorFlowModelParser::UpdateInputTensor(ge::OpDescPtr &op_desc, const std:
       ge::graphStatus ret = op_desc->UpdateInputDesc(op_desc->GetInputNameByIndex(i), input_desc[i]);
       if (ret != ge::GRAPH_SUCCESS) {
         // UpdateInputDesc for dynamic intput will be failed, but it will be added in later op parser.
-        GELOGI("op [%s], type[%s], update input(%zu) with name %s failed", op_desc->GetName().c_str(),
+        GELOGI("op [%s], type[%s], input(%zu) with name %s is not updated", op_desc->GetName().c_str(),
                op_desc->GetType().c_str(), i, op_desc->GetInputNameByIndex(i).c_str());
       }
     } else {
@@ -584,7 +584,7 @@ void TensorFlowModelParser::UpdateInputTensor(ge::OpDescPtr &op_desc, const std:
       ge::graphStatus ret = op_desc->UpdateInputDesc(op_desc->GetInputNameByIndex(i), input_tensor);
       if (ret != ge::GRAPH_SUCCESS) {
         // UpdateInputDesc for dynamic intput will be failed, but it will be added in later op parser.
-        GELOGI("op [%s], type[%s], update input(%zu) with name %s failed", op_desc->GetName().c_str(),
+        GELOGI("op [%s], type[%s], input(%zu) with name %s is not updated", op_desc->GetName().c_str(),
                op_desc->GetType().c_str(), i, op_desc->GetInputNameByIndex(i).c_str());
       }
     }
@@ -600,7 +600,7 @@ void TensorFlowModelParser::UpdateOutputTensor(ge::OpDescPtr &op_desc, const std
       ge::graphStatus ret = op_desc->UpdateOutputDesc(op_desc->GetOutputNameByIndex(i), output_desc[i]);
       if (ret != ge::GRAPH_SUCCESS) {
         // UpdateOutputDesc for dynamic output will be failed, but it will be added in later op parser.
-        GELOGI("op [%s], type[%s], update output(%zu) with name %s failed", op_desc->GetName().c_str(),
+        GELOGI("op [%s], type[%s], output(%zu) with name %s is not updated", op_desc->GetName().c_str(),
                op_desc->GetType().c_str(), i, op_desc->GetInputNameByIndex(i).c_str());
       }
     } else {
@@ -609,7 +609,7 @@ void TensorFlowModelParser::UpdateOutputTensor(ge::OpDescPtr &op_desc, const std
       ge::graphStatus ret = op_desc->UpdateOutputDesc(op_desc->GetOutputNameByIndex(i), output_tensor);
       if (ret != ge::GRAPH_SUCCESS) {
         // UpdateOutputDesc for dynamic output will be failed, but it will be added in later op parser.
-        GELOGI("op [%s], type[%s], update output(%zu) with name %s failed", op_desc->GetName().c_str(),
+        GELOGI("op [%s], type[%s], output(%zu) with name %s is not updated", op_desc->GetName().c_str(),
                op_desc->GetType().c_str(), i, op_desc->GetInputNameByIndex(i).c_str());
       }
     }
