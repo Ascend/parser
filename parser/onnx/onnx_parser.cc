@@ -159,6 +159,7 @@ Status OnnxModelParser::ParseInput(ge::onnx::GraphProto &onnx_graph,
   }
 
   // get input value info map
+  int64_t data_index = 0;
   for (int i = 0; i < onnx_graph.input_size(); i++) {
     ge::onnx::ValueInfoProto value_info = onnx_graph.input(i);
     GELOGI("The index of %d input name : %s.", i, value_info.name().c_str());
@@ -201,7 +202,7 @@ Status OnnxModelParser::ParseInput(ge::onnx::GraphProto &onnx_graph,
     // add index
     ge::onnx::AttributeProto *attribute_index = input_node->add_attribute();
     attribute_index->set_name(ge::kAttrNameIndex);
-    attribute_index->set_i(i);
+    attribute_index->set_i(data_index++);
     input_node_names_.emplace_back(value_info.name());
   }
   return SUCCESS;
