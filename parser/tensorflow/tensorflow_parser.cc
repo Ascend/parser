@@ -818,6 +818,8 @@ Status TensorFlowModelParser::CheckOpType(const domi::tensorflow::NodeDef *node_
  * @return ge::DataType
  */
 ge::DataType TensorFlowModelParser::ConvertToGeDataType(const uint32_t type) {
+  ErrorManager::GetInstance().GenWorkStreamIdDefault();
+
   ge::DataType data_type = domi::TensorAssign::ConvertTensorflowDataType(type);
   return data_type;
 }
@@ -2139,6 +2141,7 @@ Status TensorFlowWeightsParser::ParseFromMemory(const char *data, uint32_t size,
 Status TensorFlowWeightsParser::Parse(const char *file, ge::Graph &graph) { return SUCCESS; }
 
 Status TensorFlowModelParser::ParseProto(const google::protobuf::Message *proto, ge::ComputeGraphPtr &graph) {
+  ErrorManager::GetInstance().GenWorkStreamIdDefault();
   PARSER_TIMESTAMP_START(ParseProto);
   GE_CHECK_NOTNULL(proto);
   GE_CHECK_NOTNULL(graph);
@@ -2265,6 +2268,7 @@ Status TensorFlowModelParser::ParseProto(const google::protobuf::Message *proto,
 
 Status TensorFlowModelParser::ParseProtoWithSubgraph(const google::protobuf::Message *root_proto,
                                                      domi::GetGraphCallback callback, ge::ComputeGraphPtr &root_graph) {
+  ErrorManager::GetInstance().GenWorkStreamIdDefault();
   GE_CHECK_NOTNULL(root_proto);
   GE_CHECK_NOTNULL(callback);
   GE_CHECK_NOTNULL(root_graph);
