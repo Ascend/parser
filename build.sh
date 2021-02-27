@@ -180,7 +180,7 @@ generate_package()
   FWK_PATH="fwkacllib/lib64"
   ATC_PATH="atc/lib64"
 
-  COMMON_LIB=("libgraph.so" "libregister.so")
+  COMMON_LIB=("libgraph.so" "libregister.so" "liberror_manager.so")
   PARSER_LIB=("lib_caffe_parser.so" "libfmk_onnx_parser.so" "libfmk_parser.so" "libparser_common.so")
 
   rm -rf ${OUTPUT_PATH:?}/${FWK_PATH}/
@@ -192,7 +192,7 @@ generate_package()
   mk_dir "${OUTPUT_PATH}/${ACL_PATH}"
 
   find output/ -name parser_lib.tar -exec rm {} \;
- 
+
   cd "${OUTPUT_PATH}"
 
   for lib in "${PARSER_LIB[@]}";
