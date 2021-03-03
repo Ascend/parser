@@ -74,6 +74,7 @@ using std::ifstream;
 
 namespace ge {
 graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file, ge::Graph &graph) {
+  ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
   GE_CHECK_NOTNULL(model_file);
   GetParserContext().type = domi::CAFFE;
   std::map<string, string> options;
@@ -121,6 +122,7 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file, 
 
 graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file,
                               const std::map<AscendString, AscendString> &parser_params, ge::Graph &graph) {
+  ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
   GE_CHECK_NOTNULL(model_file);
   GetParserContext().type = domi::CAFFE;
   std::map<string, string> options;
@@ -1464,6 +1466,7 @@ Status CaffeModelParser::PreCheck(const domi::caffe::NetParameter &net) {
 }
 
 Status CaffeModelParser::ParseFromMemory(const char *data, uint32_t size, ge::ComputeGraphPtr &graph) {
+  ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
   bool has_error = false;
 
   GE_CHK_BOOL_RET_STATUS(data != nullptr, FAILED, "model data  is nullptr.");
@@ -1586,6 +1589,7 @@ Status CaffeModelParser::ParseFromMemory(const char *data, uint32_t size, ge::Co
 }
 
 Status CaffeModelParser::Parse(const char *model_path, ge::Graph &graph) {
+  ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
   GE_CHECK_NOTNULL(model_path);
   ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
   GE_CHECK_NOTNULL(compute_graph);
@@ -1865,6 +1869,7 @@ Status CaffeModelParser::ReorderInput(domi::caffe::NetParameter &net) {
 }
 
 Status CaffeWeightsParser::ParseFromMemory(const char *data, uint32_t size, ge::ComputeGraphPtr &graph) {
+  ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
   if (data == nullptr) {
     GELOGE(PARAM_INVALID, "Caffe weights data is nullptr");
     return PARAM_INVALID;
@@ -1892,6 +1897,7 @@ Status CaffeWeightsParser::ParseFromMemory(const char *data, uint32_t size, ge::
 }
 
 Status CaffeWeightsParser::Parse(const char *file, ge::Graph &graph) {
+  ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
   GE_CHECK_NOTNULL(file);
   ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
   GE_CHECK_NOTNULL(compute_graph);
