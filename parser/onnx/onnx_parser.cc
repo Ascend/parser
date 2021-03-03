@@ -83,7 +83,7 @@ graphStatus HandleAfterParse(AclGrphParseUtil &acl_graph_parse_util,
 }
 
 graphStatus aclgrphParseONNX(const char *model_file,
-                             const std::map<AscendString, AscendString> &parser_params, ge::Graph &graph) {							 
+                             const std::map<AscendString, AscendString> &parser_params, ge::Graph &graph) {
   GE_CHECK_NOTNULL(model_file);
   // load custom plugin so and proto
   AclGrphParseUtil acl_graph_parse_util;
@@ -641,6 +641,7 @@ Status OnnxModelParser::ModelParseToGraph(const ge::onnx::ModelProto &onnx_model
 }
 
 Status OnnxModelParser::Parse(const char *file, ge::Graph &graph) {
+  ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
   ge::onnx::ModelProto onnx_model;
   Status ret = GetModelFromFile(file, onnx_model);
   if (ret != SUCCESS) {
@@ -656,6 +657,7 @@ Status OnnxModelParser::Parse(const char *file, ge::Graph &graph) {
 }
 
 Status OnnxModelParser::ParseFromMemory(const char *data, uint32_t size, ge::Graph &graph) {
+  ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
   ge::onnx::ModelProto onnx_model;
   Status ret = GetModelFromMemory(data, size, onnx_model);
   if (ret != SUCCESS) {

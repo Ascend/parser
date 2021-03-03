@@ -88,6 +88,7 @@ using ge::parser::ModelSaver;
 
 namespace ge {
 graphStatus aclgrphParseTensorFlow(const char *model_file, ge::Graph &graph) {
+  ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
   GE_CHECK_NOTNULL(model_file);
   GetParserContext().type = domi::TENSORFLOW;
   std::map<string, string> options;
@@ -127,6 +128,7 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, ge::Graph &graph) {
 
 graphStatus aclgrphParseTensorFlow(const char *model_file, const std::map<AscendString, AscendString> &parser_params,
                                    ge::Graph &graph) {
+  ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
   GE_CHECK_NOTNULL(model_file);
   GetParserContext().type = domi::TENSORFLOW;
   std::map<string, string> options;
@@ -1074,6 +1076,7 @@ Status TensorFlowModelParser::ExcuteScopeFusionPasses(domi::tensorflow::GraphDef
 }
 
 Status TensorFlowModelParser::ParseFromMemory(const char *data, uint32_t size, ge::ComputeGraphPtr &graph) {
+  ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
   GE_CHECK_NOTNULL(data);
   GE_CHECK_NOTNULL(graph);
 
@@ -1216,6 +1219,7 @@ Status TensorFlowModelParser::GetFunctionProto(const string &file,
 }
 
 Status TensorFlowModelParser::Parse(const char *model_path, ge::Graph &graph) {
+  ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
   GE_CHECK_NOTNULL(model_path);
   ge::ComputeGraphPtr root_graph = ge::GraphUtils::GetComputeGraph(graph);
   GE_CHECK_NOTNULL(root_graph);
@@ -1309,6 +1313,7 @@ Status TensorFlowModelParser::Parse(const char *model_path, ge::ComputeGraphPtr 
 }
 
 Status TensorFlowModelParser::ParseAllGraph(const google::protobuf::Message *proto, ge::ComputeGraphPtr &graph) {
+  ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
   GE_CHECK_NOTNULL(proto);
   GE_CHECK_NOTNULL(graph);
 
@@ -2141,6 +2146,7 @@ Status TensorFlowWeightsParser::ParseFromMemory(const char *data, uint32_t size,
 Status TensorFlowWeightsParser::Parse(const char *file, ge::Graph &graph) { return SUCCESS; }
 
 Status TensorFlowModelParser::ParseProto(const google::protobuf::Message *proto, ge::ComputeGraphPtr &graph) {
+  ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
   ErrorManager::GetInstance().GenWorkStreamIdDefault();
   PARSER_TIMESTAMP_START(ParseProto);
   GE_CHECK_NOTNULL(proto);
@@ -2268,6 +2274,7 @@ Status TensorFlowModelParser::ParseProto(const google::protobuf::Message *proto,
 
 Status TensorFlowModelParser::ParseProtoWithSubgraph(const google::protobuf::Message *root_proto,
                                                      domi::GetGraphCallback callback, ge::ComputeGraphPtr &root_graph) {
+  ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
   ErrorManager::GetInstance().GenWorkStreamIdDefault();
   GE_CHECK_NOTNULL(root_proto);
   GE_CHECK_NOTNULL(callback);
