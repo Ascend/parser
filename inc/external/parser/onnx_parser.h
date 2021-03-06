@@ -38,11 +38,10 @@
 
 namespace ge {
 PARSER_FUNC_VISIBILITY graphStatus aclgrphParseONNX(const char *model_file,
-                             const std::map<ge::AscendString, ge::AscendString> &parser_params, ge::Graph &graph);
+    const std::map<ge::AscendString, ge::AscendString> &parser_params, ge::Graph &graph);
 
 PARSER_FUNC_VISIBILITY graphStatus aclgrphParseONNXFromMem(const char *buffer, size_t size,
-                                    const std::map<ge::AscendString, ge::AscendString> &parser_params,
-                                    ge::Graph &graph);
+    const std::map<ge::AscendString, ge::AscendString> &parser_params, ge::Graph &graph);
 }  // namespace ge
 
 #endif  // INC_EXTERNAL_PARSER_ONNX_PARSER_H_

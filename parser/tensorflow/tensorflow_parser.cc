@@ -700,8 +700,8 @@ Status TensorFlowModelParser::AddEdges(ge::ComputeGraphPtr &graph) {
         ErrorManager::GetInstance().ATCReportErrMessage("E12021", {"opname1", "index1", "opname2", "index2"},
                                                         {src_op_name, std::to_string(input_iter->second.size()),
                                                          dest_op_name, std::to_string(src_output_iter.second.size())});
-        GELOGE(INTERNAL_ERROR, "Input size of op[%s]:%zu is not equal to Output size of op[%s]:%zu.", src_op_name.c_str(),
-               input_iter->second.size(), dest_op_name.c_str(), src_output_iter.second.size());
+        GELOGE(INTERNAL_ERROR, "Input size of op[%s]:%zu is not equal to Output size of op[%s]:%zu.",
+               src_op_name.c_str(), input_iter->second.size(), dest_op_name.c_str(), src_output_iter.second.size());
         return INTERNAL_ERROR;
       }
       for (auto &outputpair : src_output_iter.second) {

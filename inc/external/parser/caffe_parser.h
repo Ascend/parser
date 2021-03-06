@@ -41,10 +41,12 @@
 #include "graph/types.h"
 
 namespace ge {
-PARSER_FUNC_VISIBILITY graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file, ge::Graph &graph);
+PARSER_FUNC_VISIBILITY graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file,
+                                                     ge::Graph &graph);
 
 PARSER_FUNC_VISIBILITY graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file,
-                              const std::map<ge::AscendString, ge::AscendString> &parser_params, ge::Graph &graph);
+                                                     const std::map<ge::AscendString, ge::AscendString> &parser_params,
+                                                     ge::Graph &graph);
 }  // namespace ge
 
 #endif  // INC_EXTERNAL_ACL_GRAPH_CAFFE_H_
