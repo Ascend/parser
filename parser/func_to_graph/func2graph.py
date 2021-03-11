@@ -1,5 +1,5 @@
 #!/usr/bin/python3
-# -*- coding: UTF-8 -*-
+# -*- coding: utf-8 -*-
 #-------------------------------------------------------------------
 # Purpose:
 # Copyright 2020 Huawei Technologies Co., Ltd. All rights reserved.

@@ -139,6 +139,7 @@ add_library(fmk_parser_stub SHARED
 
 target_compile_options(fmk_parser_stub PRIVATE
     -O2
+    -fno-common
 )
 
 target_compile_definitions(fmk_parser_stub PRIVATE
