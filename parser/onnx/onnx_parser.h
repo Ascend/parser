@@ -100,7 +100,7 @@ class PARSER_FUNC_VISIBILITY OnnxModelParser : public domi::ModelParser {
 
   Status ModelParseToGraph(const ge::onnx::ModelProto &onnx_model, ge::Graph &graph);
 
-  void UpdateFormat(ge::Graph &graph);
+  void UpdateDataFormat(ge::Graph &graph);
 
   std::map<std::string, std::string> ori_to_om_type_;
 
