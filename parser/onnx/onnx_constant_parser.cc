@@ -142,7 +142,6 @@ Status OnnxConstantParser::ParseConvertTensor(const ge::onnx::TensorProto &tenso
   };
   TensorDesc tensor_desc = tensor.GetTensorDesc();
   tensor_desc.SetShape(ge::Shape(tmp_shape));
-  tensor_desc.SetFormat(static_cast<ge::Format>(GetParserContext().format));
   tensor.SetTensorDesc(tensor_desc);
 
   // set data
@@ -190,9 +189,6 @@ Status OnnxConstantParser::ParseConstFromInput(const ge::onnx::NodeProto *op_src
   }
 
   op_def.SetAttr(ge::kAttrNameValue, tensor);
-  auto op_desc = ge::OpDescUtils::GetOpDescFromOperator(op_def);
-  op_def.UpdateOutputDesc(op_desc->GetOutputNameByIndex(0), tensor.GetTensorDesc());
-
   return SUCCESS;
 }
 
