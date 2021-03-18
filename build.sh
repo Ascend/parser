@@ -53,10 +53,10 @@ checkopts()
 {
   VERBOSE=""
   THREAD_NUM=8
-  # ENABLE_GE_UT_ONLY_COMPILE="off"
-  ENABLE_GE_UT="off"
-  ENABLE_GE_ST="off"
-  ENABLE_GE_COV="off"
+  # ENABLE_PARSER_UT_ONLY_COMPILE="off"
+  ENABLE_PARSER_UT="off"
+  ENABLE_PARSER_ST="off"
+  ENABLE_PARSER_COV="off"
   GE_ONLY="on"
   ENABLE_GITEE="off"
   # Process the options
@@ -65,19 +65,18 @@ checkopts()
     OPTARG=$(echo ${OPTARG} | tr '[A-Z]' '[a-z]')
     case "${opt}" in
       u)
-        # ENABLE_GE_UT_ONLY_COMPILE="on"
-        ENABLE_GE_UT="on"
+        ENABLE_PARSER_UT="on"
         GE_ONLY="off"
         ;;
       s)
-        ENABLE_GE_ST="on"
+        ENABLE_PARSER_ST="on"
         ;;
       t)
-	      ENABLE_GE_UT="on"
-	      GE_ONLY="off"
-	      ;;
+        ENABLE_PARSER_UT="on"
+        GE_ONLY="off"
+        ;;
       c)
-        ENABLE_GE_COV="on"
+        ENABLE_PARSER_COV="on"
         GE_ONLY="off"
         ;;
       h)
@@ -124,17 +123,17 @@ build_parser()
   cd "${BUILD_PATH}"
   CMAKE_ARGS="-DBUILD_PATH=$BUILD_PATH -DGE_ONLY=$GE_ONLY"
 
-  if [[ "X$ENABLE_GE_COV" = "Xon" ]]; then
-    CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_GE_COV=ON"
+  if [[ "X$ENABLE_PARSER_COV" = "Xon" ]]; then
+    CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_PARSER_COV=ON"
   fi
 
-  if [[ "X$ENABLE_GE_UT" = "Xon" ]]; then
-    CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_GE_UT=ON"
+  if [[ "X$ENABLE_PARSER_UT" = "Xon" ]]; then
+    CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_PARSER_UT=ON"
   fi
 
 
-  if [[ "X$ENABLE_GE_ST" = "Xon" ]]; then
-    CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_GE_ST=ON"
+  if [[ "X$ENABLE_PARSER_ST" = "Xon" ]]; then
+    CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_PARSER_ST=ON"
   fi
 
   if [[ "X$ENABLE_GITEE" = "Xon" ]]; then
@@ -149,7 +148,13 @@ build_parser()
     echo "execute command: cmake ${CMAKE_ARGS} .. failed."
     return 1
   fi
-  make ${VERBOSE} -j${THREAD_NUM} && make install
+
+  if [ "X$ENABLE_PARSER_UT" = "Xon" ]; then
+    make ut_parser -j8
+  else
+    make ${VERBOSE} -j${THREAD_NUM} && make install
+  fi
+
   if [ 0 -ne $? ]
   then
     echo "execute command: make ${VERBOSE} -j${THREAD_NUM} && make install failed."
@@ -169,6 +174,25 @@ chmod -R 750 ${OUTPUT_PATH}
 find ${OUTPUT_PATH} -name "*.so*" -print0 | xargs -0 chmod 500
 
 echo "---------------- Parser output generated ----------------"
+
+if [[ "X$ENABLE_PARSER_UT" = "Xon" || "X$ENABLE_PARSER_COV" = "Xon" ]]; then
+    cp ${BUILD_PATH}/tests/ut/parser/ut_parser ${OUTPUT_PATH}
+
+    RUN_TEST_CASE=${OUTPUT_PATH}/ut_parser && ${RUN_TEST_CASE}
+    if [[ "$?" -ne 0 ]]; then
+        echo "!!! UT FAILED, PLEASE CHECK YOUR CHANGES !!!"
+        echo -e "\033[31m${RUN_TEST_CASE}\033[0m"
+        exit 1;
+    fi
+    echo "Generating coverage statistics, please wait..."
+    cd ${BASEPATH}
+    rm -rf ${BASEPATH}/cov
+    mkdir ${BASEPATH}/cov
+    lcov -c -d build/tests/ut/parser -o cov/tmp.info
+    lcov -r cov/tmp.info '*/output/*' '*/build/opensrc/*' '*/build/proto/*' '*/third_party/*' '*/tests/*' '/usr/local/*' '*/metadef/inc/*' -o cov/coverage.info
+    cd ${BASEPATH}/cov
+    genhtml coverage.info
+fi
 
 # generate output package in tar form, including ut/st libraries/executables
 generate_package()
@@ -212,7 +236,7 @@ generate_package()
   tar -cf parser_lib.tar fwkacllib acllib atc
 }
 
-if [[ "X$ENABLE_GE_UT" = "Xoff" ]]; then
+if [[ "X$ENABLE_PARSER_UT" = "Xoff" ]]; then
   generate_package
 fi
 echo "---------------- Parser package archive generated ----------------"
