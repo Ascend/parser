@@ -5,7 +5,10 @@ set(PARSER_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 if (DEFINED ENV{D_PKG_SERVER})
     set(PARSER_PB_PKG $ENV{D_PKG_SERVER})
-endif()
+elseif (DEFINED ENV{MSLIBS_SERVER})
+    set(PARSER_PB_PKG "http://$ENV{MSLIBS_SERVER}:8081")
+    message("Download packages from MSPKG server")
+endif ()
 
 option(ENABLE_OPEN_SRC "Enable graphengine compile in opensource." FALSE)
 
