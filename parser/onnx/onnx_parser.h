@@ -72,8 +72,10 @@ class PARSER_FUNC_VISIBILITY OnnxModelParser : public domi::ModelParser {
  private:
   Status ParseAllNodeProto(ge::onnx::GraphProto &onnx_graph, ge::Graph &graph);
 
-  Status ParseInput(ge::onnx::GraphProto &onnx_graph,
-                    std::map<std::string, ge::onnx::TensorProto> &initializer_name_tensor);
+  Status ParseInput(const std::map<std::string, ge::onnx::TensorProto> &initializer_name_tensor,
+                    bool is_subgraph, ge::onnx::GraphProto &onnx_graph);
+
+  Status ParseOutput(ge::onnx::GraphProto &onnx_graph);
 
   Status ParseInitializer(ge::onnx::GraphProto &onnx_graph,
                           std::map<std::string, ge::onnx::TensorProto> &initializer_name_tensor);
@@ -90,7 +92,9 @@ class PARSER_FUNC_VISIBILITY OnnxModelParser : public domi::ModelParser {
 
   Status SetOperatorInputs();
 
-  Status GetGraphInputs(std::vector<ge::Operator> &input_ops);
+  Status GetGraphInputs(ge::onnx::GraphProto &onnx_graph, std::vector<ge::Operator> &input_ops);
+
+  Status GetGraphOutputs(std::vector<std::pair<Operator, std::vector<size_t>>> &outputs);
 
   Status Prechecker(ge::onnx::GraphProto &onnx_graph);
   
@@ -100,7 +104,14 @@ class PARSER_FUNC_VISIBILITY OnnxModelParser : public domi::ModelParser {
 
   Status ModelParseToGraph(const ge::onnx::ModelProto &onnx_model, ge::Graph &graph);
 
+  Status ModelParseToGraphImpl(bool is_subgraph, ge::onnx::GraphProto &onnx_graph, ge::Graph &graph);
+
   void UpdateDataFormat(ge::Graph &graph);
+
+  void ClearMembers();
+
+  Status AdaptAndFindAllOnnxGraph(ge::onnx::GraphProto &root_onnx_graph,
+                                  std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph);
 
   std::map<std::string, std::string> ori_to_om_type_;
 
@@ -109,6 +120,8 @@ class PARSER_FUNC_VISIBILITY OnnxModelParser : public domi::ModelParser {
   std::map<std::string, ge::Operator> name_operator_;
 
   std::vector<std::string> input_node_names_;
+
+  std::vector<std::string> output_node_names_;
 
   std::map<std::string, std::vector<std::pair<std::string, int>>> inputs_map_;
 

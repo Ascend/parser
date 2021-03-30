@@ -35,6 +35,11 @@ Status OnnxDataParser::ParseParams(const Message *op_src, ge::Operator &op_def) 
     GELOGE(FAILED, "parse shape of data op %s from model failed", op_def.GetName().c_str());
     return FAILED;
   }
+  // Subgraph data operator don't need parse input shape
+  // the shape mappings from parent node input
+  if (IsSubgraphDataOp()) {
+    return SUCCESS;
+  }
 
   if (ParseInputFromUser(op_def) != SUCCESS) {
     GELOGE(FAILED, "parse shape of data op %s from user failed", op_def.GetName().c_str());
@@ -72,13 +77,21 @@ Status OnnxDataParser::ParseInputFromModel(const Message *op_src, ge::Operator &
   // Get attr t:'input_tensor' form NodeProto
   int64_t data_type = 1;
   int64_t index = 0;
+  is_subgraph_data_op_ = false;
   for (auto it : node->attribute()) {
     if (it.name() == ge::kAttrNameInput) {
       data_type = ParseInputTensor(it);
     } else if (it.name() == ge::kAttrNameIndex) {
       index = it.i();
       GELOGI("The node has attribute with index: %ld", index);
+    } else if (it.name() == ge::kAttrNameIsSubgraphOp) {
+      is_subgraph_data_op_ = true;
     }
+  }
+
+  op_def.SetAttr(ge::ATTR_NAME_INDEX, index);
+  if (IsSubgraphDataOp()) {
+    return SUCCESS;
   }
 
   // Trans onnx type to ge type
@@ -88,7 +101,6 @@ Status OnnxDataParser::ParseInputFromModel(const Message *op_src, ge::Operator &
     return FAILED;
   }
   op_def.SetAttr(ge::DATA_ATTR_NAME_DATA_TYPE, static_cast<int64_t>(type));
-  op_def.SetAttr(ge::ATTR_NAME_INDEX, index);
 
   return SUCCESS;
 }

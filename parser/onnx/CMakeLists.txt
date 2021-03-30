@@ -8,7 +8,9 @@ set(SRC_LIST
     "onnx_parser.cc"
     "onnx_data_parser.cc"
     "onnx_util.cc"
-    "onnx_constant_parser.cc" 
+    "onnx_constant_parser.cc"
+    "subgraph_adapter/if_subgraph_adapter.cc"
+    "subgraph_adapter/subgraph_adapter_factory.cc"
 )
 
 protobuf_generate(ge PROTO_SRCS PROTO_HDRS ${PROTO_LIST})
@@ -31,6 +33,7 @@ target_compile_definitions(fmk_onnx_parser PRIVATE
 
 target_include_directories(fmk_onnx_parser PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
+    ${CMAKE_CURRENT_LIST_DIR}/subgraph_adapter
     ${PARSER_DIR}
     ${PARSER_DIR}/inc
     ${PARSER_DIR}/parser

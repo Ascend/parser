@@ -32,11 +32,17 @@ class PARSER_FUNC_VISIBILITY OnnxDataParser : public OnnxOpParser {
 
   Status ParseInputFromUser(const ge::Operator &op_def);
 
+  bool IsSubgraphDataOp() {
+    return is_subgraph_data_op_;
+  }
+
   int64_t ParseInputTensor(const ge::onnx::AttributeProto &attribute);
 
   std::vector<int64_t> model_input_dims_v_;
 
   std::vector<int64_t> user_input_dims_v_;
+
+  bool is_subgraph_data_op_;
 };
 }  // namespace ge
 

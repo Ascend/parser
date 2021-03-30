@@ -60,4 +60,9 @@ int64_t OnnxUtil::CaculateDataSize(int64_t onnx_data_type) {
     return ge::DataType::DT_UNDEFINED;
   }
 }
+
+void OnnxUtil::GenUniqueSubgraphName(int subgraph_index, const std::string &original_subgraph_name,
+                                     const std::string &parent_node_name, std::string &unique_subgraph_name) {
+  unique_subgraph_name = parent_node_name + "_" + std::to_string(subgraph_index) + "_" + original_subgraph_name;
+}
 }  // namespace ge
