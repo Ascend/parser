@@ -41,23 +41,50 @@ class PARSER_FUNC_VISIBILITY OnnxConstantParser : public OnnxOpParser {
   static Status SetTensorData(int32_t val_size, const google::protobuf::RepeatedField<T> &val_vector, int count,
                               Tensor &tensor) {
     bool zeros_like = (count != val_size && val_size == 1);
-    T *addr = new (std::nothrow) T[count]();
+    unique_ptr<T> addr(new(std::nothrow) T[count]());
     GE_CHECK_NOTNULL(addr);
     int minCount = (count > val_size) ? val_size : count;
     if (!zeros_like) {
       for (int32_t i = 0; i < minCount; i++) {
-        *(addr + i) = val_vector.Get(i);
+        *(addr.get() + i) = val_vector.Get(i);
       }
       for (int32_t i = minCount; i < count; i++) {
-        *(addr + i) = val_vector.Get(minCount - 1);
+        *(addr.get() + i) = val_vector.Get(minCount - 1);
       }
     } else {
       for (int32_t i = 0; i < count; i++) {
-        *(addr + i) = val_vector.Get(0);
+        *(addr.get() + i) = val_vector.Get(0);
       }
     }
-    tensor.SetData(reinterpret_cast<uint8_t *>(addr), count * sizeof(T));
-    GE_DELETE_NEW_ARRAY(addr);
+
+    DataType data_type = tensor.GetTensorDesc().GetDataType();
+    switch (data_type) {
+#define CASE_SET_DATA(dt_type, value_type, addr, count, tensor)                                 \
+  case dt_type:                                                                                 \
+  {                                                                                             \
+    unique_ptr<value_type> addr_trans(new(std::nothrow) value_type[count]());                   \
+    GE_CHECK_NOTNULL(addr_trans);                                                               \
+    for (int32_t i = 0; i < count; i++) {                                                       \
+      *(addr_trans.get() + i) = static_cast<value_type>(*(addr.get() + i));                     \
+    }                                                                                           \
+    tensor.SetData(reinterpret_cast<uint8_t *>(addr_trans.get()), count * sizeof(value_type));  \
+    break;                                                                                      \
+  }                                                                                             \
+
+      CASE_SET_DATA(DT_FLOAT16, uint16_t, addr, count, tensor)
+      CASE_SET_DATA(DT_INT16, int16_t, addr, count, tensor)
+      CASE_SET_DATA(DT_INT8, int8_t, addr, count, tensor)
+      CASE_SET_DATA(DT_UINT16, uint16_t, addr, count, tensor)
+      CASE_SET_DATA(DT_UINT8, uint8_t, addr, count, tensor)
+      CASE_SET_DATA(DT_BOOL, bool, addr, count, tensor)
+      CASE_SET_DATA(DT_UINT32, uint32_t, addr, count, tensor)
+#undef CASE_SET_DATA
+      default:
+      {
+        tensor.SetData(reinterpret_cast<uint8_t *>(addr.get()), count * sizeof(T));
+        break;
+      }
+    }
     return SUCCESS;
   }
 };
