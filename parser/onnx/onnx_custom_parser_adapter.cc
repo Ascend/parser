@@ -34,7 +34,7 @@ Status OnnxCustomParserAdapter::ParseParams(const Message *op_src, ge::Operator 
       custom_op_parser = domi::OpRegistry::Instance()->GetParseParamFunc(op_dest.GetOpType(), node_src->op_type());
   GE_CHECK_NOTNULL(custom_op_parser);
   if (custom_op_parser(op_src, op_dest) != SUCCESS) {
-    GELOGE(FAILED, "Custom parser params failed.");
+    GELOGE(FAILED, "[Invoke][Custom_Op_Parser] Custom parser params failed.");
     return FAILED;
   }
   return SUCCESS;

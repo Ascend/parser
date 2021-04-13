@@ -84,7 +84,8 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file, 
   AclGrphParseUtil acl_graph_parse_util;
   domi::Status status = acl_graph_parse_util.AclParserInitialize(options);
   if (status != domi::SUCCESS) {
-    GELOGE(GRAPH_FAILED, "Parser Initialize failed.");
+    REPORT_CALL_ERROR("E19999", "AclParserInitialize failed, ret:%d.", status);
+    GELOGE(GRAPH_FAILED, "[Parser][Initialize] failed, ret:%d.", status);
     return GRAPH_FAILED;
   }
 
@@ -99,7 +100,8 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file, 
   // parse caffe model_file and weights_file to GE graph
   ge::graphStatus ret = model_parser->Parse(model_file, graph);
   if (ret != ge::SUCCESS) {
-    GELOGE(ret, "Parser graph %s failed.", graph.GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "parse param:model_file %s failed, graph:%s.", model_file, graph.GetName().c_str());
+    GELOGE(ret, "[Parser][Param]ModelFile %s failed, graph:%s.", model_file, graph.GetName().c_str());
     return ge::FAILED;
   }
   GELOGI("Parser graph %s success.", graph.GetName().c_str());
@@ -108,13 +110,17 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file, 
   GE_CHECK_NOTNULL(weights_parser);
   ret = weights_parser->Parse(weights_file, graph);
   if (ret != ge::SUCCESS) {
-    GELOGE(ret, "Weights parse failed. graph: %s", graph.GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "parse param:weights_file %s failed, graph:%s", weights_file, graph.GetName().c_str());
+    GELOGE(ret, "[Parse][Param]WeightsFile %s failed. graph: %s", weights_file, graph.GetName().c_str());
     return ret;
   }
   GELOGI("Weights parse success. graph: %s", graph.GetName().c_str());
   std::map<AscendString, AscendString> parser_params;
   if (acl_graph_parse_util.SetOutputNodeInfo(graph, parser_params) != ge::SUCCESS) {
-    GELOGE(ret, "Set graph %s default output node failed.", graph.GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "SetOutputNodeInfo failed, model file:%s graph:%s",
+                      model_file, graph.GetName().c_str());
+    GELOGE(ret, "[Invoke][SetOutputNodeInfo]Set graph %s default output node failed, model file:%s.",
+           graph.GetName().c_str(), model_file);
     return ge::FAILED;
   }
   return ge::SUCCESS;
@@ -132,13 +138,14 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file,
   AclGrphParseUtil acl_graph_parse_util;
   domi::Status status = acl_graph_parse_util.AclParserInitialize(options);
   if (status != domi::SUCCESS) {
-    GELOGE(GRAPH_FAILED, "Parser Initialize failed.");
+    REPORT_CALL_ERROR("E19999", "AclParserInitialize failed, ret:%d.", status);
+    GELOGE(GRAPH_FAILED, "[Parser][Initialize] failed ret:%d.", status);
     return GRAPH_FAILED;
   }
 
   string output_name;
   if (acl_graph_parse_util.ParseParamsBeforeGraph(parser_params, output_name) != ge::SUCCESS) {
-    GELOGE(ge::FAILED, "Parser params before graph failed.");
+    GELOGE(ge::FAILED, "[Parse][Params]Before Graph failed.");
     return ge::FAILED;
   }
   // Create an empty computegraph
@@ -153,13 +160,15 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file,
   // parse caffe model_file and weights_file to GE graph
   ge::graphStatus ret = model_parser->Parse(model_file, graph);
   if (ret != ge::SUCCESS) {
-    GELOGE(ret, "Parser graph %s failed.", graph.GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "Parse param:model_file %s failed, graph:%s", model_file, graph.GetName().c_str());
+    GELOGE(ret, "[Parser][Param]ModelFile %s failed, graph %s.", model_file, graph.GetName().c_str());
     return ge::FAILED;
   }
   GELOGI("Parser graph %s success.", graph.GetName().c_str());
 
   if (acl_graph_parse_util.ParseParamsAfterGraph(graph, parser_params) != ge::SUCCESS) {
-    GELOGE(ge::FAILED, "Parser params after graph failed.");
+    REPORT_CALL_ERROR("E19999", "ParseParamsAfterGraph failed, graph:%s.", graph.GetName().c_str());
+    GELOGE(ge::FAILED, "[Parser][Params] after graph failed, graph:%s.", graph.GetName().c_str());
     return ge::FAILED;
   }
 
@@ -167,13 +176,16 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file,
   GE_CHECK_NOTNULL(weights_parser);
   ret = weights_parser->Parse(weights_file, graph);
   if (ret != ge::SUCCESS) {
-    GELOGE(ret, "Weights parse failed. graph: %s", graph.GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "parse param:weights_file %s failed, graph: %s", weights_file, graph.GetName().c_str());
+    GELOGE(ret, "[Parse][Param]WeightsFile %s failed. graph: %s", weights_file, graph.GetName().c_str());
     return ret;
   }
   GELOGI("Weights parse success. graph: %s", graph.GetName().c_str());
 
   if (acl_graph_parse_util.SetOutputNodeInfo(graph, parser_params) != ge::SUCCESS) {
-    GELOGE(ge::FAILED, "Set graph %s default output node failed.", graph.GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "SetOutputNodeInfo failed, graph:%s", graph.GetName().c_str());
+    GELOGE(ge::FAILED, "[Invoke][SetOutputNodeInfo]Set graph %s default output node failed.",
+           graph.GetName().c_str());
     return ge::FAILED;
   }
   GELOGI("AclgrphParse graph %s success.", graph.GetName().c_str());
@@ -232,7 +244,7 @@ Status CheckPathValid(const char *model_path, const string &custom_proto, string
   string path_model = ge::parser::RealPath(model_path);
   if (path_model.empty()) {
     ErrorManager::GetInstance().ATCReportErrMessage("E19000", {"path", "errmsg"}, {model_path, strerror(errno)});
-    GELOGE(FAILED, "Invalid path of model: %s", model_path);
+    GELOGE(FAILED, "[Check][Param]ModelPath %s is Invalid path of model", model_path);
     return FAILED;
   }
 
@@ -265,21 +277,22 @@ Status CaffeModelParser::ParseInput(domi::caffe::NetParameter &proto_message, bo
     if (proto_message.input_dim_size() > 0) {
       if (proto_message.input_shape_size() > 0) {
         ErrorManager::GetInstance().ATCReportErrMessage("E11001");
-        GELOGE(FAILED, "input_dim and input_shape can not both exist!");
+        GELOGE(FAILED, "[Check][Size]input_dim and input_shape can not both exist!");
         return FAILED;
       }
       int input_dim_size = proto_message.input_dim_size();
       GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((proto_message.input_size() == 0),
                                      ErrorManager::GetInstance().ATCReportErrMessage("E11002");
-                                     return PARAM_INVALID, "Model has no input.");
+                                     return PARAM_INVALID, "[Check][Size]Model has no input.");
 
       GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((input_dim_size / proto_message.input_size() != parser::DIM_DEFAULT_SIZE ||
                                       input_dim_size % proto_message.input_size() != 0),
                                      ErrorManager::GetInstance().ATCReportErrMessage(
                                          "E11003", {"input_dim_size", "input_size"},
                                          {std::to_string(input_dim_size), std::to_string(proto_message.input_size())});
-                                     return FAILED, "Model input_dim size[%d] is not 4 times of input size[%d].",
-                                            input_dim_size, proto_message.input_size())
+                                     return FAILED,
+                                     "[Check][Size]Model input_dim size[%d] is not 4 times of input size[%d].",
+                                     input_dim_size, proto_message.input_size())
 
       for (int i = 0; i < proto_message.input_size(); i++) {
         domi::caffe::LayerParameter *layer = proto_message.add_layer();
@@ -300,13 +313,12 @@ Status CaffeModelParser::ParseInput(domi::caffe::NetParameter &proto_message, bo
         input_data_flag = true;
       }
     } else if (proto_message.input_shape_size() > 0) {
-      GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
-          proto_message.input_shape_size() != proto_message.input_size(),
-          ErrorManager::GetInstance().ATCReportErrMessage(
-              "E11004", {"input_shape_size", "input_size"},
-              {std::to_string(proto_message.input_shape_size()), std::to_string(proto_message.input_size())});
-          return FAILED, "caffe net input_shape size(%d) is not equal input size(%d).",
-                 proto_message.input_shape_size(), proto_message.input_size());
+      GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(proto_message.input_shape_size() != proto_message.input_size(),
+          ErrorManager::GetInstance().ATCReportErrMessage("E11004", {"input_shape_size", "input_size"},
+                                                          {std::to_string(proto_message.input_shape_size()),
+                                                           std::to_string(proto_message.input_size())});
+          return FAILED, "[Check][Size]caffe net input_shape size(%d) is not equal input size(%d).",
+          proto_message.input_shape_size(), proto_message.input_size());
 
       for (int i = 0; i < proto_message.input_size(); i++) {
         int dim_size = proto_message.input_shape(i).dim_size();
@@ -335,7 +347,7 @@ Status CaffeModelParser::ParseInput(domi::caffe::NetParameter &proto_message, bo
         string name = proto_message.input(i);
         if (input_dims.count(name) == 0) {  // Input defined by model does not exist in input of external input
           ErrorManager::GetInstance().ATCReportErrMessage("E11005");
-          GELOGE(FAILED, "Model has no input shape.");
+          GELOGE(FAILED, "[Find][Dim]Model has no input shape.");
           return FAILED;
         }
         std::vector<int64_t> dims = input_dims.at(name);
@@ -382,7 +394,7 @@ Status CaffeModelParser::ParseNetModelByCustomProto(const char *model_path, cons
 
   if (ReadModelWithoutWarning(model_path, message) != SUCCESS) {
     delete message;
-    GELOGE(FAILED, "ReadModelWithoutWarning %s failed.", model_path);
+    GELOGE(FAILED, "[Invoke][ReadModelWithoutWarning] %s failed.", model_path);
     return FAILED;
   }
 
@@ -392,13 +404,14 @@ Status CaffeModelParser::ParseNetModelByCustomProto(const char *model_path, cons
     delete message;
     ErrorManager::GetInstance().ATCReportErrMessage(
         "E19021", {"reason"}, {"Does not find domi.caffe.LayerParameter in google::protobuf::Descriptor"});
-    GELOGE(FAILED, "Does not find domi.caffe.LayerParameter in google::protobuf::Descriptor");
+    GELOGE(FAILED, "[Invoke][FindMessageTypeByName]Does not find domi.caffe.LayerParameter"
+           "in google::protobuf::Descriptor");
     return FAILED;
   }
 
   if (ParseLayerParameter(layer_descriptor, message, operators) != SUCCESS) {
     delete message;
-    GELOGE(FAILED, "ParseLayerParameter failed.");
+    GELOGE(FAILED, "[Parse][LayerParameter] failed, model path:%s.", model_path);
     return FAILED;
   }
 
@@ -417,14 +430,14 @@ Status CaffeModelParser::CustomProtoParse(const char *model_path, const string &
 
   string custom_proto_name;
   if (CheckPathValid(model_path, custom_proto, custom_proto_path, custom_proto_name) != SUCCESS) {
-    GELOGE(FAILED, "CheckPathValid of model and proto failed.");
+    GELOGE(FAILED, "[Check][PathValid] of model and proto failed, path:%s.", model_path);
     return FAILED;
   }
 
   GELOGI("Start to parse model: %s by custom proto: %s.", model_path, custom_proto.c_str());
   Status ret = ParseNetModelByCustomProto(model_path, custom_proto_path, custom_proto_name, operators);
   if (ret != SUCCESS) {
-    GELOGE(FAILED, "parse net model by custom proto failed.");
+    GELOGE(FAILED, "[Parse][NetModel]By CustomProto failed, path:%s.", model_path);
   }
 
   return ret;
@@ -436,7 +449,7 @@ Status CaffeModelParser::GetIdentifier(const std::string &line, int32_t &identif
   if (pos == std::string::npos) {
     ErrorManager::GetInstance().ATCReportErrMessage("E11032", {"name", "reason"},
                                                     {line.c_str(), "it must contain '='"});
-    GELOGE(FAILED, "line: %s must contain char =.", line.c_str());
+    GELOGE(FAILED, "[Check][Param]line: %s must contain char =.", line.c_str());
     return FAILED;
   }
   for (size_t i = pos + 1; i < size; i++) {
@@ -446,7 +459,8 @@ Status CaffeModelParser::GetIdentifier(const std::string &line, int32_t &identif
     if (identifier > kMaxIdentifier || identifier < 0) {
       ErrorManager::GetInstance().ATCReportErrMessage(
           "E11032", {"name", "reason"}, {to_string(identifier), "it can not exceed max value or less than 0"});
-      GELOGE(FAILED, "Param identifier exceeded max value, identifier: %d.", identifier);
+      GELOGE(FAILED, "[Check][Param]Param identifier exceeded max value:%d, identifier: %d.",
+             kMaxIdentifier, identifier);
       return FAILED;
     }
     if (line[i] >= '0' && line[i] <= '9') {
@@ -457,7 +471,7 @@ Status CaffeModelParser::GetIdentifier(const std::string &line, int32_t &identif
   if (identifier == 0) {
     ErrorManager::GetInstance().ATCReportErrMessage(
         "E11032", {"name", "reason"}, {to_string(identifier), "it must larger than 0"});
-    GELOGE(FAILED, "Param identifier must larger than zero, identifier: %d.", identifier);
+    GELOGE(FAILED, "[Check][Param]Param identifier must larger than zero, identifier: %d.", identifier);
     return FAILED;
   }
   return SUCCESS;
@@ -478,15 +492,15 @@ Status CaffeModelParser::SaveIdentifierOpMapInfo(const string &line,  std::map<i
   if (op_param_info.size() < kMinLineWorldSize) {
     ErrorManager::GetInstance().ATCReportErrMessage(
         "E12025", {"size", "compare", "name"}, {to_string(op_param_info.size()), "larger", "min size"});
-    GELOGE(FAILED, "Op param size(%zu) must larger than min size.", op_param_info.size());
+    GELOGE(FAILED, "[Check][Size]Op param size(%zu) must larger than min size:%d.",
+           op_param_info.size(), kMinLineWorldSize);
     return FAILED;
   }
   if (op_param_info[0] != kOptional && op_param_info[0] != kRepeated && op_param_info[0] != kRequired) {
-    ErrorManager::GetInstance().ATCReportErrMessage(
-        "E11032", {"name", "reason"},
+    ErrorManager::GetInstance().ATCReportErrMessage("E11032", {"name", "reason"},
         {op_param_info[0].c_str(), "First value of op param is not in [optional, repeated, required]"});
-    GELOGE(FAILED, "First value of op param is not in [optional, repeated, required], first value: %s",
-           op_param_info[0].c_str());
+    GELOGE(FAILED, "[Check][Value]First value of op param is not in [optional:%s, repeated:%s, required:%s],"
+           "first value: %s", kOptional.c_str(), kRepeated.c_str(), kRequired.c_str(), op_param_info[0].c_str());
     return FAILED;
   }
 
@@ -495,7 +509,7 @@ Status CaffeModelParser::SaveIdentifierOpMapInfo(const string &line,  std::map<i
   if (GetIdentifier(line, identifier) != SUCCESS) {
     ErrorManager::GetInstance().ATCReportErrMessage("E11032", {"name", "reason"},
                                                     {to_string(identifier), "Get identifier failed"});
-    GELOGE(FAILED, "Get identifier failed, identifier: %d", identifier);
+    GELOGE(FAILED, "[Get][Identifier] failed, identifier: %d", identifier);
     return FAILED;
   }
   identifier_op_map[identifier] = op_param_info[1];
@@ -508,7 +522,7 @@ Status CaffeModelParser::ParseProtoFile(const string &proto_file, std::map<int32
   if (read_file.fail()) {
     ErrorManager::GetInstance().ATCReportErrMessage("E19001", {"file", "errmsg"},
                                                     {proto_file.c_str(), "ifstream open failed"});
-    GELOGE(FAILED, "Ifsream open caffe proto failed.");
+    GELOGE(FAILED, "[Open][File]Ifsream open caffe proto:%s failed.", proto_file.c_str());
     return FAILED;
   }
 
@@ -532,7 +546,7 @@ Status CaffeModelParser::ParseProtoFile(const string &proto_file, std::map<int32
       }
       if (SaveIdentifierOpMapInfo(line,  identifier_op_map) != SUCCESS) {
         read_file.close();
-        GELOGE(FAILED, " Save Identifier op map Info failed.");
+        GELOGE(FAILED, "[Save][IdentifierOpMapInfo] failed, line:%s.", line.c_str());
         return FAILED;
       }
     }
@@ -545,7 +559,7 @@ Status CaffeModelParser::ReadModelWithoutWarning(const char *model_path, google:
   int32_t copy_fd = mmDup(STDERR_FILENO);
   if (copy_fd < 0) {
     ErrorManager::GetInstance().ATCReportErrMessage("E19020", {"file"}, {"STDERR_FILENO"});
-    GELOGE(FAILED, "Dup failed: %d.", copy_fd);
+    GELOGE(FAILED, "[Invoke][Dup] failed: %d.", copy_fd);
     return FAILED;
   }
 
@@ -553,7 +567,7 @@ Status CaffeModelParser::ReadModelWithoutWarning(const char *model_path, google:
   if (fd < 0) {
     (void)mmClose(copy_fd);
     ErrorManager::GetInstance().ATCReportErrMessage("E19001", {"file", "errmsg"}, {kDevNull, strerror(errno)});
-    GELOGE(FAILED, "Open file %s failed.", kDevNull);
+    GELOGE(FAILED, "[Open][File] %s failed.", kDevNull);
     return FAILED;
   }
 
@@ -561,14 +575,14 @@ Status CaffeModelParser::ReadModelWithoutWarning(const char *model_path, google:
     (void)mmClose(fd);
     (void)mmClose(copy_fd);
     ErrorManager::GetInstance().ATCReportErrMessage("E19020", {"file"}, {"STDERR_FILENO"});
-    GELOGE(FAILED, "Re-orient failed.");
+    GELOGE(FAILED, "[Invoke][Dup2] Re-orient failed.");
     return FAILED;
   }
 
   if (ReadCaffeModelFromText(model_path, message) != SUCCESS) {
     (void)mmClose(fd);
     (void)mmClose(copy_fd);
-    GELOGE(FAILED, "ReadCaffeModelFromText %s failed.", model_path);
+    GELOGE(FAILED, "[Read][CaffeModel] From Text %s failed.", model_path);
     return FAILED;
   }
 
@@ -576,7 +590,7 @@ Status CaffeModelParser::ReadModelWithoutWarning(const char *model_path, google:
     (void)mmClose(fd);
     (void)mmClose(copy_fd);
     ErrorManager::GetInstance().ATCReportErrMessage("E19020", {"file"}, {"STDERR_FILENO"});
-    GELOGE(FAILED, "Re-orient failed.");
+    GELOGE(FAILED, "[Invoke][Dup2] Re-orient failed.");
     return FAILED;
   }
   (void)mmClose(fd);
@@ -592,7 +606,7 @@ Status CaffeModelParser::ReadCaffeModelFromText(const char *model_path, google::
   std::ifstream fs(model_path, std::ifstream::in);
   if (!fs.is_open()) {
     ErrorManager::GetInstance().ATCReportErrMessage("E19001", {"file", "errmsg"}, {model_path, "ifstream open failed"});
-    GELOGE(FAILED, "Open file %s failed.", model_path);
+    GELOGE(FAILED, "[Open][File] %s failed.", model_path);
     return FAILED;
   }
 
@@ -602,7 +616,7 @@ Status CaffeModelParser::ReadCaffeModelFromText(const char *model_path, google::
   if (!model_parser.Parse(&input, message)) {
     fs.close();
     ErrorManager::GetInstance().ATCReportErrMessage("E19005", {"file"}, {model_path});
-    GELOGE(FAILED, "Parse model file %s failed.", model_path);
+    GELOGE(FAILED, "[Parse][ModelFile] %s failed.", model_path);
     return FAILED;
   }
   fs.close();
@@ -632,7 +646,7 @@ Status CaffeModelParser::ParseLayerParameter(const google::protobuf::Descriptor 
     if (!field->is_repeated()) {
       ErrorManager::GetInstance().ATCReportErrMessage("E11032", {"name", "reason"},
                                                       {field->name().c_str(), "LayerParameter should be repeated"});
-      GELOGE(FAILED, "LayerParameter should be repeated.");
+      GELOGE(FAILED, "[Check][Param] LayerParameter should be repeated.");
       return FAILED;
     }
 
@@ -650,7 +664,7 @@ Status CaffeModelParser::ParseLayerParameter(const google::protobuf::Descriptor 
         continue;
       }
       if (CreateCustomOperator(op_name, op_type, &layer_message, i, operators) != SUCCESS) {
-        GELOGE(FAILED, "CreateCustomOperator failed, name: %s, type: %s.", op_name.c_str(), op_type.c_str());
+        GELOGE(FAILED, "[Create][CustomOperator] failed, name: %s, type: %s.", op_name.c_str(), op_type.c_str());
         return FAILED;
       }
     }
@@ -662,7 +676,8 @@ Status CaffeModelParser::CreateCustomOperator(string op_name, string op_type, co
                                               int index, vector<ge::Operator> &operators) {
   if (op_name.empty() || op_type.empty()) {
     ErrorManager::GetInstance().ATCReportErrMessage("E12026", {"name", "type"}, {op_name.c_str(), op_type.c_str()});
-    GELOGE(FAILED, "Name or type of layer is empty, name: %s, type: %s.", op_name.c_str(), op_type.c_str());
+    GELOGE(FAILED, "[Check][Param]Name or type of layer is empty, name: %s, type: %s.",
+           op_name.c_str(), op_type.c_str());
     return FAILED;
   }
 
@@ -670,12 +685,13 @@ Status CaffeModelParser::CreateCustomOperator(string op_name, string op_type, co
   ge::Operator ops(op_name, op_type);
   if (ops.GetName() != op_name) {
     ErrorManager::GetInstance().ATCReportErrMessage("E12027", {"name", "type"}, {op_name.c_str(), op_type.c_str()});
-    GELOGE(FAILED, "Create operator failed, name: %s, type: %s, index: %d.", op_name.c_str(), op_type.c_str(), index);
+    GELOGE(FAILED, "[Create][Operator] failed, name: %s, type: %s, index: %d.",
+           op_name.c_str(), op_type.c_str(), index);
     return FAILED;
   }
 
   if (ParseOperatorAttrs(message, 1, ops) != SUCCESS) {
-    GELOGE(FAILED, "ParseOperatorAttrs of %s failed.", op_name.c_str());
+    GELOGE(FAILED, "[Parse][OperatorAttrs] of %s failed.", op_name.c_str());
     return FAILED;
   }
 
@@ -687,7 +703,8 @@ Status CaffeModelParser::CreateCustomOperator(string op_name, string op_type, co
 
 Status CaffeModelParser::ParseOperatorAttrs(const google::protobuf::Message *message, int depth, ge::Operator &ops) {
   if (depth > kMaxParseDepth) {
-    GELOGE(FAILED, "Message depth can not exceed %d.", kMaxParseDepth);
+    REPORT_INNER_ERROR("E19999", "Message depth:%d can not exceed %d.", depth, kMaxParseDepth);
+    GELOGE(FAILED, "[Check][Param]Message depth can not exceed %d.", kMaxParseDepth);
     return FAILED;
   }
 
@@ -700,12 +717,12 @@ Status CaffeModelParser::ParseOperatorAttrs(const google::protobuf::Message *mes
     GE_CHECK_NOTNULL(field);
     if (field->is_repeated()) {
       if (ParseRepeatedField(reflection, message, field, depth, ops) != SUCCESS) {
-        GELOGE(FAILED, "Parse repeated field %s failed.", field->name().c_str());
+        GELOGE(FAILED, "[Parse][RepeatedField] %s failed.", field->name().c_str());
         return FAILED;
       }
     } else {
       if (ParseField(reflection, message, field, depth, ops) != SUCCESS) {
-        GELOGE(FAILED, "Parse field %s failed.", field->name().c_str());
+        GELOGE(FAILED, "[Parse][Field] %s failed.", field->name().c_str());
         return FAILED;
       }
     }
@@ -748,7 +765,7 @@ Status CaffeModelParser::ParseField(const google::protobuf::Reflection *reflecti
     case google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE: {
       const google::protobuf::Message &sub_message = reflection->GetMessage(*message, field);
       if (ParseOperatorAttrs(&sub_message, depth + 1, ops) != SUCCESS) {
-        GELOGE(FAILED, "ParseOperatorAttrs of %s failed.", field->name().c_str());
+        GELOGE(FAILED, "[Parse][OperatorAttrs] of %s failed.", field->name().c_str());
         return FAILED;
       }
       break;
@@ -756,7 +773,7 @@ Status CaffeModelParser::ParseField(const google::protobuf::Reflection *reflecti
     default: {
       ErrorManager::GetInstance().ATCReportErrMessage("E11032", {"name", "reason"},
                                                       {field->name().c_str(), "Unsupported field type"});
-      GELOGE(FAILED, "Unsupported field type, name: %s.", field->name().c_str());
+      GELOGE(FAILED, "[Check][FieldType]Unsupported field type, name: %s.", field->name().c_str());
       return FAILED;
     }
   }
@@ -771,7 +788,8 @@ Status CaffeModelParser::ParseRepeatedField(const google::protobuf::Reflection *
   GELOGD("Start to parse field: %s.", field->name().c_str());
   int field_size = reflection->FieldSize(*message, field);
   if (field_size <= 0) {
-    GELOGE(FAILED, "Size of repeated field %s must bigger than 0", field->name().c_str());
+    REPORT_INNER_ERROR("E19999", "Size of repeated field %s must bigger than 0", field->name().c_str());
+    GELOGE(FAILED, "[Check][Size]Size of repeated field %s must bigger than 0", field->name().c_str());
     return FAILED;
   }
 
@@ -802,11 +820,11 @@ Status CaffeModelParser::ParseRepeatedField(const google::protobuf::Reflection *
         repeated_message_str = message_json.dump(kInteval, ' ', false, Json::error_handler_t::ignore);
       } catch (std::exception &e) {
         ErrorManager::GetInstance().ATCReportErrMessage("E19007", {"exception"}, {e.what()});
-        GELOGE(FAILED, "Failed to convert JSON to string, reason: %s.", e.what());
+        GELOGE(FAILED, "[Parse][JSON]Failed to convert JSON to string, reason: %s.", e.what());
         return FAILED;
       } catch (...) {
         ErrorManager::GetInstance().ATCReportErrMessage("E19008");
-        GELOGE(FAILED, "Failed to convert JSON to string.");
+        GELOGE(FAILED, "[Parse][JSON]Failed to convert JSON to string.");
         return FAILED;
       }
       (void)ops.SetAttr(field->name(), repeated_message_str);
@@ -815,7 +833,7 @@ Status CaffeModelParser::ParseRepeatedField(const google::protobuf::Reflection *
     default: {
       ErrorManager::GetInstance().ATCReportErrMessage("E11032", {"name", "reason"},
                                                       {field->name().c_str(), "Unsupported field type"});
-      GELOGE(FAILED, "Unsupported field type, name: %s.", field->name().c_str());
+      GELOGE(FAILED, "[Check][FieldType]Unsupported field type, name: %s.", field->name().c_str());
       return FAILED;
     }
   }
@@ -872,7 +890,7 @@ Status CaffeModelParser::ParseOutputNodeTopInfo(const domi::caffe::NetParameter 
     if (!find_node_falg || layer_name.empty()) {
         ErrorManager::GetInstance().ATCReportErrMessage(
             "E11032", {"name", "reason"}, {top_name.c_str(), "Cannot find the top_name, which is invalid"});
-        GELOGE(PARAM_INVALID, "Cannot find top_name[%s], which is invalid", top_name.c_str());
+        GELOGE(PARAM_INVALID, "[Check][Param]Cannot find top_name[%s], which is invalid", top_name.c_str());
         return PARAM_INVALID;
     }
     GELOGD("Node[%s] find top_name[%s], top_index[%d]", layer_name.c_str(), top_name.c_str(), top_index);
@@ -885,7 +903,7 @@ Status CaffeModelParser::AddBlobsToMap(const domi::caffe::LayerParameter &layer,
                                        std::map<std::string, std::string> &inplace_blob_name_remapping) {
   if (layer.top_size() <= 0) {
     ErrorManager::GetInstance().ATCReportErrMessage("E19011", {"opname"}, {layer.name()});
-    GELOGE(FAILED, "The output size of layer %s needs to be greater than zero.", layer.name().c_str());
+    GELOGE(FAILED, "[Check][Size]The output size of layer %s needs to be greater than zero.", layer.name().c_str());
     return FAILED;
   }
 
@@ -963,7 +981,7 @@ Status CaffeModelParser::GetCustomOp(const domi::caffe::LayerParameter &layer, v
     const google::protobuf::Message *layer_message = reinterpret_cast<const google::protobuf::Message *>(&layer);
     Status status = CreateCustomOperator(op_name, op_type, layer_message, 0, operators);
     if (status != SUCCESS || operators.empty()) {
-      GELOGE(status, "CreateCustomOperator failed, name: %s, type: %s.", op_name.c_str(), op_type.c_str());
+      GELOGE(status, "[Create][CustomOperator] failed, name: %s, type: %s.", op_name.c_str(), op_type.c_str());
       return FAILED;
     }
     if (IsOpAttrEmpty(operators[0], kBuiltin)) {
@@ -993,7 +1011,8 @@ Status CaffeModelParser::ParseOpParam(const domi::caffe::LayerParameter &layer, 
     status = GetCustomOp(layer, custom_operator);
     if (status != SUCCESS || custom_operator.empty()) {
       ErrorManager::GetInstance().ATCReportErrMessage("E11010", {"opname", "optype"}, {layer.name(), op_type});
-      GELOGE(status, "Parse Params for custom op [%s] failed, optype [%s]", layer.name().c_str(), op_type.c_str());
+      GELOGE(status, "[Get][CustomOp]failed for op [%s], optype [%s]",
+             layer.name().c_str(), op_type.c_str());
       return status;
     }
     status = caffe_custom_op_parser->ParseParams(custom_operator[0], op);
@@ -1001,7 +1020,7 @@ Status CaffeModelParser::ParseOpParam(const domi::caffe::LayerParameter &layer, 
 
   if (status != SUCCESS) {
     ErrorManager::GetInstance().ATCReportErrMessage("E11010", {"opname", "optype"}, {layer.name(), op_type});
-    GELOGE(status, "Parse Params for op [%s] fail, optype [%s]", layer.name().c_str(), op_type.c_str());
+    GELOGE(status, "[Parse][Params] for op [%s] fail, optype [%s]", layer.name().c_str(), op_type.c_str());
     return status;
   }
 
@@ -1019,7 +1038,7 @@ Status CaffeModelParser::AddNode(const domi::caffe::LayerParameter &layer, ge::C
     // Judge whether there is Python_Param. If not, it is illegal
     if (!layer.has_python_param()) {
       ErrorManager::GetInstance().ATCReportErrMessage("E11006", {"opname"}, {layer.name()});
-      GELOGE(FAILED, "Op[%s] optype[Python] has no python_param.", layer.name().c_str());
+      GELOGE(FAILED, "[Check][Param]Op[%s] optype[Python] has no python_param.", layer.name().c_str());
       return FAILED;
     }
 
@@ -1027,15 +1046,13 @@ Status CaffeModelParser::AddNode(const domi::caffe::LayerParameter &layer, ge::C
     // Judge whether it is a Proposal operator
     if (python_param.layer() == kProposalLayer) {
       ErrorManager::GetInstance().ATCReportErrMessage("E11031", {"opname"}, {layer.name()});
-      GELOGE(PARAM_INVALID, "Python Layer %s need to be rewritten according to product directions",
+      GELOGE(PARAM_INVALID, "[Check][Param]Python Layer %s need to be rewritten according to product directions",
              layer.name().c_str());
       return FAILED;
     } else {
       ErrorManager::GetInstance().ATCReportErrMessage("E11007", {"opname"}, {python_param.layer()});
-      GELOGE(FAILED,
-          "If optype is [Python], opname must be [ProposalLayer], "
-          "but actual opname is [%s].",
-          python_param.layer().c_str());
+      GELOGE(FAILED, "[Check][Param]If optype is [Python], opname must be [ProposalLayer], "
+             "but actual opname is [%s].", python_param.layer().c_str());
       return FAILED;
     }
   } else {
@@ -1051,16 +1068,12 @@ Status CaffeModelParser::AddNode(const domi::caffe::LayerParameter &layer, ge::C
     if (iter == caffe_op_map.end()) {
       if (op_type == kDetectionOutput) {
         ErrorManager::GetInstance().ATCReportErrMessage("E11008");
-        GELOGE(FAILED,
-            "Op type 'DetectionOutput' is confused. "
-            "Suggest you modify the model file and use a explicit type, such as 'FSRDetectionOutput' or "
-            "'SSDDetectionOutput'.");
+        GELOGE(FAILED, "[Check][Type] Op type 'DetectionOutput' is confused. Suggest you modify the model file "
+               "and use a explicit type, such as 'FSRDetectionOutput' or 'SSDDetectionOutput'.");
       } else {
         ErrorManager::GetInstance().ATCReportErrMessage("E11009", {"opname", "optype"}, {layer.name(), op_type});
-        GELOGE(FAILED,
-            "Unsupport op[%s] optype[%s], "
-            "you should customize the op at first.",
-            layer.name().c_str(), op_type.c_str());
+        GELOGE(FAILED, "[Check][Type]Unsupport op[%s] optype[%s], you should customize the op at first.",
+               layer.name().c_str(), op_type.c_str());
       }
 
       return FAILED;
@@ -1108,7 +1121,8 @@ Status CaffeModelParser::AddNode(const domi::caffe::LayerParameter &layer, ge::C
 
   ge::NodePtr node = graph->AddNode(op);
   if (node == nullptr) {
-    GELOGE(FAILED, "call Graph add node failed, op name:%s, type:%s", op->GetName().c_str(), op->GetType().c_str());
+    REPORT_INNER_ERROR("E19999", "AddNode failed, op name:%s, type:%s", op->GetName().c_str(), op->GetType().c_str());
+    GELOGE(FAILED, "[Add][Node] failed, op name:%s, type:%s", op->GetName().c_str(), op->GetType().c_str());
     return FAILED;
   }
 
@@ -1121,7 +1135,8 @@ Status CaffeModelParser::AddNode(const domi::caffe::LayerParameter &layer, ge::C
   Status status;
   status = caffe_op_parser->AddConstInput(node);
   if (status != SUCCESS) {
-    GELOGE(FAILED, "add const input to node %s fail.", node->GetOpDesc()->GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "AddConstInput failed for node:%s", node->GetOpDesc()->GetName().c_str());
+    GELOGE(FAILED, "[Add][ConstInput] to node %s fail.", node->GetOpDesc()->GetName().c_str());
     return status;
   }
 
@@ -1171,7 +1186,7 @@ Status CaffeModelParser::AddTensorDescToOpDescByIr(ge::OpDescPtr &op_desc, const
     GE_CHECK_NOTNULL(op_desc);
     Status ret = AddTensorDescToOpDesc(op_desc, layer);
     if (ret != SUCCESS) {
-      GELOGE(FAILED, "op[%s] type[%s] AddTensorDescToOpDesc failed.", layer.name().c_str(), op_type.c_str());
+      GELOGE(FAILED, "[Add][TensorDesc]To OpDesc failed for op[%s] type[%s].", layer.name().c_str(), op_type.c_str());
     }
     return ret;
   }
@@ -1181,7 +1196,8 @@ Status CaffeModelParser::AddTensorDescToOpDescByIr(ge::OpDescPtr &op_desc, const
   ge::Operator op_factory = ge::OperatorFactory::CreateOperator(layer_name, op_type);
   if (op_factory.GetName() != layer.name()) {
     ErrorManager::GetInstance().ATCReportErrMessage("E11011", {"opname", "optype"}, {layer_name, op_type});
-    GELOGE(FAILED, "IR for op[%s] optype[%s] is not registered.", layer_name.c_str(), op_type.c_str());
+    GELOGE(FAILED, "[Invoke][CreateOperator]IR for op[%s] optype[%s] is not registered.",
+           layer_name.c_str(), op_type.c_str());
     return FAILED;
   } else {
     op_desc = ge::OpDescUtils::GetOpDescFromOperator(op_factory);
@@ -1237,10 +1253,10 @@ Status CaffeModelParser::AddEdges(ge::ComputeGraphPtr &graph) {
     auto t_iter = top_blobs_map_.find(b_iter->first);
     // Unable to find the output corresponding to the input, error reported
     if (t_iter == top_blobs_map_.end()) {
-      ErrorManager::GetInstance().ATCReportErrMessage(
-          "E11012", {"bottom_blob", "layer", "bottom_index"},
-          {b_iter->first, b_iter->second[0].first, std::to_string(b_iter->second[0].second)});
-      GELOGE(FAILED, "Unknown bottom blob '%s', in layer '%s', bottom index:%d.", b_iter->first.c_str(),
+      ErrorManager::GetInstance().ATCReportErrMessage("E11012", {"bottom_blob", "layer", "bottom_index"},
+                                                      {b_iter->first, b_iter->second[0].first,
+                                                       std::to_string(b_iter->second[0].second)});
+      GELOGE(FAILED, "[Find][Blob]Unknown bottom blob '%s', in layer '%s', bottom index:%d.", b_iter->first.c_str(),
              b_iter->second[0].first.c_str(), b_iter->second[0].second);
       return PARAM_INVALID;
     }
@@ -1268,10 +1284,10 @@ Status CaffeModelParser::AddEdges(ge::ComputeGraphPtr &graph) {
           ge::InDataAnchorPtr in_archor_ptr = bottom_node_iter->second->GetInDataAnchor(bottom_blob_layer_pair.second);
           GE_CHECK_NOTNULL(in_archor_ptr);
           GE_IF_BOOL_EXEC(ge::GraphUtils::AddEdge(out_archor_ptr, in_archor_ptr) != ge::GRAPH_SUCCESS,
-                          ErrorManager::GetInstance().ATCReportErrMessage(
-                              "E11013", {"opname1", "opname2"},
-                              {top_node_iter->second->GetName(), bottom_node_iter->second->GetName()});
-                          GELOGE(INTERNAL_ERROR, "Add link failed from op[%s] to op[%s].",
+                          ErrorManager::GetInstance().ATCReportErrMessage("E11013", {"opname1", "opname2"},
+                                                                          {top_node_iter->second->GetName(),
+                                                                           bottom_node_iter->second->GetName()});
+                          GELOGE(INTERNAL_ERROR, "[Invoke][AddEdge]Add link failed from op[%s] to op[%s].",
                                  top_node_iter->second->GetName().c_str(), bottom_node_iter->second->GetName().c_str());
                           return INTERNAL_ERROR;);
           auto op_desc = bottom_node_iter->second->GetOpDesc();
@@ -1281,15 +1297,16 @@ Status CaffeModelParser::AddEdges(ge::ComputeGraphPtr &graph) {
           (void) op_desc->UpdateInputDesc((static_cast<uint32_t>(in_archor_ptr->GetIdx())),
                                           out_op_desc->GetOutputDesc(static_cast<uint32_t>(out_archor_ptr->GetIdx())));
         }
-        GE_IF_BOOL_EXEC(top_node_iter == node_map.end(), ErrorManager::GetInstance().ATCReportErrMessage(
-                                                             "E11014", {"opname"}, {top_blob_layer_pair.first});
-                        GELOGE(INTERNAL_ERROR, "Failed to find top layer name: %s.", top_blob_layer_pair.first.c_str());
+        GE_IF_BOOL_EXEC(top_node_iter == node_map.end(),
+                        ErrorManager::GetInstance().ATCReportErrMessage("E11014", {"opname"},
+                                                                        {top_blob_layer_pair.first});
+                        GELOGE(INTERNAL_ERROR, "[Find][TopLayer] %s failed.", top_blob_layer_pair.first.c_str());
                         return ge::FAILED;)
-        GE_IF_BOOL_EXEC(
-            top_node_iter == node_map.end(),
-            ErrorManager::GetInstance().ATCReportErrMessage("E11015", {"opname"}, {bottom_blob_layer_pair.first});
-            GELOGE(INTERNAL_ERROR, "Failed to find bottom layer name: %s.", bottom_blob_layer_pair.first.c_str());
-            return ge::FAILED;)
+        GE_IF_BOOL_EXEC(top_node_iter == node_map.end(),
+                        ErrorManager::GetInstance().ATCReportErrMessage("E11015", {"opname"},
+                                                                        {bottom_blob_layer_pair.first});
+                        GELOGE(INTERNAL_ERROR, "[Find][BottomLayer] %s failed.", bottom_blob_layer_pair.first.c_str());
+                        return ge::FAILED;)
       }
     }
   }
@@ -1329,14 +1346,11 @@ Status CaffeModelParser::AddUserOutNodesTop() {
       if (static_cast<uint32_t>(out_pair.second) >= (layer_iter->second).size()) {
         ErrorManager::GetInstance().ATCReportErrMessage(
             "E11016", {"opname", "outputindex", "totlaloutputindex", "inputindex", "totlalinputindex"},
-            {out_pair.first.c_str(), std::to_string(out_pair.second),
-             std::to_string((layer_iter->second).size()), std::to_string(index),
-             std::to_string(net_output_num)});
-        GELOGE(INTERNAL_ERROR,
-               "Add op %s to NetOutput faild, current node output index:%d should < %zu. NetOutput"
-               "input_index:%d should < %u.",
-               out_pair.first.c_str(), out_pair.second, (layer_iter->second).size(), index,
-               net_output_num);
+            {out_pair.first.c_str(), std::to_string(out_pair.second), std::to_string((layer_iter->second).size()),
+             std::to_string(index), std::to_string(net_output_num)});
+        GELOGE(INTERNAL_ERROR, "[Check][Size]Add op %s to NetOutput faild, current node output index:%d should < %zu. "
+               "NetOutput input_index:%d should < %u.", out_pair.first.c_str(), out_pair.second,
+               (layer_iter->second).size(), index, net_output_num);
         return INTERNAL_ERROR;
       }
 
@@ -1349,7 +1363,8 @@ Status CaffeModelParser::AddUserOutNodesTop() {
       ++index;
     } else {
       ErrorManager::GetInstance().ATCReportErrMessage("E11017", {"opname"}, {out_pair.first});
-      GELOGE(PARAM_INVALID, "Can not find out_node:%s, you should check --out_nodes.", out_pair.first.c_str());
+      GELOGE(PARAM_INVALID, "[Find][Node]Can not find out_node:%s, you should check --out_nodes.",
+             out_pair.first.c_str());
       return PARAM_INVALID;
     }
   }
@@ -1374,7 +1389,8 @@ Status CaffeModelParser::AddOutputTop(const domi::caffe::NetParameter &proto_mes
 
       auto t_iter = top_blobs_map_.find(top);
 
-      GE_RETURN_WITH_LOG_IF_FALSE(t_iter != top_blobs_map_.end(), "Failed to find top: %s, layer name:%s", top.c_str(),
+      GE_RETURN_WITH_LOG_IF_FALSE(t_iter != top_blobs_map_.end(),
+                                  "[Check][Param]Failed to find top: %s, layer name:%s", top.c_str(),
                                   layer.name().c_str());
 
       // Find the bottom blob corresponding to the top blob
@@ -1447,19 +1463,20 @@ Status CaffeModelParser::PreCheck(const domi::caffe::NetParameter &net) {
     string mode = "^[A-Za-z0-9./_-]+$";
     if (!ge::parser::ValidateStr(layer.name(), mode)) {
       ErrorManager::GetInstance().ATCReportErrMessage("E11018", {"opname"}, {layer.name()});
-      GELOGE(ge::FAILED,
-             "Parse caffe pbtxt validate op[%s] failed, opname can only contain "
-             "'a-z' 'A-Z' '0-9' '-' '.' '_' '/'",
-             layer.name().c_str());
+      GELOGE(ge::FAILED, "[Invoke][ValidateStr]Parse caffe pbtxt validate op[%s] failed, opname can only contain "
+             "'a-z' 'A-Z' '0-9' '-' '.' '_' '/'", layer.name().c_str());
       return ge::FAILED;
     }
 
     GE_RETURN_WITH_LOG_IF_ERROR(PreChecker::Instance().AddOp(&layer, layer.name(), layer.type()),
-                                "Add layer to PreChecker failed, layer name: %s.", layer.name().c_str());
+                                "[Invoke][AddOp]Add layer to PreChecker failed, layer name: %s.",
+                                layer.name().c_str());
     GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(PreChecker::Instance().CheckName(&layer) != SUCCESS, return FAILED,
-                                   "Check op[%s] failed, name repeat in caffe prototxt.", layer.name().c_str());
+                                   "[Invoke][CheckName]Check op[%s] failed, name repeat in caffe prototxt.",
+                                   layer.name().c_str());
     GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(PreChecker::Instance().CheckType(&layer) != SUCCESS, return FAILED,
-                                   "Check op[%s]'s optype failed, type is not supported.", layer.name().c_str());
+                                   "[Invoke][CheckType]Check op[%s]'s optype failed, type is not supported.",
+                                   layer.name().c_str());
   }
 
   return SUCCESS;
@@ -1469,23 +1486,22 @@ Status CaffeModelParser::ParseFromMemory(const char *data, uint32_t size, ge::Co
   ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
   bool has_error = false;
 
-  GE_CHK_BOOL_RET_STATUS(data != nullptr, FAILED, "model data  is nullptr.");
-  GE_CHK_BOOL_RET_STATUS(graph != nullptr, FAILED, "graph is nullptr.");
+  GE_CHK_BOOL_RET_STATUS(data != nullptr, FAILED, "[Check][Param]model data  is nullptr.");
+  GE_CHK_BOOL_RET_STATUS(graph != nullptr, FAILED, "[Check][Param]graph is nullptr.");
 
   domi::caffe::NetParameter proto_message;
 
   // Get Caffe network model information
   if (!ge::parser::ReadProtoFromMem(data, static_cast<int>(size), &proto_message)) {
-    GELOGE(FAILED, "read proto from text ret fail");
+    GELOGE(FAILED, "[Read][ProtoFromMem] ret fail");
     return FAILED;
   }
 
-  GE_CHK_BOOL_RET_STATUS(
-      !(proto_message.layer_size() == 0 && proto_message.layers_size() > 0), FAILED,
-      "The model file is consisted of layers-structure which is deprecated in caffe and unsupport in OMG. "
+  GE_CHK_BOOL_RET_STATUS(!(proto_message.layer_size() == 0 && proto_message.layers_size() > 0), FAILED,
+      "[Check][Size]The model file is consisted of layers-structure which is deprecated in caffe and unsupport in OMG."
       "It is recommended to convert layers-structure to layer-structure by caffe tool.");
   GE_CHK_BOOL_RET_STATUS((proto_message.layer_size() != 0), FAILED,
-                         "net layer num is zero, prototxt file may be invalid.");
+                         "[Check][Size]net layer num is zero, prototxt file may be invalid.");
 
   // Set network name
   GE_IF_BOOL_EXEC((proto_message.has_name()), graph->SetName(proto_message.name()));
@@ -1495,7 +1511,7 @@ Status CaffeModelParser::ParseFromMemory(const char *data, uint32_t size, ge::Co
   has_error = PreChecker::Instance().HasError();
 
   if (ReorderInput(proto_message) != SUCCESS) {
-    GELOGE(INTERNAL_ERROR, "Reorder input failed.");
+    GELOGE(INTERNAL_ERROR, "[Reorder][Input] failed.");
     return INTERNAL_ERROR;
   }
 
@@ -1503,7 +1519,7 @@ Status CaffeModelParser::ParseFromMemory(const char *data, uint32_t size, ge::Co
 
   // Process input of type input
   CHECK_FALSE_EXEC(ParseInput(proto_message, input_data_flag) == SUCCESS, has_error = true;
-                   GELOGE(FAILED, "ParseInput ret fail."));
+                   GELOGE(FAILED, "[Parse][Input] ret fail."));
 
   int32_t layer_count = proto_message.layer_size();
   std::map<std::string, std::string> inplace_blob_name_remapping;
@@ -1517,11 +1533,17 @@ Status CaffeModelParser::ParseFromMemory(const char *data, uint32_t size, ge::Co
   for (int32_t i = 0; i < layer_count; i++) {
     domi::caffe::LayerParameter &layer = const_cast<domi::caffe::LayerParameter &>(proto_message.layer(i));
 
-    GE_CHK_BOOL_EXEC_INFO(CheckValidLayer(layer), continue, "layer phase is train, skip this layer, name:%s, type:%s.",
+    GE_CHK_BOOL_EXEC_INFO(CheckValidLayer(layer), continue,
+                          "[Check][Layer]layer phase is train, skip this layer, name:%s, type:%s.",
                           layer.name().c_str(), layer.type().c_str());
 
     CHECK_FALSE_EXEC(!((layer.type() == ge::parser::DATA_TYPE) && (input_data_flag == true)), has_error = true;
-                     GELOGE(FAILED, "net %s has input and data layer simultaneously.", proto_message.name().c_str()));
+                     REPORT_INNER_ERROR("E19999", "net %s has input and data layer simultaneously, check invalid."
+                                        "layer name:%s, layer type:%s", proto_message.name().c_str(),
+                                        layer.name().c_str(), layer.type().c_str());
+                     GELOGE(FAILED, "[Check][Layer]net %s has input and data layer simultaneously, check invalid."
+                            "layer name:%s, layer type:%s", proto_message.name().c_str(),
+                            layer.name().c_str(), layer.type().c_str()));
 
     // All layer names cannot be duplicate
     // 20181208 Modified to support the existence of duplicate operators in Caffe model
@@ -1540,7 +1562,7 @@ Status CaffeModelParser::ParseFromMemory(const char *data, uint32_t size, ge::Co
     // Do not exit immediately when there is an error, wait until all errors are collected before exiting
     Status ret = AddNode(layer, graph);
     if (ret != SUCCESS) {
-      GELOGE(FAILED, "Caffe parser add node fail.");
+      GELOGE(FAILED, "[Add][Node]failed for layer:%s.", layer.name().c_str());
       has_error = true;
       continue;
     }
@@ -1556,25 +1578,28 @@ Status CaffeModelParser::ParseFromMemory(const char *data, uint32_t size, ge::Co
     GE_IF_BOOL_EXEC((v_param_names.size() > 0), layer_params_map.emplace(layer.name(), v_param_names));
 
     GE_RETURN_WITH_LOG_IF_ERROR(AddBlobsToMap(layer, inplace_blob_name_remapping),
-                                "Caffe parser add blobs to map ret fail.");
+                                "[Add][Blobs]To Map ret fail, layer:%s.", layer.name().c_str());
   }
   // Find a layer with the same param name and save it to graph
   GE_RETURN_WITH_LOG_IF_ERROR(FindShareParamLayers(layer_params_map),
-                              "Caffe parser find share param layers map ret fail.");
+                              "[Find][ShareParamLayers] by Caffe parser ret fail.");
 
   // Exit if an error occurs
   GE_IF_BOOL_EXEC(has_error, return FAILED);
 
-  GE_CHK_BOOL_RET_STATUS(top_blobs_map_.size() > 0, FAILED, "current net has no output!");
+  GE_CHK_BOOL_RET_STATUS(top_blobs_map_.size() > 0, FAILED, "[Check][Size]current net has no output!");
 
-  GE_RETURN_WITH_LOG_IF_ERROR(AddEdges(graph), "Caffe parser add edges fail.");
+  GE_RETURN_WITH_LOG_IF_ERROR(AddEdges(graph), "[Add][Edges] failed by Caffe parser, graph:%s.",
+                              graph->GetName().c_str());
 
   if (!(ge::GetParserContext().user_out_nodes.empty())) {
-    GE_RETURN_WITH_LOG_IF_ERROR(AddUserOutNodesTop(), "Caffe parser add top_name for user out nodes failed.");
+    GE_RETURN_WITH_LOG_IF_ERROR(AddUserOutNodesTop(), "[Add][UserOutNodesTop] by Caffe parser failed.");
   } else {
-    GE_RETURN_WITH_LOG_IF_ERROR(AddOutputTop(proto_message), "Caffe parser add top_name for output fail.");
+    GE_RETURN_WITH_LOG_IF_ERROR(AddOutputTop(proto_message), "[Add][OutputTop] by Caffe parser failed.");
   }
-  GE_RETURN_WITH_LOG_IF_ERROR(graph->TopologicalSorting(), "Caffe parser call graph topo sort fail.");
+  GE_RETURN_WITH_LOG_IF_ERROR(graph->TopologicalSorting(),
+                              "[Call][TopologicalSorting] by Caffe parser failed, graph:%s.",
+                              graph->GetName().c_str());
 
   auto nodes = graph->GetDirectNode();
   GELOGI("graph node size = %zu.", nodes.size());
@@ -1596,7 +1621,7 @@ Status CaffeModelParser::Parse(const char *model_path, ge::Graph &graph) {
 
   Status ret = Parse(model_path, compute_graph);
   if (ret != SUCCESS) {
-    GELOGE(ret, "Parser model for graph %s failed.", graph.GetName().c_str());
+    GELOGE(ret, "[Parser][Model] %s for graph %s failed.", model_path, graph.GetName().c_str());
     return ret;
   }
 
@@ -1621,7 +1646,7 @@ Status CaffeModelParser::SaveDataLayerTops(const domi::caffe::LayerParameter &la
   string name = layer.name();
   if (node_map.find(name) == node_map.end()) {
     ErrorManager::GetInstance().ATCReportErrMessage("E11034", {"opname"}, {name});
-    GELOGE(FAILED, "Node can not be found by layer name: %s", name.c_str());
+    GELOGE(FAILED, "[Find][Node]Node can not be found by layer name: %s", name.c_str());
     return FAILED;
   }
 
@@ -1632,7 +1657,7 @@ Status CaffeModelParser::SaveDataLayerTops(const domi::caffe::LayerParameter &la
     if (layer.top_size() != 1) {
       ErrorManager::GetInstance().ATCReportErrMessage("E11035", {"opname", "size"},
         {name, std::to_string(layer.top_size())});
-      GELOGE(FAILED, "Data layer[%s] top size must be 1, real size: %d", name.c_str(), layer.top_size());
+      GELOGE(FAILED, "[Check][Type]Data layer[%s] top size must be 1, real size: %d", name.c_str(), layer.top_size());
       return FAILED;
     }
 
@@ -1640,7 +1665,7 @@ Status CaffeModelParser::SaveDataLayerTops(const domi::caffe::LayerParameter &la
     auto data_top_names = ge::GetParserContext().data_top_names;
     if (find(data_top_names.begin(), data_top_names.end(), top_name) != data_top_names.end()) {
       ErrorManager::GetInstance().ATCReportErrMessage("E11036", {"topname"}, {top_name});
-      GELOGE(FAILED, "Different data node can not have same top name: %s.", top_name.c_str());
+      GELOGE(FAILED, "[Check][Node]Different data node can not have same top name: %s.", top_name.c_str());
       return FAILED;
     }
     ge::GetParserContext().data_top_names.push_back(top_name);
@@ -1661,7 +1686,7 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
 
   // Get Caffe network model information
   if (ReadModelWithoutWarning(model_path, &proto_message) != SUCCESS) {
-    GELOGE(FAILED, "read caffe model from text ret fail, model path: %s.", model_path);
+    GELOGE(FAILED, "[Read][Model] from text ret fail, model path: %s.", model_path);
     return FAILED;
   }
 
@@ -1670,7 +1695,7 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
   string caffe_proto_path = ge::GetParserContext().caffe_proto_path + "caffe.proto";
   Status result = CustomProtoParse(model_path, custom_proto_path, caffe_proto_path, custom_operator_);
   if (result != SUCCESS) {
-    GELOGE(FAILED, "Parse model by custom proto failed, model: %s.", model_path);
+    GELOGE(FAILED, "[Parse][Model] by custom proto failed, model path: %s.", model_path);
     return FAILED;
   }
 
@@ -1678,12 +1703,12 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
       proto_message.layer_size() == 0 && proto_message.layers_size() > 0,
       ErrorManager::GetInstance().ATCReportErrMessage("E11021", {"realpath"}, {model_path});
       return FAILED,
-             "The model file[%s] is consisted of layers-structure which is deprecated in Caffe "
+             "[Check][Size]The model file[%s] is consisted of layers-structure which is deprecated in Caffe "
              "and unsupported in ATC. The \"layers\" should be changed to \"layer\".",
              model_path);
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((proto_message.layer_size() == 0),
                                  ErrorManager::GetInstance().ATCReportErrMessage("E11022");
-                                 return FAILED, "net layer num is zero, prototxt file may be invalid.");
+                                 return FAILED, "[Check][Size]net layer num is zero, prototxt file may be invalid.");
 
   // Set network name
   GE_IF_BOOL_EXEC((proto_message.has_name() && !proto_message.name().empty()), graph->SetName(proto_message.name()));
@@ -1692,12 +1717,13 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
   GE_RETURN_IF_ERROR(PreCheck(proto_message));
 
   if (PreChecker::Instance().HasError()) {
-    GELOGE(INTERNAL_ERROR, "Precheck failed. Please read check report.");
+    REPORT_INNER_ERROR("E19999", "Precheck failed. Please read check report.");
+    GELOGE(INTERNAL_ERROR, "[Has][Error]Precheck failed. Please read check report.");
     return FAILED;
   }
 
   if (ReorderInput(proto_message) != SUCCESS) {
-    GELOGE(INTERNAL_ERROR, "Reorder input failed.");
+    GELOGE(INTERNAL_ERROR, "[Reorder][Input] failed.");
     return INTERNAL_ERROR;
   }
 
@@ -1705,14 +1731,14 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
 
   // Process input of type input
   CHECK_FALSE_EXEC(ParseInput(proto_message, input_data_flag) == SUCCESS, has_error = true;
-                   GELOGE(FAILED, "ParseInput ret fail."));
+                   GELOGE(FAILED, "[Parse][Input] ret fail."));
 
   int32_t layer_count = proto_message.layer_size();
 
   if (!ge::GetParserContext().user_out_nodes_top_vec.empty()) {
     GELOGW("The out_put info has top_name items.");
     GE_RETURN_WITH_LOG_IF_ERROR(ParseOutputNodeTopInfo(proto_message),
-                                "Caffe parser parse output node-top info failed.");
+                                "[Parse][OutputNodeTopInfo] failed.");
     ge::GetParserContext().user_out_nodes_top_vec.clear();
   }
 
@@ -1727,11 +1753,14 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
   for (int32_t i = 0; i < layer_count; i++) {
     domi::caffe::LayerParameter &layer = const_cast<domi::caffe::LayerParameter &>(proto_message.layer(i));
     SaveOrigionLayerTops(layer);
-    GE_CHK_BOOL_EXEC_INFO(CheckValidLayer(layer), continue, "layer phase is train, skip this layer, name:%s, type:%s.",
+    GE_CHK_BOOL_EXEC_INFO(CheckValidLayer(layer), continue,
+                          "[Check][Layer]layer phase is train, skip this layer, name:%s, type:%s.",
                           layer.name().c_str(), layer.type().c_str());
 
     CHECK_FALSE_EXEC(!((layer.type() == ge::parser::DATA_TYPE) && (input_data_flag == true)), has_error = true;
-                     GELOGE(FAILED, "net %s has input and data layer simultaneously.", proto_message.name().c_str()));
+                     GELOGE(FAILED, "[Check][Layer]net %s has input and data layer simultaneously, check invalid."
+                            "layer name:%s, layer type:%s", proto_message.name().c_str(),
+                            layer.name().c_str(), layer.type().c_str()));
 
     // All layer names cannot be duplicate
     // Modified to support the existence of duplicate operators in Caffe model
@@ -1750,7 +1779,7 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
     // Do not exit immediately when there is an error, wait until all errors are collected before exiting
     Status ret = AddNode(layer, graph);
     if (ret != SUCCESS) {
-      GELOGE(FAILED, "Caffe parser add node fail.");
+      GELOGE(FAILED, "[Add][Node] fail, layer:%s.", layer.name().c_str());
       has_error = true;
       continue;
     }
@@ -1766,29 +1795,30 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
     GE_IF_BOOL_EXEC((v_param_names.size() > 0), layer_params_map.emplace(layer.name(), v_param_names));
 
     GE_RETURN_WITH_LOG_IF_ERROR(AddBlobsToMap(layer, inplace_blob_name_remapping),
-                                "Caffe parser add blobs to map ret fail.");
+                                "[Add][blobs] to map ret fail, layer:%s.", layer.name().c_str());
     if (SaveDataLayerTops(layer) != SUCCESS) {
-      GELOGE(FAILED, "Caffe parse: save data layer tops failed.");
+      GELOGE(FAILED, "[Save][DataLayerTops] failed, layer:%s.", layer.name().c_str());
       return FAILED;
     }
   }
   // Find a layer with the same param name and save it to graph
   GE_RETURN_WITH_LOG_IF_ERROR(FindShareParamLayers(layer_params_map),
-                              "Caffe parser find share param layers map ret fail.");
+                              "[Find][ShareParamLayers] ret fail.");
 
   // Exit if an error occurs
   GE_IF_BOOL_EXEC(has_error, return FAILED);
 
-  GE_CHK_BOOL_RET_STATUS(top_blobs_map_.size() > 0, FAILED, "current net has no output!");
+  GE_CHK_BOOL_RET_STATUS(top_blobs_map_.size() > 0, FAILED, "[Check][Size]current net has no output!");
 
-  GE_RETURN_WITH_LOG_IF_ERROR(AddEdges(graph), "Caffe parser add edges fail.");
+  GE_RETURN_WITH_LOG_IF_ERROR(AddEdges(graph), "[Add][Edges] fail, graph:%s.", graph->GetName().c_str());
 
   if (!(ge::GetParserContext().user_out_nodes.empty())) {
-    GE_RETURN_WITH_LOG_IF_ERROR(AddUserOutNodesTop(), "Caffe parser add top_name for user out nodes failed.");
+    GE_RETURN_WITH_LOG_IF_ERROR(AddUserOutNodesTop(), "[Add][UserOutNodesTop] failed.");
   } else {
-    GE_RETURN_WITH_LOG_IF_ERROR(AddOutputTop(proto_message), "Caffe parser add top_name for output fail.");
+    GE_RETURN_WITH_LOG_IF_ERROR(AddOutputTop(proto_message), "[Add][OutputTop] failed.");
   }
-  GE_RETURN_WITH_LOG_IF_ERROR(graph->TopologicalSorting(), "Caffe parser call graph topo sort fail.");
+  GE_RETURN_WITH_LOG_IF_ERROR(graph->TopologicalSorting(), "[Call][TopologicalSorting] failed, graph:%s.",
+                              graph->GetName().c_str());
 
   auto nodes = graph->GetDirectNode();
   GELOGI("graph node size = %zu.", nodes.size());
@@ -1825,13 +1855,13 @@ Status CaffeModelParser::FindShareParamLayers(const std::map<std::string, std::v
 }
 
 Status CaffeModelParser::ToJson(const char *model_file, const char *json_file) {
-  GE_CHK_BOOL_RET_STATUS(model_file != nullptr, FAILED, "model_file is nullptr.");
-  GE_CHK_BOOL_RET_STATUS(json_file != nullptr, FAILED, "json_file is nullptr.");
+  GE_CHK_BOOL_RET_STATUS(model_file != nullptr, FAILED, "[Check][Param]model_file is nullptr.");
+  GE_CHK_BOOL_RET_STATUS(json_file != nullptr, FAILED, "[Check][Param]json_file is nullptr.");
   domi::caffe::NetParameter net;
   nlohmann::json j;
 
   GE_RETURN_WITH_LOG_IF_FALSE(ReadModelWithoutWarning(model_file, &net) == SUCCESS,
-                              "ReadModelWithoutWarning failed, Please Check file:%s.", model_file);
+                              "[Read][Model]Without Warning failed, Please Check file:%s.", model_file);
   Pb2Json::Message2Json(net, set<string>(), j, true);
   return ModelSaver::SaveJsonToFile(json_file, j);
 }
@@ -1849,14 +1879,19 @@ Status CaffeModelParser::ReorderInput(domi::caffe::NetParameter &net) {
       if (it.moveType == domi::OMG_INPUT_REORDER) {
         auto inputs = layer->bottom();
         if (static_cast<size_t>(inputs.size()) != it.input_order.size()) {
-          GELOGE(INTERNAL_ERROR, "Size of input is mismatched, new order size is %zu, input size is %d.",
+          REPORT_INNER_ERROR("E19999", "Size of input is mismatched, check invalid,"
+                             "new order size is %zu, input size is %d.", it.input_order.size(), inputs.size());
+          GELOGE(INTERNAL_ERROR, "[Check][Size]Size of input is mismatched, new order size is %zu, input size is %d.",
                  it.input_order.size(), inputs.size());
           return INTERNAL_ERROR;
         }
         for (size_t j = 0; j < it.input_order.size(); ++j) {
           int new_index = it.input_order[j];
           if (new_index < 0 || new_index >= inputs.size()) {
-            GELOGE(INTERNAL_ERROR, "New order of %s has invalid index %d.", layer->name().c_str(), new_index);
+            REPORT_INNER_ERROR("E19999", "New order of %s has invalid index %d, which is out of range, "
+                               "inputs size:%d.", layer->name().c_str(), new_index, inputs.size());
+            GELOGE(INTERNAL_ERROR, "[Check][Param]New order of %s has invalid index %d, which is out of range, "
+                   "inputs size:%d.", layer->name().c_str(), new_index, inputs.size());
             return INTERNAL_ERROR;
           }
           layer->set_bottom(j, inputs[new_index]);
@@ -1871,12 +1906,14 @@ Status CaffeModelParser::ReorderInput(domi::caffe::NetParameter &net) {
 Status CaffeWeightsParser::ParseFromMemory(const char *data, uint32_t size, ge::ComputeGraphPtr &graph) {
   ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
   if (data == nullptr) {
-    GELOGE(PARAM_INVALID, "Caffe weights data is nullptr");
+    REPORT_INNER_ERROR("E19999", "param data is nullptr.");
+    GELOGE(PARAM_INVALID, "[Check][Param]Caffe weights data is nullptr");
     return PARAM_INVALID;
   }
 
   if (graph == nullptr) {
-    GELOGE(PARAM_INVALID, "Caffe weights graph is nullptr");
+    REPORT_INNER_ERROR("E19999", "param graph is nullptr.");
+    GELOGE(PARAM_INVALID, "[Check][Param]Caffe weights graph is nullptr");
     return PARAM_INVALID;
   }
 
@@ -1884,13 +1921,14 @@ Status CaffeWeightsParser::ParseFromMemory(const char *data, uint32_t size, ge::
   NetParameter proto;
   bool success = ge::parser::ReadProtoFromArray(reinterpret_cast<const char *>(data), static_cast<int>(size), &proto);
   if (!success) {
-    GELOGE(domi::PARSE_WEIGHTS_FAILED, "ReadProto from Memory fail");
+    REPORT_CALL_ERROR("E19999", "ReadProtoFromArray failed.");
+    GELOGE(domi::PARSE_WEIGHTS_FAILED, "[Read][Proto] from Memory fail");
     return domi::PARSE_WEIGHTS_FAILED;
   }
 
   // Convert netparameter to opdef and save to graph
   Status status = ConvertNetParameter(proto, graph);
-  GE_IF_BOOL_EXEC(status != SUCCESS, GELOGE(FAILED, "Parse weights ConvertNetParameter failed, status=%d", status);
+  GE_IF_BOOL_EXEC(status != SUCCESS, GELOGE(FAILED, "[Convert][NetParameter] failed, status=%d", status);
                   return domi::PARSE_WEIGHTS_FAILED;);
 
   return SUCCESS;
@@ -1904,7 +1942,7 @@ Status CaffeWeightsParser::Parse(const char *file, ge::Graph &graph) {
 
   Status ret = Parse(file, compute_graph);
   if (ret != SUCCESS) {
-    GELOGE(ret, "Parser weight for graph %s failed.", graph.GetName().c_str());
+    GELOGE(ret, "[Parser][Weight] %s for graph %s failed.", file, graph.GetName().c_str());
     return ret;
   }
 
@@ -1914,12 +1952,14 @@ Status CaffeWeightsParser::Parse(const char *file, ge::Graph &graph) {
 
 Status CaffeWeightsParser::Parse(const char *file, ge::ComputeGraphPtr &graph) {
   if (file == nullptr) {
-    GELOGE(FAILED, "Caffe weights parse fail, Parameter file invalid");
+    REPORT_INNER_ERROR("E19999", "param file is nullptr, check invalid.");
+    GELOGE(FAILED, "[Check][Param]Caffe weights parse fail, Parameter file invalid");
     return PARAM_INVALID;
   }
 
   if (graph == nullptr) {
-    GELOGE(FAILED, "Caffe weights parse fail, Parameter graph invalid");
+    REPORT_INNER_ERROR("E19999", "param graph is nullptr, check invalid.");
+    GELOGE(FAILED, "[Check][Param]Caffe weights parse fail, Parameter graph invalid");
     return PARAM_INVALID;
   }
 
@@ -1938,7 +1978,9 @@ Status CaffeWeightsParser::Parse(const char *file, ge::ComputeGraphPtr &graph) {
   } else {
     if (proto_file_parser.CombineProtoFile(caffe_proto_path.c_str(), custom_proto_path.c_str(),\
         fusion_proto_file) != SUCCESS) {
-      GELOGE(FAILED, "Create tmp fusion proto file from caffe and custom proto failed.");
+      REPORT_INNER_ERROR("E19999", "CombineProtoFile failed, caffe_proto_path:%s, custom_proto_path:%s.",
+                         caffe_proto_path.c_str(), custom_proto_path.c_str());
+      GELOGE(FAILED, "[Invoke][CombineProtoFile]Create tmp fusion proto file from caffe and custom proto failed.");
       return FAILED;
     }
   }
@@ -1946,14 +1988,16 @@ Status CaffeWeightsParser::Parse(const char *file, ge::ComputeGraphPtr &graph) {
   string fusion_proto_path = ge::parser::RealPath(fusion_proto_file.c_str());
   GELOGI("Get fusion proto file[%s]-[%s].", fusion_proto_file.c_str(), fusion_proto_path.c_str());
   if (fusion_proto_path.empty()) {
-    GELOGE(FAILED, "Fusion proto file path [%s]-[%s] is not real existed.", fusion_proto_file.c_str(),
-           fusion_proto_path.c_str());
+    REPORT_INNER_ERROR("E19999", "Fusion proto file path [%s] is not real existed.",
+                       fusion_proto_file.c_str());
+    GELOGE(FAILED, "[Invoke][RealPath]Fusion proto file path [%s]-[%s] is not real existed.",
+           fusion_proto_file.c_str(), fusion_proto_path.c_str());
     return FAILED;
   }
 
   string fusion_proto_name;
   if (CheckPathValid(file, fusion_proto_file, fusion_proto_path, fusion_proto_name) != SUCCESS) {
-    GELOGE(FAILED, "CheckPathValid of weight file[%s] and tmp proto[%s] failed.", file,
+    GELOGE(FAILED, "[Check][PathValid] of weight file[%s] and tmp proto[%s] failed.", file,
            fusion_proto_file.c_str());
     return FAILED;
   }
@@ -1961,13 +2005,13 @@ Status CaffeWeightsParser::Parse(const char *file, ge::ComputeGraphPtr &graph) {
   GELOGI("Start to parse weight: %s by fusion proto: %s.", file, fusion_proto_file.c_str());
   Status status = ParseWeightByFusionProto(file, fusion_proto_path, fusion_proto_name, graph);
   if (status != SUCCESS) {
-    GELOGE(FAILED, "Parse weight by fusion proto failed.");
+    GELOGE(FAILED, "[Invoke][ParseWeightByFusionProto] failed. ret:%u", status);
     return status;
   }
 
   status = CheckNodes(graph);
   if (status != SUCCESS) {
-    GELOGE(ge::GRAPH_FAILED, "Check Nodes failed, status=%u", status);
+    GELOGE(ge::GRAPH_FAILED, "[Check][Nodes] failed, status=%u", status);
     return domi::PARSE_WEIGHTS_FAILED;
   }
 
@@ -1986,8 +2030,8 @@ Status CaffeWeightsParser::ParseWeightByFusionProto(const char *weight_path, con
   if (descriptor == nullptr) {
     ErrorManager::GetInstance().ATCReportErrMessage(
         "E19021", {"reason"}, {"Does not find domi.caffe.NetParameter in google::protobuf::Descriptor."});
-    GELOGE(FAILED, "Does not find domi.caffe.NetParameter in google::protobuf::Descriptor, \
-    which may be caused by problematic fusion proto.");
+    GELOGE(FAILED, "[Invoke][FindMessageTypeByName]Does not find domi.caffe.NetParameter in "
+           "google::protobuf::Descriptor, which may be caused by problematic fusion proto.");
     return FAILED;
   }
   google::protobuf::DynamicMessageFactory factory;
@@ -2001,7 +2045,7 @@ Status CaffeWeightsParser::ParseWeightByFusionProto(const char *weight_path, con
     message = nullptr;
     ErrorManager::GetInstance().ATCReportErrMessage(
         "E19021", {"reason"}, {"ReadProtoFromBinaryFile based on fusion proto failed."});
-    GELOGE(FAILED, "ReadProtoFromBinaryFile %s failed.", weight_path);
+    GELOGE(FAILED, "[Invoke][ReadProtoFromBinaryFile] %s failed.", weight_path);
     return FAILED;
   }
 
@@ -2012,7 +2056,8 @@ Status CaffeWeightsParser::ParseWeightByFusionProto(const char *weight_path, con
     message = nullptr;
     ErrorManager::GetInstance().ATCReportErrMessage(
         "E19021", {"reason"}, {"Does not find domi.caffe.LayerParameter in google::protobuf::Descriptor"});
-    GELOGE(FAILED, "Does not find domi.caffe.LayerParameter in google::protobuf::Descriptor");
+    GELOGE(FAILED,
+           "[Invoke][FindMessageTypeByName]Does not find domi.caffe.LayerParameter in google::protobuf::Descriptor");
     return FAILED;
   }
 
@@ -2027,7 +2072,7 @@ Status CaffeWeightsParser::ParseWeightByFusionProto(const char *weight_path, con
     message = nullptr;
     ErrorManager::GetInstance().ATCReportErrMessage(
         "E19021", {"reason"}, {"ParseLayerParameter failed."});
-    GELOGE(FAILED, "ParseLayerParameter failed.");
+    GELOGE(FAILED, "[Parse][LayerParameter] failed.");
     return FAILED;
   }
 
@@ -2061,7 +2106,7 @@ Status CaffeWeightsParser::ParseLayerParameter(const google::protobuf::Descripto
     if (!field->is_repeated()) {
       ErrorManager::GetInstance().ATCReportErrMessage("E11032", {"name", "reason"},
                                                       {field->name().c_str(), "LayerParameter should be repeated"});
-      GELOGE(FAILED, "LayerParameter should be repeated.");
+      GELOGE(FAILED, "[Check][Param] LayerParameter should be repeated, field:%s.", field->name().c_str());
       return FAILED;
     }
 
@@ -2072,7 +2117,7 @@ Status CaffeWeightsParser::ParseLayerParameter(const google::protobuf::Descripto
 
       LayerParameter *layer = tmp_net.add_layer();
       if (ConvertLayerProto(&layer_message, layer) != SUCCESS) {
-         GELOGE(FAILED, "Convert message to layer proto failed.");
+         GELOGE(FAILED, "[Invoke][ConvertLayerProto] Convert message to layer proto failed.");
          return FAILED;
       }
 
@@ -2102,7 +2147,7 @@ Status CaffeWeightsParser::ConvertLayerProto(const google::protobuf::Message *me
   for (auto &field : field_desc) {
     GE_CHECK_NOTNULL(field);
     if (ParseLayerField(layer_reflection, message, field, layer) != SUCCESS) {
-      GELOGE(FAILED, "Parse field %s failed.", field->name().c_str());
+      GELOGE(FAILED, "[Invoke][ParseLayerField] Parse field %s failed.", field->name().c_str());
       return FAILED;
     }
   }
@@ -2144,7 +2189,7 @@ Status CaffeWeightsParser::ParseLayerField(const google::protobuf::Reflection *r
       BlobProto *item_message = layer_proto->add_blobs();
       const google::protobuf::Message &sub_message = reflection->GetRepeatedMessage(*message, field, i);
       if (ConvertBlobsProto(&sub_message, item_message) != SUCCESS) {
-        GELOGE(FAILED, "ParseLayerField of field: %s failed.", field->name().c_str());
+        GELOGE(FAILED, "[Invoke][ConvertBlobsProto] ParseLayerField of field: %s failed.", field->name().c_str());
         return FAILED;
       }
     }
@@ -2292,7 +2337,7 @@ Status CaffeWeightsParser::CheckLayersSize(const google::protobuf::Message *mess
     if (!field->is_repeated()) {
       ErrorManager::GetInstance().ATCReportErrMessage("E11032", {"name", "reason"},
                                                       {field->name().c_str(), "LayerParameter should be repeated"});
-      GELOGE(FAILED, "LayerParameter should be repeated.");
+      GELOGE(FAILED, "[Check][Param] LayerParameter should be repeated. field:%s", field->name().c_str());
       return FAILED;
     }
 
@@ -2307,10 +2352,11 @@ Status CaffeWeightsParser::CheckLayersSize(const google::protobuf::Message *mess
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(num_layer == 0 && num_layers > 0,
                                  ErrorManager::GetInstance().ATCReportErrMessage("E11023");
                                  return FAILED,
-                                 "The weight file is consisted of layers-structure which is deprecated in Caffe "
-                                 "and unsupported in ATC. The \"layers\" should be changed to \"layer\".");
+                                 "[Check][Param]The weight file is consisted of layers-structure which is deprecated "
+                                 "in Caffe and unsupported in ATC. The \"layers\" should be changed to \"layer\".");
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((num_layer == 0), ErrorManager::GetInstance().ATCReportErrMessage("E11024");
-                                 return FAILED, "Weight layer num is zero, weight file may be invalid.");
+                                 return FAILED,
+                                 "[Check][Param] Weight layer num is zero, weight file may be invalid.");
 
   return SUCCESS;
 }
@@ -2368,13 +2414,15 @@ Status CaffeWeightsParser::ConvertLayerParameter(const google::protobuf::Message
     GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
         (op_parser.get() == nullptr),
         ErrorManager::GetInstance().ATCReportErrMessage("E11025", {"opname", "optype"}, {layer_name, op_type});
-        return FAILED, "Op[%s] create OpParser failed, optype is %s", layer_name.c_str(), op_type.c_str());
+        return FAILED,
+        "[Create][OpParser] failed for Op[%s], optype is %s", layer_name.c_str(), op_type.c_str());
 
     // Parsing weight information through op parser
     Status status = op_parser->ParseWeights(layer_message, node);
     GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
         (status != SUCCESS), ErrorManager::GetInstance().ATCReportErrMessage("E11026", {"opname"}, {layer_name});
-        return status, "Parse op weights for op[%s] failed", layer_name.c_str());
+        return status,
+        "[Parse][Weights] for op[%s] failed", layer_name.c_str());
   }
   return SUCCESS;
 }
@@ -2394,13 +2442,14 @@ Status CaffeWeightsParser::CheckNodes(ge::ComputeGraphPtr &graph) {
       if (in_anchor_ptr->GetPeerAnchors().empty() && input_desc != nullptr) {
         if (layer_name_record_map_.find(node->GetName()) == layer_name_record_map_.end()) {
           ErrorManager::GetInstance().ATCReportErrMessage("E11029", {"opname"}, {node->GetName()});
-          GELOGE(ge::GRAPH_FAILED, "Op[%s] in model file does not exist in weight file.", node->GetName().c_str());
+          GELOGE(ge::GRAPH_FAILED, "[Find][Node] Op[%s] in model file does not exist in weight file.",
+                 node->GetName().c_str());
           PreChecker::Instance().RefreshErrorMessageByName(node->GetName(), PreChecker::PARAM_INVALID,
                                                            "Node does not exist in weight file.");
         } else {
           ErrorManager::GetInstance().ATCReportErrMessage("E11019", {"opname", "index"},
                                                           {node->GetName(), std::to_string(in_anchor_ptr->GetIdx())});
-          GELOGE(ge::GRAPH_FAILED, "Op[%s]'s input %d is not linked.", node->GetName().c_str(),
+          GELOGE(ge::GRAPH_FAILED, "[Check][Param] Op[%s]'s input %d is not linked.", node->GetName().c_str(),
                  in_anchor_ptr->GetIdx());
           string check_msg = "input " + to_string(in_anchor_ptr->GetIdx()) + "is not linked in weight file";
           PreChecker::Instance().RefreshErrorMessageByName(node->GetName(), PreChecker::PARAM_INVALID, check_msg);
@@ -2422,9 +2471,9 @@ Status CaffeWeightsParser::ConvertNetParameter(const NetParameter &param, ge::Co
 
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(num_layer == 0 && num_layers > 0,
                                  ErrorManager::GetInstance().ATCReportErrMessage("E11023");
-                                 return FAILED,
-                                        "The weight file is consisted of layers-structure which is deprecated in Caffe "
-                                        "and unsupported in ATC. The \"layers\" should be changed to \"layer\".");
+                                 return FAILED, "[Check][Param] The weight file is consisted of layers-structure "
+                                 "which is deprecated in Caffe and unsupported in ATC. "
+                                 "The \"layers\" should be changed to \"layer\".");
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((num_layer == 0), ErrorManager::GetInstance().ATCReportErrMessage("E11024");
                                  return FAILED, "weight layer num is zero, weight file may be invalid.");
 
@@ -2488,13 +2537,13 @@ Status CaffeWeightsParser::ConvertNetParameter(const NetParameter &param, ge::Co
       GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
           (op_parser.get() == nullptr),
           ErrorManager::GetInstance().ATCReportErrMessage("E11025", {"opname", "optype"}, {layer_name, op_type});
-          return FAILED, "Op[%s] create OpParser failed, optype is %s", layer_name.c_str(), op_type.c_str());
+          return FAILED, "[Create][OpParser] failed for Op[%s], optype is %s", layer_name.c_str(), op_type.c_str());
 
       // Parsing weight information through op parser
       Status status = op_parser->ParseWeights(&layer, node);
       GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
           (status != SUCCESS), ErrorManager::GetInstance().ATCReportErrMessage("E11026", {"opname"}, {layer_name});
-          return status, "Parse op weights for op[%s] failed", layer_name.c_str());
+          return status, "[Parse][Weights] for op[%s] failed", layer_name.c_str());
     }
   }
 

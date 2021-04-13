@@ -83,7 +83,8 @@ static void GetOpsProtoPath(string &opsproto_path) {
     string path = path_env;
     string file_path = ge::parser::RealPath(path.c_str());
     if (file_path.empty()) {
-      GELOGE(ge::FAILED, "File path %s is invalid.", path.c_str());
+      REPORT_INNER_ERROR("E19999", "File path %s is invalid.", path.c_str());
+      GELOGE(ge::FAILED, "[Get][Path] File path %s is invalid.", path.c_str());
       return;
     }
     opsproto_path = (path + "/op_proto/custom/" + ":") + (path + "/op_proto/built-in/");
@@ -124,7 +125,8 @@ static void GetAclParams(const std::map<ge::AscendString, ge::AscendString> &par
 static bool CheckDigitStr(std::string &str) {
   for (char c : str) {
     if (!isdigit(c)) {
-      GELOGE(domi::FAILED, "Value[%s] is not positive integer", str.c_str());
+      REPORT_CALL_ERROR("E19999", "param str:%s is not positive integer", str.c_str());
+      GELOGE(domi::FAILED, "[Check][Param] Value[%s] is not positive integer", str.c_str());
       return false;
     }
   }
@@ -138,7 +140,8 @@ static bool CheckInputTrueOrFalse(const std::string &s, const std::string &atc_p
     return true;
   } else {
     ErrorManager::GetInstance().ATCReportErrMessage("E10005", {"parameter", "value"}, {atc_param, s});
-    GELOGE(PARAM_INVALID, "Input parameter[%s]'s value[%s] must be true or false.", atc_param.c_str(), s.c_str());
+    GELOGE(PARAM_INVALID, "[Check][Param] Input parameter[%s]'s value[%s] must be true or false.",
+           atc_param.c_str(), s.c_str());
     return false;
   }
 }
@@ -146,10 +149,8 @@ static bool CheckInputTrueOrFalse(const std::string &s, const std::string &atc_p
 static Status CheckOutNode(ge::OpDescPtr op_desc, int32_t index) {
   int32_t out_size = op_desc->GetOutputsSize();
   if (index < 0 || index >= out_size) {
-    GELOGE(domi::FAILED,
-           "out_node [%s] output index:%d must be smaller "
-           "than node output size:%d and can not be negative!",
-           op_desc->GetName().c_str(), index, out_size);
+    GELOGE(domi::FAILED, "[Check][Param]out_node [%s] output index:%d must be smaller "
+           "than node output size:%d and can not be negative!", op_desc->GetName().c_str(), index, out_size);
     std::string fail_reason = "output index:" + to_string(index) +
                               " must be smaller than output size:" + to_string(out_size) + " and can not be negative!";
     ErrorManager::GetInstance().ATCReportErrMessage("E10003", {"parameter", "value", "reason"},
@@ -168,7 +169,10 @@ domi::Status AclGrphParseUtil::LoadOpsProtoLib() {
   option_tmp.emplace(std::pair<string, string>(string("ge.opsProtoLibPath"), opsproto_path));
   bool is_proto_init = manager->Initialize(option_tmp);
   if (!is_proto_init) {
-    GELOGE(FAILED, "Load ops_proto lib failed, ops proto path is invalid.");
+    REPORT_INNER_ERROR("E19999", "OpsProtoManager init failed because ops proto path:%s is invalid.",
+                       opsproto_path.c_str());
+    GELOGE(FAILED, "[Invoke][Initialize] Load ops_proto lib failed, ops proto path:%s is invalid.",
+           opsproto_path.c_str());
     return FAILED;
   }
   return SUCCESS;
@@ -214,13 +218,15 @@ domi::Status AclGrphParseUtil::AclParserInitialize(const std::map<std::string, s
 
   auto op_registry = domi::OpRegistry::Instance();
   if (op_registry == nullptr) {
-    GELOGE(FAILED, "Get OpRegistry instance failed");
+    REPORT_CALL_ERROR("E19999", "Call OpRegistry::Instance failed, ret nullptr.");
+    GELOGE(FAILED, "[Get][OpRegistry] instance failed");
     return FAILED;
   }
 
   auto it = options.find(ge::FRAMEWORK_TYPE);
   if (it == options.end()) {
-    GELOGE(FAILED, "Can not find ge.frameworkType in options");
+    REPORT_INNER_ERROR("E19999", "Can not find ge.frameworkType in param options");
+    GELOGE(FAILED, "[Check][Param]Can not find ge.frameworkType in options");
     return FAILED;
   }
   std::string fmk_type = it->second;
@@ -269,25 +275,25 @@ domi::Status AclGrphParseUtil::ParseAclOutputNodes(const string &out_nodes) {
           }
           ErrorManager::GetInstance().ATCReportErrMessage(
               "E10001", {"parameter", "value", "reason"},
-              {"out_nodes", node, "the correct format is \"node_name1:0;node_name1:1;node_name2:0\""});
-          GELOGE(PARAM_INVALID,
-                 "The input format of out_nodes is invalid, the correct format is "
-                 "\"node_name1:0;node_name1:1;node_name2:0\", while the actual input is %s.",
+              {"out_nodes", node, "the correct format is \"node_name1:0; node_name1:1; node_name2:0\""});
+          GELOGE(PARAM_INVALID, "[Check][Param] The input format of out_nodes is invalid, the correct format is "
+                 "\"node_name1:0; node_name1:1; node_name2:0\", while the actual input is %s.",
                  node.c_str());
           return PARAM_INVALID;
         }
         if (!ge::GetParserContext().user_out_nodes_top_vec.empty()) {
           ErrorManager::GetInstance().ATCReportErrMessage("E10001", {"parameter", "value", "reason"},
                                                           {"out_nodes", out_nodes, "is not all index or top_name"});
-          GELOGE(PARAM_INVALID, "This out_nodes str must be all index or top_name, while the actual input is %s",
-                 out_nodes.c_str());
+          GELOGE(PARAM_INVALID, "[Check][Param] This out_nodes str must be all index or top_name, "
+                 "while the actual input is %s", out_nodes.c_str());
           return PARAM_INVALID;
         }
         // stoi: The method may throw an exception: invalid_argument/out_of_range
         if (!CheckDigitStr(key_value_v[1])) {
           ErrorManager::GetInstance().ATCReportErrMessage("E10001", {"parameter", "value", "reason"},
                                                           {"out_nodes", out_nodes, "is not positive integer"});
-          GELOGE(PARAM_INVALID, "This str must be digit string, while the actual input is %s", out_nodes.c_str());
+          GELOGE(PARAM_INVALID, "[Check][Param] This str:%s must be digit string, while the actual input is %s",
+                 key_value_v[1].c_str(), out_nodes.c_str());
           return PARAM_INVALID;
         }
 
@@ -305,11 +311,11 @@ domi::Status AclGrphParseUtil::ParseAclOutputNodes(const string &out_nodes) {
       }
     }
   } catch (std::invalid_argument &) {
-    GELOGE(PARAM_INVALID, "Invalid of out_nodes: %s ", out_nodes.c_str());
+    GELOGE(PARAM_INVALID, "[Check][Param] Invalid of out_nodes: %s ", out_nodes.c_str());
     ErrorManager::GetInstance().ATCReportErrMessage("E10014", {"parameter", "value"}, {"out_nodes", out_nodes});
     return PARAM_INVALID;
   } catch (std::out_of_range &) {
-    GELOGE(PARAM_INVALID, "Invalid of out_nodes: %s ", out_nodes.c_str());
+    GELOGE(PARAM_INVALID, "[Check][Param] Invalid of out_nodes: %s ", out_nodes.c_str());
     ErrorManager::GetInstance().ATCReportErrMessage("E10013", {"parameter", "value"}, {"out_nodes", out_nodes});
     return PARAM_INVALID;
   }
@@ -327,8 +333,8 @@ domi::Status AclGrphParseUtil::ParseAclOutputFp16NodesFormat(const string &is_ou
   for (auto &is_fp16 : node_format_vec) {
     StringUtils::Trim(is_fp16);
     if (!CheckInputTrueOrFalse(is_fp16, "is_output_adjust_hw_layout")) {
-      GELOGE(PARAM_INVALID, "Invalid Param, is_output_adjust_hw_layout only support true/false: but is [%s]",
-             is_output_fp16.c_str());
+      GELOGE(PARAM_INVALID, "[Check][Param]Invalid Param, is_output_adjust_hw_layout "
+             "only support true/false: but is [%s]", is_output_fp16.c_str());
       return PARAM_INVALID;
     }
     if (is_fp16 == "false") {
@@ -370,8 +376,8 @@ domi::Status AclGrphParseUtil::ParseAclInputFp16Nodes(const ComputeGraphPtr &gra
     for (auto &s : adjust_fp16_format_vec) {
       StringUtils::Trim(s);
       if (!CheckInputTrueOrFalse(s, "is_input_adjust_hw_layout")) {
-        GELOGE(PARAM_INVALID, "Invalid Param, is_input_adjust_hw_layout only support true/false: but is [%s]",
-               is_input_adjust_hw_layout.c_str());
+        GELOGE(PARAM_INVALID, "[Check][Param] Invalid Param, is_input_adjust_hw_layout "
+               "only support true/false: but is [%s]", is_input_adjust_hw_layout.c_str());
         return PARAM_INVALID;
       }
     }
@@ -386,7 +392,7 @@ domi::Status AclGrphParseUtil::ParseAclInputFp16Nodes(const ComputeGraphPtr &gra
     if (node == nullptr) {
       ErrorManager::GetInstance().ATCReportErrMessage("E10016", {"parameter", "opname"},
                                                       {"input_fp16_nodes", input_fp16_nodes_vec[i]});
-      GELOGE(PARAM_INVALID, "Input parameter[input_fp16_nodes]'s opname[%s] is not exist in model",
+      GELOGE(PARAM_INVALID, "[Check][Param] Input parameter[input_fp16_nodes]'s opname[%s] is not exist in model",
              input_fp16_nodes_vec[i].c_str());
       return PARAM_INVALID;
     }
@@ -395,7 +401,7 @@ domi::Status AclGrphParseUtil::ParseAclInputFp16Nodes(const ComputeGraphPtr &gra
     if (op_desc->GetType() != ge::parser::DATA) {
       ErrorManager::GetInstance().ATCReportErrMessage("E10017", {"parameter", "opname"},
                                                       {"input_fp16_nodes", input_fp16_nodes_vec[i]});
-      GELOGE(PARAM_INVALID, "Input parameter[input_fp16_nodes]'s opname[%s] is not a input opname",
+      GELOGE(PARAM_INVALID, "[Check][Param] Input parameter[input_fp16_nodes]'s opname[%s] is not a input opname",
              input_fp16_nodes_vec[i].c_str());
       return PARAM_INVALID;
     }
@@ -434,7 +440,8 @@ domi::Status AclGrphParseUtil::GetOutputLeaf(NodePtr node,
                                              std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info) {
   ge::OpDescPtr tmpDescPtr = node->GetOpDesc();
   if (tmpDescPtr == nullptr) {
-    GELOGE(domi::FAILED, "Get outnode op desc fail.");
+    REPORT_INNER_ERROR("E19999", "param node has no opdesc.");
+    GELOGE(domi::FAILED, "[Get][OpDesc] param node has no opdesc.");
     return domi::FAILED;
   }
   size_t size = tmpDescPtr->GetOutputsSize();
@@ -448,7 +455,8 @@ domi::Status AclGrphParseUtil::GetOutputLeaf(NodePtr node,
     for (auto in_anchor : in_anchors) {
       auto out_anchor = in_anchor->GetPeerOutAnchor();
       if (out_anchor == nullptr) {
-        GELOGE(domi::FAILED, "Get leaf node op desc fail.");
+        REPORT_INNER_ERROR("E19999", "Get leaf node op desc fail.");
+        GELOGE(domi::FAILED, "[Invoke][GetPeerOutAnchor] Get leaf node op desc fail.");
         return domi::FAILED;
       }
       auto out_node = out_anchor->GetOwnerNode();
@@ -467,7 +475,8 @@ domi::Status AclGrphParseUtil::GetDefaultOutInfo(ge::ComputeGraphPtr &compute_gr
       if (out_node == nullptr) {
         ErrorManager::GetInstance().ATCReportErrMessage("E10016", {"parameter", "opname"},
                                                         {"out_nodes", default_out_nodes[i].first});
-        GELOGE(domi::FAILED, "Can not find src node (%s) in graph.", default_out_nodes[i].first.c_str());
+        GELOGE(domi::FAILED, "[Check][Param] Can not find out_nodes(%d) (%s) in graph.",
+               i, default_out_nodes[i].first.c_str());
         return domi::FAILED;
       }
       output_nodes_info.push_back(std::make_pair(out_node, default_out_nodes[i].second));
@@ -479,7 +488,7 @@ domi::Status AclGrphParseUtil::GetDefaultOutInfo(ge::ComputeGraphPtr &compute_gr
   for (ge::NodePtr node : compute_graph->GetDirectNode()) {
     if (!node->GetInAllNodes().empty() && node->GetOutAllNodes().empty()) {
       Status ret = GetOutputLeaf(node, output_nodes_info);
-      GE_CHK_BOOL_RET_STATUS(ret == SUCCESS, ret, "Find leaf fail.");
+      GE_CHK_BOOL_RET_STATUS(ret == SUCCESS, ret, "[Invoke][GetOutputLeaf] Find leaf fail.");
     }
   }
   return domi::SUCCESS;
@@ -501,13 +510,14 @@ domi::Status AclGrphParseUtil::SetOutputNodeInfo(ge::Graph &graph,
     if (out_node == nullptr) {
       ErrorManager::GetInstance().ATCReportErrMessage("E10016", {"parameter", "opname"},
                                                       {"out_nodes", user_out_nodes[i].first});
-      GELOGE(domi::FAILED, "Can not find src node (%s) in graph.", user_out_nodes[i].first.c_str());
+      GELOGE(domi::FAILED, "[Check][Param] Can not find out_nodes(%d) (%s) in graph.",
+             i, user_out_nodes[i].first.c_str());
       return domi::FAILED;
     }
     auto op_desc = out_node->GetOpDesc();
     GE_CHECK_NOTNULL(op_desc);
     if (CheckOutNode(op_desc, user_out_nodes[i].second) != SUCCESS) {
-      GELOGE(domi::FAILED, "Check out node (%s) fail.", user_out_nodes[i].first.c_str());
+      GELOGE(domi::FAILED, "[CheckOut][Node] (%s) fail.", user_out_nodes[i].first.c_str());
       return domi::FAILED;
     }
 
@@ -528,7 +538,8 @@ domi::Status AclGrphParseUtil::SetOutputNodeInfo(ge::Graph &graph,
   // default output node (leaf)
   if (user_out_nodes.empty()) {
     if (GetDefaultOutInfo(compute_graph, output_nodes_info) != SUCCESS) {
-      GELOGE(domi::FAILED, "Get default output info failed.");
+      REPORT_CALL_ERROR("E19999", "GetDefaultOutInfo failed for graph:%s", graph.GetName().c_str());
+      GELOGE(domi::FAILED, "[Invoke][GetDefaultOutInfo] failed, graph:%s.", graph.GetName().c_str());
       return domi::FAILED;
     }
   }
@@ -545,7 +556,7 @@ domi::Status AclGrphParseUtil::CheckOptions(const std::map<AscendString, AscendS
     if (key_ascend == nullptr) {
       ErrorManager::GetInstance().ATCReportErrMessage("E10016", {"parameter", "opname"},
                                                       {"parser_params", "null AscendString"});
-      GELOGE(PARAM_INVALID, "Input options key is null, Please check!");
+      GELOGE(PARAM_INVALID, "[Check][Param] Input options key is null, Please check!");
       return PARAM_INVALID;
     }
 
@@ -553,7 +564,7 @@ domi::Status AclGrphParseUtil::CheckOptions(const std::map<AscendString, AscendS
     auto it = ge::ir_option::ir_parser_suppported_options.find(key_str);
     if (it == ge::ir_option::ir_parser_suppported_options.end()) {
       ErrorManager::GetInstance().ATCReportErrMessage("E10016", {"parameter", "opname"}, {"parser_params", key_str});
-      GELOGE(PARAM_INVALID, "Input options include unsupported option(%s).Please check!", key_ascend);
+      GELOGE(PARAM_INVALID, "[Check][Param] Input options include unsupported option(%s).Please check!", key_ascend);
       return PARAM_INVALID;
     }
   }
@@ -563,20 +574,24 @@ domi::Status AclGrphParseUtil::CheckOptions(const std::map<AscendString, AscendS
 domi::Status AclGrphParseUtil::ParseParamsBeforeGraph(const std::map<AscendString, AscendString> &parser_params,
                                                       string &graph_name) {
   GELOGI("Parse graph user options start.");
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(CheckOptions(parser_params) != SUCCESS, return PARAM_INVALID,
-                                 "Parse paragrams invalid.");
+  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(CheckOptions(parser_params) != SUCCESS,
+                                 return PARAM_INVALID, "[Check][Options] Parse paragrams invalid, graph:%s.",
+                                 graph_name.c_str());
   // support paragrams: out_nodes, is_output_adjust_hw_layout, output, enable_scope_fusion_passes
   SetDefaultFormat();
 
   string out_nodes;
   GetAclParams(parser_params, ge::ir_option::OUT_NODES, out_nodes);
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(ParseAclOutputNodes(out_nodes) != SUCCESS, return PARAM_INVALID,
-                                 "Parse out_nodes failed");
+  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(ParseAclOutputNodes(out_nodes) != SUCCESS,
+                                 return PARAM_INVALID,
+                                 "[Invoke][ParseAclOutputNodes] Parse out_nodes failed, graph:%s.", graph_name.c_str());
 
   string is_output_adjust_hw_layout;
   GetAclParams(parser_params, ge::ir_option::IS_OUTPUT_ADJUST_HW_LAYOUT, is_output_adjust_hw_layout);
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(ParseAclOutputFp16NodesFormat(is_output_adjust_hw_layout) != SUCCESS,
-                                 return PARAM_INVALID, "Parse is_output_adjust_hw_layout failed");
+                                 return PARAM_INVALID,
+                                 "[Invoke][ParseAclOutputFp16NodesFormat] Parse is_output_adjust_hw_layout failed, "
+                                 "graph:%s.", graph_name.c_str());
 
   string tmp_name;
   GetAclParams(parser_params, ge::ir_option::OUTPUT, tmp_name);
@@ -584,8 +599,10 @@ domi::Status AclGrphParseUtil::ParseParamsBeforeGraph(const std::map<AscendStrin
 
   string enable_scope_fusion_passes;
   GetAclParams(parser_params, ge::ir_option::ENABLE_SCOPE_FUSION_PASSES, enable_scope_fusion_passes);
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(ParseAclEnableScope(enable_scope_fusion_passes) != SUCCESS, return PARAM_INVALID,
-                                 "Parse enable_scope_fusion_passes failed");
+  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(ParseAclEnableScope(enable_scope_fusion_passes) != SUCCESS,
+                                 return PARAM_INVALID,
+                                 "[Invoke][ParseAclEnableScope] Parse enable_scope_fusion_passes failed, graph:%s.",
+                                 graph_name.c_str());
 
   return SUCCESS;
 }
@@ -603,7 +620,8 @@ domi::Status AclGrphParseUtil::ParseParamsAfterGraph(ge::Graph &graph,
   GetAclParams(parser_params, ge::ir_option::IS_INPUT_ADJUST_HW_LAYOUT, is_input_adjust_hw_layout);
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
       ParseAclInputFp16Nodes(compute_graph, input_fp16_nodes, is_input_adjust_hw_layout) != SUCCESS,
-      return PARAM_INVALID, "Parse input_fp16_nodes failed");
+      return PARAM_INVALID, "[Invoke][ParseAclInputFp16Nodes] Parse input_fp16_nodes failed, graph:%s",
+      compute_graph->GetName().c_str());
 
   return SUCCESS;
 }
@@ -616,7 +634,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY std::string RealPath(const char
   }
   if (strlen(path) >= PATH_MAX) {
     ErrorManager::GetInstance().ATCReportErrMessage("E19002", {"filepath", "size"}, {path, std::to_string(PATH_MAX)});
-    GELOGE(ge::FAILED, "Path[%s] len is too long, it must be less than %d", path, PATH_MAX);
+    GELOGE(ge::FAILED, "[Check][Param] Path[%s] len is too long, it must be less than %d", path, PATH_MAX);
     return "";
   }
   // Nullptr is returned when the path does not exist or there is no permission
@@ -632,26 +650,31 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY std::string RealPath(const char
 
 // Get file length
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY long GetFileLength(const std::string &input_file) {
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(input_file.empty(), return -1, "input_file path is null.");
+  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(input_file.empty(),
+                                 REPORT_INNER_ERROR("E19999", "input_file path is null, check invalid.");
+                                 return -1, "[Check][Param] input_file path is null.");
 
   std::string real_path = RealPath(input_file.c_str());
 
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(real_path.empty(), return -1, "input_file path '%s' not valid", input_file.c_str());
+  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(real_path.empty(),
+                                 REPORT_CALL_ERROR("E19999", "input_file path '%s' not valid, realpath failed",
+                                                   input_file.c_str());
+                                 return -1, "[Get][Path] input_file path '%s' not valid", input_file.c_str());
   unsigned long long file_length = 0;
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(mmGetFileSize(input_file.c_str(), &file_length) != EN_OK,
                                  ErrorManager::GetInstance().ATCReportErrMessage("E19001", {"file", "errmsg"},
                                                                                  {input_file, strerror(errno)});
-                                         return -1, "Open file[%s] failed. %s", input_file.c_str(), strerror(errno));
+                                 return -1, "[Open][File] [%s] failed. %s", input_file.c_str(), strerror(errno));
 
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((file_length == 0),
                                  ErrorManager::GetInstance().ATCReportErrMessage("E19015", {"filepath"}, {input_file});
-                                         return -1, "File[%s] size is 0, not valid.", input_file.c_str());
+                                 return -1, "[Check][Param] File[%s] size is 0, not valid.", input_file.c_str());
 
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(file_length > kMaxFileSizeLimit,
                                  ErrorManager::GetInstance().ATCReportErrMessage(
                                          "E19016", {"filepath", "filesize", "maxlen"},
                                          {input_file, std::to_string(file_length), std::to_string(kMaxFileSizeLimit)});
-                                         return -1, "File[%s] size %lld is out of limit: %d.",
+                                 return -1, "[Check][Param] File[%s] size %lld is out of limit: %d.",
                                  input_file.c_str(), file_length, kMaxFileSizeLimit);
   return static_cast<long>(file_length);
 }
@@ -659,14 +682,15 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY long GetFileLength(const std::s
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY uint64_t GetCurrentTimestamp() {
   struct timeval tv{};
   int ret = gettimeofday(&tv, nullptr);
-  GE_LOGE_IF(ret != 0, "Func gettimeofday may failed: ret=%d", ret);
+  GE_LOGE_IF(ret != 0, "[Func][GetTimeOfDay] may failed: ret=%d", ret);
   auto total_use_time = tv.tv_usec + tv.tv_sec * 1000000;  // 1000000: seconds to microseconds
   return static_cast<uint64_t>(total_use_time);
 }
 
 static bool ReadProtoFromCodedInputStream(CodedInputStream &coded_stream, Message *proto) {
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(proto == nullptr,
-                                 return false, "incorrect parameter. nullptr == proto");
+                                 REPORT_INNER_ERROR("E19999", "param proto is nullptr, check invalid");
+                                 return false, "[Check][Param] incorrect parameter. nullptr == proto");
 
   coded_stream.SetTotalBytesLimit(kProtoReadBytesLimit, kWarningThreshold);
   return proto->ParseFromCodedStream(&coded_stream);
@@ -682,26 +706,36 @@ static bool ReadProtoFromCodedInputStream(CodedInputStream &coded_stream, Messag
  */
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadBytesFromBinaryFile(const char *file_name, char **buffer,
                                                                               int &length) {
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((file_name == nullptr), return false, "incorrect parameter. file is nullptr");
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((buffer == nullptr), return false, "incorrect parameter. buffer is nullptr");
+  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((file_name == nullptr),
+                                 REPORT_INNER_ERROR("E19999", "param file_name is nullptr, check invalid");
+                                 return false, "[Check][Param] incorrect parameter. file is nullptr");
+  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((buffer == nullptr),
+                                 REPORT_INNER_ERROR("E19999", "param buffer is nullptr, check invalid");
+                                 return false, "[Check][Param] incorrect parameter. buffer is nullptr");
 
   std::string real_path = RealPath(file_name);
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(real_path.empty(), return false, "file path '%s' not valid", file_name);
+  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(real_path.empty(),
+                                 REPORT_INNER_ERROR("E19999", "file path '%s' not valid, realpath failed", file_name);
+                                 return false, "[Check][Param]file path '%s' not valid, realpath failed", file_name);
 
   std::ifstream file(real_path.c_str(), std::ios::binary | std::ios::ate);
   if (!file.is_open()) {
-    GELOGE(ge::FAILED, "Read file %s failed.", file_name);
+    REPORT_INNER_ERROR("E19999", "read file %s failed", file_name);
+    GELOGE(ge::FAILED, "[Read][File] %s failed.", file_name);
     return false;
   }
 
   length = static_cast<int>(file.tellg());
 
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((length <= 0), file.close(); return false, "file length <= 0");
+  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((length <= 0), file.close(); REPORT_INNER_ERROR("E19999", "file length <= 0");
+                                 return false, "[Check][Param] file length <= 0");
 
   file.seekg(0, std::ios::beg);
 
   *buffer = new(std::nothrow) char[length]();
-  GE_CHK_BOOL_TRUE_EXEC_RET_STATUS(*buffer == nullptr, false, file.close(), "new an object failed.");
+  GE_CHK_BOOL_TRUE_EXEC_RET_STATUS(*buffer == nullptr, false, file.close();
+                                   REPORT_CALL_ERROR("E19999", "new an object failed."),
+                                   "[Create][Buffer] new an object failed.");
 
   file.read(*buffer, length);
   file.close();
@@ -710,19 +744,20 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadBytesFromBinaryFile(co
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadProtoFromBinaryFile(const char *file, Message *proto) {
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((file == nullptr || proto == nullptr),
-                                 return false,
-                                 "Input parameter file or proto is nullptr!");
+                                 REPORT_INNER_ERROR("E19999", "param file or proto is nullptr, check invalid");
+                                 return false, "[Check][Param] Input parameter file or proto is nullptr!");
 
   std::string real_path = RealPath(file);
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(real_path.empty(),
-                                 return false, "pb file path '%s' not valid", file);
+                                 REPORT_INNER_ERROR("E19999", "file path '%s' not valid, realpath failed", file);
+                                 return false, "[Check][Param]pb file path '%s' not valid, realpath failed", file);
 
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(GetFileLength(real_path) == -1, return false, "file size not valid.");
+  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(GetFileLength(real_path) == -1, return false, "[Get][FileLength]file size not valid.");
 
   std::ifstream fs(real_path, std::ifstream::in | std::ifstream::binary);
   if (!fs.is_open()) {
     ErrorManager::GetInstance().ATCReportErrMessage("E19001", {"file", "errmsg"}, {file, "ifstream is_open failed"});
-    GELOGE(ge::FAILED, "Open real path[%s] failed.", file);
+    GELOGE(ge::FAILED, "[Open][RealPath][%s] failed.", file);
     return false;
   }
 
@@ -735,7 +770,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadProtoFromBinaryFile(co
 
   if (!ret) {
     ErrorManager::GetInstance().ATCReportErrMessage("E19005", {"file"}, {file});
-    GELOGE(ge::FAILED, "Parse file[%s] failed.", file);
+    GELOGE(ge::FAILED, "[Read][Proto] Parse file[%s] failed.", file);
     return ret;
   }
 
@@ -743,8 +778,10 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadProtoFromBinaryFile(co
 }
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadProtoFromArray(const void *data, int size, Message *proto) {
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((proto == nullptr || data == nullptr || size == 0), return false,
-                                 "incorrect parameter. proto is nullptr || data is nullptr || size is 0");
+  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((proto == nullptr || data == nullptr || size == 0),
+                                 REPORT_INNER_ERROR("E19999", "param proto or data is nullptr "
+                                                    "or size is 0, check invalid"); return false,
+                                 "[Check][Param]incorrect parameter. proto is nullptr || data is nullptr || size is 0");
 
   google::protobuf::io::CodedInputStream coded_stream(reinterpret_cast<uint8_t *>(const_cast<void *>(data)), size);
   return ReadProtoFromCodedInputStream(coded_stream, proto);
@@ -752,33 +789,34 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadProtoFromArray(const v
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadProtoFromText(const char *file,
                                                                         google::protobuf::Message *message) {
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((file == nullptr || message == nullptr), return false,
-                                 "incorrect parameter. nullptr == file || nullptr == message");
+  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((file == nullptr || message == nullptr),
+                                 REPORT_INNER_ERROR("E19999", "param file or message is nullptr, check invalid");
+                                 return false,
+                                 "[Check][Param]incorrect parameter. nullptr == file || nullptr == message");
 
   std::string real_path = RealPath(file);
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(real_path.empty(),
                                  ErrorManager::GetInstance().ATCReportErrMessage("E19000", {"path", "errmsg"},
                                                                                  {file, strerror(errno)});
-                                         return false, "Path[%s]'s realpath is empty, errmsg[%s]", file,
+                                 return false, "[Check][Param]Path[%s]'s realpath is empty, errmsg[%s]", file,
                                  strerror(errno));
 
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(GetFileLength(real_path) == -1, return false, "file size not valid.");
+  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(GetFileLength(real_path) == -1, return false, "[Check][Param] file size not valid.");
 
   std::ifstream fs(real_path.c_str(), std::ifstream::in);
 
   if (!fs.is_open()) {
     ErrorManager::GetInstance().ATCReportErrMessage("E19017", {"realpth", "protofile"}, {real_path, file});
-    GELOGE(ge::FAILED,
-           "Fail to open proto file real path is '%s' when orginal file path is '%s'.", real_path.c_str(), file);
+    GELOGE(ge::FAILED, "[Open][ProtoFile] failed, real path is '%s' when orginal file path is '%s'.",
+           real_path.c_str(), file);
     return false;
   }
 
   google::protobuf::io::IstreamInputStream input(&fs);
   bool ret = google::protobuf::TextFormat::Parse(&input, message);
-  GE_IF_BOOL_EXEC(!ret,
-                  ErrorManager::GetInstance().ATCReportErrMessage("E19018", {"protofile"}, {file});
-                          GELOGE(ret, "Parse file[%s] through [google::protobuf::TextFormat::Parse] failed, "
-                                      "please check whether the file is a valid protobuf format file.", file));
+  GE_IF_BOOL_EXEC(!ret, ErrorManager::GetInstance().ATCReportErrMessage("E19018", {"protofile"}, {file});
+                  GELOGE(ret, "[Parse][File] [%s] through [google::protobuf::TextFormat::Parse] failed, "
+                         "please check whether the file is a valid protobuf format file.", file));
   fs.close();
 
   return ret;
@@ -786,15 +824,17 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadProtoFromText(const ch
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadProtoFromMem(const char *data, int size,
                                                                        google::protobuf::Message *message) {
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((data == nullptr || message == nullptr), return false,
-                                 "incorrect parameter. data is nullptr || message is nullptr");
+  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((data == nullptr || message == nullptr),
+                                 REPORT_INNER_ERROR("E19999", "param data or message is nullptr,check invalid");
+                                 return false,
+                                 "[Check][Param] incorrect parameter. data is nullptr || message is nullptr");
   std::string str(data, static_cast<size_t>(size));
   std::istringstream fs(str);
 
   google::protobuf::io::IstreamInputStream input(&fs);
   bool ret = google::protobuf::TextFormat::Parse(&input, message);
-  GE_IF_BOOL_EXEC(
-          !ret, GELOGE(ret, "Call [google::protobuf::TextFormat::Parse] func ret fail, please check your text file."));
+  GE_IF_BOOL_EXEC(!ret, REPORT_CALL_ERROR("E19999", "parse failed, please check your text file.");
+                  GELOGE(ret, "[Call][Parse] ret fail, please check your text file."));
 
   return ret;
 }
@@ -812,7 +852,10 @@ Status GetOriginalType(const ge::NodePtr &node, string &type) {
   GE_CHECK_NOTNULL(node->GetOpDesc());
   bool ret = ge::AttrUtils::GetStr(node->GetOpDesc(), ATTR_NAME_FRAMEWORK_ORIGINAL_TYPE, type);
   if (!ret) {
-    GELOGE(INTERNAL_ERROR, "Get FrameWorkOp original type [%s]", type.c_str());
+    REPORT_CALL_ERROR("E19999", "Get FrameWorkOp original type [%s] from node:%s failed.",
+                      type.c_str(), node->GetName().c_str());
+    GELOGE(INTERNAL_ERROR, "[Invoke][GetStr] Get FrameWorkOp original type [%s] from node:%s failed",
+           type.c_str(), node->GetName().c_str());
     return INTERNAL_ERROR;
   }
   GELOGD("Get FrameWorkOp original type [%s]", type.c_str());
@@ -834,7 +877,7 @@ FMK_FUNC_HOST_VISIBILITY bool ValidateStr(const std::string &str, const std::str
   ret = regexec(&reg, str.c_str(), 0, nullptr, 0);
   if (ret) {
     regerror(ret, &reg, ebuff, kMaxBuffSize);
-    GELOGE(ge::PARAM_INVALID, "regexec failed, reason: %s", ebuff);
+    GELOGE(ge::PARAM_INVALID, "[Invoke][RegExec] failed, reason: %s", ebuff);
     regfree(&reg);
     return false;
   }
@@ -847,7 +890,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY std::string CurrentTimeInStr() 
   std::time_t now = std::time(nullptr);
   std::tm *ptm = std::localtime(&now);
   if (ptm == nullptr) {
-    GELOGE(ge::FAILED, "Localtime failed.");
+    GELOGE(ge::FAILED, "[Invoke][LocalTime] failed.");
     return "";
   }
 

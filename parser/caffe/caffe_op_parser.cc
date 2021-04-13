@@ -58,16 +58,17 @@ Status CaffeOpParser::ConvertWeight(const BlobProto &proto, const string &lay_na
   for (size_t i = 0; i < shape.GetDimNum(); ++i) {
     int dim = shape.GetDim(i);
     if (dim <= 0) {
-      GELOGE(FAILED, "Convert weight fail, Blob size invalid");
+      REPORT_INNER_ERROR("E19999", "Convert weight fail, dim:%d of layer:%s <=0, check invalid", dim, lay_name.c_str());
+      GELOGE(FAILED, "[Check][Size]Convert weight fail, dim:%d of layer:%s <=0, check invalid", dim, lay_name.c_str());
       return FAILED;
     }
 
     if (dim >= INT64_MAX / count) {
-      ErrorManager::GetInstance().ATCReportErrMessage(
-          "E11033", {"opname", "blobsize", "reason"},
-          {lay_name, std::to_string(dim) + "*" + std::to_string(count),
-           "it exceeds INT64_MAX[" + std::to_string(INT64_MAX) + "]"});
-      GELOGE(FAILED, "Convert weight fail, Blob size exceeds INT64_MAX, dim:%d, count:%d", dim, count);
+      ErrorManager::GetInstance().ATCReportErrMessage("E11033", {"opname", "blobsize", "reason"},
+                                                      {lay_name, std::to_string(dim) + "*" + std::to_string(count),
+                                                       "it exceeds INT64_MAX[" + std::to_string(INT64_MAX) + "]"});
+      GELOGE(FAILED, "[Check][Size]Convert weight fail, Blob size exceeds INT64_MAX, dim:%d, count:%d, layer name:%s",
+             dim, count, lay_name.c_str());
       return FAILED;
     }
 
@@ -84,12 +85,11 @@ Status CaffeOpParser::ParseWeightType(const BlobProto &proto, const ge::GeShape 
   if (proto.double_data_size() > 0) {
     // Convert by double type
     if (size != proto.double_data_size()) {
-      ErrorManager::GetInstance().ATCReportErrMessage(
-          "E11033", {"opname", "blobsize", "reason"},
-          {lay_name, std::to_string(proto.double_data_size()),
-           "it does not match shape size[" + std::to_string(size) + "]"});
-      GELOGE(FAILED, "Convert weight fail, Blob size does not match shape size, shape size:%d, blob size:%d", size,
-          proto.double_data_size());
+      ErrorManager::GetInstance().ATCReportErrMessage("E11033", {"opname", "blobsize", "reason"},
+                                                      {lay_name, std::to_string(proto.double_data_size()),
+                                                       "it does not match shape size[" + std::to_string(size) + "]"});
+      GELOGE(FAILED, "[Check][Param]Convert weight fail, Blob size does not match shape size, "
+             "shape size:%d, blob size:%d, layer name:%s", size, proto.double_data_size(), lay_name.c_str());
       return FAILED;
     }
     std::unique_ptr<float[]> buf(new (std::nothrow) float[size]());
@@ -101,12 +101,11 @@ Status CaffeOpParser::ParseWeightType(const BlobProto &proto, const ge::GeShape 
                     GELOGW("SetData failed for GeTensor."););  // no need to return
   } else if (proto.int8_data().length() > 0) {
     if (size != static_cast<int>(proto.int8_data().length())) {
-      ErrorManager::GetInstance().ATCReportErrMessage(
-          "E11033", {"opname", "blobsize", "reason"},
-          {lay_name, std::to_string(proto.int8_data().length()),
-           "it does not match shape size[" + std::to_string(size) + "]"});
-      GELOGE(FAILED, "Convert weight failed, Blob size does not match shape size, shape size:%d, blob size:%ld", size,
-          proto.int8_data().length());
+      ErrorManager::GetInstance().ATCReportErrMessage("E11033", {"opname", "blobsize", "reason"},
+                                                      {lay_name, std::to_string(proto.int8_data().length()),
+                                                       "it does not match shape size[" + std::to_string(size) + "]"});
+      GELOGE(FAILED, "[Check][Param]Convert weight failed, Blob size does not match shape size, "
+             "shape size:%d, blob size:%ld, layer name:%s", size, proto.int8_data().length(), lay_name.c_str());
       return FAILED;
     }
     const char *data_ptr = proto.int8_data().data();
@@ -117,12 +116,11 @@ Status CaffeOpParser::ParseWeightType(const BlobProto &proto, const ge::GeShape 
     dtype = ge::DT_INT8;
   } else if (proto.int32_data_size() > 0) {
     if (size != proto.int32_data_size()) {
-      ErrorManager::GetInstance().ATCReportErrMessage(
-          "E11033", {"opname", "blobsize", "reason"},
-          {lay_name, std::to_string(proto.int32_data_size()),
-           "it does not match shape size[" + std::to_string(size) + "]"});
-      GELOGE(FAILED, "Convert weight failed, Blob size does not match shape size, shape size:%d, blob size:%d", size,
-          proto.int32_data_size());
+      ErrorManager::GetInstance().ATCReportErrMessage("E11033", {"opname", "blobsize", "reason"},
+                                                      {lay_name, std::to_string(proto.int32_data_size()),
+                                                       "it does not match shape size[" + std::to_string(size) + "]"});
+      GELOGE(FAILED, "[Check][Param]Convert weight failed, Blob size does not match shape size, "
+             "shape size:%d, blob size:%d, layer name:%s", size, proto.int32_data_size(), lay_name.c_str());
       return FAILED;
     }
     std::unique_ptr<int32_t[]> int32_weight_buf(new (std::nothrow) int32_t[size]());
@@ -136,12 +134,11 @@ Status CaffeOpParser::ParseWeightType(const BlobProto &proto, const ge::GeShape 
     dtype = ge::DT_INT32;
   } else if (proto.uint64_data_size() > 0) {
     if (size != proto.uint64_data_size()) {
-      ErrorManager::GetInstance().ATCReportErrMessage(
-          "E11033", {"opname", "blobsize", "reason"},
-          {lay_name, std::to_string(proto.uint64_data_size()),
-           "it does not match shape size[" + std::to_string(size) + "]"});
-      GELOGE(FAILED, "Convert weight failed, Blob size does not match shape size, shape size:%d, blob size:%d", size,
-          proto.uint64_data_size());
+      ErrorManager::GetInstance().ATCReportErrMessage("E11033", {"opname", "blobsize", "reason"},
+                                                      {lay_name, std::to_string(proto.uint64_data_size()),
+                                                       "it does not match shape size[" + std::to_string(size) + "]"});
+      GELOGE(FAILED, "[Check][Param]Convert weight failed, Blob size does not match shape size, "
+             "shape size:%d, blob size:%d, layer name:%s", size, proto.uint64_data_size(), lay_name.c_str());
       return FAILED;
     }
     std::unique_ptr<uint64_t[]> uint64_weight_buf(new (std::nothrow) uint64_t[size]());
@@ -156,12 +153,11 @@ Status CaffeOpParser::ParseWeightType(const BlobProto &proto, const ge::GeShape 
   } else {
     // Convert by float type
     if (size != proto.data_size()) {
-      ErrorManager::GetInstance().ATCReportErrMessage(
-          "E11033", {"opname", "blobsize", "reason"},
-          {lay_name, std::to_string(proto.data_size()),
-           "it does not match shape size[" + std::to_string(size) + "]"});
-      GELOGE(FAILED, "Convert weight fail, Blob size does not match shape size, shape size:%d, blob.data_size:%d", size,
-          proto.data_size());
+      ErrorManager::GetInstance().ATCReportErrMessage("E11033", {"opname", "blobsize", "reason"},
+                                                      {lay_name, std::to_string(proto.data_size()),
+                                                       "it does not match shape size[" + std::to_string(size) + "]"});
+      GELOGE(FAILED, "[Check][Param]Convert weight fail, Blob size does not match shape size, "
+             "shape size:%d, blob.data_size:%d, layer name:%s", size, proto.data_size(), lay_name.c_str());
       return FAILED;
     }
     const float *data_ptr = proto.data().data();

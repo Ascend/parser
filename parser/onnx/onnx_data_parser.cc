@@ -32,7 +32,7 @@ Status OnnxDataParser::ParseParams(const Message *op_src, ge::Operator &op_def) 
   GE_CHECK_NOTNULL(node_src);
   GELOGD("Onnx op node name = %s, op type= %s, parse params", node_src->name().c_str(), node_src->op_type().c_str());
   if (ParseInputFromModel(op_src, op_def) != SUCCESS) {
-    GELOGE(FAILED, "parse shape of data op %s from model failed", op_def.GetName().c_str());
+    GELOGE(FAILED, "[Parse][Shape] of data op %s from model failed", op_def.GetName().c_str());
     return FAILED;
   }
   // Subgraph data operator don't need parse input shape
@@ -42,7 +42,7 @@ Status OnnxDataParser::ParseParams(const Message *op_src, ge::Operator &op_def) 
   }
 
   if (ParseInputFromUser(op_def) != SUCCESS) {
-    GELOGE(FAILED, "parse shape of data op %s from user failed", op_def.GetName().c_str());
+    GELOGE(FAILED, "[Parse][Shape] of data op %s from user failed", op_def.GetName().c_str());
     return FAILED;
   }
 
@@ -97,7 +97,8 @@ Status OnnxDataParser::ParseInputFromModel(const Message *op_src, ge::Operator &
   // Trans onnx type to ge type
   DataType type = OnnxUtil::ConvertOnnxDataType(data_type);
   if (type == ge::DataType::DT_UNDEFINED) {
-    GELOGE(domi::PARAM_INVALID, "tensor_proto date type %ld is undefined.", data_type);
+    REPORT_INNER_ERROR("E19999", "tensor_proto date type %ld is undefined.", data_type);
+    GELOGE(domi::PARAM_INVALID, "[Check][Param]tensor_proto date type %ld is undefined.", data_type);
     return FAILED;
   }
   op_def.SetAttr(ge::DATA_ATTR_NAME_DATA_TYPE, static_cast<int64_t>(type));

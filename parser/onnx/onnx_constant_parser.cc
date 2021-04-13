@@ -36,7 +36,8 @@ namespace ge {
 Status OnnxConstantParser::ParseConvertData(const ge::onnx::TensorProto &tensor_proto, ge::Tensor &tensor, int count) {
   int64_t data_type = tensor_proto.data_type();
   if (ge::OnnxUtil::ConvertOnnxDataType(data_type) == ge::DataType::DT_UNDEFINED) {
-    GELOGE(FAILED, "data_type %ld not support.", data_type);
+    REPORT_INNER_ERROR("E19999", "data_type %ld not support.", data_type);
+    GELOGE(FAILED, "[Check][Param] data_type %ld not support.", data_type);
     return FAILED;
   }
 
@@ -74,14 +75,16 @@ Status OnnxConstantParser::ParseConvertData(const ge::onnx::TensorProto &tensor_
   if (iter != datatype_val_size_map.end()) {
     datatype_val_size = iter->second;
   } else {
-    GELOGE(domi::PARAM_INVALID, "data_type %ld not support.", data_type);
+    REPORT_INNER_ERROR("E19999", "data_type %ld not support.", data_type);
+    GELOGE(domi::PARAM_INVALID, "[Find][DataType]data_type %ld not support.", data_type);
     return FAILED;
   }
 
   // find raw data
   if (datatype_val_size == 0) {
     if (tensor_proto.raw_data().empty()) {
-      GELOGE(domi::PARAM_INVALID, "tensor_proto has no data() elements or raw_data()");
+      REPORT_INNER_ERROR("E19999", "tensor_proto has no elements or raw_data");
+      GELOGE(domi::PARAM_INVALID, "[Check][Param]tensor_proto has no elements or raw_data");
       return FAILED;
     }
 
@@ -161,7 +164,8 @@ Status OnnxConstantParser::ParseConvertTensor(const ge::onnx::TensorProto &tenso
     int64_t dim = tmp_shape[i];
     // support weights shape [0],have no weights
     if (dim < 0 || (count != 0 && (dim >= INT64_MAX / count))) {
-      GELOGE(FAILED, "Dim size is invalid, dim is less than zero or dim size exceeds INT64_MAX.");
+      REPORT_INNER_ERROR("E19999", "Dim size is invalid, dim is less than zero or dim size exceeds INT64_MAX.");
+      GELOGE(FAILED, "[Check][Param] Dim size is invalid, dim is less than zero or dim size exceeds INT64_MAX.");
       return FAILED;
     }
     count *= dim;
@@ -172,7 +176,7 @@ Status OnnxConstantParser::ParseConvertTensor(const ge::onnx::TensorProto &tenso
 
   // set data
   if (ParseConvertData(tensor_proto, tensor, count) != SUCCESS) {
-    GELOGE(FAILED, "Convert ge tensor data and format failed.");
+    GELOGE(FAILED, "[Invoke][ParseConvertData]Convert ge tensor data and format failed.");
     return FAILED;
   }
   return SUCCESS;
@@ -182,7 +186,8 @@ Status OnnxConstantParser::ParseConvertDataType(const ge::onnx::TensorProto &ten
   int64_t data_type = tensor_proto.data_type();
   ge::DataType type = ge::OnnxUtil::ConvertOnnxDataType(data_type);
   if (type == ge::DataType::DT_UNDEFINED) {
-    GELOGE(domi::PARAM_INVALID, "tensor_proto date type %ld is undefined.", data_type);
+    REPORT_INNER_ERROR("E19999", "tensor_proto date type %ld is undefined.", data_type);
+    GELOGE(domi::PARAM_INVALID, "[Check][Param] tensor_proto date type %ld is undefined.", data_type);
     return FAILED;
   }
 
@@ -204,12 +209,13 @@ Status OnnxConstantParser::ParseConstFromInput(const ge::onnx::NodeProto *op_src
     }
     const ::ge::onnx::TensorProto it_tensor = it.t();
     if (ParseConvertDataType(it_tensor, tensor) != SUCCESS) {
-      GELOGE(FAILED, "Convert ge tensor date type failed, attribute name is %s.", it.name().c_str());
+      GELOGE(FAILED, "[Check][Param] Convert ge tensor date type failed, attribute name is %s.", it.name().c_str());
       return FAILED;
     }
 
     if (ParseConvertTensor(it_tensor, tensor) != SUCCESS) {
-      GELOGE(FAILED, "Convert ge tensor shape and format failed, attribute name is %s.", it.name().c_str());
+      GELOGE(FAILED, "[Check][Param] Convert ge tensor shape and format failed, attribute name is %s.",
+             it.name().c_str());
       return FAILED;
     }
   }
@@ -225,7 +231,7 @@ Status OnnxConstantParser::ParseParams(const Message *op_src, ge::Operator &op_d
   GELOGD("Onnx op node name = %s, op type= %s, parse params", node->name().c_str(), node->op_type().c_str());
 
   if (ParseConstFromInput(node, op_def) != SUCCESS) {
-    GELOGE(FAILED, "Parse constant node %s failed", node->name().c_str());
+    GELOGE(FAILED, "[Parse][Constant] node %s failed", node->name().c_str());
     return FAILED;
   }
   return SUCCESS;

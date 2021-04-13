@@ -67,7 +67,8 @@ bool OpRegistrationTbe::RegisterParser(const OpRegistrationData &reg_data) {
   if (reg_data.GetFrameworkType() == domi::TENSORFLOW) {
     std::shared_ptr<OpParserFactory> factory = OpParserFactory::Instance(domi::TENSORFLOW);
     if (factory == nullptr) {
-      GELOGE(INTERNAL_ERROR, "Get op parser factory for tf failed.");
+      REPORT_CALL_ERROR("E19999", "Get OpParserFactory failed.");
+      GELOGE(INTERNAL_ERROR, "[Get][OpParserFactory] for tf failed.");
       return false;
     }
     if (reg_data.GetParseParamFn() != nullptr || reg_data.GetParseParamByOperatorFn() != nullptr) {
@@ -79,7 +80,8 @@ bool OpRegistrationTbe::RegisterParser(const OpRegistrationData &reg_data) {
       std::shared_ptr<TensorFlowCustomParserAdapter> tf_parser_adapter =
           ge::parser::MakeShared<TensorFlowCustomParserAdapter>();
       if (tf_parser_adapter == nullptr) {
-        GELOGE(PARAM_INVALID, "Create tf parser adapter failed.");
+        REPORT_CALL_ERROR("E19999", "Create TensorFlowCustomParserAdapter failed.");
+        GELOGE(PARAM_INVALID, "[Create][TensorFlowCustomParserAdapter] failed.");
         return false;
       }
       OpParserRegisterar registerar __attribute__((unused)) = OpParserRegisterar(
@@ -95,7 +97,8 @@ bool OpRegistrationTbe::RegisterParser(const OpRegistrationData &reg_data) {
       std::shared_ptr<TensorFlowFusionCustomParserAdapter> tf_fusion_parser_adapter =
           ge::parser::MakeShared<TensorFlowFusionCustomParserAdapter>();
       if (tf_fusion_parser_adapter == nullptr) {
-        GELOGE(PARAM_INVALID, "Create tf fusion parser adapter failed.");
+        REPORT_CALL_ERROR("E19999", "Create TensorFlowFusionCustomParserAdapter failed.");
+        GELOGE(PARAM_INVALID, "[Create][TensorFlowFusionCustomParserAdapter] failed.");
         return false;
       }
       OpParserRegisterar registerar __attribute__((unused)) = OpParserRegisterar(
@@ -105,7 +108,9 @@ bool OpRegistrationTbe::RegisterParser(const OpRegistrationData &reg_data) {
   } else {
     std::shared_ptr<OpParserFactory> factory = OpParserFactory::Instance(reg_data.GetFrameworkType());
     if (factory == nullptr) {
-      GELOGE(INTERNAL_ERROR, "Get op parser factory for %s failed.",
+      REPORT_CALL_ERROR("E19999", "Get OpParserFactory for %s failed.",
+                        TypeUtils::FmkTypeToSerialString(reg_data.GetFrameworkType()).c_str());
+      GELOGE(INTERNAL_ERROR, "[Get][OpParserFactory] for %s failed.",
              TypeUtils::FmkTypeToSerialString(reg_data.GetFrameworkType()).c_str());
       return false;
     }
@@ -117,7 +122,9 @@ bool OpRegistrationTbe::RegisterParser(const OpRegistrationData &reg_data) {
 
     PARSER_CREATOR_FN func = CustomParserAdapterRegistry::Instance()->GetCreateFunc(reg_data.GetFrameworkType());
     if (func == nullptr) {
-      GELOGE(INTERNAL_ERROR, "Get custom parser adapter failed for fmk type %s.",
+      REPORT_CALL_ERROR("E19999", "Get custom parser adapter failed for fmk type %s.",
+                        TypeUtils::FmkTypeToSerialString(reg_data.GetFrameworkType()).c_str());
+      GELOGE(INTERNAL_ERROR, "[Get][CustomParserAdapter] failed for fmk type %s.",
              TypeUtils::FmkTypeToSerialString(reg_data.GetFrameworkType()).c_str());
       return false;
     }

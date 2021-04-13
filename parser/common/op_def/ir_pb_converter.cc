@@ -94,8 +94,16 @@ static void UpdateTensorForOpDesc(const ParserOperator &op, ge::OpDescPtr op_def
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY domi::Status ConvertToOpDesc(const ParserOperator &op,
                                                                               ge::OpDescPtr op_def) {
-  GE_RETURN_WITH_LOG_IF_TRUE(op_def == nullptr, "parameter is null.");
-  GE_CHK_BOOL_RET_STATUS(op.GetSchema(), domi::PARAM_INVALID, "Op schema is null, op type: %s", op.GetType().c_str());
+  if (op_def == nullptr) {
+    REPORT_INNER_ERROR("E19999", "param op_def is nullptr, check invalid.");
+    GELOGE(ge::FAILED, "[Check][Param] param op_def is nullptr, check invalid.");
+    return ge::FAILED;
+  }
+  if (op.GetSchema() == nullptr) {
+    REPORT_INNER_ERROR("E19999", "Op schema is nullptr, op type: %s", op.GetType().c_str());
+    GELOGE(domi::PARAM_INVALID, "[Get][Schema] Op schema is nullptr, op type: %s", op.GetType().c_str());
+    return domi::PARAM_INVALID;
+  }
   op_def->SetName(op.GetName());
   op_def->SetType(op.GetType());
   GE_IF_BOOL_EXEC(op.GetType() == ge::parser::YOLO, op_def->SetType(ge::parser::REGION));
@@ -131,15 +139,21 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY domi::Status ConvertToOpDesc(co
       }
     }
   }
-  GE_CHK_BOOL_RET_STATUS(op.GetSchema()->Verify(op_def), domi::PARAM_INVALID, "Op schema verify failed, op name: %s",
-                         op.GetName().c_str());
-
+  if (!op.GetSchema()->Verify(op_def)) {
+    REPORT_CALL_ERROR("E19999", "Op schema verify failed, op name: %s", op.GetName().c_str());
+    GELOGE(domi::PARAM_INVALID, "[Invoke][Verify] Op schema verify failed, op name: %s", op.GetName().c_str());
+    return domi::PARAM_INVALID;
+  }
   return domi::SUCCESS;
 }
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY domi::Status ConvertFromOpDesc(const ge::OpDescPtr op_def,
                                                                                 ParserOperator &op) {
-  GE_RETURN_WITH_LOG_IF_TRUE(op_def == nullptr, "parameter is null.");
+  if (op_def == nullptr) {
+    REPORT_INNER_ERROR("E19999", "param op_def is nullptr, check invalid.");
+    GELOGE(ge::FAILED, "[Check][Param] param op_def is nullptr, check invalid.");
+    return ge::FAILED;
+  }
   op.Name(op_def->GetName());
 
   map<string, ge::GeAttrValue> allattrs = op_def->GetAllAttrs();

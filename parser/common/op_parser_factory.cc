@@ -54,7 +54,8 @@ FMK_FUNC_HOST_VISIBILITY std::shared_ptr<OpParserFactory> OpParserFactory::Insta
   if (iter == instances.end()) {
     std::shared_ptr<OpParserFactory> instance(new (std::nothrow) OpParserFactory());
     if (instance == nullptr) {
-      GELOGE(INTERNAL_ERROR, "Create op parser factory failed.");
+      REPORT_CALL_ERROR("E19999", "create OpParserFactory failed");
+      GELOGE(INTERNAL_ERROR, "[Create][OpParserFactory] failed.");
       return nullptr;
     }
     instances[framework] = instance;
@@ -70,8 +71,8 @@ FMK_FUNC_HOST_VISIBILITY std::shared_ptr<OpParser> OpParserFactory::CreateOpPars
   if (iter != op_parser_creator_map_.end()) {
     return iter->second();
   }
-
-  GELOGE(FAILED, "OpParserFactory::CreateOpParser: Not supported type: %s", op_type.c_str());
+  REPORT_INNER_ERROR("E19999", "param op_type invalid, Not supported type: %s", op_type.c_str());
+  GELOGE(FAILED, "[Check][Param] OpParserFactory::CreateOpParser: Not supported type: %s", op_type.c_str());
   return nullptr;
 }
 
@@ -81,8 +82,8 @@ FMK_FUNC_HOST_VISIBILITY std::shared_ptr<OpParser> OpParserFactory::CreateFusion
   if (iter != fusion_op_parser_creator_map_.end()) {
     return iter->second();
   }
-
-  GELOGE(FAILED, "OpParserFactory::CreateOpParser: Not supported fusion op type: %s", op_type.c_str());
+  REPORT_INNER_ERROR("E19999", "param op_type invalid, Not supported fusion op type: %s", op_type.c_str());
+  GELOGE(FAILED, "[Check][Param] OpParserFactory::CreateOpParser: Not supported fusion op type: %s", op_type.c_str());
   return nullptr;
 }
 

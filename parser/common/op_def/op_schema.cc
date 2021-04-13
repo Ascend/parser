@@ -52,8 +52,10 @@ OpSchema &OpSchema::Attr(const Attribute &attr) {
 #define ATTR_SETTER_WITH_SINGLE_VALUE(Type, field, attrtype)                                               \
   OpSchema &OpSchema::Attr(const std::string &name, AttributeType attr_type, const Type &default_value) {  \
     if (attrtype != attr_type) {                                                                           \
-      GELOGE(FAILED, "Attribute specification param_type mismatch, input attr type %u, required attr type %u.", \
-                (uint32_t)attr_type, (uint32_t)attrtype);                                                  \
+      REPORT_INNER_ERROR("E19999", "Attribute specification param_type mismatch, input attr type %u, "     \
+                         "required attr type %u.", (uint32_t)attr_type, (uint32_t)attrtype);               \
+      GELOGE(FAILED, "[Check][Param]Attribute specification param_type mismatch, "                         \
+             "input attr type %u, required attr type %u.", (uint32_t)attr_type, (uint32_t)attrtype);       \
       return *this;                                                                                        \
     }                                                                                                      \
                                                                                                            \
@@ -80,8 +82,10 @@ OpSchema &OpSchema::Attr(const Attribute &attr) {
 #define ATTR_SETTER_WITH_LIST_VALUE(Type, field, attrtype)                                                             \
   OpSchema &OpSchema::Attr(const std::string &name, AttributeType attr_type, const std::vector<Type> &default_value) { \
     if (attrtype != attr_type) {                                                                                       \
-      GELOGE(FAILED, "Attribute specification vector param_type mismatch, input attr type %u, required attr type %u.", \
-                (uint32_t)attr_type, (uint32_t)attrtype);                                                              \
+      REPORT_INNER_ERROR("E19999", "Attribute specification vector param_type mismatch, "                              \
+                         "input attr type %u, required attr type %u.", (uint32_t)attr_type, (uint32_t)attrtype);       \
+      GELOGE(FAILED, "[Check][Param]Attribute specification vector param_type mismatch, "                              \
+             "input attr type %u, required attr type %u.", (uint32_t)attr_type, (uint32_t)attrtype);                   \
       return *this;                                                                                                    \
     }                                                                                                                  \
     domi::AttrDef vec_a;                                                                                               \
@@ -93,8 +97,10 @@ OpSchema &OpSchema::Attr(const Attribute &attr) {
   }                                                                                                                    \
   OpSchema &OpSchema::Attr(const std::string &name, AttributeType attr_type, const Tuple<Type> &default_value) {       \
     if (attrtype != attr_type) {                                                                                       \
-      GELOGE(FAILED, "Attribute specification vector param_type mismatch, input attr type %u, required attr type %u.", \
-                (uint32_t)attr_type, (uint32_t)attrtype);                                                              \
+      REPORT_INNER_ERROR("E19999", "Attribute specification vector param_type mismatch, "                              \
+                         "input attr type %u, required attr type %u.", (uint32_t)attr_type, (uint32_t)attrtype);       \
+      GELOGE(FAILED, "[Check][Param]Attribute specification vector param_type mismatch, "                              \
+             "input attr type %u, required attr type %u.", (uint32_t)attr_type, (uint32_t)attrtype);                   \
       return *this;                                                                                                    \
     }                                                                                                                  \
     domi::AttrDef tuple_a;                                                                                             \
@@ -168,7 +174,10 @@ const domi::AttrDef &OpSchema::GetDefaultAttr(const std::string &name) const {
 
 bool OpSchema::Verify(const ge::OpDescPtr op_def) const {
   if (op_def->GetType() != name_) {
-    GELOGE(FAILED, "Name not math, op schema name: %s, opdef type: %s.", name_.c_str(), op_def->GetType().c_str());
+    REPORT_INNER_ERROR("E19999", "Name not math, op schema name: %s, opdef type: %s.",
+                       name_.c_str(), op_def->GetType().c_str());
+    GELOGE(FAILED, "[Check][Param]Name not math, op schema name: %s, opdef type: %s.",
+           name_.c_str(), op_def->GetType().c_str());
     return false;
   }
 
@@ -179,7 +188,10 @@ bool OpSchema::Verify(const ge::OpDescPtr op_def) const {
       continue;
     }
     if (!op_def->HasAttr(attr.name_)) {
-      GELOGE(FAILED, "Required attribute: %s of op: %s is missing.", attr.name_.c_str(), op_def->GetName().c_str());
+      REPORT_INNER_ERROR("E19999", "Required attribute: %s of op: %s is missing.",
+                         attr.name_.c_str(), op_def->GetName().c_str());
+      GELOGE(FAILED, "[Invoke][HasAttr]Required attribute: %s of op: %s is missing.",
+             attr.name_.c_str(), op_def->GetName().c_str());
       return false;
     }
   }

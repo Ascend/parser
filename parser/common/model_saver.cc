@@ -35,7 +35,8 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status ModelSaver::SaveJsonToFi
                                                                                    const Json &model) {
   Status ret = SUCCESS;
   if (file_path == nullptr || SUCCESS != CheckPath(file_path)) {
-    GELOGE(FAILED, "Check output file failed.");
+    REPORT_INNER_ERROR("E19999", "param file_path is nullptr or checkpath not return success");
+    GELOGE(FAILED, "[Check][Param]Check output file failed.");
     return FAILED;
   }
   std::string model_str;
@@ -43,16 +44,18 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status ModelSaver::SaveJsonToFi
     model_str = model.dump(kInteval, ' ', false, Json::error_handler_t::ignore);
   } catch (std::exception &e) {
     ErrorManager::GetInstance().ATCReportErrMessage("E19007", {"exception"}, {e.what()});
-    GELOGE(FAILED, "Failed to convert JSON to string, reason: %s.", e.what());
+    GELOGE(FAILED, "[Invoke][Dump] Failed to convert JSON to string, reason: %s, savefile:%s.", e.what(), file_path);
     return FAILED;
   } catch (...) {
     ErrorManager::GetInstance().ATCReportErrMessage("E19008");
-    GELOGE(FAILED, "Failed to convert JSON to string.");
+    GELOGE(FAILED, "[Invoke][Dump] Failed to convert JSON to string, savefile:%s.", file_path);
     return FAILED;
   }
 
   char real_path[PATH_MAX] = {0};
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(strlen(file_path) >= PATH_MAX, return FAILED, "file path is too long!");
+  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(strlen(file_path) >= PATH_MAX,
+                                 REPORT_INNER_ERROR("E19999", "file path %s is too long!", file_path);
+                                 return FAILED, "[Check][Param] file path %s is too long!", file_path);
   if (realpath(file_path, real_path) == nullptr) {
     GELOGI("File %s does not exit, it will be created.", file_path);
   }
@@ -62,7 +65,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status ModelSaver::SaveJsonToFi
   int32_t fd = mmOpen2(real_path, O_RDWR | O_CREAT | O_TRUNC, mode);
   if (fd == EN_ERROR || fd == EN_INVALID_PARAM) {
     ErrorManager::GetInstance().ATCReportErrMessage("E19001", {"file", "errmsg"}, {file_path, strerror(errno)});
-    GELOGE(FAILED, "Open file[%s] failed. %s", file_path, strerror(errno));
+    GELOGE(FAILED, "[Open][File] [%s] failed. %s", file_path, strerror(errno));
     return FAILED;
   }
   const char *model_char = model_str.c_str();
@@ -73,12 +76,13 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status ModelSaver::SaveJsonToFi
     ErrorManager::GetInstance().ATCReportErrMessage(
             "E19004", {"file", "errmsg"}, {file_path, strerror(errno)});
     // Need to both print the error info of mmWrite and mmClose, so return ret after mmClose
-    GELOGE(FAILED, "Write to file failed. errno = %ld, %s", mmpa_ret, strerror(errno));
+    GELOGE(FAILED, "[WriteTo][File] %s failed. errno = %ld, %s", file_path, mmpa_ret, strerror(errno));
     ret = FAILED;
   }
   // Close file
   if (mmClose(fd) != EN_OK) {
-    GELOGE(FAILED, "Close file failed.");
+    REPORT_INNER_ERROR("E19999", "close file:%s failed", file_path);
+    GELOGE(FAILED, "[Close][File] %s failed.", file_path);
     ret = FAILED;
   }
   return ret;
@@ -87,7 +91,8 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status ModelSaver::SaveJsonToFi
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status ModelSaver::CheckPath(const std::string &file_path) {
   // Determine file path length
   if (file_path.size() >= PATH_MAX) {
-    GELOGE(FAILED, "Path is too long:%zu", file_path.size());
+    REPORT_INNER_ERROR("E19999", "Path is too long:%zu", file_path.size());
+    GELOGE(FAILED, "[Check][Param] Path is too long:%zu", file_path.size());
     return FAILED;
   }
 
@@ -106,7 +111,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status ModelSaver::CheckPath(co
   // If there is a path before the file name, create the path
   if (path_split_pos != -1) {
     if (CreateDirectory(std::string(file_path).substr(0, static_cast<size_t>(path_split_pos))) != kFileOpSuccess) {
-      GELOGE(FAILED, "CreateDirectory failed, file path:%s.", file_path.c_str());
+      GELOGE(FAILED, "[Create][Directory] failed, file path:%s.", file_path.c_str());
       return FAILED;
     }
   }
