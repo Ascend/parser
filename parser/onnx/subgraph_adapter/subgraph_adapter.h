@@ -36,7 +36,7 @@
 #include "proto/onnx/ge_onnx.pb.h"
 #include "external/register/register_error_codes.h"
 #include "framework/omg/parser/parser_types.h"
-#include "onnx_util.h"
+#include "parser/onnx/onnx_util.h"
 
 using Status = domi::Status;
 using namespace ge::parser;
