@@ -16,6 +16,12 @@
 
 #include "common/util/error_manager/error_manager.h"
 
+namespace ErrorMessage {
+int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...) {
+  return 0;
+}
+}
+
 ErrorManager &ErrorManager::GetInstance() {
 static ErrorManager instance;
 return instance;
