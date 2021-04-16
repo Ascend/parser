@@ -148,6 +148,7 @@ const std::map<std::string, std::string> kOnnxOpMap = {
 };
 const char* const MATMULV2 = "MatMulV2";
 const std::vector<std::string> kNoNeedUpdateFormat = {MATMULV2};
+const int64_t kDimValue = 1;
 }
 
 Status OnnxModelParser::ParseInput(ge::onnx::GraphProto &onnx_graph,
@@ -182,7 +183,10 @@ Status OnnxModelParser::ParseInput(ge::onnx::GraphProto &onnx_graph,
           const ge::onnx::TensorShapeProto tensor_shape = type_proto_tensor.shape();
           for (int j = 0; j < tensor_shape.dim_size(); j++) {
             const ge::onnx::TensorShapeProto_Dimension dimension = tensor_shape.dim(j);
-            int64_t dim_value = dimension.dim_value();
+            int64_t dim_value = -1;
+            if (dimension.value_case() == kDimValue) {
+              dim_value = dimension.dim_value();
+            }
             tensor_tmp.add_dims(dim_value);
             GELOGI("elem_type: %d, dim_value: %ld", elem_type, dim_value);
           }
