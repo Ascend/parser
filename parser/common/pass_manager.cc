@@ -55,7 +55,8 @@ Status PassManager::Run(const ComputeGraphPtr &graph, vector<std::pair<std::stri
     }
     for (const auto &subgraph :graph->GetAllSubgraphs()) {
       GE_CHECK_NOTNULL(subgraph);
-      GE_CHK_STATUS_RET(pass->ClearStatus(), "pass clear status failed for subgraph %s", subgraph->GetName().c_str());
+      GE_CHK_STATUS_RET(pass->ClearStatus(), "[Invoke][ClearStatus]pass clear status failed for subgraph %s",
+                        subgraph->GetName().c_str());
       string subgraph_pass_name = pass_name + "::" + graph->GetName();
       PARSER_TIMESTAMP_START(PassRunSubgraph);
       status = pass->Run(subgraph);
@@ -63,7 +64,10 @@ Status PassManager::Run(const ComputeGraphPtr &graph, vector<std::pair<std::stri
       if (status == SUCCESS) {
         not_changed = false;
       } else if (status != NOT_CHANGED) {
-        GELOGE(status, "Pass Run failed on subgraph %s", subgraph->GetName().c_str());
+        REPORT_CALL_ERROR("E19999", "Pass Run failed on subgraph %s, pass name:%s",
+                          subgraph->GetName().c_str(), subgraph_pass_name.c_str());
+        GELOGE(status, "[Invoke][Run]Pass Run failed on subgraph %s, pass name:%s",
+               subgraph->GetName().c_str(), subgraph_pass_name.c_str());
         return status;
       }
     }

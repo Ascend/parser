@@ -75,7 +75,8 @@ FMK_FUNC_HOST_VISIBILITY PreChecker &PreChecker::Instance() {
 FMK_FUNC_HOST_VISIBILITY void PreChecker::SetModelName(const string &name) { model_name_ = name; }
 
 FMK_FUNC_HOST_VISIBILITY Status PreChecker::AddOp(OpId id, const string &name, const string &type) {
-  GE_RETURN_WITH_LOG_IF_TRUE(op_map_.find(id) != op_map_.end(), "Id already exists.");
+  GE_RETURN_WITH_LOG_IF_TRUE(op_map_.find(id) != op_map_.end(),
+                             "[Check][Param] Id already exists, name:%s, type:%s.", name.c_str(), type.c_str());
 
   Info info;
   info.id = id;
@@ -89,7 +90,7 @@ FMK_FUNC_HOST_VISIBILITY Status PreChecker::AddOp(OpId id, const string &name, c
 
 Status PreChecker::CheckName(OpId id) {
   auto iter = op_map_.find(id);
-  GE_RETURN_WITH_LOG_IF_TRUE(iter == op_map_.end(), "Id does not exist.");
+  GE_RETURN_WITH_LOG_IF_TRUE(iter == op_map_.end(), "[Check][Param] Id does not exist.");
 
   Info &info = iter->second;
   for (auto &v : op_map_) {
@@ -101,8 +102,8 @@ Status PreChecker::CheckName(OpId id) {
 
       GELOGI("Name %s repeated.", info.name.c_str());
       ErrorManager::GetInstance().ATCReportErrMessage("E19009", {"opname"}, {info.name});
-      GE_RETURN_WITH_LOG_IF_ERROR(AddCause(id, cause), "Add cause failed.");
-      GE_RETURN_WITH_LOG_IF_ERROR(AddCause(v.first, cause), "Add cause failed.");
+      GE_RETURN_WITH_LOG_IF_ERROR(AddCause(id, cause), "[Add][Cause] failed.");
+      GE_RETURN_WITH_LOG_IF_ERROR(AddCause(v.first, cause), "[Add][Cause] failed.");
       break;
     }
   }
@@ -112,7 +113,7 @@ Status PreChecker::CheckName(OpId id) {
 
 FMK_FUNC_HOST_VISIBILITY Status PreChecker::CheckType(OpId id, bool is_tensorflow) {
   auto iter = op_map_.find(id);
-  GE_RETURN_WITH_LOG_IF_TRUE(iter == op_map_.end(), "Id does not exist.");
+  GE_RETURN_WITH_LOG_IF_TRUE(iter == op_map_.end(), "[Check][Param] Id does not exist.");
 
   Info &info = iter->second;
   string type = info.type;
@@ -125,8 +126,9 @@ FMK_FUNC_HOST_VISIBILITY Status PreChecker::CheckType(OpId id, bool is_tensorflo
   }
 
   // Judge whether the type is supported
-  GE_RETURN_WITH_LOG_IF_ERROR(
-      CheckTypeSupported(info.id, type, info.name, is_tensorflow), "Check type supported failed.");
+  GE_RETURN_WITH_LOG_IF_ERROR(CheckTypeSupported(info.id, type, info.name, is_tensorflow),
+                              "[Invoke][CheckTypeSupported] failed, type:%s, name:%s.",
+                              type.c_str(), info.name.c_str());
 
   return SUCCESS;
 }
@@ -151,7 +153,7 @@ FMK_FUNC_HOST_VISIBILITY void PreChecker::RefreshErrorMessageByName(const string
 
 Status PreChecker::AddCause(OpId id, const Cause &cause) {
   auto iter = op_map_.find(id);
-  GE_RETURN_WITH_LOG_IF_TRUE(iter == op_map_.end(), "Id does not exist.");
+  GE_RETURN_WITH_LOG_IF_TRUE(iter == op_map_.end(), "[Check][Param] Id does not exist.");
 
   Info &info = iter->second;
 
@@ -171,7 +173,7 @@ void PreChecker::Clear() { Init(); }
 
 Status PreChecker::Clear(OpId id, const string &message) {
   auto iter = op_map_.find(id);
-  GE_RETURN_WITH_LOG_IF_TRUE(iter == op_map_.end(), "Id does not exist.");
+  GE_RETURN_WITH_LOG_IF_TRUE(iter == op_map_.end(), "[Check][Param] Id does not exist.");
 
   Info &info = iter->second;
   info.causes.clear();
@@ -181,7 +183,7 @@ Status PreChecker::Clear(OpId id, const string &message) {
     Cause cause;
     cause.code = ErrorCode::OK;
     cause.message = message;
-    GE_RETURN_WITH_LOG_IF_ERROR(AddCause(id, cause), "Add cause failed.");
+    GE_RETURN_WITH_LOG_IF_ERROR(AddCause(id, cause), "[Add][Cause] failed.");
   }
 
   return SUCCESS;
@@ -216,7 +218,7 @@ Status PreChecker::Save(string file) {
   // Constructing JSON information of operators in order of network
   for (auto id : ops_) {
     auto iter = op_map_.find(id);
-    GE_CHK_BOOL_RET_STATUS(iter != op_map_.end(), FAILED, "don't find this op.");
+    GE_CHK_BOOL_RET_STATUS(iter != op_map_.end(), FAILED, "[Check][Param] don't find this op.");
     Info &info = iter->second;
 
     // Initialization operator general information
@@ -233,7 +235,8 @@ Status PreChecker::Save(string file) {
   }
 
   // Save JSON data to a file
-  GE_RETURN_WITH_LOG_IF_ERROR(ge::parser::ModelSaver::SaveJsonToFile(file.c_str(), model), "Save failed.");
+  GE_RETURN_WITH_LOG_IF_ERROR(ge::parser::ModelSaver::SaveJsonToFile(file.c_str(), model),
+                              "[Invoke][SaveJsonToFile]Save failed, file:%s.", file.c_str());
 
   return SUCCESS;
 }
@@ -250,7 +253,7 @@ Status PreChecker::CheckTypeSupported(OpId id, const string &type, const string 
       if (!is_tensorflow) {
         ErrorManager::GetInstance().ATCReportErrMessage("E19010", {"opname", "optype"}, {name, type});
       }
-      GE_RETURN_WITH_LOG_IF_ERROR(AddCause(id, cause), "Add cause failed.");
+      GE_RETURN_WITH_LOG_IF_ERROR(AddCause(id, cause), "[Add][Cause] failed.");
     }
     return SUCCESS;
   }
@@ -265,7 +268,7 @@ Status PreChecker::CheckTypeSupported(OpId id, const string &type, const string 
     if (!is_tensorflow) {
       ErrorManager::GetInstance().ATCReportErrMessage("E19010", {"opname", "optype"}, {name, type});
     }
-    GE_RETURN_WITH_LOG_IF_ERROR(AddCause(id, cause), "Add cause failed.");
+    GE_RETURN_WITH_LOG_IF_ERROR(AddCause(id, cause), "[Add][Cause] failed.");
   }
 
   return SUCCESS;
@@ -273,7 +276,7 @@ Status PreChecker::CheckTypeSupported(OpId id, const string &type, const string 
 
 bool PreChecker::HasError(OpId id) {
   auto iter = op_map_.find(id);
-  GE_RETURN_WITH_LOG_IF_TRUE(iter == op_map_.end(), "Id does not exist.");
+  GE_RETURN_WITH_LOG_IF_TRUE(iter == op_map_.end(), "[Check][Param] Id does not exist.");
 
   Info &info = iter->second;
   for (const Cause &cause : info.causes) {

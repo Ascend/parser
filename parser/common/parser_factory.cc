@@ -28,8 +28,8 @@ std::shared_ptr<WeightsParser> WeightsParserFactory::CreateWeightsParser(const d
   if (iter != creator_map_.end()) {
     return iter->second();
   }
-
-  GELOGE(FAILED, "WeightsParserFactory::CreateWeightsParser: Not supported Type: %d", type);
+  REPORT_INNER_ERROR("E19999", "param type invalid, Not supported Type: %d", type);
+  GELOGE(FAILED, "[Check][Param]WeightsParserFactory::CreateWeightsParser: Not supported Type: %d", type);
   return nullptr;
 }
 
@@ -58,8 +58,8 @@ std::shared_ptr<ModelParser> ModelParserFactory::CreateModelParser(const domi::F
   if (iter != creator_map_.end()) {
     return iter->second();
   }
-
-  GELOGE(FAILED, "ModelParserFactory::CreateModelParser: Not supported Type: %d", type);
+  REPORT_INNER_ERROR("E19999", "param type invalid, Not supported Type: %d", type);
+  GELOGE(FAILED, "[Check][Param]ModelParserFactory::CreateModelParser: Not supported Type: %d", type);
   return nullptr;
 }
 

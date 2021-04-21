@@ -40,7 +40,8 @@ Status CaffeReshapeParser::ParseParams(const Message *op_src, ge::OpDescPtr &op)
   GE_CHECK_NOTNULL(op);
   const LayerParameter *layer = DOMI_DYNAMIC_CAST<const LayerParameter *>(op_src);
   if (layer == nullptr) {
-    GELOGE(FAILED, "Reshape Dynamic cast op_src to LayerParameter failed");
+    REPORT_INNER_ERROR("E19999", "Reshape Dynamic cast op_src to LayerParameter failed");
+    GELOGE(FAILED, "[Convert][DataType]Reshape Dynamic cast op_src to LayerParameter failed");
     return FAILED;
   }
 
@@ -53,7 +54,10 @@ Status CaffeReshapeParser::ParseParams(const Message *op_src, ge::OpDescPtr &op)
                   GELOGW("SetInt failed for op %s.", op->GetName().c_str()););  // no need to return
 
   if (!reshape_parameter.has_shape()) {
-    GELOGE(FAILED, "Reshape has no shape info, ret fail");
+    REPORT_INNER_ERROR("E19999", "Reshape has no shape info, ret fail, layer name = %s, layer type= %s",
+                       layer->name().c_str(), layer->type().c_str());
+    GELOGE(FAILED, "[Check][Param]Reshape has no shape info, ret fail, layer name = %s, layer type= %s",
+           layer->name().c_str(), layer->type().c_str());
     return FAILED;
   }
   const BlobShape &blob_shape = reshape_parameter.shape();
@@ -87,7 +91,8 @@ Status CaffeReshapeParser::AddConstInput(ge::NodePtr &node) {
   GE_CHECK_NOTNULL(node);
   auto owner_graph = node->GetOwnerComputeGraph();
   if (owner_graph == nullptr) {
-    GELOGE(FAILED, "node's graph is empty, name: %s", node->GetName().c_str());
+    REPORT_INNER_ERROR("E19999", "node's graph is empty, name: %s", node->GetName().c_str());
+    GELOGE(FAILED, "[Get][OwnerComputeGraph]node's graph is empty, name: %s", node->GetName().c_str());
     return FAILED;
   }
   ge::OpDescPtr op = node->GetOpDesc();
@@ -104,7 +109,8 @@ Status CaffeReshapeParser::AddConstInput(ge::NodePtr &node) {
   const_desc.Update(shape, ge::FORMAT_NCHW, ge::DT_INT64);
   ge::graphStatus state = op->UpdateInputDesc(RESHAPE_ATTR_SHAPE, const_desc);
   if (state != ge::GRAPH_SUCCESS) {
-    GELOGE(FAILED, "Updata input_shape desc failed.");
+    REPORT_CALL_ERROR("E19999", "op:%s UpdateInputDesc failed.", op->GetName().c_str());
+    GELOGE(FAILED, "[Update][InputDesc] failed for op:%s.", op->GetName().c_str());
     return FAILED;
   }
 
@@ -133,7 +139,10 @@ Status CaffeReshapeParser::AddConstInput(ge::NodePtr &node) {
   GE_CHECK_NOTNULL(in_archor_ptr);
   state = ge::GraphUtils::AddEdge(out_archor_ptr, in_archor_ptr);
   if (state != ge::GRAPH_SUCCESS) {
-    GELOGE(FAILED, "AddEdge failed of from Node %s to Node %s", const_node->GetName().c_str(), node->GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "AddEdge failed of from Node %s to Node %s",
+                      const_node->GetName().c_str(), node->GetName().c_str());
+    GELOGE(FAILED, "[Add][Edge] failed of from Node %s to Node %s",
+           const_node->GetName().c_str(), node->GetName().c_str());
     return domi::FAILED;
   }
   return SUCCESS;

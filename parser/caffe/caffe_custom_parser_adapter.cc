@@ -49,7 +49,9 @@ Status CaffeCustomParserAdapter::ParseParams(const Message *op_src, ge::OpDescPt
 
   op_dest->SetName(layer->name());
   ge::Operator op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_dest);
-  GE_CHK_BOOL_RET_STATUS(customOpParser(op_src, op) == SUCCESS, FAILED, "Custom parser params failed");
+  GE_CHK_BOOL_RET_STATUS(customOpParser(op_src, op) == SUCCESS, FAILED,
+                         "[Invoke][CustomOpParser] failed, layer name:%s, layer type:%s",
+                         layer->name().c_str(), layer->type().c_str());
   return SUCCESS;
 }
 
@@ -64,7 +66,9 @@ Status CaffeCustomParserAdapter::ParseParams(const Operator &op_src, ge::OpDescP
   op_dest->SetName(op_src.GetName());
   ge::Operator op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_dest);
 
-  GE_CHK_BOOL_RET_STATUS(custom_op_parser(op_src, op) == SUCCESS, FAILED, "Custom parser params failed");
+  GE_CHK_BOOL_RET_STATUS(custom_op_parser(op_src, op) == SUCCESS, FAILED,
+                         "[Invoke][CustomOpParser] failed, layer name:%s, type:%s",
+                         op_src.GetName().c_str(), op_src.GetOpType().c_str());
   return SUCCESS;
 }
 
@@ -75,7 +79,7 @@ Status CaffeCustomParserAdapter::ParseWeights(const Message *op_src, ge::NodePtr
   GE_CHECK_NOTNULL(op);
   const LayerParameter *layer = reinterpret_cast<const LayerParameter *>(op_src);
 
-  GE_CHK_BOOL_RET_STATUS(nullptr != layer, FAILED, "Dynamic cast op_src to LayerParameter failed");
+  GE_CHK_BOOL_RET_STATUS(nullptr != layer, FAILED, "[Convert][Type]Dynamic cast op_src to LayerParameter failed");
   GELOGI("layer: %s blobs_size: %d bottom_size: %d", layer->name().c_str(), layer->blobs_size(), layer->bottom_size());
   if (layer->blobs_size() == 0) {
     return SUCCESS;
@@ -87,8 +91,8 @@ Status CaffeCustomParserAdapter::ParseWeights(const Message *op_src, ge::NodePtr
   for (int i = 0; i < layer->blobs_size(); ++i) {
     ge::GeTensorPtr weight = ge::parser::MakeShared<ge::GeTensor>();
     GE_CHECK_NOTNULL(weight);
-    GE_CHK_STATUS_RET(ConvertWeight(layer->blobs(i), layer->name(), weight), "Convert blobs(%d) for layer %s failed", i,
-                      layer->name().c_str());
+    GE_CHK_STATUS_RET(ConvertWeight(layer->blobs(i), layer->name(), weight),
+                      "[Convert][Blobs] (%d) for layer %s failed", i, layer->name().c_str());
     GE_IF_BOOL_EXEC(layer->type() == kConvolution && i == kBlobIndexOne,
                     const ConvolutionParameter &conv_params_src = layer->convolution_param();
                     bias_en = conv_params_src.bias_term(););
@@ -122,13 +126,17 @@ Status CaffeCustomParserAdapter::ParseWeights(const Message *op_src, ge::NodePtr
     auto valid_input_name = op->GetValidInputNameByIndex(static_cast<uint32_t>(index));
     if (update_in_turn || valid_input_name.empty()) {
       if (node->AddLinkFrom(static_cast<const uint32_t &>(index), const_node) != GRAPH_SUCCESS) {
-        GELOGE(GRAPH_FAILED, "AddEdge failed of from Node %s output to Node %s input %d", const_node->GetName().c_str(),
-               node->GetName().c_str(), index);
+        REPORT_CALL_ERROR("E19999", "AddEdge failed of from Node %s output to Node %s input %d",
+                          const_node->GetName().c_str(), node->GetName().c_str(), index);
+        GELOGE(GRAPH_FAILED, "[Invoke][AddLinkFrom] AddEdge failed of from Node %s output to Node %s input %d",
+               const_node->GetName().c_str(), node->GetName().c_str(), index);
       }
     } else {
       if (node->AddLinkFrom(valid_input_name, const_node) != GRAPH_SUCCESS) {
-        GELOGE(GRAPH_FAILED, "AddEdge failed of from Node %s output to Node %s input %s", const_node->GetName().c_str(),
-               node->GetName().c_str(), valid_input_name.c_str());
+        REPORT_CALL_ERROR("E19999", "AddEdge failed of from Node %s output to Node %s input %s",
+                          const_node->GetName().c_str(), node->GetName().c_str(), valid_input_name.c_str());
+        GELOGE(GRAPH_FAILED, "[Invoke][AddLinkFrom] AddEdge failed of from Node %s output to Node %s input %s",
+               const_node->GetName().c_str(), node->GetName().c_str(), valid_input_name.c_str());
       }
     }
 

@@ -31,7 +31,7 @@ const uint32_t kScalarLength = 1;
 
 namespace ge {
 FMK_FUNC_HOST_VISIBILITY Status DataOpParser::ParseShape(const vector<int64_t> &shape, ge::OpDescPtr op) {
-  GE_RETURN_WITH_LOG_IF_FALSE(op != nullptr, "ParseShape failed for data_op, op is null");
+  GE_RETURN_WITH_LOG_IF_FALSE(op != nullptr, "[Check][Param] ParseShape failed for data_op, op is null");
 
   const string &data_op_name = op->GetName();
   GetParserContext().input_dims.emplace(data_op_name, shape);
@@ -53,9 +53,11 @@ FMK_FUNC_HOST_VISIBILITY Status DataOpParser::ParseShape(const vector<int64_t> &
   auto map_iter = input_nodes_format_map.find(data_op_name);
   if (map_iter != input_nodes_format_map.end() && map_iter->second == domi::DOMI_TENSOR_NC1HWC0) {
     // Input 5D NC1HWC0
-    GE_RETURN_WITH_LOG_IF_ERROR(Init5DInputTensor(def_format_shape, i_tensor_desc), "InitInputTensor failed");
+    GE_RETURN_WITH_LOG_IF_ERROR(Init5DInputTensor(def_format_shape, i_tensor_desc),
+                                "[Invoke][Init5DInputTensor] failed");
     // Output
-    GE_RETURN_WITH_LOG_IF_ERROR(Init5DOutputTensor(def_format_shape, o_tensor_desc), "InitOutputTensor failed");
+    GE_RETURN_WITH_LOG_IF_ERROR(Init5DOutputTensor(def_format_shape, o_tensor_desc),
+                                "[Invoke][Init5DOutputTensor] failed");
   } else {
     // No need to consider AIPP here,
     // The adjustdatanodedesc function of model_builder will process the
@@ -66,27 +68,31 @@ FMK_FUNC_HOST_VISIBILITY Status DataOpParser::ParseShape(const vector<int64_t> &
     // To be modified after AICPU operators support pvmodel.
     if (data_type == ge::DT_FLOAT) {
       // Input
-      GE_RETURN_WITH_LOG_IF_ERROR(InitInputTensor(def_format_shape, i_tensor_desc), "InitInputTensor failed");
+      GE_RETURN_WITH_LOG_IF_ERROR(InitInputTensor(def_format_shape, i_tensor_desc),
+                                  "[Invoke][InitInputTensor] failed");
       // Output
-      GE_RETURN_WITH_LOG_IF_ERROR(InitOutputTensor(def_format_shape, o_tensor_desc), "InitOutputTensor failed");
+      GE_RETURN_WITH_LOG_IF_ERROR(InitOutputTensor(def_format_shape, o_tensor_desc),
+                                  "[Invoke][InitOutputTensor] failed");
     } else {
       // Input
       GE_RETURN_WITH_LOG_IF_ERROR(InitNDTensor(def_format_shape, data_type, i_tensor_desc),
-                                  "Init ND InputTensor failed");
+                                  "[Invoke][InitNDTensor] failed");
       // Output
       GE_RETURN_WITH_LOG_IF_ERROR(InitNDTensor(def_format_shape, data_type, o_tensor_desc),
-                                  "Init ND Output Tensor failed");
+                                  "[Invoke][InitNDTensor] failed");
     }
   }
   i_tensor_desc.SetFormat(ge::TypeUtils::DomiFormatToFormat(GetParserContext().format));
   i_tensor_desc.SetOriginFormat(ge::TypeUtils::DomiFormatToFormat(GetParserContext().format));
   o_tensor_desc.SetFormat(ge::TypeUtils::DomiFormatToFormat(GetParserContext().format));
   if (op->AddInputDesc(i_tensor_desc) != ge::GRAPH_SUCCESS) {
-    GELOGE(domi::INTERNAL_ERROR, "AddInputDesc failed for op %s.", op->GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "AddInputDesc failed for op %s.", op->GetName().c_str());
+    GELOGE(domi::INTERNAL_ERROR, "[Invoke][AddInputDesc] failed for op %s.", op->GetName().c_str());
     return FAILED;
   }
   if (op->AddOutputDesc(o_tensor_desc) != ge::GRAPH_SUCCESS) {
-    GELOGE(domi::INTERNAL_ERROR, "AddOutputDesc failed for op %s.", op->GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "AddOutputDesc failed for op %s.", op->GetName().c_str());
+    GELOGE(domi::INTERNAL_ERROR, "[Invoke][AddOutputDesc] failed for op %s.", op->GetName().c_str());
     return FAILED;
   }
   return SUCCESS;
@@ -102,7 +108,8 @@ Status DataOpParser::Init5DInputTensor(const vector<int64_t> &shape, ge::GeTenso
   int64_t tensor_size = 0;
   ge::graphStatus graph_status = ge::TensorUtils::GetTensorSizeInBytes(tensor_desc, tensor_size);
   if (graph_status != ge::GRAPH_SUCCESS) {
-    GELOGE(FAILED, "GetTensorSizeInBytes failed!");
+    REPORT_CALL_ERROR("E19999", "GetTensorSizeInBytes failed");
+    GELOGE(FAILED, "[Invoke][GetTensorSizeInBytes] failed!");
     return domi::FAILED;
   }
   // Set the actual occupied space size
@@ -146,7 +153,8 @@ Status DataOpParser::Init5DOutputTensor(const vector<int64_t> &shape, ge::GeTens
   int64_t output_size = 0;
   ge::graphStatus graph_status = ge::TensorUtils::GetTensorMemorySizeInBytes(output, output_size);
   if (graph_status != ge::GRAPH_SUCCESS) {
-    GELOGE(FAILED, "GetTensorMemorySizeInBytes failed!");
+    REPORT_CALL_ERROR("E19999", "GetTensorMemorySizeInBytes failed!");
+    GELOGE(FAILED, "[Invoke][GetTensorMemorySizeInBytes] failed!");
     return domi::FAILED;
   }
   // Set the actual occupied space size
@@ -186,7 +194,14 @@ Status DataOpParser::InitOutputTensor(const vector<int64_t> &shape, ge::GeTensor
 
   ge::graphStatus graph_status = ge::TensorUtils::CalcTensorMemSize(output_shape, format, data_type, output_size);
   if (graph_status != ge::GRAPH_SUCCESS) {
-    GELOGE(FAILED, "CalcTensorMemSize failed!");
+    REPORT_CALL_ERROR("E19999", "CalcTensorMemSize failed, shape:%s, format:%s, datatype:%s",
+                      output_shape.ToString().c_str(),
+                      ge::TypeUtils::FormatToSerialString(format).c_str(),
+                      ge::TypeUtils::DataTypeToSerialString(data_type).c_str());
+    GELOGE(FAILED, "[Invoke][CalcTensorMemSize] failed, shape:%s, format:%s, datatype:%s",
+           output_shape.ToString().c_str(),
+           ge::TypeUtils::FormatToSerialString(format).c_str(),
+           ge::TypeUtils::DataTypeToSerialString(data_type).c_str());
     return FAILED;
   }
 
@@ -198,7 +213,14 @@ Status DataOpParser::InitOutputTensor(const vector<int64_t> &shape, ge::GeTensor
   int64_t size = output_size;
   auto valid_max_size = INT64_MAX - kTwoTimesAlign * kDataMemAlignSize;
   if (size > valid_max_size || size < 0) {
-    GELOGE(FAILED, "The updated mem size is out of data range [0, %ld]", valid_max_size);
+    REPORT_INNER_ERROR("E19999", "updated mem size is out of data range [0, %ld], shape:%s, format:%s, datatype:%s",
+                       valid_max_size, output_shape.ToString().c_str(),
+                       ge::TypeUtils::FormatToSerialString(format).c_str(),
+                       ge::TypeUtils::DataTypeToSerialString(data_type).c_str());
+    GELOGE(FAILED, "[Check][Size] updated mem size is out of data range [0, %ld], shape:%s, format:%s, datatype:%s",
+           valid_max_size, output_shape.ToString().c_str(),
+           ge::TypeUtils::FormatToSerialString(format).c_str(),
+           ge::TypeUtils::DataTypeToSerialString(data_type).c_str());
     return FAILED;
   } else {
     size = ((size + kTwoTimesAlign * kDataMemAlignSize - 1) / kDataMemAlignSize) * kDataMemAlignSize;

@@ -130,12 +130,16 @@ bool SaveIdentifierOpMapInfo(const string &line,  std::map<int, std::pair<string
   GetOpParamInfo(line, op_param_info);
   int info_size = op_param_info.size();
   if (info_size < kMinLineWordSize) {
-    GELOGE(ge::FAILED, "Words size of line[%s] is less than kMinLineWordSize[%d].", line.c_str(), kMinLineWordSize);
+    REPORT_INNER_ERROR("E19999", "Words size:%d of line[%s] is less than kMinLineWordSize[%d].",
+                       info_size, line.c_str(), kMinLineWordSize);
+    GELOGE(ge::FAILED, "[Check][Size] Words size:%d of line[%s] is less than kMinLineWordSize[%d].",
+           info_size, line.c_str(), kMinLineWordSize);
     return false;
   }
 
   if (op_param_info[0] != kOptional && op_param_info[0] != kRepeated && op_param_info[0] != kRequired) {
-    GELOGE(ge::FAILED, "Split line[%s] failed.", line.c_str());
+    REPORT_INNER_ERROR("E19999", "Split line[%s] failed.", line.c_str());
+    GELOGE(ge::FAILED, "[Check][Param] Split line[%s] failed.", line.c_str());
     return false;
   }
 
@@ -143,7 +147,7 @@ bool SaveIdentifierOpMapInfo(const string &line,  std::map<int, std::pair<string
   int identifier = 0;
   bool ret = GetIdentifier(line, identifier);
   if (!ret) {
-    GELOGE(ge::FAILED, "Get identifier of line[%s] failed.", line.c_str());
+    GELOGE(ge::FAILED, "[Get][Identifier] of line[%s] failed.", line.c_str());
     return false;
   }
 
@@ -185,7 +189,8 @@ Status ProtoFileParser::CreatProtoFile() {
 
   int fd = open(fusion_proto_path.c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP);
   if (fd < kOpenRetValue) {
-    GELOGE(FAILED, "creat tmp proto file[%s] failed.", fusion_proto_path.c_str());
+    REPORT_INNER_ERROR("E19999", "creat tmp proto file[%s] failed.", fusion_proto_path.c_str());
+    GELOGE(FAILED, "[Open][File] creat tmp proto file[%s] failed.", fusion_proto_path.c_str());
     return FAILED;
   }
   close(fd);
@@ -198,7 +203,8 @@ Status ProtoFileParser::ParseProtoFile(const string &proto_file,
   ifstream read_file;
   read_file.open(proto_file, std::ios::in);
   if (read_file.fail()) {
-    GELOGE(FAILED, "ifsream open proto file[%s] failed.", proto_file.c_str());
+    REPORT_INNER_ERROR("E19999", "ifsream open proto file[%s] failed.", proto_file.c_str());
+    GELOGE(FAILED, "[Open][File] ifsream open proto file[%s] failed.", proto_file.c_str());
     return FAILED;
   }
 
@@ -235,7 +241,8 @@ Status ProtoFileParser::AddCustomAndConflictLayer(const char *custom_proto_file,
   ifstream read_custom;
   read_custom.open(custom_proto_file, std::ios::in);
   if (read_custom.fail()) {
-    GELOGE(FAILED, "ifsream open custom proto file[%s] failed.", custom_proto_file);
+    REPORT_INNER_ERROR("E19999", "ifsream open custom proto file[%s] failed.", custom_proto_file);
+    GELOGE(FAILED, "[Open][File] ifsream open custom proto file[%s] failed.", custom_proto_file);
     return FAILED;
   }
 
@@ -273,7 +280,8 @@ Status ProtoFileParser::AddCustomAndConflictMessage(const char *custom_proto_fil
   ifstream read_custom;
   read_custom.open(custom_proto_file, std::ios::in);
   if (read_custom.fail()) {
-    GELOGE(FAILED, "ifsream open custom proto file[%s] failed.", custom_proto_file);
+    REPORT_INNER_ERROR("E19999", "ifsream open custom proto file[%s] failed.", custom_proto_file);
+    GELOGE(FAILED, "[Open][File] ifsream open custom proto file[%s] failed.", custom_proto_file);
     return FAILED;
   }
 
@@ -324,7 +332,8 @@ Status ProtoFileParser::WriteCaffeProtoFile(const char *custom_proto_file,
     }
     if (caffe_in_layer && line_caffe.find(kCloseBrace) != std::string::npos) {
       if (AddCustomAndConflictLayer(custom_proto_file, write_tmp) != SUCCESS) {
-        GELOGE(FAILED, "Add conflict and new layer line from custom proto to dest proto failed.");
+        GELOGE(FAILED, "[Invoke][AddCustomAndConflictLayer] Add conflict and new layer line "
+               "from custom proto to dest proto failed, protofile:%s.", custom_proto_file);
         return FAILED;
       }
       caffe_in_layer = false;
@@ -346,12 +355,14 @@ Status ProtoFileParser::WriteProtoFile(const char *caffe_proto_file,
   std::ofstream write_tmp;
   read_caffe.open(caffe_proto_file, std::ios::in);
   if (read_caffe.fail()) {
-    GELOGE(FAILED, "ifsream open proto file[%s] failed.", caffe_proto_file);
+    REPORT_INNER_ERROR("E19999", "ifsream open proto file[%s] failed.", caffe_proto_file);
+    GELOGE(FAILED, "[Open][File] ifsream open proto file[%s] failed.", caffe_proto_file);
     return FAILED;
   }
   write_tmp.open(fusion_proto_path, std::ios::out);
   if (write_tmp.fail()) {
-    GELOGE(FAILED, "ofstream open proto file[%s] failed.", fusion_proto_path.c_str());
+    REPORT_INNER_ERROR("E19999", "ofstream open proto file[%s] failed.", fusion_proto_path.c_str());
+    GELOGE(FAILED, "[Open][File] ofstream open proto file[%s] failed.", fusion_proto_path.c_str());
     read_caffe.close();
     return FAILED;
   }
@@ -363,7 +374,8 @@ Status ProtoFileParser::WriteProtoFile(const char *caffe_proto_file,
   }
 
   if (AddCustomAndConflictMessage(custom_proto_file, write_tmp) != SUCCESS) {
-    GELOGE(FAILED, "Add conflict and new message from custom proto to dest proto failed.");
+    GELOGE(FAILED, "[Invoke][AddCustomAndConflictMessage] Add conflict and new message from custom proto "
+           "to dest proto failed, proto file:%s.", custom_proto_file);
     read_caffe.close();
     write_tmp.close();
     return FAILED;
@@ -379,7 +391,8 @@ Status ProtoFileParser::FindConflictLine(const char *proto_file, int identifier,
   ifstream read_file;
   read_file.open(proto_file, std::ios::in);
   if (read_file.fail()) {
-    GELOGE(FAILED, "open file[%s] failed.", proto_file);
+    REPORT_INNER_ERROR("E19999", "open file[%s] failed.", proto_file);
+    GELOGE(FAILED, "[Open][File] [%s] failed.", proto_file);
     return FAILED;
   }
 
@@ -404,7 +417,8 @@ Status ProtoFileParser::FindConflictLine(const char *proto_file, int identifier,
     }
   }
   read_file.close();
-  GELOGE(FAILED, "find line according to identifier[%d] failed.", identifier);
+  REPORT_INNER_ERROR("E19999", "find line according to identifier[%d] failed.", identifier);
+  GELOGE(FAILED, "[Find][Line] according to identifier[%d] failed.", identifier);
   return FAILED;
 }
 
@@ -467,7 +481,8 @@ Status ProtoFileParser::RecordProtoMessage(const string &proto_file) {
   ifstream read_file;
   read_file.open(proto_file, std::ios::in);
   if (read_file.fail()) {
-    GELOGE(FAILED, "ifsream open proto file[%s] failed.", proto_file.c_str());
+    REPORT_INNER_ERROR("E19999", "ifsream open proto file[%s] failed.", proto_file.c_str());
+    GELOGE(FAILED, "[Open][File] ifsream open proto file[%s] failed.", proto_file.c_str());
     return FAILED;
   }
 
@@ -490,7 +505,9 @@ Status ProtoFileParser::CombineProtoFile(const char *caffe_proto_file, const cha
   GE_CHECK_NOTNULL(custom_proto_file);
 
   if (!CheckRealPath(caffe_proto_file) || !CheckRealPath(custom_proto_file)) {
-    GELOGE(FAILED, "caffe proto[%s] and custom proto[%s] are not all existed.",
+    REPORT_CALL_ERROR("E19999", "caffe proto[%s] or custom proto[%s] is not existed.",
+                       caffe_proto_file, custom_proto_file);
+    GELOGE(FAILED, "[Check][Param] caffe proto[%s] or custom proto[%s] is not existed.",
            caffe_proto_file, custom_proto_file);
     return FAILED;
   }
@@ -516,7 +533,7 @@ Status ProtoFileParser::CombineProtoFile(const char *caffe_proto_file, const cha
   }
 
   if (WriteProtoFile(caffe_proto_file, custom_proto_file) != SUCCESS) {
-    GELOGE(FAILED, "Combine caffe proto and custom proto to dest proto file failed.");
+    GELOGE(FAILED, "[Write][ProtoFile] Combine caffe proto and custom proto to dest proto file failed.");
     return FAILED;
   }
   dest_proto_file.assign(fusion_proto_path);

@@ -47,7 +47,8 @@ Status HandleNewOp(const NodePtr &node,
   GE_CHECK_NOTNULL(node);
   GE_CHECK_NOTNULL(new_node);
   if (new_node->SetOwnerComputeGraph(compute_graph) != GRAPH_SUCCESS) {
-    GELOGE(FAILED, "Set owner graph for node:%s failed.", new_node->GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "SetOwnerComputeGraph failed for node:%s", new_node->GetName().c_str());
+    GELOGE(FAILED, "[Set][OwnerComputeGraph] for node:%s failed.", new_node->GetName().c_str());
     return FAILED;
   }
   auto op_desc = new_node->GetOpDesc();
@@ -90,12 +91,13 @@ Status ParserUtils::ExpandOneToManyGraph(Graph &graph) {
     Operator op = OpDescUtils::CreateOperatorFromNode(n);
     Status ret = parse_op_to_graph_func(op, subgraph);
     if (ret != SUCCESS) {
-      GELOGE(FAILED, "Get one to many graph failed for op:%s.", op.GetName().c_str());
+      REPORT_CALL_ERROR("E19999", "Get one to many graph failed for op:%s.", op.GetName().c_str());
+      GELOGE(FAILED, "[Invoke][ParseOpToGraphFunc]Get one to many graph failed for op:%s.", op.GetName().c_str());
       return FAILED;
     }
     ret = ExpandNodeToSubgraph(subgraph, n, graph);
     if (ret != SUCCESS) {
-      GELOGE(FAILED, "Expand one to many graph failed for op:%s.", op.GetName().c_str());
+      GELOGE(FAILED, "[Invoke][ExpandNodeToSubgraph]Expand one to many graph failed for op:%s.", op.GetName().c_str());
       return FAILED;
     }
   }
@@ -116,7 +118,7 @@ Status ParserUtils::ExpandNodeToSubgraph(const Graph &subgraph, const NodePtr &n
     auto new_node = compute_graph->AddNode(n);
     GE_CHECK_NOTNULL(new_node);
     if (HandleNewOp(node, compute_graph, new_node, no_need_change_name) != SUCCESS) {
-      GELOGE(FAILED, "Handle new op[%s] for node[%s] failed.", new_node->GetName().c_str(), node->GetName().c_str());
+      GELOGE(FAILED, "[Handle][NewOp][%s] for node[%s] failed.", new_node->GetName().c_str(), node->GetName().c_str());
       return FAILED;
     }
     if (new_node->GetType() == ge::parser::DATA) {
@@ -127,7 +129,7 @@ Status ParserUtils::ExpandNodeToSubgraph(const Graph &subgraph, const NodePtr &n
   // handle input context.
   Status ret = HandleInputContext(node, input_nodes, compute_graph);
   if (ret != SUCCESS) {
-    GELOGE(FAILED, "run ParserUtils::HandleInputContext failed.");
+    GELOGE(FAILED, "[Run][HandleInputContext] failed, node:%s.", node->GetName().c_str());
     return FAILED;
   }
 
@@ -135,18 +137,22 @@ Status ParserUtils::ExpandNodeToSubgraph(const Graph &subgraph, const NodePtr &n
   std::vector<std::pair<NodePtr, int32_t>> out_node_index = sub_compute_graph->GetGraphOutNodesInfo();
   ret = HandleOutputContext(node, out_node_index);
   if (ret != SUCCESS) {
-    GELOGE(FAILED, "run ParserUtils::HandleOutputContext failed.");
+    GELOGE(FAILED, "[Run][HandleOutputContext] failed, node:%s.", node->GetName().c_str());
     return FAILED;
   }
 
   graphStatus graph_status = GraphUtils::RemoveNodeWithoutRelink(compute_graph, node);
   if (graph_status != GRAPH_SUCCESS) {
-    GELOGE(FAILED, "Remove node:%s failed.", node->GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "Remove node:%s from graph:%s failed.", node->GetName().c_str(),
+                      compute_graph->GetName().c_str());
+    GELOGE(FAILED, "[Remove][Node] %s from graph:%s failed.", node->GetName().c_str(),
+           compute_graph->GetName().c_str());
     return FAILED;
   }
   graph_status = compute_graph->TopologicalSorting();
   if (graph_status != GRAPH_SUCCESS) {
-    GELOGE(FAILED, "Topological sorting failed.");
+    REPORT_CALL_ERROR("E19999", "TopologicalSorting failed, graph:%s.", compute_graph->GetName().c_str());
+    GELOGE(FAILED, "[Invoke][TopologicalSorting] failed, graph:%s.", compute_graph->GetName().c_str());
     return FAILED;
   }
   return SUCCESS;
@@ -160,7 +166,8 @@ Status ParserUtils::HandleInputContext(const NodePtr &node,
     GE_CHECK_NOTNULL(in_n);
     int index;
     if (!AttrUtils::GetInt(in_n->GetOpDesc(), ATTR_NAME_INDEX, index)) {
-      GELOGE(FAILED, "Get attr index of node:%s failed.", in_n->GetName().c_str());
+      REPORT_INNER_ERROR("E19999", "GetInt failed, node:%s", in_n->GetName().c_str());
+      GELOGE(FAILED, "[Get][AttrIndex] of node:%s failed.", in_n->GetName().c_str());
       return FAILED;
     }
     GELOGD("Begin to handle input node:%s with index:%d.", in_n->GetName().c_str(), index);
@@ -175,17 +182,29 @@ Status ParserUtils::HandleInputContext(const NodePtr &node,
       // add data edge
       graphStatus ret = GraphUtils::RemoveEdge(data_out_anchor, peer_in_anchor);
       if (ret != GRAPH_SUCCESS) {
-        GELOGE(FAILED, "remove data out anchor and peer in anchor failed.");
+        REPORT_CALL_ERROR("E19999", "remove edge from %s to %s failed.",
+                          data_out_anchor->GetOwnerNode()->GetName().c_str(),
+                          peer_in_anchor->GetOwnerNode()->GetName().c_str());
+        GELOGE(FAILED, "[Remove][Edge] from %s to %s failed.", data_out_anchor->GetOwnerNode()->GetName().c_str(),
+               peer_in_anchor->GetOwnerNode()->GetName().c_str());
         return FAILED;
       }
       ret = GraphUtils::RemoveEdge(src_out_anchor, node_in_anchor);
       if (ret != GRAPH_SUCCESS) {
-        GELOGE(FAILED, "remove node in anchor and peer out anchor failed.");
+        REPORT_CALL_ERROR("E19999", "remove edge from %s to %s failed.",
+                          src_out_anchor->GetOwnerNode()->GetName().c_str(),
+                          node_in_anchor->GetOwnerNode()->GetName().c_str());
+        GELOGE(FAILED, "[Remove][Edge] from %s to %s failed.", src_out_anchor->GetOwnerNode()->GetName().c_str(),
+               node_in_anchor->GetOwnerNode()->GetName().c_str());
         return FAILED;
       }
       ret = GraphUtils::AddEdge(src_out_anchor, peer_in_anchor);
       if (ret != GRAPH_SUCCESS) {
-        GELOGE(FAILED, "link node's peer out anchor and data's peer in anchor failed.");
+        REPORT_CALL_ERROR("E19999", "add edge from %s to %s failed.",
+                          src_out_anchor->GetOwnerNode()->GetName().c_str(),
+                          peer_in_anchor->GetOwnerNode()->GetName().c_str());
+        GELOGE(FAILED, "[Add][Edge] from %s to %s failed.", src_out_anchor->GetOwnerNode()->GetName().c_str(),
+               peer_in_anchor->GetOwnerNode()->GetName().c_str());
         return FAILED;
       }
 
@@ -194,7 +213,11 @@ Status ParserUtils::HandleInputContext(const NodePtr &node,
         for (const auto &out_anchor : node->GetInControlAnchor()->GetPeerAnchors()) {
           graphStatus ret = GraphUtils::AddEdge(out_anchor, peer_in_anchor->GetOwnerNode()->GetInControlAnchor());
           if (ret != GRAPH_SUCCESS) {
-            GELOGE(FAILED, "add control edge failed.");
+            REPORT_CALL_ERROR("E19999", "add control edge from %s to %s failed.",
+                              out_anchor->GetOwnerNode()->GetName().c_str(),
+                              peer_in_anchor->GetOwnerNode()->GetName().c_str());
+            GELOGE(FAILED, "[Invoke][AddEdge]add control edge from %s to %s failed.",
+                   out_anchor->GetOwnerNode()->GetName().c_str(), peer_in_anchor->GetOwnerNode()->GetName().c_str());
             return FAILED;
           }
         }
@@ -202,7 +225,9 @@ Status ParserUtils::HandleInputContext(const NodePtr &node,
     }
     graphStatus ret = GraphUtils::RemoveNodeWithoutRelink(compute_graph, in_n);
     if (ret != GRAPH_SUCCESS) {
-      GELOGE(FAILED, "remove node:%s failed.", in_n->GetName().c_str());
+      REPORT_CALL_ERROR("E19999", "RemoveNodeWithoutRelink failed, graph:%s, node:%s.",
+                        compute_graph->GetName().c_str(), in_n->GetName().c_str());
+      GELOGE(FAILED, "[Remove][Node] %s failed, graph:%s.", in_n->GetName().c_str(), compute_graph->GetName().c_str());
       return FAILED;
     }
   }
@@ -227,12 +252,21 @@ Status ParserUtils::HandleOutputContext(const NodePtr &node,
     for (const auto &dest_in_anchor : node_out_anchor->GetPeerInDataAnchors()) {
       graphStatus ret = GraphUtils::RemoveEdge(node_out_anchor, dest_in_anchor);
       if (ret != GRAPH_SUCCESS) {
-        GELOGE(FAILED, "remove node's out anchor and peer in anchor failed.");
+        REPORT_CALL_ERROR("E19999", "remove edge from node %s to node %s failed.",
+                          node_out_anchor->GetOwnerNode()->GetName().c_str(),
+                          dest_in_anchor->GetOwnerNode()->GetName().c_str());
+        GELOGE(FAILED, "[Remove][Edge] from node %s to node %s failed.",
+               node_out_anchor->GetOwnerNode()->GetName().c_str(),
+               dest_in_anchor->GetOwnerNode()->GetName().c_str());
         return FAILED;
       }
       ret = GraphUtils::AddEdge(src_out_anchor, dest_in_anchor);
       if (ret != GRAPH_SUCCESS) {
-        GELOGE(FAILED, "link node's peer out anchor and out node's out anchor failed.");
+        REPORT_CALL_ERROR("E19999", "Add edge from %s to %s failed.",
+                          src_out_anchor->GetOwnerNode()->GetName().c_str(),
+                          dest_in_anchor->GetOwnerNode()->GetName().c_str());
+        GELOGE(FAILED, "[Add][Edge] from %s to %s failed.", src_out_anchor->GetOwnerNode()->GetName().c_str(),
+               dest_in_anchor->GetOwnerNode()->GetName().c_str());
         return FAILED;
       }
     }
