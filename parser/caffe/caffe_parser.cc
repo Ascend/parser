@@ -44,6 +44,7 @@
 #include "parser/caffe/caffe_op_parser.h"
 #include "parser/common/op_parser_factory.h"
 #include "parser/common/pre_checker.h"
+#include "parser/common/prototype_pass_manager.h"
 #include "framework/omg/parser/parser_types.h"
 #include "parser/common/model_saver.h"
 #include "parser/common/acl_graph_parser_util.h"
@@ -1503,6 +1504,8 @@ Status CaffeModelParser::ParseFromMemory(const char *data, uint32_t size, ge::Co
   GE_CHK_BOOL_RET_STATUS((proto_message.layer_size() != 0), FAILED,
                          "[Check][Size]net layer num is zero, prototxt file may be invalid.");
 
+  GE_RETURN_WITH_LOG_IF_ERROR(ProtoTypePassManager::Instance().Run(&proto_message, domi::CAFFE),
+                              "Run ProtoType Pass Failed");
   // Set network name
   GE_IF_BOOL_EXEC((proto_message.has_name()), graph->SetName(proto_message.name()));
 
@@ -1710,6 +1713,8 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
                                  ErrorManager::GetInstance().ATCReportErrMessage("E11022");
                                  return FAILED, "[Check][Size]net layer num is zero, prototxt file may be invalid.");
 
+  GE_RETURN_WITH_LOG_IF_ERROR(ProtoTypePassManager::Instance().Run(&proto_message, domi::CAFFE),
+                              "Run ProtoType Pass Failed");
   // Set network name
   GE_IF_BOOL_EXEC((proto_message.has_name() && !proto_message.name().empty()), graph->SetName(proto_message.name()));
 
