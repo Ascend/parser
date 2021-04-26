@@ -68,7 +68,11 @@ Status TensorFlowConstantParser::ParseValue(const domi::tensorflow::NodeDef *nod
   const domi::tensorflow::TensorProto &tensor = attr_value.tensor();
 
   GeTensorPtr weight = ge::parser::MakeShared<ge::GeTensor>();
-  GE_CHECK_NOTNULL(weight);
+  if (weight == nullptr) {
+    REPORT_CALL_ERROR("E19999", "New GeTensor failed when parse node:%s", node->name().c_str());
+    GELOGE(FAILED, "Create GeTensor fail when parse node:%s", node->name().c_str());
+    return FAILED;
+  }
   int64_t dataType = 0;
   GE_CHK_BOOL_RET_STATUS(ge::AttrUtils::GetInt(opDesc, TENSORFLOW_ATTR_DTYPE, dataType), INTERNAL_ERROR,
                          "get dtype fail");

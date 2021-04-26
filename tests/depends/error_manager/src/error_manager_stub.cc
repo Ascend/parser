@@ -74,7 +74,7 @@ int ErrorManager::OutputMessage(int handle) { return 0; }
 /// @param [in] value: vector parameter value
 ///
 void ErrorManager::ATCReportErrMessage(std::string error_code, const std::vector<std::string> &key,
-                                     const std::vector<std::string> &value) { 
+                                     const std::vector<std::string> &value) {
 }
 
 ///
@@ -96,6 +96,13 @@ int ErrorManager::GetMstuneCompileFailedMsg(const std::string &graph_name, std::
 
 void ErrorManager::SetStage(const std::string &first_stage, const std::string &second_stage) {
 }
+
+  struct error_message::Context &ErrorManager::GetErrorManagerContext() {
+    struct error_message::Context error_context;
+    return error_context;
+  }
+
+void ErrorManager::SetErrorContext(struct error_message::Context error_context) {}
 
 void ErrorManager::GenWorkStreamIdDefault() {
 }

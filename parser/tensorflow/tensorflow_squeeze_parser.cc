@@ -42,8 +42,11 @@ Status TensorFlowSqueezeParser::ParseDesc(const domi::tensorflow::AttrValue &att
 
   auto data_type = ge_desc.GetDataType();
   bool type_ret = ge::TypeUtils::GetDataTypeLength(data_type, size_type);
-  GE_IF_BOOL_EXEC(!type_ret, GELOGE(domi::PARAM_INVALID, "Can't GetDataTypeLength of data_type: %s",
+  GE_IF_BOOL_EXEC(!type_ret,
+                  REPORT_CALL_ERROR("E19999", "Data type %s is not supported",
                                     ge::TypeUtils::DataTypeToSerialString(data_type).c_str());
+                  GELOGE(domi::PARAM_INVALID, "Can't GetDataTypeLength of data_type: %s",
+                         ge::TypeUtils::DataTypeToSerialString(data_type).c_str());
                   return domi::PARAM_INVALID);
   // calculate size
   for (uint32_t j = 0; j < ge_desc.GetShape().GetDimNum(); ++j) {
@@ -83,6 +86,8 @@ Status TensorFlowSqueezeParser::ParseParams(const Message *op_src, ge::OpDescPtr
     return SUCCESS;
   }
   if (has_axis && has_dims) {
+    REPORT_CALL_ERROR("E19999", "In NodeDef %s, Attr %s or %s not exist, check invalid", node->name().c_str(),
+                      SQUEEZE_ATTR_AXIS.c_str(), SQUEEZE_ATTR_DIMS.c_str());
     GELOGE(FAILED, "In NodeDef %s dim and axis is error.", node->name().c_str());
     return domi::PARAM_INVALID;
   }
@@ -101,6 +106,8 @@ Status TensorFlowSqueezeParser::ParseParams(const Message *op_src, ge::OpDescPtr
     v_result.push_back(result);
   }
   if (!ge::AttrUtils::SetListInt(op, SQUEEZE_ATTR_AXIS, v_result)) {
+    REPORT_CALL_ERROR("E19999", "Set Attr:%s to op:%s(%s) failed", SQUEEZE_ATTR_AXIS.c_str(),
+                      op->GetName().c_str(), op->GetType().c_str());
     GELOGE(FAILED, "Set squeeze axis attr failed");
     return FAILED;
   }
@@ -121,9 +128,13 @@ Status TensorFlowSqueezeParser::ParseParams(const Message *op_src, ge::OpDescPtr
       }
 
       if (!ge::AttrUtils::SetTensorDesc(op, RESHAPE_ATTR_NAME_INPUT_DESC, input_desc)) {
+        REPORT_CALL_ERROR("E19999", "Set Attr:%s to op:%s(%s) failed", RESHAPE_ATTR_NAME_INPUT_DESC.c_str(),
+                          op->GetName().c_str(), op->GetType().c_str());
         GELOGE(FAILED, "Set input desc  failed");
         return FAILED;
       } if (!ge::AttrUtils::SetTensorDesc(op, RESHAPE_ATTR_NAME_OUTPUT_DESC, output_desc)) {
+        REPORT_CALL_ERROR("E19999", "Set Attr:%s to op:%s(%s) failed", RESHAPE_ATTR_NAME_OUTPUT_DESC.c_str(),
+                          op->GetName().c_str(), op->GetType().c_str());
         GELOGE(FAILED, "Set output desc  failed");
         return FAILED;
       })

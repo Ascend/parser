@@ -92,6 +92,7 @@ domi::Status ComputeArgRange(const domi::tensorflow::NodeDef &node_def, const do
     GE_IF_BOOL_EXEC(
       !GraphToFunctionDef::FindAttrValue(&node_def, arg_def.number_attr(), attr_value),
       GELOGE(domi::INTERNAL_ERROR, "In NodeDef %s Attr number_attr is not exist.", node_def.name().c_str());
+      REPORT_INNER_ERROR("E19999", "Attr:number_attr not exist in node:%s, check invalid", node_def.name().c_str());
       return domi::INTERNAL_ERROR);
     *num = attr_value.i();
   } else if (!arg_def.type_list_attr().empty()) {
@@ -101,12 +102,15 @@ domi::Status ComputeArgRange(const domi::tensorflow::NodeDef &node_def, const do
     GE_IF_BOOL_EXEC(
       !GraphToFunctionDef::FindAttrValue(&node_def, arg_def.type_list_attr(), attr_value),
       GELOGE(domi::INTERNAL_ERROR, "In NodeDef %s Attr type_list_attr is not exist.", node_def.name().c_str());
+      REPORT_INNER_ERROR("E19999", "Attr:type_list_attr not exist in node:%s, check invalid", node_def.name().c_str());
       return domi::INTERNAL_ERROR);
     *num = attr_value.list().type_size();
   } else if ((!arg_def.type_attr().empty()) || (arg_def.type() != DT_INVALID)) {
     *num = 1;
   } else {
     GELOGE(domi::INTERNAL_ERROR, "In NodeDef %s Attr type_list_attr is not exist.", node_def.name().c_str());
+    REPORT_INNER_ERROR("E19999", "arg_def for node:%s is invalid, number_attr type_list_attr type_attr all empty",
+                       node_def.name().c_str());
     return domi::INTERNAL_ERROR;
   }
   return SUCCESS;
@@ -143,6 +147,8 @@ domi::Status RemapFunctionDef(FunctionDef *fdef, const string &name, NameMapHelp
   for (int i = 0; i < fdef->signature().input_arg_size(); ++i) {
     const string &input_name = fdef->signature().input_arg(i).name();
     GE_IF_BOOL_EXEC(input_name.empty(),
+                    REPORT_INNER_ERROR("E19999", "In fdef %s, index:%d input_name is empty, check invalid",
+                                       fdef->signature().name().c_str(), i);
                     GELOGE(domi::INTERNAL_ERROR, "In fdef %s  input_name null .", fdef->signature().name().c_str());
                     return domi::INTERNAL_ERROR);
   }
@@ -157,6 +163,8 @@ domi::Status RemapFunctionDef(FunctionDef *fdef, const string &name, NameMapHelp
         const string normalized = node_names.Renormalize(node_def->input(i).substr(1));
 
         GE_IF_BOOL_EXEC(normalized.empty(),
+                        REPORT_INNER_ERROR("E19999", "Could not remap control input %s of node %s in function %s",
+                                           node_def->input(i).c_str(), node_def->name().c_str(), name.c_str());
                         GELOGE(domi::INTERNAL_ERROR, "Could not remap control input %s of node %s in function %s .",
                                node_def->input(i).c_str(), node_def->name().c_str(), name.c_str());
                         return domi::INTERNAL_ERROR);
@@ -166,6 +174,8 @@ domi::Status RemapFunctionDef(FunctionDef *fdef, const string &name, NameMapHelp
         const auto iter = tensor_renaming.find(node_def->input(i));
 
         GE_IF_BOOL_EXEC(iter == tensor_renaming.end(),
+                        REPORT_INNER_ERROR("E19999", "Could not remap input %s of node %s in function %s",
+                                           node_def->input(i).c_str(), node_def->name().c_str(), name.c_str());
                         GELOGE(domi::INTERNAL_ERROR, "Could not remap input %s of node %s in function %s .",
                                node_def->input(i).c_str(), node_def->name().c_str(), name.c_str());
                         return domi::INTERNAL_ERROR);
@@ -180,19 +190,25 @@ domi::Status RemapFunctionDef(FunctionDef *fdef, const string &name, NameMapHelp
     const string &ret_name = fdef->signature().output_arg(r).name();
 
     GE_IF_BOOL_EXEC(ret_name.empty(),
+                    REPORT_INNER_ERROR("E19999", "Missing output %d to function %s", r, name.c_str());
                     GELOGE(domi::INTERNAL_ERROR, "Missing output %d to function %s .", r, name.c_str());
                     return domi::INTERNAL_ERROR);
 
     const string &return_value = return_values[ret_name];
 
     GE_IF_BOOL_EXEC(return_value.empty(),
+                    REPORT_INNER_ERROR("E19999", "Could not remap return value %d ,%s of %s in function %s", r,
+                                       ret_name.c_str(), return_value.c_str(), name.c_str());
                     GELOGE(domi::INTERNAL_ERROR, "Could not remap return value %d ,%s of %s in function %s .", r,
                            ret_name.c_str(), return_value.c_str(), name.c_str());
                     return domi::INTERNAL_ERROR);
 
     const auto iter = tensor_renaming.find(return_value);
 
-    GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(iter == tensor_renaming.end(), return domi::INTERNAL_ERROR,
+    GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(iter == tensor_renaming.end(),
+                                   REPORT_INNER_ERROR("E19999", "can not find value[%s] in tensor_renaming map",
+                                                      return_value.c_str());
+                                   return domi::INTERNAL_ERROR,
                                    "can not find value[%s] in tensor_renaming map.", return_value.c_str());
 
     (*fdef->mutable_ret())[ret_name] = iter->second;
@@ -213,6 +229,9 @@ domi::Status GraphToFunctionDef::RecordResult(ge::ComputeGraphPtr graph,
     int32_t type = anchor->GetOwnerNode()->GetOpDesc()->GetOutputDesc(anchor->GetIdx()).GetDataType();
     auto iter = GE_TENSORFLOW_DATA_TYPE_MAP.find(type);
     GE_IF_BOOL_EXEC(iter == GE_TENSORFLOW_DATA_TYPE_MAP.end(),
+                    REPORT_INNER_ERROR("E19999", "datatype:%d of output:%d in node:%s:%s is not supported",
+                                       type, anchor->GetIdx(), anchor->GetOwnerNode()->GetName().c_str(),
+                                       anchor->GetOwnerNode()->GetName().c_str());
                     GELOGE(PARAM_INVALID, "data_type %d not supported", type);
                     return PARAM_INVALID);
     int32_t dtype = iter->second;
@@ -222,11 +241,13 @@ domi::Status GraphToFunctionDef::RecordResult(ge::ComputeGraphPtr graph,
     GE_MAKE_SHARED(op = std::make_shared<ge::OpDesc>(op_name, ge::parser::NETOUTPUT), return FAILED);
     graphStatus status = op->AddInputDesc(ge::GeTensorDesc());
     if (status != GRAPH_SUCCESS) {
+      REPORT_CALL_ERROR("E19999", "Add input desc to op:%s(%s) failed", op->GetName().c_str(), op->GetType().c_str());
       GELOGE(FAILED, "Add input desc for op:%s failed.", op->GetName().c_str());
       return FAILED;
     }
     status = op->AddOutputDesc(ge::GeTensorDesc());
     if (status != GRAPH_SUCCESS) {
+      REPORT_CALL_ERROR("E19999", "Add output desc to op:%s(%s) failed", op->GetName().c_str(), op->GetType().c_str());
       GELOGE(FAILED, "Add output desc for op:%s failed.", op->GetName().c_str());
       return FAILED;
     }
@@ -244,6 +265,11 @@ domi::Status GraphToFunctionDef::RecordResult(ge::ComputeGraphPtr graph,
         GE_CHECK_NOTNULL(in_archor_ptr);
         ge::graphStatus ret = ge::GraphUtils::AddEdge(out_archor_ptr, in_archor_ptr);
         if (ret != ge::GRAPH_SUCCESS) {
+          REPORT_CALL_ERROR("E19999", "Add edge between op:%s(%s)(index:%d) and op:%s(%s)(index:%d) failed",
+                            out_archor_ptr->GetOwnerNode()->GetName().c_str(),
+                            out_archor_ptr->GetOwnerNode()->GetType().c_str(), out_archor_ptr->GetIdx(),
+                            in_archor_ptr->GetOwnerNode()->GetName().c_str(),
+                            in_archor_ptr->GetOwnerNode()->GetType().c_str(), in_archor_ptr->GetIdx());
           GELOGE(domi::INTERNAL_ERROR, "Add edge failed,src op:%s,dst op:%s", node->GetName().c_str(),
                  res_node->GetName().c_str());
           return FAILED;
@@ -251,7 +277,13 @@ domi::Status GraphToFunctionDef::RecordResult(ge::ComputeGraphPtr graph,
         node_exists = true;
       }
     }
-    GE_IF_BOOL_EXEC(!node_exists, GELOGE(FAILED, "node not exists!"); return FAILED);
+    GE_IF_BOOL_EXEC(!node_exists,
+                    GELOGE(FAILED, "node not exists!");
+                    REPORT_CALL_ERROR("E19999", "Node:%s(%s) not found in graph:%s, check invalid",
+                                      anchor->GetOwnerNode()->GetName().c_str(),
+                                      anchor->GetOwnerNode()->GetType().c_str(),
+                                      graph->GetName().c_str());
+                    return FAILED);
     result_datetypes_.emplace_back(domi::tensorflow::DataType(dtype));
 
     index++;
@@ -274,6 +306,9 @@ domi::Status GraphToFunctionDef::RecordArg(ge::ComputeGraphPtr graph, const vect
     int32_t type = tensor_desc_ptr->GetDataType();
     auto iter = GE_TENSORFLOW_DATA_TYPE_MAP.find(type);
     GE_IF_BOOL_EXEC(iter == GE_TENSORFLOW_DATA_TYPE_MAP.end(),
+                    REPORT_INNER_ERROR("E19999", "datatype:%d of input:%d in node:%s:%s is not supported",
+                                       type, anchor->GetIdx(), anchor->GetOwnerNode()->GetName().c_str(),
+                                       anchor->GetOwnerNode()->GetName().c_str());
                     GELOGE(PARAM_INVALID, "data_type %d not supported", type);
                     return PARAM_INVALID);
     int32_t dtype = iter->second;
@@ -285,6 +320,7 @@ domi::Status GraphToFunctionDef::RecordArg(ge::ComputeGraphPtr graph, const vect
     GE_MAKE_SHARED(op = std::make_shared<ge::OpDesc>(op_name, ge::parser::DATA), return FAILED);
     graphStatus status = op->AddOutputDesc(ge::GeTensorDesc());
     if (status != GRAPH_SUCCESS) {
+      REPORT_CALL_ERROR("E19999", "Add output desc to op:%s(%s) failed", op->GetName().c_str(), op->GetType().c_str());
       GELOGE(FAILED, "Add output desc for op:%s failed.", op->GetName().c_str());
       return FAILED;
     }
@@ -303,6 +339,11 @@ domi::Status GraphToFunctionDef::RecordArg(ge::ComputeGraphPtr graph, const vect
         (void)ge::GraphUtils::RemoveEdge(in_archor_ptr->GetPeerOutAnchor(), in_archor_ptr);
         ge::graphStatus ret = ge::GraphUtils::AddEdge(out_archor_ptr, in_archor_ptr);
         if (ret != ge::GRAPH_SUCCESS) {
+          REPORT_CALL_ERROR("E19999", "Add control edge between op:%s(%s)(index:%d) and op:%s(%s)(index:%d) failed",
+                            out_archor_ptr->GetOwnerNode()->GetName().c_str(),
+                            out_archor_ptr->GetOwnerNode()->GetType().c_str(), out_archor_ptr->GetIdx(),
+                            in_archor_ptr->GetOwnerNode()->GetName().c_str(),
+                            in_archor_ptr->GetOwnerNode()->GetType().c_str(), in_archor_ptr->GetIdx());
           GELOGE(domi::INTERNAL_ERROR, "Add edge failed,src op:%s,dst op:%s", arg_node->GetName().c_str(),
                  node->GetName().c_str());
           return FAILED;
@@ -310,7 +351,12 @@ domi::Status GraphToFunctionDef::RecordArg(ge::ComputeGraphPtr graph, const vect
         node_exists = true;
       }
     }
-    GE_IF_BOOL_EXEC(!node_exists, GELOGE(FAILED, "node not exists!"); return FAILED);
+    GE_IF_BOOL_EXEC(!node_exists,
+                    REPORT_CALL_ERROR("E19999", "Node:%s(%s) not found in graph:%s, check invalid",
+                                      anchor->GetOwnerNode()->GetName().c_str(),
+                                      anchor->GetOwnerNode()->GetType().c_str(),
+                                      graph->GetName().c_str());
+                    GELOGE(FAILED, "node not exists!"); return FAILED);
     arg_datetypes_.emplace_back(domi::tensorflow::DataType(dtype));
     index++;
   }
@@ -422,6 +468,8 @@ domi::Status GraphToFunctionDef::DavGraphToFunctionDef(ge::ComputeGraphPtr graph
     // Add regular inputs
     for (auto anchor : in_anchors) {
       GE_IF_BOOL_EXEC(anchor == nullptr,
+                      REPORT_INNER_ERROR("E19999", "Nonconsecutive input edges; missing input edge for node %s",
+                                        node_def_.name().c_str());
                       GELOGE(domi::INTERNAL_ERROR, "Nonconsecutive input edges; missing input edge , for node %s .",
                              node_def_.name().c_str());
                       return domi::INTERNAL_ERROR);

@@ -38,8 +38,11 @@ Status TensorFlowReshapeParser::ParseDesc(const domi::tensorflow::AttrValue &att
 
   auto data_type = ge_desc.GetDataType();
   bool type_ret = ge::TypeUtils::GetDataTypeLength(data_type, size_type);
-  GE_IF_BOOL_EXEC(!type_ret, GELOGE(FAILED, "Can't GetDataTypeLength of data_type: %s",
-                                       ge::TypeUtils::DataTypeToSerialString(data_type).c_str());
+  GE_IF_BOOL_EXEC(!type_ret,
+                  REPORT_CALL_ERROR("E19999", "Data type %s is not supported",
+                                    ge::TypeUtils::DataTypeToSerialString(data_type).c_str());
+                  GELOGE(FAILED, "Can't GetDataTypeLength of data_type: %s",
+                         ge::TypeUtils::DataTypeToSerialString(data_type).c_str());
                   return PARAM_INVALID);
   // calculate size
   for (uint32_t j = 0; j < ge_desc.GetShape().GetDimNum(); ++j) {

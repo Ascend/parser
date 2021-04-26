@@ -40,6 +40,8 @@ Status TensorFlowMergeParser::ParseParams(const Message *op_src, ge::OpDescPtr &
   // add dynamic input
   graphStatus ret = op_desc->AddDynamicInputDesc("x", input_tensor_num);
   if (ret != GRAPH_SUCCESS) {
+    REPORT_CALL_ERROR("E19999", "Add Dynamic InputDesc name:x to node:%s(%s) failed",
+                      op_desc->GetName().c_str(), op_desc->GetType().c_str());
     GELOGE(FAILED, "Add dynamic input:x for node:%s failed.", op_desc->GetName().c_str());
     return FAILED;
   }

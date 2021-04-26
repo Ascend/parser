@@ -27,27 +27,31 @@ using domi::tensorflow::DataType;
 using domi::tensorflow::NodeDef;
 
 namespace ge {
-#define GET_CONST_VALUE(tensor, param, index, FIELD)                                                    \
-  do {                                                                                                  \
-    google::protobuf::RepeatedField<FIELD> val_vec;                                                     \
-    int32_t val_size = 0;                                                                               \
-    val_vec = tensor.FIELD##_val();                                                                     \
-    val_size = val_vec.size();                                                                          \
-    if (index < val_size) {                                                                             \
-      param = val_vec.Get(index);                                                                       \
-    } else if (tensor.has_tensor_shape()) {                                                             \
-      const std::string tensor_content = tensor.tensor_content();                                       \
-      char *buf = const_cast<char *>(tensor_content.data());                                            \
-      FIELD *buf_v = reinterpret_cast<FIELD *>(buf);                                                    \
-      if (static_cast<uint32_t>(index) >= tensor_content.length() / sizeof(FIELD)) {                    \
-        GELOGE(domi::PARAM_INVALID, "Const data size is smaller than index :%d,not supported!", index); \
-        return domi::PARAM_INVALID;                                                                     \
-      }                                                                                                 \
-      param = buf_v[index];                                                                             \
-    } else {                                                                                            \
-      GELOGE(domi::PARAM_INVALID, "Const data size is smaller than index :%d,not supported!", index);   \
-      return domi::PARAM_INVALID;                                                                       \
-    }                                                                                                   \
+#define GET_CONST_VALUE(tensor, param, index, FIELD)                                                        \
+  do {                                                                                                      \
+    google::protobuf::RepeatedField<FIELD> val_vec;                                                         \
+    int32_t val_size = 0;                                                                                   \
+    val_vec = tensor.FIELD##_val();                                                                         \
+    val_size = val_vec.size();                                                                              \
+    if (index < val_size) {                                                                                 \
+      param = val_vec.Get(index);                                                                           \
+    } else if (tensor.has_tensor_shape()) {                                                                 \
+      const std::string tensor_content = tensor.tensor_content();                                           \
+      char *buf = const_cast<char *>(tensor_content.data());                                                \
+      FIELD *buf_v = reinterpret_cast<FIELD *>(buf);                                                        \
+      if (static_cast<uint32_t>(index) >= tensor_content.length() / sizeof(FIELD)) {                        \
+        REPORT_INNER_ERROR("E19999", "Const data size of node:%s is smaller than index:%d, not supported!", \
+                           node_def->name().c_str(), index);                                                \
+        GELOGE(domi::PARAM_INVALID, "Const data size is smaller than index :%d,not supported!", index);     \
+        return domi::PARAM_INVALID;                                                                         \
+      }                                                                                                     \
+      param = buf_v[index];                                                                                 \
+    } else {                                                                                                \
+      REPORT_INNER_ERROR("E19999", "Const data size of node:%s is smaller than index:%d, not supported!",   \
+                         node_def->name().c_str(), index);                                                  \
+      GELOGE(domi::PARAM_INVALID, "Const data size is smaller than index :%d,not supported!", index);       \
+      return domi::PARAM_INVALID;                                                                           \
+    }                                                                                                       \
   } while (false)
 
 Status TensorFlowFusionOpParser::GetTensorFromNode(const NodeDef *node_def, TensorProto &tensor) {
@@ -59,6 +63,8 @@ Status TensorFlowFusionOpParser::GetTensorFromNode(const NodeDef *node_def, Tens
   domi::tensorflow::AttrValue attr_value;
   // Check that the attribute value must exist and get the value.
   if (!TensorFlowUtil::FindAttrValue(node_def, TENSORFLOW_ATTR_VALUE, attr_value)) {
+    REPORT_CALL_ERROR("E19999", "In NodeDef:%s attr:%s not exist, check invalid",
+                      node_def->name().c_str(), TENSORFLOW_ATTR_VALUE.c_str());
     GELOGE(domi::PARAM_INVALID, "NodeDef %s Attr %s is not exist.", node_name.c_str(), TENSORFLOW_ATTR_VALUE.c_str());
     return domi::PARAM_INVALID;
   }
@@ -116,10 +122,13 @@ Status TensorFlowFusionOpParser::ParseHalfFromConst(const NodeDef *node_def, flo
       ge::parser::fp16_t fp16_value = static_cast<parser::fp16_t>(val_vec.Get(index));
       param = fp16_value.ToFloat();
     } else {
+      REPORT_INNER_ERROR("E19999", "Const data size:%d of node:%s <= index:%d, not supported!",
+                         val_size, node_def->name().c_str(), index);
       GELOGE(domi::PARAM_INVALID, "Const data size is smaller than index:%d, not supported.", index);
       return domi::PARAM_INVALID;
     }
   } else {
+    REPORT_INNER_ERROR("E19999", "Node %s does not have half value, index:%d.", node_def->name().c_str(), index);
     GELOGE(domi::PARAM_INVALID, "Node %s does not have half value, index:%d.", node_def->name().c_str(), index);
     return domi::PARAM_INVALID;
   }
@@ -131,7 +140,11 @@ Status TensorFlowFusionOpParser::ParseWeightFromConst(const NodeDef *node_def, g
   TensorProto tensor;
   GE_CHK_STATUS_RET(GetTensorFromNode(node_def, tensor), "get tensor failed.");
   weight = ge::parser::MakeShared<ge::GeTensor>();
-  GE_CHECK_NOTNULL(weight);
+  if (weight == nullptr) {
+    REPORT_CALL_ERROR("E19999", "New GeTensor failed for node:%s", node_def->name().c_str());
+    GELOGE(domi::PARAM_INVALID, "New GeTensor failed for node:%s", node_def->name().c_str());
+    return domi::PARAM_INVALID;
+  }
   domi::tensorflow::DataType data_type = tensor.dtype();
   GE_CHK_STATUS_RET(
     domi::TensorAssign::SetGeTensorDataType(domi::TensorAssign::ConvertTensorflowDataType(data_type), weight),

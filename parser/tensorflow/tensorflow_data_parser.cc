@@ -69,6 +69,9 @@ Status TensorFlowDataParser::ParseInputFromModel(const Message *op_src, ge::OpDe
     domi::tensorflow::DataType tf_type = attr_value.type();
     ge::DataType type = domi::TensorAssign::ConvertTensorflowDataType(tf_type);
     CHECK_FALSE_EXEC(type != ge::DataType::DT_UNDEFINED,
+                     REPORT_CALL_ERROR("E19999", "Data type %s of node %s is not supported",
+                                       DataType_Name(tf_type).c_str(),
+                                       node->name().c_str());
                      GELOGE(domi::PARAM_INVALID,
                             "Data type %s of node %s is not supported.",
                             DataType_Name(tf_type).c_str(),
@@ -76,7 +79,8 @@ Status TensorFlowDataParser::ParseInputFromModel(const Message *op_src, ge::OpDe
                      return domi::PARAM_INVALID);
 
     GE_CHK_BOOL_RET_STATUS(ge::AttrUtils::SetInt(op_def, DATA_ATTR_NAME_DATA_TYPE, static_cast<int64_t>(type)), FAILED,
-                           "SetInt failed");
+                           "SetAttr:%s to node:%s(%s) failed", DATA_ATTR_NAME_DATA_TYPE.c_str(),
+                           op_def->GetName().c_str(), op_def->GetType().c_str());
   }
 
   if (!TensorFlowUtil::FindAttrValue(node, TENSORFLOW_ATTR_SHAPE, attr_value)) {
@@ -139,7 +143,7 @@ Status TensorFlowDataParser::CheckInputShape(const std::string &name) {
     // dim i = 0, means empty tensor.
     // dim i = -1 or -2, means unknown shape.
     GE_CHK_BOOL_RET_STATUS(user_input_dims_v[i] >= kValidShapeMinValue, domi::PARAM_INVALID,
-        "parse data node %s: shape contains placeholder ,but not designated by user", name.c_str());
+        "parse data node %s: shape contains placeholder, but not designated by user", name.c_str());
   }
   return SUCCESS;
 }

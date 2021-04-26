@@ -32,9 +32,14 @@ Status TensorFlowCustomParserAdapter::ParseParams(const Message *op_src, ge::OpD
   GE_CHECK_NOTNULL(op_dest);
 
   ParseParamFunc custom_op_parser = domi::OpRegistry::Instance()->GetParseParamFunc(op_dest->GetType(), node_src->op());
-  GE_CHECK_NOTNULL(custom_op_parser);
+  if (custom_op_parser == nullptr) {
+    REPORT_CALL_ERROR("E19999", "No ParseParamFunc of node:%s exist in OpRegistry", node_src->name().c_str());
+    GELOGE(FAILED, "No ParseParamFunc of node:%s exist in OpRegistry", node_src->name().c_str());
+    return FAILED;
+  }
   ge::Operator op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_dest);
-  GE_CHK_BOOL_RET_STATUS(custom_op_parser(op_src, op) == SUCCESS, FAILED, "Custom parser params failed");
+  GE_CHK_BOOL_RET_STATUS(custom_op_parser(op_src, op) == SUCCESS, FAILED, "Custom parser params failed for node:%s",
+                         node_src->name().c_str());
 
   op.BreakConnect();
 
@@ -47,10 +52,15 @@ Status TensorFlowCustomParserAdapter::ParseParams(const Operator &op_src, ge::Op
   GE_CHECK_NOTNULL(op_dest);
 
   ParseParamByOpFunc custom_op_parser = domi::OpRegistry::Instance()->GetParseParamByOperatorFunc(op_src.GetOpType());
-  GE_CHECK_NOTNULL(custom_op_parser);
-  ge::Operator op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_dest);
-  GE_CHK_BOOL_RET_STATUS(custom_op_parser(op_src, op) == SUCCESS, FAILED, "Custom parser params failed");
+  if (custom_op_parser == nullptr) {
+    REPORT_CALL_ERROR("E19999", "No ParseParamByOperatorFunc of node:%s exist in OpRegistry", op_src.GetName().c_str());
+    GELOGE(FAILED, "No ParseParamByOperatorFunc of node:%s exist in OpRegistry", op_src.GetName().c_str());
+    return FAILED;
+  }
 
+  ge::Operator op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_dest);
+  GE_CHK_BOOL_RET_STATUS(custom_op_parser(op_src, op) == SUCCESS, FAILED, "Custom parser params failed or node:%s",
+                         op_src.GetName().c_str());
   op_src.BreakConnect();
 
   return SUCCESS;
