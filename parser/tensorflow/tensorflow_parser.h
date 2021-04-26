@@ -565,7 +565,8 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
   *
   */
   static Status ParseNodeDef(TensorFlowModelParser *parser, ge::ComputeGraphPtr &graph, std::mutex *graphMutex,
-                             shared_ptr<ge::ScopeGraph> &scope_graph, const domi::tensorflow::NodeDef *node_def);
+                             shared_ptr<ge::ScopeGraph> &scope_graph, const domi::tensorflow::NodeDef *node_def,
+                             error_message::Context error_context);
 
   /**
   * @ingroup domi_omg

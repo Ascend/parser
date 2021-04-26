@@ -936,7 +936,7 @@ Status OnnxModelParser::ModelParseToGraphImpl(bool is_subgraph, ge::onnx::GraphP
 }
 
 Status OnnxModelParser::Parse(const char *file, ge::Graph &graph) {
-  ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
+  ErrorManager::GetInstance().SetStage(error_message::kModelCompile, error_message::kParser);
   ge::onnx::ModelProto onnx_model;
   Status ret = GetModelFromFile(file, onnx_model);
   if (ret != SUCCESS) {
@@ -952,7 +952,7 @@ Status OnnxModelParser::Parse(const char *file, ge::Graph &graph) {
 }
 
 Status OnnxModelParser::ParseFromMemory(const char *data, uint32_t size, ge::Graph &graph) {
-  ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
+  ErrorManager::GetInstance().SetStage(error_message::kModelCompile, error_message::kParser);
   ge::onnx::ModelProto onnx_model;
   Status ret = GetModelFromMemory(data, size, onnx_model);
   if (ret != SUCCESS) {

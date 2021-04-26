@@ -40,10 +40,18 @@ Status TensorFlowFusionCustomParserAdapter::ParseParams(const vector<const NodeD
   (void)ge::AttrUtils::GetStr(node->GetOpDesc(), ge::ATTR_NAME_FUSIONOP_ORIGINAL_TYPE, ori_type);
   FusionParseParamFunc
       custom_op_parser = domi::OpRegistry::Instance()->GetFusionParseParamFunc(op_dest->GetType(), ori_type);
-  GE_CHECK_NOTNULL(custom_op_parser);
+  if (custom_op_parser == nullptr) {
+    REPORT_CALL_ERROR("E19999", "No FusionParseParamFunc of node:%s(%s) exist in OpRegistry",
+                      node->GetName().c_str(), node->GetType().c_str());
+    GELOGE(FAILED, "No FusionParseParamFunc of node:%s(%s) exist in OpRegistry",
+           node->GetName().c_str(), node->GetType().c_str());
+    return FAILED;
+  }
   GELOGI("Get fusion parser succ, node: %s.", node->GetName().c_str());
   ge::Operator op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_dest);
-  GE_CHK_BOOL_RET_STATUS(custom_op_parser(inside_nodes, op) == SUCCESS, FAILED, "Custom parser params failed");
+  GE_CHK_BOOL_RET_STATUS(custom_op_parser(inside_nodes, op) == SUCCESS, FAILED,
+                         "Custom parse params failed for node:%s(%s)",
+                         node->GetName().c_str(), node->GetType().c_str());
 
   op.BreakConnect();
   GELOGI("Run fusion parser succ, node: %s.", node->GetName().c_str());
@@ -61,9 +69,17 @@ Status TensorFlowFusionCustomParserAdapter::ParseParams(const std::vector<ge::Op
   (void)ge::AttrUtils::GetStr(node->GetOpDesc(), ge::ATTR_NAME_FUSIONOP_ORIGINAL_TYPE, ori_type);
   FusionParseParamByOpFunc
       custom_op_parser = domi::OpRegistry::Instance()->GetFusionParseParamByOpFunc(op_dest->GetType(), ori_type);
-  GE_CHECK_NOTNULL(custom_op_parser);
+  if (custom_op_parser == nullptr) {
+    REPORT_CALL_ERROR("E19999", "No FusionParseParamByOpFunc of node:%s(%s) exist in OpRegistry",
+                      node->GetName().c_str(), node->GetType().c_str());
+    GELOGE(FAILED, "No FusionParseParamByOpFunc of node:%s(%s) exist in OpRegistry",
+           node->GetName().c_str(), node->GetType().c_str());
+    return FAILED;
+  }
   ge::Operator op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_dest);
-  GE_CHK_BOOL_RET_STATUS(custom_op_parser(v_input_const, op) == SUCCESS, FAILED, "Custom parser params failed");
+  GE_CHK_BOOL_RET_STATUS(custom_op_parser(v_input_const, op) == SUCCESS, FAILED,
+                         "Custom parser params failedfor node:%s(%s)",
+                         node->GetName().c_str(), node->GetType().c_str());
 
   for (const auto &op_src : v_input_const) {
     op_src.BreakConnect();

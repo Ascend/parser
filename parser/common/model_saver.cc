@@ -81,8 +81,8 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status ModelSaver::SaveJsonToFi
   }
   // Close file
   if (mmClose(fd) != EN_OK) {
-    REPORT_INNER_ERROR("E19999", "close file:%s failed", file_path);
-    GELOGE(FAILED, "[Close][File] %s failed.", file_path);
+    REPORT_INNER_ERROR("E19999", "close file:%s failed. errmsg:%s", file_path, strerror(errno));
+    GELOGE(FAILED, "[Close][File] %s failed. errmsg:%s", file_path, strerror(errno));
     ret = FAILED;
   }
   return ret;
@@ -137,8 +137,8 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY int ModelSaver::CreateDirectory
         if (ret != 0) {
           if (errno != EEXIST) {
             ErrorManager::GetInstance().ATCReportErrMessage("E19006", {"path"}, {directory_path});
-            GELOGW("Can not create directory %s. Make sure the directory exists and writable.",
-                   directory_path.c_str());
+            GELOGW("Can not create directory %s. Make sure the directory exists and writable. errmsg:%s",
+                   directory_path.c_str(), strerror(errno));
             return ret;
           }
         }
@@ -149,7 +149,8 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY int ModelSaver::CreateDirectory
   if (ret != 0) {
     if (errno != EEXIST) {
       ErrorManager::GetInstance().ATCReportErrMessage("E19006", {"path"}, {directory_path});
-      GELOGW("Can not create directory %s. Make sure the directory exists and writable.", directory_path.c_str());
+      GELOGW("Can not create directory %s. Make sure the directory exists and writable. errmsg:%s",
+             directory_path.c_str(), strerror(errno));
       return ret;
     }
   }

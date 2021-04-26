@@ -27,6 +27,7 @@ shared_ptr<ScopeGraph> ScopePassManager::BuildScopeGraph(domi::tensorflow::Graph
   GE_CHK_BOOL_EXEC(graph_def != nullptr, return nullptr, "graph_def is nullptr");
   scope_graph_ = ge::parser::MakeShared<ScopeGraph>();
   if (scope_graph_ == nullptr) {
+    REPORT_CALL_ERROR("E19999", "New ScopeGraph failed");
     GELOGE(FAILED, "Scope graph make shared failed.");
     return nullptr;
   }
@@ -59,6 +60,7 @@ Status ScopePassManager::Run(shared_ptr<ScopeGraph> &graph) {
     auto &impl = pass->impl_;
     if (impl == nullptr) {
       GELOGE(ge::MEMALLOC_FAILED, "ScopeBasePass is not properly initialized.");
+      REPORT_INNER_ERROR("E19999", "ScopeBasePass is not properly initialized");
       continue;
     }
 

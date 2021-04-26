@@ -74,7 +74,7 @@ using std::ifstream;
 
 namespace ge {
 graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file, ge::Graph &graph) {
-  ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
+  ErrorManager::GetInstance().SetStage(error_message::kModelCompile, error_message::kParser);
   GE_CHECK_NOTNULL(model_file);
   GetParserContext().type = domi::CAFFE;
   std::map<string, string> options;
@@ -128,7 +128,7 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file, 
 
 graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file,
                               const std::map<AscendString, AscendString> &parser_params, ge::Graph &graph) {
-  ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
+  ErrorManager::GetInstance().SetStage(error_message::kModelCompile, error_message::kParser);
   GE_CHECK_NOTNULL(model_file);
   GetParserContext().type = domi::CAFFE;
   std::map<string, string> options;
@@ -558,8 +558,8 @@ Status CaffeModelParser::ParseProtoFile(const string &proto_file, std::map<int32
 Status CaffeModelParser::ReadModelWithoutWarning(const char *model_path, google::protobuf::Message *message) {
   int32_t copy_fd = mmDup(STDERR_FILENO);
   if (copy_fd < 0) {
-    ErrorManager::GetInstance().ATCReportErrMessage("E19020", {"file"}, {"STDERR_FILENO"});
-    GELOGE(FAILED, "[Invoke][Dup] failed: %d.", copy_fd);
+    ErrorManager::GetInstance().ATCReportErrMessage("E19020", {"file", "errmsg"}, {"STDERR_FILENO", strerror(errno)});
+    GELOGE(FAILED, "[Invoke][Dup] failed:%d, reason:%s", copy_fd, strerror(errno));
     return FAILED;
   }
 
@@ -567,15 +567,15 @@ Status CaffeModelParser::ReadModelWithoutWarning(const char *model_path, google:
   if (fd < 0) {
     (void)mmClose(copy_fd);
     ErrorManager::GetInstance().ATCReportErrMessage("E19001", {"file", "errmsg"}, {kDevNull, strerror(errno)});
-    GELOGE(FAILED, "[Open][File] %s failed.", kDevNull);
+    GELOGE(FAILED, "[Open][File] %s failed. reason:%s", kDevNull, strerror(errno));
     return FAILED;
   }
 
   if (mmDup2(fd, STDERR_FILENO) < 0) {
     (void)mmClose(fd);
     (void)mmClose(copy_fd);
-    ErrorManager::GetInstance().ATCReportErrMessage("E19020", {"file"}, {"STDERR_FILENO"});
-    GELOGE(FAILED, "[Invoke][Dup2] Re-orient failed.");
+    ErrorManager::GetInstance().ATCReportErrMessage("E19020", {"file", "errmsg"}, {"STDERR_FILENO", strerror(errno)});
+    GELOGE(FAILED, "[Invoke][Dup2] Re-orient failed. reason:%s", strerror(errno));
     return FAILED;
   }
 
@@ -589,8 +589,8 @@ Status CaffeModelParser::ReadModelWithoutWarning(const char *model_path, google:
   if (mmDup2(copy_fd, STDERR_FILENO) < 0) {
     (void)mmClose(fd);
     (void)mmClose(copy_fd);
-    ErrorManager::GetInstance().ATCReportErrMessage("E19020", {"file"}, {"STDERR_FILENO"});
-    GELOGE(FAILED, "[Invoke][Dup2] Re-orient failed.");
+    ErrorManager::GetInstance().ATCReportErrMessage("E19020", {"file", "errmsg"}, {"STDERR_FILENO", strerror(errno)});
+    GELOGE(FAILED, "[Invoke][Dup2] Re-orient failed. reason:%s", strerror(errno));
     return FAILED;
   }
   (void)mmClose(fd);
@@ -1483,7 +1483,7 @@ Status CaffeModelParser::PreCheck(const domi::caffe::NetParameter &net) {
 }
 
 Status CaffeModelParser::ParseFromMemory(const char *data, uint32_t size, ge::ComputeGraphPtr &graph) {
-  ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
+  ErrorManager::GetInstance().SetStage(error_message::kModelCompile, error_message::kParser);
   bool has_error = false;
 
   GE_CHK_BOOL_RET_STATUS(data != nullptr, FAILED, "[Check][Param]model data  is nullptr.");
@@ -1614,7 +1614,7 @@ Status CaffeModelParser::ParseFromMemory(const char *data, uint32_t size, ge::Co
 }
 
 Status CaffeModelParser::Parse(const char *model_path, ge::Graph &graph) {
-  ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
+  ErrorManager::GetInstance().SetStage(error_message::kModelCompile, error_message::kParser);
   GE_CHECK_NOTNULL(model_path);
   ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
   GE_CHECK_NOTNULL(compute_graph);
@@ -1904,7 +1904,7 @@ Status CaffeModelParser::ReorderInput(domi::caffe::NetParameter &net) {
 }
 
 Status CaffeWeightsParser::ParseFromMemory(const char *data, uint32_t size, ge::ComputeGraphPtr &graph) {
-  ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
+  ErrorManager::GetInstance().SetStage(error_message::kModelCompile, error_message::kParser);
   if (data == nullptr) {
     REPORT_INNER_ERROR("E19999", "param data is nullptr.");
     GELOGE(PARAM_INVALID, "[Check][Param]Caffe weights data is nullptr");
@@ -1935,7 +1935,7 @@ Status CaffeWeightsParser::ParseFromMemory(const char *data, uint32_t size, ge::
 }
 
 Status CaffeWeightsParser::Parse(const char *file, ge::Graph &graph) {
-  ErrorManager::GetInstance().SetStage(ErrorMessage::kModelCompile, ErrorMessage::kParser);
+  ErrorManager::GetInstance().SetStage(error_message::kModelCompile, error_message::kParser);
   GE_CHECK_NOTNULL(file);
   ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
   GE_CHECK_NOTNULL(compute_graph);

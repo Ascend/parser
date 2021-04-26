@@ -38,12 +38,14 @@ const char *const kShapeAttrDtype = "dtype";
 
 Status TensorFlowAutoMappingParserAdapter::ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) {
   if (op_src == nullptr) {
+    REPORT_INNER_ERROR("E19999", "Param op_src is nullptr, check invalid");
     GELOGE(PARAM_INVALID, "Op src is null");
     return PARAM_INVALID;
   }
   const NodeDef *node = reinterpret_cast<const NodeDef *>(op_src);
   GELOGD("TF op node name = %s, op type= %s, parse params", node->name().c_str(), node->op().c_str());
   if (op_dest == nullptr) {
+    REPORT_INNER_ERROR("E19999", "Param op_dest is nullptr, check invalid");
     GELOGE(FAILED, "Op dest is null");
     return PARAM_INVALID;
   }
@@ -51,6 +53,7 @@ Status TensorFlowAutoMappingParserAdapter::ParseParams(const Message *op_src, ge
   ge::Operator op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_dest);
   Status ret = domi::AutoMappingFn(op_src, op);
   if (ret != SUCCESS) {
+    REPORT_CALL_ERROR("E19999", "call auto mapping failed for node:%s", op.GetName().c_str());
     GELOGE(FAILED, "Tensorflow auto mapping parser params failed");
     return FAILED;
   }
@@ -86,6 +89,8 @@ Status TensorFlowAutoMappingParserAdapter::ParseParams(const Message *op_src, ge
     ge::DataType out_type = DT_INT32;
     if (AttrUtils::GetDataType(op_dest, kShapeAttrOutType, out_type)) {
       if (!AttrUtils::SetInt(op_dest, kShapeAttrDtype, static_cast<int64_t>(out_type))) {
+        REPORT_CALL_ERROR("E19999", "Set Attr:%s to op:%s(%s) failed", kShapeAttrDtype,
+                          op_dest->GetName().c_str(), op_dest->GetType().c_str());
         GELOGE(FAILED, "Set attr dtype for op:%s failed.", op_dest->GetName().c_str());
         return FAILED;
       }
@@ -104,6 +109,8 @@ Status TensorFlowAutoMappingParserAdapter::ParseParams(const Message *op_src, ge
     // Serialize nodedef into string and package as a whole
     string serialized_node;
     GE_IF_BOOL_EXEC(!pkg_node->SerializeToString(&serialized_node),
+                    REPORT_CALL_ERROR("E19999", "Trans NodeDef:%s(%s) to string failed",
+                                      pkg_node->name().c_str(), pkg_node->op().c_str());
                     GELOGE(PARAM_INVALID, "In FrameworkOp trans NodeDef to string failed.");
                     return PARAM_INVALID);
 

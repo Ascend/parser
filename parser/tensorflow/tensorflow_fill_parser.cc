@@ -48,6 +48,9 @@ domi::Status ParseParams(const NodeDef *node, FillOperator *op) {
   ge::DataType type = domi::TensorAssign::ConvertTensorflowDataType(data_type);
   CHECK_FALSE_EXEC(
       type != ge::DataType::DT_UNDEFINED,
+      REPORT_CALL_ERROR("E19999", "Data type %s of node %s is not supported",
+                        DataType_Name(data_type).c_str(),
+                        node->name().c_str());
       GELOGE(PARAM_INVALID, "Data type %s of node %s is not supported.", DataType_Name(data_type).c_str(),
           node->name().c_str());
       return PARAM_INVALID);

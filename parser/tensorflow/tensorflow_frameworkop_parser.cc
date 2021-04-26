@@ -76,6 +76,8 @@ Status ParseParams(const Message *op_src, FrameworkOpOperator *op) {
   } else {
     GE_CHK_BOOL_EXEC(type == "_Retval",
                      GE_DELETE_NEW_SINGLE(pkg_node);
+                     REPORT_INNER_ERROR("E19999", "In NodeDef:%s Attr:opdef is not exist, check invalid",
+                                        pkg_node->name().c_str());
                      return PARAM_INVALID, "In NodeDef %s Attr opdef is not exist.", pkg_node->name().c_str());
   }
 
@@ -97,6 +99,8 @@ Status ParseParams(const Message *op_src, FrameworkOpOperator *op) {
   // Serialize nodedef into string and package as a whole
   string serialized_node;
   GE_IF_BOOL_EXEC(!pkg_node->SerializeToString(&serialized_node),
+                  REPORT_CALL_ERROR("E19999", "Trans NodeDef:%s(%s) to string failed",
+                                    pkg_node->name().c_str(), pkg_node->op().c_str());
                   GELOGE(PARAM_INVALID, "In FrameworkOp trans NodeDef to string failed.");
                   GE_DELETE_NEW_SINGLE(pkg_node); return PARAM_INVALID);
 

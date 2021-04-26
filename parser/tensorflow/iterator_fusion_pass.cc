@@ -29,6 +29,7 @@ Status IteratorFusionPass::Run(ge::ComputeGraphPtr graph) {
   domi::FrameworkType fmk_type = static_cast<domi::FrameworkType>(fmk_type_);
   std::unique_ptr<ParserGraphOptimizer> graph_optimizer(new (std::nothrow) ParserGraphOptimizer(graph, fmk_type));
   if (graph_optimizer == nullptr) {
+    REPORT_CALL_ERROR("E19999", "New ParserGraphOptimizer failed");
     return FAILED;
   }
 

@@ -42,8 +42,12 @@ Status TensorFlowRefSwitchParser::ParseT(const domi::tensorflow::NodeDef *node, 
 
   domi::tensorflow::DataType tfType = attr.type();
   ge::DataType type = domi::TensorAssign::ConvertTensorflowDataType(tfType);
-  CHECK_FALSE_EXEC(type != ge::DataType::DT_UNDEFINED, GELOGE(FAILED, "Data type %s of node %s is not supported.",
-                                                                 DataType_Name(tfType).c_str(), node->name().c_str());
+  CHECK_FALSE_EXEC(type != ge::DataType::DT_UNDEFINED,
+                   REPORT_CALL_ERROR("E19999", "Data type %s of node %s is not supported",
+                                     DataType_Name(tfType).c_str(),
+                                     node->name().c_str());
+                   GELOGE(FAILED, "Data type %s of node %s is not supported.",
+                          DataType_Name(tfType).c_str(), node->name().c_str());
                    return PARAM_INVALID);
 
   op->T(type);

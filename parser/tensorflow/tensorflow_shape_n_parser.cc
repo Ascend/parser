@@ -44,8 +44,11 @@ Status TensorFlowShapeNParser::ParseInType(const domi::tensorflow::NodeDef *node
 
   domi::tensorflow::DataType tf_type = attr.type();
   ge::DataType type = domi::TensorAssign::ConvertTensorflowDataType(tf_type);
-  CHECK_FALSE_EXEC(type != ge::DataType::DT_UNDEFINED, GELOGE(FAILED, "Data type %s of node %s is not supported.",
-                                                                 DataType_Name(tf_type).c_str(), node->name().c_str());
+  CHECK_FALSE_EXEC(type != ge::DataType::DT_UNDEFINED,
+                   REPORT_CALL_ERROR("E19999", "Data type %s of node %s is not supported",
+                                     DataType_Name(tf_type).c_str(), node->name().c_str());
+                   GELOGE(FAILED, "Data type %s of node %s is not supported.",
+                          DataType_Name(tf_type).c_str(), node->name().c_str());
                    return PARAM_INVALID);
 
   op->InType(type);
@@ -64,8 +67,11 @@ Status TensorFlowShapeNParser::ParseOutType(const domi::tensorflow::NodeDef *nod
 
   domi::tensorflow::DataType tf_type = attr.type();
   ge::DataType type = domi::TensorAssign::ConvertTensorflowDataType(tf_type);
-  CHECK_FALSE_EXEC(type != ge::DataType::DT_UNDEFINED, GELOGE(FAILED, "Data type %s of node %s is not supported.",
-                                                                 DataType_Name(tf_type).c_str(), node->name().c_str());
+  CHECK_FALSE_EXEC(type != ge::DataType::DT_UNDEFINED,
+                   REPORT_CALL_ERROR("E19999", "Data type %s of node %s is not supported",
+                                     DataType_Name(tf_type).c_str(), node->name().c_str());
+                   GELOGE(FAILED, "Data type %s of node %s is not supported.",
+                          DataType_Name(tf_type).c_str(), node->name().c_str());
                    return PARAM_INVALID);
 
   op->OutType(type);
@@ -106,6 +112,8 @@ Status TensorFlowShapeNParser::ParseParams(const Message *op_src, ge::OpDescPtr 
   // add dynamic input/output
   domi::tensorflow::AttrValue attr_num;
   CHECK_FALSE_EXEC(TensorFlowUtil::FindAttrValue(node, SHAPEN_ATTR_N, attr_num),
+                   REPORT_CALL_ERROR("E19999", "In NodeDef:%s attr:%s not exist, check invalid",
+                                     node->name().c_str(), SHAPEN_ATTR_N.c_str());
                    GELOGE(FAILED, "Get Attr N failed in Node %s.", node->name().c_str());
                    return PARAM_INVALID);
   int32_t dynamic_tensor_num = attr_num.i();
@@ -127,12 +135,16 @@ Status TensorFlowShapeNParser::ParseParams(const Message *op_src, ge::OpDescPtr 
     }
     graphStatus status = op_dest->AddDynamicOutputDesc("y", dynamic_tensor_num);
     if (status != GRAPH_SUCCESS) {
+      REPORT_CALL_ERROR("E19999", "Add Dynamic OuputDesc name:y to node:%s(%s) failed",
+                        op_dest->GetName().c_str(), op_dest->GetType().c_str());
       GELOGE(FAILED, "Add dynamic output:y for node:%s failed.", op_dest->GetName().c_str());
       return FAILED;
     }
   }
   graphStatus status = op_dest->AddDynamicInputDesc("x", dynamic_tensor_num);
   if (status != GRAPH_SUCCESS) {
+    REPORT_CALL_ERROR("E19999", "Add Dynamic InputDesc name:x to node:%s(%s) failed",
+                      op_dest->GetName().c_str(), op_dest->GetType().c_str());
     GELOGE(FAILED, "Add dynamic input:x for node:%s failed.", op_dest->GetName().c_str());
     return FAILED;
   }

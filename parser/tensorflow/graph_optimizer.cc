@@ -413,6 +413,8 @@ Status SetTensorAttr(ge::OpDescPtr &opDesc, google::protobuf::Map<string, domi::
       data_count = ge_tensor->GetData().size() / sizeof(bool);
       break;
     default:
+      REPORT_INNER_ERROR("E19999", "datatype:%d of Attr:%s in node:%s:%s is not supported",
+                         ge_datatype, attr.first.c_str(), opDesc->GetName().c_str(), opDesc->GetType().c_str());
       GELOGE(PARAM_INVALID, "NO SUPPORT datatype = %s", ge::TypeUtils::DataTypeToSerialString(ge_datatype).c_str());
       return PARAM_INVALID;
   }
@@ -519,11 +521,20 @@ typedef Status (*PIOListHandle)(ge::GeAttrValue::LIST_INT &input_list, ge::GeAtt
 Status GatherV2IOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_INT &output_list,
                       ge::OpDescPtr &opDesc) {
   int tparams;
-  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "Tparams", tparams)), return PARAM_INVALID, "Get Tparams error.");
+  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "Tparams", tparams)),
+                   REPORT_CALL_ERROR("E19999", "Get Attr:Tparams from op:%s(%s) failed",
+                                     opDesc->GetName().c_str(), opDesc->GetType().c_str());
+                   return PARAM_INVALID, "Get Tparams error.");
   int tindices;
-  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "Tindices", tindices)), return PARAM_INVALID, "Get Tindices error.");
+  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "Tindices", tindices)),
+                   REPORT_CALL_ERROR("E19999", "Get Attr:Tindices from op:%s(%s) failed",
+                                     opDesc->GetName().c_str(), opDesc->GetType().c_str());
+                   return PARAM_INVALID, "Get Tindices error.");
   int taxis;
-  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "Taxis", taxis)), return PARAM_INVALID, "Get Taxis error.");
+  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "Taxis", taxis)),
+                   REPORT_CALL_ERROR("E19999", "Get Attr:Taxis from op:%s(%s) failed",
+                                     opDesc->GetName().c_str(), opDesc->GetType().c_str());
+                   return PARAM_INVALID, "Get Taxis error.");
 
   // input_list - eg:{1, 3, 3}
   input_list.push_back(tparams);
@@ -548,7 +559,10 @@ Status ConstIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_
 Status MaxMinIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_INT &output_list,
                     ge::OpDescPtr &opDesc) {
   int attrT;
-  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", attrT)), return PARAM_INVALID, "Get Tparams error.");
+  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", attrT)),
+                   REPORT_CALL_ERROR("E19999", "Get Attr:T from op:%s(%s) failed",
+                                     opDesc->GetName().c_str(), opDesc->GetType().c_str());
+                   return PARAM_INVALID, "Get Tparams error.");
 
   // input_list
   input_list.push_back(attrT);
@@ -564,8 +578,14 @@ Status CastIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_I
                   ge::OpDescPtr &opDesc) {
   int srcT;
   int dstT;
-  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "SrcT", srcT)), return PARAM_INVALID, "Get srcT error.");
-  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "DstT", dstT)), return PARAM_INVALID, "Get dstT error.");
+  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "SrcT", srcT)),
+                   REPORT_CALL_ERROR("E19999", "Get Attr:SrcT from op:%s(%s) failed",
+                                     opDesc->GetName().c_str(), opDesc->GetType().c_str());
+                   return PARAM_INVALID, "Get srcT error.");
+  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "DstT", dstT)),
+                   REPORT_CALL_ERROR("E19999", "Get Attr:DstT from op:%s(%s) failed",
+                                     opDesc->GetName().c_str(), opDesc->GetType().c_str());
+                   return PARAM_INVALID, "Get dstT error.");
   input_list.push_back(srcT);
   output_list.push_back(dstT);
 
@@ -574,7 +594,10 @@ Status CastIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_I
 
 Status AddIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_INT &output_list, ge::OpDescPtr &opDesc) {
   int type;
-  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", type)), return PARAM_INVALID, "Get T error.");
+  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", type)),
+                   REPORT_CALL_ERROR("E19999", "Get Attr:T from op:%s(%s) failed",
+                                     opDesc->GetName().c_str(), opDesc->GetType().c_str());
+                   return PARAM_INVALID, "Get T error.");
 
   input_list.push_back(type);
   input_list.push_back(type);
@@ -587,7 +610,10 @@ Status AddIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_IN
 Status LessIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_INT &output_list,
                   ge::OpDescPtr &opDesc) {
   int dtype;
-  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", dtype)), return PARAM_INVALID, "Get dtype error.");
+  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", dtype)),
+                   REPORT_CALL_ERROR("E19999", "Get Attr:T from op:%s(%s) failed",
+                                     opDesc->GetName().c_str(), opDesc->GetType().c_str());
+                   return PARAM_INVALID, "Get dtype error.");
 
   input_list.push_back(dtype);
   input_list.push_back(dtype);
@@ -598,7 +624,10 @@ Status LessIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_I
 
 Status MulIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_INT &output_list, ge::OpDescPtr &opDesc) {
   int dataType;
-  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, ge::ATTR_NAME_T, dataType)), return PARAM_INVALID,
+  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, ge::ATTR_NAME_T, dataType)),
+                   REPORT_CALL_ERROR("E19999", "Get Attr:%s from op:%s(%s) failed", ge::ATTR_NAME_T.c_str(),
+                                     opDesc->GetName().c_str(), opDesc->GetType().c_str());
+                   return PARAM_INVALID,
                    "Get Tparams error.");
 
   input_list.push_back(dataType);
@@ -612,7 +641,10 @@ Status MulIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_IN
 Status RealDivIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_INT &output_list,
                      ge::OpDescPtr &opDesc) {
   int t;
-  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", t)), return PARAM_INVALID, "Get beta error.");
+  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", t)),
+                   REPORT_CALL_ERROR("E19999", "Get Attr:T from op:%s(%s) failed",
+                                     opDesc->GetName().c_str(), opDesc->GetType().c_str());
+                   return PARAM_INVALID, "Get beta error.");
 
   input_list.push_back(t);
   input_list.push_back(t);
@@ -625,7 +657,10 @@ Status RealDivIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIS
 Status SelectIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_INT &output_list,
                     ge::OpDescPtr &opDesc) {
   int t;
-  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", t)), return PARAM_INVALID, "Get e error.");
+  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", t)),
+                   REPORT_CALL_ERROR("E19999", "Get Attr:T from op:%s(%s) failed",
+                                     opDesc->GetName().c_str(), opDesc->GetType().c_str());
+                   return PARAM_INVALID, "Get e error.");
 
   input_list.push_back(domi::tensorflow::DataType::DT_BOOL);
   input_list.push_back(t);
@@ -639,7 +674,10 @@ Status SelectIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST
 Status SqrtIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_INT &output_list,
                   ge::OpDescPtr &opDesc) {
   int dataType;
-  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, ge::ATTR_NAME_T, dataType)), return PARAM_INVALID,
+  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, ge::ATTR_NAME_T, dataType)),
+                   REPORT_CALL_ERROR("E19999", "Get Attr:%s from op:%s(%s) failed", ge::ATTR_NAME_T.c_str(),
+                                     opDesc->GetName().c_str(), opDesc->GetType().c_str());
+                   return PARAM_INVALID,
                    "Get Tparam error.");
 
   input_list.push_back(dataType);
@@ -653,8 +691,14 @@ Status TruncatedNormalIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrVa
                              ge::OpDescPtr &opDesc) {
   int t;
   int dtype;
-  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", t)), return PARAM_INVALID, "Get T error.");
-  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "dtype", dtype)), return PARAM_INVALID, "Get e error.");
+  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", t)),
+                   REPORT_CALL_ERROR("E19999", "Get Attr:T from op:%s(%s) failed",
+                                     opDesc->GetName().c_str(), opDesc->GetType().c_str());
+                   return PARAM_INVALID, "Get T error.");
+  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "dtype", dtype)),
+                   REPORT_CALL_ERROR("E19999", "Get Attr:dtype from op:%s(%s) failed",
+                                     opDesc->GetName().c_str(), opDesc->GetType().c_str());
+                   return PARAM_INVALID, "Get e error.");
 
   input_list.push_back(t);
 
@@ -667,8 +711,14 @@ Status PackIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_I
                   ge::OpDescPtr &opDesc) {
   int t;
   int n;
-  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", t)), return PARAM_INVALID, "Get T error.");
-  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "N", n)), return PARAM_INVALID, "Get N error.");
+  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", t)),
+                   REPORT_CALL_ERROR("E19999", "Get Attr:T from op:%s(%s) failed",
+                                     opDesc->GetName().c_str(), opDesc->GetType().c_str());
+                   return PARAM_INVALID, "Get T error.");
+  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "N", n)),
+                   REPORT_CALL_ERROR("E19999", "Get Attr:N from op:%s(%s) failed",
+                                     opDesc->GetName().c_str(), opDesc->GetType().c_str());
+                   return PARAM_INVALID, "Get N error.");
 
   for (int i = 0; i < n; i++) {
     input_list.push_back(t);
@@ -692,8 +742,14 @@ Status ExpandDimsIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::
                         ge::OpDescPtr &opDesc) {
   int dataType;
   int dimType;
-  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", dataType)), return PARAM_INVALID, "Get T error.");
-  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "Tdim", dimType)), return PARAM_INVALID, "Get Tdim error.");
+  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", dataType)),
+                   REPORT_CALL_ERROR("E19999", "Get Attr:T from op:%s(%s) failed",
+                                     opDesc->GetName().c_str(), opDesc->GetType().c_str());
+                   return PARAM_INVALID, "Get T error.");
+  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "Tdim", dimType)),
+                   REPORT_CALL_ERROR("E19999", "Get Attr:Tdim from op:%s(%s) failed",
+                                     opDesc->GetName().c_str(), opDesc->GetType().c_str());
+                   return PARAM_INVALID, "Get Tdim error.");
   // input_list - x y data type
   input_list.push_back(dataType);
   input_list.push_back(dimType);
@@ -708,8 +764,14 @@ Status SqueezeIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIS
   // Set - TENSORFLOW_IN_DATATYPE/TENSORFLOW_OUT_DATATYPE
   int dataType;
   vector<int> dimTypeList;
-  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", dataType)), return PARAM_INVALID, "Get T error.");
-  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetListInt(opDesc, "squeeze_dims", dimTypeList)), return PARAM_INVALID,
+  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", dataType)),
+                   REPORT_CALL_ERROR("E19999", "Get Attr:T from op:%s(%s) failed",
+                                     opDesc->GetName().c_str(), opDesc->GetType().c_str());
+                   return PARAM_INVALID, "Get T error.");
+  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetListInt(opDesc, "squeeze_dims", dimTypeList)),
+                   REPORT_CALL_ERROR("E19999", "Get Attr:squeeze_dims from op:%s(%s) failed",
+                                     opDesc->GetName().c_str(), opDesc->GetType().c_str());
+                   return PARAM_INVALID,
                    "Get squeeze_dims error.");
   for (auto i : dimTypeList) {
     GELOGI("squeeze_dims = %d.\n", i);
@@ -726,7 +788,10 @@ Status SqueezeIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIS
 Status TopKV2IOList(ge::GeAttrValue::LIST_INT &inputList, ge::GeAttrValue::LIST_INT &outputList,
                     ge::OpDescPtr &opDesc) {
   int t;
-  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", t)), return PARAM_INVALID, "Get T error.");
+  GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", t)),
+                   REPORT_CALL_ERROR("E19999", "Get Attr:T from op:%s(%s) failed",
+                                     opDesc->GetName().c_str(), opDesc->GetType().c_str());
+                   return PARAM_INVALID, "Get T error.");
 
   // input_list - eg:{1, 3}
   inputList.push_back(t);
@@ -798,8 +863,12 @@ Status CreateNodeDefBytes(ge::NodePtr n, string originalType, map<string, PIOLis
 
     uint32_t size_type = 1;
     bool type_ret = ge::TypeUtils::GetDataTypeLength(data_type, size_type);
-    GE_IF_BOOL_EXEC(!type_ret, GELOGE(PARAM_INVALID, "Can't GetDataTypeLength of data_type: %s",
-                                      ge::TypeUtils::DataTypeToSerialString(data_type).c_str());
+    GE_IF_BOOL_EXEC(!type_ret,
+                    REPORT_CALL_ERROR("E19999", "Can't get DataType:%s length of op:%s(%s)",
+                                      ge::TypeUtils::DataTypeToSerialString(data_type).c_str(),
+                                      n->GetName().c_str(), n->GetType().c_str());
+                    GELOGE(PARAM_INVALID, "Can't GetDataTypeLength of data_type: %s",
+                           ge::TypeUtils::DataTypeToSerialString(data_type).c_str());
                     return PARAM_INVALID);
 
     // calculate size
@@ -815,7 +884,10 @@ Status CreateNodeDefBytes(ge::NodePtr n, string originalType, map<string, PIOLis
 
   // Serial - nodedef proto
   string nodefStr;
-  GE_IF_BOOL_EXEC(!proto.SerializeToString(&nodefStr), GELOGE(PARAM_INVALID, "Serialize nodedef to string failed.");
+  GE_IF_BOOL_EXEC(!proto.SerializeToString(&nodefStr),
+                  REPORT_CALL_ERROR("E19999", "Serialize nodedef to string failed, op:%s(%s)",
+                                    n->GetName().c_str(), n->GetType().c_str());
+                  GELOGE(PARAM_INVALID, "Serialize nodedef to string failed.");
                   return PARAM_INVALID);
 
   // Set - ATTR_NAME_FRAMEWORK_NODE_DEF
@@ -1167,7 +1239,10 @@ Status CreateOpDefBytes(ge::NodePtr n, string original_type) {
   }
   // set - opdef
   string opdefString;
-  GE_IF_BOOL_EXEC(!proto.SerializeToString(&opdefString), GELOGE(PARAM_INVALID, "Serialize opdef to string failed.");
+  GE_IF_BOOL_EXEC(!proto.SerializeToString(&opdefString),
+                  REPORT_CALL_ERROR("E19999", "Serialize opdef to string failed, op:%s(%s)",
+                                    n->GetName().c_str(), n->GetType().c_str());
+                  GELOGE(PARAM_INVALID, "Serialize opdef to string failed.");
                   return PARAM_INVALID);
 
   (void)ge::AttrUtils::SetStr(opDesc, ge::ATTR_NAME_FRAMEWORK_OP_DEF, opdefString);
@@ -1197,7 +1272,9 @@ Status CreateFuncDefBytes(ge::NodePtr n, string original_type, string func_bin_p
 
   char *buf = nullptr;
   int32_t len = 0;
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(!ge::parser::ReadBytesFromBinaryFile(file.c_str(), &buf, len), return false,
+  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(!ge::parser::ReadBytesFromBinaryFile(file.c_str(), &buf, len),
+                                 REPORT_CALL_ERROR("E19999", "Read bytes from file:%s failed", file.c_str());
+                                 return false,
                                  "read bytes file error!");
 
   GELOGI("len =%d\n", len);
@@ -1408,7 +1485,9 @@ Status ParserGraphOptimizer::UpdateGraph(vector<NodePtr> &nodes) {
   std::unique_ptr<FunctionDefLibrary> func_def_lib(new (std::nothrow) FunctionDefLibrary());
   GE_CHECK_NOTNULL(func_def_lib);
   // convert graph to FunctionDef
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(nodes.size() == 0, return PARAM_INVALID, "node size must greater than 0 .");
+  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(nodes.size() == 0,
+                                 REPORT_INNER_ERROR("E19999", "Param nodes size must greater than 0");
+                                 return PARAM_INVALID, "node size must greater than 0 .");
   GE_CHK_STATUS_RET(CollectNodeFuncs(nodes, func_def_lib.get()), "Collect functionDef in nodes failed.");
   GE_CHK_STATUS_RET(GraphToFunctionDef::BuildFunctionDef(sub_graph, nodes[0]->GetName(), func_def_lib.get(),
                                                          node_def.get(), input_anchors, output_anchors),
@@ -1416,10 +1495,13 @@ Status ParserGraphOptimizer::UpdateGraph(vector<NodePtr> &nodes) {
   string nodefStr;
   string funcdefStr;
 
-  GE_IF_BOOL_EXEC(!node_def->SerializeToString(&nodefStr), GELOGE(PARAM_INVALID, "Serialize nodedef to string failed.");
+  GE_IF_BOOL_EXEC(!node_def->SerializeToString(&nodefStr),
+                  REPORT_CALL_ERROR("E19999", "Serialize nodedef to string failed");
+                  GELOGE(PARAM_INVALID, "Serialize nodedef to string failed.");
                   return PARAM_INVALID);
 
   GE_IF_BOOL_EXEC(!func_def_lib->SerializeToString(&funcdefStr),
+                  REPORT_CALL_ERROR("E19999", "Serialize func_def to string failed, ");
                   GELOGE(PARAM_INVALID, "Serialize func_def to string failed.");
                   return PARAM_INVALID);
 
@@ -1521,6 +1603,9 @@ Status ParserGraphOptimizer::LinkInnerAnchor(unordered_map<string, ge::NodePtr> 
 
       GE_IF_BOOL_EXEC(ge::GraphUtils::AddEdge(src->GetOutDataAnchor(peer_out_anchor->GetIdx()),
                                               dst->GetInDataAnchor(in_anchor->GetIdx())) != GRAPH_SUCCESS,
+                      REPORT_CALL_ERROR("E19999", "Add edge between op:%s(%s)(index:%d) and op:%s(%s)(index:%d) failed",
+                                        src->GetName().c_str(), src->GetType().c_str(), peer_out_anchor->GetIdx(),
+                                        dst->GetName().c_str(), dst->GetType().c_str(), in_anchor->GetIdx());
                       GELOGE(FAILED,
                              "LinkInnerAnchor Link data anchor failed, src node: %s, "
                              "dst node: %s.",
@@ -1536,6 +1621,9 @@ Status ParserGraphOptimizer::LinkInnerAnchor(unordered_map<string, ge::NodePtr> 
           NodePtr src_ctrl = node_map[peer_out_ctl_anchor->GetOwnerNode()->GetName()];
           GE_IF_BOOL_EXEC(
               ge::GraphUtils::AddEdge(src_ctrl->GetOutControlAnchor(), dst->GetInControlAnchor()) != GRAPH_SUCCESS,
+              REPORT_CALL_ERROR("E19999", "Add control edge between op:%s(%s) and op:%s(%s) failed",
+                                src_ctrl->GetName().c_str(), src_ctrl->GetType().c_str(),
+                                dst->GetName().c_str(), dst->GetType().c_str());
               GELOGE(FAILED,
                      "LinkInnerAnchor Link control anchor failed, src node: "
                      "%s, dst node: %s.",
@@ -1564,6 +1652,8 @@ Status ParserGraphOptimizer::RebuildOutputAnchors(vector<ge::OutDataAnchorPtr> &
     auto iter = GE_TENSORFLOW_DATA_TYPE_MAP.find((int32_t)data_type);
     GE_IF_BOOL_EXEC(
         iter == GE_TENSORFLOW_DATA_TYPE_MAP.end(),
+        REPORT_INNER_ERROR("E19999", "datatype:%d of output:%d in node:%s:%s is not supported",
+                           data_type, out_anchor->GetIdx(), src_node->GetName().c_str(), src_node->GetName().c_str());
         GELOGE(PARAM_INVALID, "data_type %s not supported", ge::TypeUtils::DataTypeToSerialString(data_type).c_str());
         return PARAM_INVALID);
 
@@ -1588,12 +1678,18 @@ Status ParserGraphOptimizer::RebuildInputAnchors(vector<ge::InDataAnchorPtr> &in
     auto tensorDescPtr = dst_node->GetOpDesc()->GetInputDescPtr(in_anchor->GetIdx());
     GE_CHECK_NOTNULL_EXEC(tensorDescPtr, return domi::FAILED);
 
-    GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((fusion_op_desc->AddInputDesc(*tensorDescPtr)) != GRAPH_SUCCESS, return FAILED,
+    GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((fusion_op_desc->AddInputDesc(*tensorDescPtr)) != GRAPH_SUCCESS,
+                                   REPORT_CALL_ERROR("E19999", "Add input desc to op:%s(%s) failed",
+                                                     fusion_op_desc->GetName().c_str(),
+                                                     fusion_op_desc->GetType().c_str());
+                                   return FAILED,
                                    "Add fusion_op_desc AddInputDesc failed");
     ge::DataType data_type = tensorDescPtr->GetDataType();
     auto iter = GE_TENSORFLOW_DATA_TYPE_MAP.find((int32_t)data_type);
     GE_IF_BOOL_EXEC(
         iter == GE_TENSORFLOW_DATA_TYPE_MAP.end(),
+        REPORT_INNER_ERROR("E19999", "datatype:%d of input:%d in node:%s:%s is not supported",
+                           data_type, in_anchor->GetIdx(), dst_node->GetName().c_str(), dst_node->GetName().c_str());
         GELOGE(PARAM_INVALID, "data_type %s not supported", ge::TypeUtils::DataTypeToSerialString(data_type).c_str());
         return PARAM_INVALID);
 
@@ -1658,12 +1754,18 @@ Status ParserGraphOptimizer::Insert4DTo5DTransOp(OutDataAnchorPtr src_anchor, In
     if (src_out_data_type != dst_in_data_type) {
       OpDescPtr cast_opdesc = CreateCastOp(src_out_data_type, dst_in_data_type, ge::FORMAT_NCHW);
       cast_node = graph_->AddNode(cast_opdesc);
-      GE_CHK_BOOL_EXEC(cast_node != nullptr, return INTERNAL_ERROR, "graph add cast node fail.");
+      GE_CHK_BOOL_EXEC(cast_node != nullptr,
+                       REPORT_CALL_ERROR("E19999", "Add Cast node to graph:%s failed",
+                                         graph_->GetName().c_str());
+                       return INTERNAL_ERROR, "graph add cast node fail.");
     }
 
     OpDescPtr trans_data_opdesc = CreateTransDataOp(FORMAT_NCHW);
     NodePtr trans_data_node = graph_->AddNode(trans_data_opdesc);
-    GE_CHK_BOOL_EXEC(trans_data_node != nullptr, return INTERNAL_ERROR, "graph add TransData node node fail.");
+    GE_CHK_BOOL_EXEC(trans_data_node != nullptr,
+                     REPORT_CALL_ERROR("E19999", "Add Transdata node to graph:%s failed",
+                                       graph_->GetName().c_str());
+                     return INTERNAL_ERROR, "graph add TransData node node fail.");
     GE_CHK_STATUS_RET(NewNodeAddEdges(src_anchor, dst_anchor, nullptr, cast_node, trans_data_node),
                       "NewNodeAddEdges ret fail.");
 
@@ -1676,8 +1778,18 @@ Status ParserGraphOptimizer::Insert4DTo5DTransOp(OutDataAnchorPtr src_anchor, In
   GE_CHECK_NOTNULL(transNode);
   GELOGI("Create 4D To 5D fp32 node susscess!");
 
-  GE_IF_BOOL_EXEC(GraphUtils::AddEdge(src_anchor, transNode->GetInDataAnchor(0)), return INTERNAL_ERROR);
-  GE_IF_BOOL_EXEC(GraphUtils::AddEdge(transNode->GetOutDataAnchor(0), dst_anchor), return INTERNAL_ERROR);
+  GE_IF_BOOL_EXEC(GraphUtils::AddEdge(src_anchor, transNode->GetInDataAnchor(0)),
+                  REPORT_CALL_ERROR("E19999", "Add edge between op:%s(%s)(index:%d) and op:%s(%s)(index:0) failed",
+                                    src_anchor->GetOwnerNode()->GetName().c_str(),
+                                    src_anchor->GetOwnerNode()->GetType().c_str(), src_anchor->GetIdx(),
+                                    transNode->GetName().c_str(), transNode->GetType().c_str());
+                  return INTERNAL_ERROR);
+  GE_IF_BOOL_EXEC(GraphUtils::AddEdge(transNode->GetOutDataAnchor(0), dst_anchor),
+                  REPORT_CALL_ERROR("E19999", "Add edge between op:%s(%s)(index:0) and op:%s(%s)(index:%d) failed",
+                                    transNode->GetName().c_str(), transNode->GetType().c_str(),
+                                    dst_anchor->GetOwnerNode()->GetName().c_str(),
+                                    dst_anchor->GetOwnerNode()->GetType().c_str(), dst_anchor->GetIdx());
+                  return INTERNAL_ERROR);
 
   GELOGI("Create 4D To 5D susscess!");
   return SUCCESS;
@@ -1701,14 +1813,39 @@ Status ParserGraphOptimizer::InsertFZ2HWCK(OutDataAnchorPtr src_anchor, InDataAn
       OpDescPtr translatetoHWCK = CreateTranslateOp(srcOutFormat, ge::DT_FLOAT16, dstInFormat, dstInDatatype);
       NodePtr transHWCKNode = graph_->AddNode(translatetoHWCK); GELOGI("Create FZ 16 to HWCK fp32 node susscess!");
       GE_CHECK_NOTNULL(transHWCKNode); if (transHalfNode) {
-        GE_IF_BOOL_EXEC(GraphUtils::AddEdge(src_anchor, transHalfNode->GetInDataAnchor(0)), return INTERNAL_ERROR);
+        GE_IF_BOOL_EXEC(GraphUtils::AddEdge(src_anchor, transHalfNode->GetInDataAnchor(0)),
+                        REPORT_CALL_ERROR(
+                            "E19999", "Add edge between op:%s(%s)(index:%d) and op:%s(%s)(index:0) failed",
+                            src_anchor->GetOwnerNode()->GetName().c_str(),
+                            src_anchor->GetOwnerNode()->GetType().c_str(), src_anchor->GetIdx(),
+                            transHalfNode->GetName().c_str(), transHalfNode->GetType().c_str());
+                        return INTERNAL_ERROR);
         GE_IF_BOOL_EXEC(GraphUtils::AddEdge(transHalfNode->GetOutDataAnchor(0), transHWCKNode->GetInDataAnchor(0)),
+                        REPORT_CALL_ERROR("E19999", "Add edge between op:%s(%s)(index:0) and op:%s(%s)(index:0) failed",
+                                          transHalfNode->GetName().c_str(), transHalfNode->GetType().c_str(),
+                                          transHWCKNode->GetName().c_str(), transHWCKNode->GetType().c_str());
                         return INTERNAL_ERROR);
         GE_IF_BOOL_EXEC(GraphUtils::AddEdge(transHWCKNode->GetOutDataAnchor(0), dst_anchor) != SUCCESS,
+                        REPORT_CALL_ERROR(
+                            "E19999", "Add edge between op:%s(%s)(index:0) and op:%s(%s)(index:%d) failed",
+                            transHWCKNode->GetName().c_str(), transHWCKNode->GetType().c_str(),
+                            dst_anchor->GetOwnerNode()->GetName().c_str(),
+                            dst_anchor->GetOwnerNode()->GetType().c_str(), dst_anchor->GetIdx());
                         return INTERNAL_ERROR);
       } else {
-        GE_IF_BOOL_EXEC(GraphUtils::AddEdge(src_anchor, transHWCKNode->GetInDataAnchor(0)), return INTERNAL_ERROR);
+        GE_IF_BOOL_EXEC(GraphUtils::AddEdge(src_anchor, transHWCKNode->GetInDataAnchor(0)),
+                        REPORT_CALL_ERROR(
+                            "E19999", "Add edge between op:%s(%s)(index:%d) and op:%s(%s)(index:0) failed",
+                            src_anchor->GetOwnerNode()->GetName().c_str(),
+                            src_anchor->GetOwnerNode()->GetType().c_str(), src_anchor->GetIdx(),
+                            transHWCKNode->GetName().c_str(), transHWCKNode->GetType().c_str());
+                        return INTERNAL_ERROR);
         GE_IF_BOOL_EXEC(GraphUtils::AddEdge(transHWCKNode->GetOutDataAnchor(0), dst_anchor) != SUCCESS,
+                        REPORT_CALL_ERROR(
+                            "E19999", "Add edge between op:%s(%s)(index:0) and op:%s(%s)(index:%d) failed",
+                            transHWCKNode->GetName().c_str(), transHWCKNode->GetType().c_str(),
+                            dst_anchor->GetOwnerNode()->GetName().c_str(),
+                            dst_anchor->GetOwnerNode()->GetType().c_str(), dst_anchor->GetIdx());
                         return INTERNAL_ERROR);
       } GELOGI("Create InsertFZ2HWCK success!");)
   return SUCCESS;
@@ -1731,14 +1868,40 @@ Status ParserGraphOptimizer::InsertVar5DTo4D(ge::OutDataAnchorPtr src_anchor, ge
       GE_CHECK_NOTNULL(trans4DNode);
 
       if (cast_node) {
-        GE_IF_BOOL_EXEC(GraphUtils::AddEdge(src_anchor, cast_node->GetInDataAnchor(0)), return INTERNAL_ERROR);
+        GE_IF_BOOL_EXEC(GraphUtils::AddEdge(src_anchor, cast_node->GetInDataAnchor(0)),
+                        REPORT_CALL_ERROR(
+                            "E19999", "Add edge between op:%s(%s)(index:%d) and op:%s(%s)(index:0) failed",
+                            src_anchor->GetOwnerNode()->GetName().c_str(),
+                            src_anchor->GetOwnerNode()->GetType().c_str(), src_anchor->GetIdx(),
+                            cast_node->GetName().c_str(), cast_node->GetType().c_str());
+                        return INTERNAL_ERROR);
         GE_IF_BOOL_EXEC(GraphUtils::AddEdge(cast_node->GetOutDataAnchor(0), trans4DNode->GetInDataAnchor(0)),
+                        REPORT_CALL_ERROR(
+                            "E19999", "Add edge between op:%s(%s)(index:0) and op:%s(%s)(index:0) failed",
+                            cast_node->GetName().c_str(), cast_node->GetType().c_str(),
+                            trans4DNode->GetName().c_str(), trans4DNode->GetType().c_str());
                         return INTERNAL_ERROR);
         GE_IF_BOOL_EXEC(GraphUtils::AddEdge(trans4DNode->GetOutDataAnchor(0), dst_anchor) != SUCCESS,
+                        REPORT_CALL_ERROR(
+                            "E19999", "Add edge between op:%s(%s)(index:0) and op:%s(%s)(index:%d) failed",
+                            trans4DNode->GetName().c_str(), trans4DNode->GetType().c_str(),
+                            dst_anchor->GetOwnerNode()->GetName().c_str(),
+                            dst_anchor->GetOwnerNode()->GetType().c_str(), dst_anchor->GetIdx());
                         return INTERNAL_ERROR);
       } else {
-        GE_IF_BOOL_EXEC(GraphUtils::AddEdge(src_anchor, trans4DNode->GetInDataAnchor(0)), return INTERNAL_ERROR);
+        GE_IF_BOOL_EXEC(GraphUtils::AddEdge(src_anchor, trans4DNode->GetInDataAnchor(0)),
+                        REPORT_CALL_ERROR(
+                            "E19999", "Add edge between op:%s(%s)(index:%d) and op:%s(%s)(index:0) failed",
+                            src_anchor->GetOwnerNode()->GetName().c_str(),
+                            src_anchor->GetOwnerNode()->GetType().c_str(), src_anchor->GetIdx(),
+                            trans4DNode->GetName().c_str(), trans4DNode->GetType().c_str());
+                        return INTERNAL_ERROR);
         GE_IF_BOOL_EXEC(GraphUtils::AddEdge(trans4DNode->GetOutDataAnchor(0), dst_anchor) != SUCCESS,
+                        REPORT_CALL_ERROR(
+                            "E19999", "Add edge between op:%s(%s)(index:0) and op:%s(%s)(index:%d) failed",
+                            trans4DNode->GetName().c_str(), trans4DNode->GetType().c_str(),
+                            dst_anchor->GetOwnerNode()->GetName().c_str(),
+                            dst_anchor->GetOwnerNode()->GetType().c_str(), dst_anchor->GetIdx());
                         return INTERNAL_ERROR);
       } GELOGI("Create 5D To 4D susscess!");)
   return SUCCESS;
@@ -1764,15 +1927,40 @@ Status ParserGraphOptimizer::InsertHWCK2FZ(OutDataAnchorPtr src_anchor, InDataAn
       }
 
       if (translateHalftoFp32Node) {
-        GE_IF_BOOL_EXEC(GraphUtils::AddEdge(src_anchor, transHWCK2FZNode->GetInDataAnchor(0)), return INTERNAL_ERROR);
+        GE_IF_BOOL_EXEC(GraphUtils::AddEdge(src_anchor, transHWCK2FZNode->GetInDataAnchor(0)),
+                        REPORT_CALL_ERROR(
+                            "E19999", "Add edge between op:%s(%s)(index:%d) and op:%s(%s)(index:0) failed",
+                            src_anchor->GetOwnerNode()->GetName().c_str(),
+                            src_anchor->GetOwnerNode()->GetType().c_str(), src_anchor->GetIdx(),
+                            transHWCK2FZNode->GetName().c_str(), transHWCK2FZNode->GetType().c_str());
+                        return INTERNAL_ERROR);
         GE_IF_BOOL_EXEC(
             GraphUtils::AddEdge(transHWCK2FZNode->GetOutDataAnchor(0), translateHalftoFp32Node->GetInDataAnchor(0)),
+            REPORT_CALL_ERROR("E19999", "Add edge between op:%s(%s)(index:0) and op:%s(%s)(index:0) failed",
+                              transHWCK2FZNode->GetName().c_str(), transHWCK2FZNode->GetType().c_str(),
+                              translateHalftoFp32Node->GetName().c_str(), translateHalftoFp32Node->GetType().c_str());
             return INTERNAL_ERROR);
         GE_IF_BOOL_EXEC(GraphUtils::AddEdge(translateHalftoFp32Node->GetOutDataAnchor(0), dst_anchor) != SUCCESS,
+                        REPORT_CALL_ERROR(
+                            "E19999", "Add edge between op:%s(%s)(index:0) and op:%s(%s)(index:%d) failed",
+                            translateHalftoFp32Node->GetName().c_str(), translateHalftoFp32Node->GetType().c_str(),
+                            dst_anchor->GetOwnerNode()->GetName().c_str(),
+                            dst_anchor->GetOwnerNode()->GetType().c_str(), dst_anchor->GetIdx());
                         return INTERNAL_ERROR);
       } else {
-        GE_IF_BOOL_EXEC(GraphUtils::AddEdge(src_anchor, transHWCK2FZNode->GetInDataAnchor(0)), return INTERNAL_ERROR);
+        GE_IF_BOOL_EXEC(GraphUtils::AddEdge(src_anchor, transHWCK2FZNode->GetInDataAnchor(0)),
+                        REPORT_CALL_ERROR(
+                            "E19999", "Add edge between op:%s(%s)(index:%d) and op:%s(%s)(index:0) failed",
+                            src_anchor->GetOwnerNode()->GetName().c_str(),
+                            src_anchor->GetOwnerNode()->GetType().c_str(), src_anchor->GetIdx(),
+                            transHWCK2FZNode->GetName().c_str(), transHWCK2FZNode->GetType().c_str());
+                        return INTERNAL_ERROR);
         GE_IF_BOOL_EXEC(GraphUtils::AddEdge(transHWCK2FZNode->GetOutDataAnchor(0), dst_anchor) != SUCCESS,
+                        REPORT_CALL_ERROR(
+                            "E19999", "Add edge between op:%s(%s)(index:0) and op:%s(%s)(index:%d) failed",
+                            transHWCK2FZNode->GetName().c_str(), transHWCK2FZNode->GetType().c_str(),
+                            dst_anchor->GetOwnerNode()->GetName().c_str(),
+                            dst_anchor->GetOwnerNode()->GetType().c_str(), dst_anchor->GetIdx());
                         return INTERNAL_ERROR);
       } GELOGI("Create InsertHWCK2FZ success!");)
   return SUCCESS;
@@ -1787,18 +1975,27 @@ Status ParserGraphOptimizer::Insert5DTo4DTransOp(OutDataAnchorPtr src_anchor, In
 
   OpDescPtr trans_data_opdesc = CreateTransDataOp(FORMAT_NC1HWC0);
   NodePtr trans_data_node = graph_->AddNode(trans_data_opdesc);
-  GE_CHK_BOOL_EXEC(trans_data_node != nullptr, return INTERNAL_ERROR, "graph add TransData node node fail.");
+  GE_CHK_BOOL_EXEC(trans_data_node != nullptr,
+                   REPORT_CALL_ERROR("E19999", "Add Transdata node to graph:%s failed",
+                                     graph_->GetName().c_str());
+                   return INTERNAL_ERROR, "graph add TransData node node fail.");
 
   if (src_out_data_type != dst_in_data_type) {
     OpDescPtr cast_opdesc = CreateCastOp(src_out_data_type, dst_in_data_type, ge::FORMAT_NCHW);
     cast_node = graph_->AddNode(cast_opdesc);
-    GE_CHK_BOOL_EXEC(cast_node != nullptr, return INTERNAL_ERROR, "graph add cast node fail.");
+    GE_CHK_BOOL_EXEC(cast_node != nullptr,
+                     REPORT_CALL_ERROR("E19999", "Add Cast node to graph:%s failed",
+                                     graph_->GetName().c_str());
+                     return INTERNAL_ERROR, "graph add cast node fail.");
   }
 
   if (dst_in_format == FORMAT_NHWC) {
     OpDescPtr permute_opdec = CreatePermuteOp(FORMAT_NCHW, dst_in_format);
     permute_node = graph_->AddNode(permute_opdec);
-    GE_CHK_BOOL_EXEC(permute_node != nullptr, return INTERNAL_ERROR, "graph add permute node fail.");
+    GE_CHK_BOOL_EXEC(permute_node != nullptr,
+                     REPORT_CALL_ERROR("E19999", "Add Permute node to graph:%s failed",
+                                       graph_->GetName().c_str());
+                     return INTERNAL_ERROR, "graph add permute node fail.");
   }
 
   GE_CHK_STATUS_RET(NewNodeAddEdges(src_anchor, dst_anchor, trans_data_node, cast_node, permute_node),
@@ -1818,60 +2015,136 @@ Status ParserGraphOptimizer::NewNodeAddEdges(OutDataAnchorPtr src_anchor, InData
 
   if (first != nullptr) {
     Status status = GraphUtils::AddEdge(src_anchor, first->GetInDataAnchor(0));
-    GE_CHK_BOOL_EXEC(status == SUCCESS, return INTERNAL_ERROR, "graph add edge fail, src index:%d, dst index:%d.",
+    GE_CHK_BOOL_EXEC(status == SUCCESS,
+                     REPORT_CALL_ERROR(
+                            "E19999", "Add edge between op:%s(%s)(index:%d) and op:%s(%s)(index:0) failed",
+                            src_anchor->GetOwnerNode()->GetName().c_str(),
+                            src_anchor->GetOwnerNode()->GetType().c_str(), src_anchor->GetIdx(),
+                            first->GetName().c_str(), first->GetType().c_str());
+                     return INTERNAL_ERROR, "graph add edge fail, src index:%d, dst index:%d.",
                      src_anchor->GetIdx(), 0);
     if (second != nullptr) {
       status = GraphUtils::AddEdge(first->GetOutDataAnchor(0), second->GetInDataAnchor(0));
-      GE_CHK_BOOL_EXEC(status == SUCCESS, return INTERNAL_ERROR, "graph add edge fail, src index:%d, dst index:%d.", 0,
-                       0);
+      GE_CHK_BOOL_EXEC(status == SUCCESS,
+                       REPORT_CALL_ERROR(
+                            "E19999", "Add edge between op:%s(%s)(index:0) and op:%s(%s)(index:0) failed",
+                            first->GetName().c_str(), first->GetType().c_str(),
+                            second->GetName().c_str(), second->GetType().c_str());
+                       return INTERNAL_ERROR, "graph add edge fail, src index:%d, dst index:%d.", 0, 0);
       if (third != nullptr) {
         status = GraphUtils::AddEdge(second->GetOutDataAnchor(0), third->GetInDataAnchor(0));
-        GE_CHK_BOOL_EXEC(status == SUCCESS, return INTERNAL_ERROR, "graph add edge fail, src index:%d, dst index:%d.",
-                         0, 0);
+        GE_CHK_BOOL_EXEC(status == SUCCESS,
+                         REPORT_CALL_ERROR(
+                            "E19999", "Add edge between op:%s(%s)(index:0) and op:%s(%s)(index:0) failed",
+                            second->GetName().c_str(), second->GetType().c_str(),
+                            third->GetName().c_str(), third->GetType().c_str());
+                         return INTERNAL_ERROR, "graph add edge fail, src index:%d, dst index:%d.", 0, 0);
         status = GraphUtils::AddEdge(third->GetOutDataAnchor(0), dst_anchor);
-        GE_CHK_BOOL_EXEC(status == SUCCESS, return INTERNAL_ERROR, "graph add edge fail, src index:%d, dst index:%d.",
+        GE_CHK_BOOL_EXEC(status == SUCCESS,
+                         REPORT_CALL_ERROR(
+                            "E19999", "Add edge between op:%s(%s)(index:0) and op:%s(%s)(index:%d) failed",
+                            third->GetName().c_str(), third->GetType().c_str(),
+                            dst_anchor->GetOwnerNode()->GetName().c_str(),
+                            dst_anchor->GetOwnerNode()->GetType().c_str(), dst_anchor->GetIdx());
+                         return INTERNAL_ERROR, "graph add edge fail, src index:%d, dst index:%d.",
                          0, dst_anchor->GetIdx());
       } else {
         status = GraphUtils::AddEdge(second->GetOutDataAnchor(0), dst_anchor);
-        GE_CHK_BOOL_EXEC(status == SUCCESS, return INTERNAL_ERROR, "graph add edge fail, src index:%d, dst index:%d.",
+        GE_CHK_BOOL_EXEC(status == SUCCESS,
+                         REPORT_CALL_ERROR(
+                            "E19999", "Add edge between op:%s(%s)(index:0) and op:%s(%s)(index:%d) failed",
+                            second->GetName().c_str(), second->GetType().c_str(),
+                            dst_anchor->GetOwnerNode()->GetName().c_str(),
+                            dst_anchor->GetOwnerNode()->GetType().c_str(), dst_anchor->GetIdx());
+                         return INTERNAL_ERROR, "graph add edge fail, src index:%d, dst index:%d.",
                          0, dst_anchor->GetIdx());
       }
     } else {
       if (third != nullptr) {
         status = GraphUtils::AddEdge(first->GetOutDataAnchor(0), third->GetInDataAnchor(0));
-        GE_CHK_BOOL_EXEC(status == SUCCESS, return INTERNAL_ERROR, "graph add edge fail, src index:%d, dst index:%d.",
-                         0, 0);
+        GE_CHK_BOOL_EXEC(status == SUCCESS,
+                         REPORT_CALL_ERROR(
+                            "E19999", "Add edge between op:%s(%s)(index:0) and op:%s(%s)(index:0) failed",
+                            first->GetName().c_str(), first->GetType().c_str(),
+                            third->GetName().c_str(), third->GetType().c_str());
+                         return INTERNAL_ERROR, "graph add edge fail, src index:%d, dst index:%d.", 0, 0);
         status = GraphUtils::AddEdge(third->GetOutDataAnchor(0), dst_anchor);
-        GE_CHK_BOOL_EXEC(status == SUCCESS, return INTERNAL_ERROR, "graph add edge fail, src index:%d, dst index:%d.",
+        GE_CHK_BOOL_EXEC(status == SUCCESS,
+                         REPORT_CALL_ERROR(
+                            "E19999", "Add edge between op:%s(%s)(index:0) and op:%s(%s)(index:%d) failed",
+                            third->GetName().c_str(), third->GetType().c_str(),
+                            dst_anchor->GetOwnerNode()->GetName().c_str(),
+                            dst_anchor->GetOwnerNode()->GetType().c_str(), dst_anchor->GetIdx());
+                         return INTERNAL_ERROR, "graph add edge fail, src index:%d, dst index:%d.",
                          0, dst_anchor->GetIdx());
       } else {
         status = GraphUtils::AddEdge(first->GetOutDataAnchor(0), dst_anchor);
-        GE_CHK_BOOL_EXEC(status == SUCCESS, return INTERNAL_ERROR, "graph add edge fail, src index:%d, dst index:%d.",
+        GE_CHK_BOOL_EXEC(status == SUCCESS,
+                         REPORT_CALL_ERROR(
+                            "E19999", "Add edge between op:%s(%s)(index:0) and op:%s(%s)(index:%d) failed",
+                            first->GetName().c_str(), first->GetType().c_str(),
+                            dst_anchor->GetOwnerNode()->GetName().c_str(),
+                            dst_anchor->GetOwnerNode()->GetType().c_str(), dst_anchor->GetIdx());
+                         return INTERNAL_ERROR, "graph add edge fail, src index:%d, dst index:%d.",
                          0, dst_anchor->GetIdx());
       }
     }
   } else {
     if (second != nullptr) {
       Status status = GraphUtils::AddEdge(src_anchor, second->GetInDataAnchor(0));
-      GE_CHK_BOOL_EXEC(status == SUCCESS, return INTERNAL_ERROR,
+      GE_CHK_BOOL_EXEC(status == SUCCESS,
+                       REPORT_CALL_ERROR(
+                            "E19999", "Add edge between op:%s(%s)(index:%d) and op:%s(%s)(index:0) failed",
+                            src_anchor->GetOwnerNode()->GetName().c_str(),
+                            src_anchor->GetOwnerNode()->GetType().c_str(), src_anchor->GetIdx(),
+                            second->GetName().c_str(), second->GetType().c_str());
+                       return INTERNAL_ERROR,
                        "graph add src to cast edge fail, src index:%d, dst index:%d.", src_anchor->GetIdx(), 0);
       GE_IF_BOOL_EXEC(
           third != nullptr, status = GraphUtils::AddEdge(second->GetOutDataAnchor(0), third->GetInDataAnchor(0));
-          GE_CHK_BOOL_EXEC(status == SUCCESS, return INTERNAL_ERROR, "graph add edge fail, src index:%d, dst index:%d.",
-                           0, 0);
+          GE_CHK_BOOL_EXEC(status == SUCCESS,
+                           REPORT_CALL_ERROR(
+                               "E19999", "Add edge between op:%s(%s)(index:0) and op:%s(%s)(index:0) failed",
+                               second->GetName().c_str(), second->GetType().c_str(),
+                               third->GetName().c_str(), third->GetType().c_str());
+                           return INTERNAL_ERROR, "graph add edge fail, src index:%d, dst index:%d.", 0, 0);
           status = GraphUtils::AddEdge(third->GetOutDataAnchor(0), dst_anchor);
-          GE_CHK_BOOL_EXEC(status == SUCCESS, return INTERNAL_ERROR, "graph add edge fail, src index:%d, dst index:%d.",
+          GE_CHK_BOOL_EXEC(status == SUCCESS,
+                           REPORT_CALL_ERROR(
+                              "E19999", "Add edge between op:%s(%s)(index:0) and op:%s(%s)(index:%d) failed",
+                              third->GetName().c_str(), third->GetType().c_str(),
+                              dst_anchor->GetOwnerNode()->GetName().c_str(),
+                              dst_anchor->GetOwnerNode()->GetType().c_str(), dst_anchor->GetIdx());
+                           return INTERNAL_ERROR, "graph add edge fail, src index:%d, dst index:%d.",
                            0, dst_anchor->GetIdx()););
       GE_IF_BOOL_EXEC(third == nullptr, status = GraphUtils::AddEdge(second->GetOutDataAnchor(0), dst_anchor);
-                      GE_CHK_BOOL_EXEC(status == SUCCESS, return INTERNAL_ERROR,
-                                       "graph add edge fail, src index:%d, dst index:%d.", 0, 0););
+                      GE_CHK_BOOL_EXEC(
+                          status == SUCCESS,
+                          REPORT_CALL_ERROR(
+                              "E19999", "Add edge between op:%s(%s)(index:0) and op:%s(%s)(index:%d) failed",
+                              second->GetName().c_str(), second->GetType().c_str(),
+                              dst_anchor->GetOwnerNode()->GetName().c_str(),
+                              dst_anchor->GetOwnerNode()->GetType().c_str(), dst_anchor->GetIdx());
+                          return INTERNAL_ERROR,
+                          "graph add edge fail, src index:%d, dst index:%d.", 0, 0););
     } else {
       if (third != nullptr) {
         Status status = GraphUtils::AddEdge(src_anchor, third->GetInDataAnchor(0));
-        GE_CHK_BOOL_EXEC(status == SUCCESS, return INTERNAL_ERROR, "graph add edge fail, src index:%d, dst index:%d.",
-                         0, 0);
+        GE_CHK_BOOL_EXEC(status == SUCCESS,
+                         REPORT_CALL_ERROR(
+                            "E19999", "Add edge between op:%s(%s)(index:%d) and op:%s(%s)(index:0) failed",
+                            src_anchor->GetOwnerNode()->GetName().c_str(),
+                            src_anchor->GetOwnerNode()->GetType().c_str(), src_anchor->GetIdx(),
+                            third->GetName().c_str(), third->GetType().c_str());
+                         return INTERNAL_ERROR, "graph add edge fail, src index:%d, dst index:%d.", 0, 0);
         status = GraphUtils::AddEdge(third->GetOutDataAnchor(0), dst_anchor);
-        GE_CHK_BOOL_EXEC(status == SUCCESS, return INTERNAL_ERROR, "graph add edge fail, src index:%d, dst index:%d.",
+        GE_CHK_BOOL_EXEC(status == SUCCESS,
+                         REPORT_CALL_ERROR(
+                              "E19999", "Add edge between op:%s(%s)(index:0) and op:%s(%s)(index:%d) failed",
+                              third->GetName().c_str(), third->GetType().c_str(),
+                              dst_anchor->GetOwnerNode()->GetName().c_str(),
+                              dst_anchor->GetOwnerNode()->GetType().c_str(), dst_anchor->GetIdx());
+                         return INTERNAL_ERROR, "graph add edge fail, src index:%d, dst index:%d.",
                          0, dst_anchor->GetIdx());
       }
     }
@@ -1902,26 +2175,49 @@ OpDescPtr ParserGraphOptimizer::CreateTranslateOp(enum ge::Format inFormat, enum
       ge::TypeUtils::DataTypeToSerialString(inDatatype).c_str(), ge::TypeUtils::FormatToSerialString(outFormat).c_str(),
       ge::TypeUtils::DataTypeToSerialString(outDatatype).c_str());
 
-  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_def, ge::ATTR_NAME_INPUT_FORMAT, inFormat), return nullptr,
+  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_def, ge::ATTR_NAME_INPUT_FORMAT, inFormat),
+                   REPORT_CALL_ERROR("E19999", "Set Attr:%s to op:%s(%s) failed", ATTR_NAME_INPUT_FORMAT.c_str(),
+                                     op_def->GetName().c_str(), op_def->GetType().c_str());
+                   return nullptr,
                    "SetInt ATTR_NAME_INPUT_FORMAT failed.");
-  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_def, ATTR_NAME_INPUT_DATATYPE, inDatatype), return nullptr,
+  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_def, ATTR_NAME_INPUT_DATATYPE, inDatatype),
+                   REPORT_CALL_ERROR("E19999", "Set Attr:%s to op:%s(%s) failed", ATTR_NAME_INPUT_DATATYPE.c_str(),
+                                     op_def->GetName().c_str(), op_def->GetType().c_str());
+                   return nullptr,
                    "SetInt ATTR_NAME_INPUT_DATATYPE failed.");
-  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_def, ge::ATTR_NAME_OUTPUT_FORMAT, outFormat), return nullptr,
+  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_def, ge::ATTR_NAME_OUTPUT_FORMAT, outFormat),
+                   REPORT_CALL_ERROR("E19999", "Set Attr:%s to op:%s(%s) failed", ATTR_NAME_OUTPUT_FORMAT.c_str(),
+                                     op_def->GetName().c_str(), op_def->GetType().c_str());
+                   return nullptr,
                    "SetInt ATTR_NAME_INPUT_DATATYPE failed.");
-  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_def, ATTR_NAME_OUTPUT_DATATYPE, outDatatype), return nullptr,
+  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_def, ATTR_NAME_OUTPUT_DATATYPE, outDatatype),
+                   REPORT_CALL_ERROR("E19999", "Set Attr:%s to op:%s(%s) failed", ATTR_NAME_OUTPUT_DATATYPE.c_str(),
+                                     op_def->GetName().c_str(), op_def->GetType().c_str());
+                   return nullptr,
                    "SetInt ATTR_NAME_INPUT_DATATYPE failed.");
   if (inDatatype != ge::DT_FLOAT16) {
-    GE_CHK_BOOL_EXEC(SUCCESS == op_def->AddInputDesc(GeTensorDesc(GeShape(), inFormat)), return nullptr,
+    GE_CHK_BOOL_EXEC(SUCCESS == op_def->AddInputDesc(GeTensorDesc(GeShape(), inFormat)),
+                     REPORT_CALL_ERROR("E19999", "Add input desc to op:%s(%s) failed",
+                                       op_def->GetName().c_str(), op_def->GetType().c_str());
+                     return nullptr,
                      "create translate op:add input desc fail.");
   } else {
-    GE_CHK_BOOL_EXEC(SUCCESS == op_def->AddInputDesc(GeTensorDesc(GeShape(), inFormat, ge::DT_FLOAT16)), return nullptr,
+    GE_CHK_BOOL_EXEC(SUCCESS == op_def->AddInputDesc(GeTensorDesc(GeShape(), inFormat, ge::DT_FLOAT16)),
+                     REPORT_CALL_ERROR("E19999", "Add input desc to op:%s(%s) failed",
+                                       op_def->GetName().c_str(), op_def->GetType().c_str());
+                     return nullptr,
                      "create translate op:add input desc fail.");
   }
   if (outDatatype != ge::DT_FLOAT16) {
-    GE_CHK_BOOL_EXEC(SUCCESS == op_def->AddOutputDesc(GeTensorDesc(GeShape(), outFormat)), return nullptr,
+    GE_CHK_BOOL_EXEC(SUCCESS == op_def->AddOutputDesc(GeTensorDesc(GeShape(), outFormat)),
+                     REPORT_CALL_ERROR("E19999", "Add output desc to op:%s(%s) failed",
+                                       op_def->GetName().c_str(), op_def->GetType().c_str());
+                     return nullptr,
                      "create translate op:add output desc fail.");
   } else {
     GE_CHK_BOOL_EXEC(SUCCESS == op_def->AddOutputDesc(GeTensorDesc(GeShape(), outFormat, ge::DT_FLOAT16)),
+                     REPORT_CALL_ERROR("E19999", "Add output desc to op:%s(%s) failed",
+                                       op_def->GetName().c_str(), op_def->GetType().c_str());
                      return nullptr, "create translate op:add output desc fail.");
   }
   return op_def;
@@ -1938,17 +2234,29 @@ OpDescPtr ParserGraphOptimizer::CreatePermuteOp(enum ge::Format input_format, en
                  return op_desc);
   GELOGI("create permute op:%s", op_desc->GetName().c_str());
 
-  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_desc, ge::ATTR_NAME_INPUT_FORMAT, (int64_t)input_format), return nullptr,
+  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_desc, ge::ATTR_NAME_INPUT_FORMAT, (int64_t)input_format),
+                   REPORT_CALL_ERROR("E19999", "Set Attr:%s to op:%s(%s) failed", ATTR_NAME_INPUT_FORMAT.c_str(),
+                                     op_desc->GetName().c_str(), op_desc->GetType().c_str());
+                   return nullptr,
                    "SetInt ATTR_NAME_INPUT_FORMAT failed.");
-  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_desc, ge::ATTR_NAME_OUTPUT_FORMAT, (int64_t)output_format), return nullptr,
+  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_desc, ge::ATTR_NAME_OUTPUT_FORMAT, (int64_t)output_format),
+                   REPORT_CALL_ERROR("E19999", "Set Attr:%s to op:%s(%s) failed", ATTR_NAME_OUTPUT_FORMAT.c_str(),
+                                     op_desc->GetName().c_str(), op_desc->GetType().c_str());
+                   return nullptr,
                    "SetInt ATTR_NAME_OUTPUT_FORMAT failed.");
 
   GE_IF_BOOL_EXEC(input_format == FORMAT_NCHW, (void)AttrUtils::SetInt(op_desc, "NCHW_to_NHWC", (int64_t)1));
   GE_IF_BOOL_EXEC(input_format == FORMAT_NHWC, (void)AttrUtils::SetInt(op_desc, "NHWC_to_NCHW", (int64_t)1));
 
-  GE_CHK_BOOL_EXEC(SUCCESS == op_desc->AddInputDesc(GeTensorDesc(GeShape(), input_format)), return nullptr,
+  GE_CHK_BOOL_EXEC(SUCCESS == op_desc->AddInputDesc(GeTensorDesc(GeShape(), input_format)),
+                   REPORT_CALL_ERROR("E19999", "Add input desc to op:%s(%s) failed",
+                                     op_desc->GetName().c_str(), op_desc->GetType().c_str());
+                   return nullptr,
                    "create permute op:add input desc fail.");
-  GE_CHK_BOOL_EXEC(SUCCESS == op_desc->AddOutputDesc(GeTensorDesc(GeShape(), output_format)), return nullptr,
+  GE_CHK_BOOL_EXEC(SUCCESS == op_desc->AddOutputDesc(GeTensorDesc(GeShape(), output_format)),
+                   REPORT_CALL_ERROR("E19999", "Add output desc to op:%s(%s) failed",
+                                     op_desc->GetName().c_str(), op_desc->GetType().c_str());
+                   return nullptr,
                    "create permute op:add output desc fail.");
 
   return op_desc;
@@ -1971,14 +2279,24 @@ OpDescPtr ParserGraphOptimizer::CreateCastOp(enum ge::DataType input_data_type, 
         AttrUtils::SetInt(op_desc, ge::CAST_ATTR_DSTT, (int64_t)output_data_type) &&
         AttrUtils::SetInt(op_desc, ge::CAST_ATTR_DST_TYPE, (int64_t)output_data_type) &&
         AttrUtils::SetBool(op_desc, ge::CAST_ATTR_TRUNCATE, false))) {
+    REPORT_CALL_ERROR("E19999", "Set Attr:%s or %s or %s or %s to op:%s(%s) failed",
+                      CAST_ATTR_SRCT.c_str(), CAST_ATTR_DSTT.c_str(),
+                      CAST_ATTR_DST_TYPE.c_str(), CAST_ATTR_TRUNCATE.c_str(),
+                      op_desc->GetName().c_str(), op_desc->GetType().c_str());
     GELOGE(FAILED, "Set CAST_ATTR_SRCT or CAST_ATTR_DSTT or CAST_ATTR_DST_TYPE or CAST_ATTR_TRUNCATE fail, node: %s.",
            op_desc->GetName().c_str());
     return nullptr;
   }
 
-  GE_CHK_BOOL_EXEC(SUCCESS == op_desc->AddInputDesc(GeTensorDesc(GeShape(), format, input_data_type)), return nullptr,
+  GE_CHK_BOOL_EXEC(SUCCESS == op_desc->AddInputDesc(GeTensorDesc(GeShape(), format, input_data_type)),
+                   REPORT_CALL_ERROR("E19999", "Add input desc to op:%s(%s) failed",
+                                     op_desc->GetName().c_str(), op_desc->GetType().c_str());
+                   return nullptr,
                    "create cast op:add input desc fail.");
-  GE_CHK_BOOL_EXEC(SUCCESS == op_desc->AddOutputDesc(GeTensorDesc(GeShape(), format, output_data_type)), return nullptr,
+  GE_CHK_BOOL_EXEC(SUCCESS == op_desc->AddOutputDesc(GeTensorDesc(GeShape(), format, output_data_type)),
+                   REPORT_CALL_ERROR("E19999", "Add output desc to op:%s(%s) failed",
+                                     op_desc->GetName().c_str(), op_desc->GetType().c_str());
+                   return nullptr,
                    "create cast op:add output desc fail.");
 
   return op_desc;
@@ -2000,13 +2318,25 @@ OpDescPtr ParserGraphOptimizer::CreateTransDataOp(enum ge::Format input_format) 
     output_format = FORMAT_NCHW;
   }
 
-  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_desc, ge::ATTR_NAME_INPUT_FORMAT, (int64_t)input_format), return nullptr,
+  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_desc, ge::ATTR_NAME_INPUT_FORMAT, (int64_t)input_format),
+                   REPORT_CALL_ERROR("E19999", "Set Attr:%s to op:%s(%s) failed", ATTR_NAME_INPUT_FORMAT.c_str(),
+                                     op_desc->GetName().c_str(), op_desc->GetType().c_str());
+                   return nullptr,
                    "SetInt of ATTR_NAME_INPUT_FORMAT failed.");
-  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_desc, ge::ATTR_NAME_OUTPUT_FORMAT, (int64_t)output_format), return nullptr,
+  GE_CHK_BOOL_EXEC(AttrUtils::SetInt(op_desc, ge::ATTR_NAME_OUTPUT_FORMAT, (int64_t)output_format),
+                   REPORT_CALL_ERROR("E19999", "Set Attr:%s to op:%s(%s) failed", ATTR_NAME_OUTPUT_FORMAT.c_str(),
+                                     op_desc->GetName().c_str(), op_desc->GetType().c_str());
+                   return nullptr,
                    "SetInt of ATTR_NAME_OUTPUT_FORMAT failed.");
-  GE_CHK_BOOL_EXEC(SUCCESS == op_desc->AddInputDesc(GeTensorDesc(GeShape(), input_format)), return nullptr,
+  GE_CHK_BOOL_EXEC(SUCCESS == op_desc->AddInputDesc(GeTensorDesc(GeShape(), input_format)),
+                   REPORT_CALL_ERROR("E19999", "Add input desc to op:%s(%s) failed",
+                                     op_desc->GetName().c_str(), op_desc->GetType().c_str());
+                   return nullptr,
                    "create transdata op:add input desc fail.");
-  GE_CHK_BOOL_EXEC(SUCCESS == op_desc->AddOutputDesc(GeTensorDesc(GeShape(), output_format)), return nullptr,
+  GE_CHK_BOOL_EXEC(SUCCESS == op_desc->AddOutputDesc(GeTensorDesc(GeShape(), output_format)),
+                   REPORT_CALL_ERROR("E19999", "Add output desc to op:%s(%s) failed",
+                                     op_desc->GetName().c_str(), op_desc->GetType().c_str());
+                   return nullptr,
                    "create transdata op:add output desc fail.");
 
   return op_desc;

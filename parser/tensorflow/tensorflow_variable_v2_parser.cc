@@ -87,6 +87,8 @@ static Status ParseSrcType(const domi::tensorflow::NodeDef *node, VariableOperat
   // The upper caller guarantees input params is not empty.
   domi::tensorflow::AttrValue attr;
   CHECK_FALSE_EXEC(TensorFlowUtil::FindAttrValue(node, VAR_ATTR_DTYPE, attr),
+                   REPORT_CALL_ERROR("E19999", "In NodeDef:%s attr:%s not exist, check invalid",
+                                     node->name().c_str(), VAR_ATTR_DTYPE.c_str());
                    GELOGE(FAILED, "Attr %s does not exist in NodeDef %s.",
                    VAR_ATTR_DTYPE.c_str(), node->name().c_str());
                    return PARAM_INVALID);
@@ -97,8 +99,11 @@ static Status ParseSrcType(const domi::tensorflow::NodeDef *node, VariableOperat
   domi::tensorflow::DataType tf_type = attr.type();
   ge::DataType type = domi::TensorAssign::ConvertTensorflowDataType(tf_type);
 
-  CHECK_FALSE_EXEC(type != ge::DataType::DT_UNDEFINED, GELOGE(FAILED, "Data type %s of node %s is not supported.",
-                                                                 DataType_Name(tf_type).c_str(), node->name().c_str());
+  CHECK_FALSE_EXEC(type != ge::DataType::DT_UNDEFINED,
+                   REPORT_CALL_ERROR("E19999", "Data type %s of node %s is not supported",
+                                     DataType_Name(tf_type).c_str(), node->name().c_str());
+                   GELOGE(FAILED, "Data type %s of node %s is not supported.",
+                          DataType_Name(tf_type).c_str(), node->name().c_str());
                    return PARAM_INVALID);
 
   op->SrcType(type);
@@ -109,6 +114,8 @@ Status ParseContainer(const domi::tensorflow::NodeDef *node, VariableOperator *o
   // The upper caller guarantees input params is not empty.
   domi::tensorflow::AttrValue attr;
   CHECK_FALSE_EXEC(TensorFlowUtil::FindAttrValue(node, VAR_ATTR_CONTAINER, attr),
+                   REPORT_CALL_ERROR("E19999", "In NodeDef:%s attr:%s not exist, check invalid",
+                                     node->name().c_str(), VAR_ATTR_CONTAINER.c_str());
                    GELOGE(FAILED, "Attr %s does not exist in NodeDef %s.",
                    VAR_ATTR_CONTAINER.c_str(), node->name().c_str());
                    return PARAM_INVALID);
@@ -126,6 +133,8 @@ Status ParseSharedName(const domi::tensorflow::NodeDef *node, VariableOperator *
   domi::tensorflow::AttrValue attr;
   CHECK_FALSE_EXEC(
     TensorFlowUtil::FindAttrValue(node, VAR_ATTR_SHARED_NAME, attr),
+    REPORT_CALL_ERROR("E19999", "In NodeDef:%s attr:%s not exist, check invalid",
+                      node->name().c_str(), VAR_ATTR_SHARED_NAME.c_str());
     GELOGE(FAILED, "Attr %s does not exist in NodeDef %s.", VAR_ATTR_SHARED_NAME.c_str(), node->name().c_str());
     return PARAM_INVALID);
   GE_RETURN_WITH_LOG_IF_ERROR(TensorFlowUtil::CheckAttrHasType(attr, TENSORFLOW_ATTR_TYPE_STRING),
@@ -141,6 +150,8 @@ static Status ParseVarName(const domi::tensorflow::NodeDef *node, VariableOperat
   // The upper caller guarantees input params is not empty.
   domi::tensorflow::AttrValue attr;
   CHECK_FALSE_EXEC(TensorFlowUtil::FindAttrValue(node, ge::VAR_ATTR_NAME, attr),
+                   REPORT_CALL_ERROR("E19999", "In NodeDef:%s attr:%s not exist, check invalid",
+                                     node->name().c_str(), VAR_ATTR_NAME.c_str());
                    GELOGE(FAILED, "Attr %s does not exist in NodeDef %s.", ge::VAR_ATTR_NAME.c_str(),
                    node->name().c_str()); return PARAM_INVALID);
 
@@ -174,6 +185,8 @@ static Status ParseVarShape(const domi::tensorflow::NodeDef *node, VariableOpera
   domi::tensorflow::AttrValue attr_value;
 
   if (!TensorFlowUtil::FindAttrValue(node, ge::ATTR_NAME_OUTPUT_TENSOR_DESC, attr_value)) {
+    REPORT_CALL_ERROR("E19999", "In NodeDef:%s attr:%s not exist, check invalid",
+                      node->name().c_str(), ATTR_NAME_OUTPUT_TENSOR_DESC.c_str());
     GELOGE(FAILED, "In NodeDef %s Attr %s is not exist.", node_src_name.c_str(),
            ge::ATTR_NAME_OUTPUT_TENSOR_DESC.c_str());
     return FAILED;
@@ -188,6 +201,8 @@ static Status ParseVarShape(const domi::tensorflow::NodeDef *node, VariableOpera
   ge::Format src_format = ge::FORMAT_ND;
 
   CHECK_FALSE_EXEC(TensorFlowUtil::FindAttrValue(node, VAR_ATTR_SHAPE, attr_value),
+                   REPORT_CALL_ERROR("E19999", "In NodeDef:%s attr:%s not exist, check invalid",
+                                     node->name().c_str(), VAR_ATTR_SHAPE.c_str());
                    GELOGE(FAILED, "Attr %s does not exist in NodeDef %s.", VAR_ATTR_SHAPE.c_str(),
                    node->name().c_str()); return PARAM_INVALID);
 
