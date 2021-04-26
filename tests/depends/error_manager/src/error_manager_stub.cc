@@ -16,7 +16,7 @@
 
 #include "common/util/error_manager/error_manager.h"
 
-namespace ErrorMessage {
+namespace error_message {
 int FormatErrorMessage(char *str_dst, size_t dst_max, const char *format, ...) {
   return 0;
 }
