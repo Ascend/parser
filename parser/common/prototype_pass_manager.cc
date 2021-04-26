@@ -16,6 +16,7 @@
 
 #include "prototype_pass_manager.h"
 
+#include "common/util.h"
 #include "framework/common/debug/ge_log.h"
 
 namespace ge {
@@ -25,10 +26,14 @@ ProtoTypePassManager &ProtoTypePassManager::Instance() {
 }
 
 Status ProtoTypePassManager::Run(google::protobuf::Message *message, const domi::FrameworkType &fmk_type) {
+  GE_CHECK_NOTNULL(message);
   const auto &pass_vec = ProtoTypePassRegistry::GetInstance().GetCreateFnByType(fmk_type);
   for (const auto &pass_item : pass_vec) {
     std::string pass_name = pass_item.first;
-    std::unique_ptr<ProtoTypeBasePass> pass = std::unique_ptr<ProtoTypeBasePass>(pass_item.second());
+    const auto &func = pass_item.second;
+    GE_CHECK_NOTNULL(func);
+    std::unique_ptr<ProtoTypeBasePass> pass = std::unique_ptr<ProtoTypeBasePass>(func());
+    GE_CHECK_NOTNULL(pass);
     Status ret = pass->Run(message);
     if (ret != SUCCESS) {
       GELOGE(FAILED, "Run ProtoType pass:%s failed", pass_name.c_str());
