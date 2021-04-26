@@ -249,6 +249,7 @@ set(PARSER_SRC_FILES
     "${PARSER_DIR}/parser/common/register_tbe.cc"
     "${PARSER_DIR}/parser/common/tbe_plugin_loader.cc"
     "${PARSER_DIR}/parser/common/thread_pool.cc"
+    "${PARSER_DIR}/parser/common/auto_mapping_subgraph_io_index_func.cc"
     "${PARSER_DIR}/parser/onnx/onnx_constant_parser.cc"
     "${PARSER_DIR}/parser/onnx/onnx_custom_parser_adapter.cc"
     "${PARSER_DIR}/parser/onnx/onnx_data_parser.cc"

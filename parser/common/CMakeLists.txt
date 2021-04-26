@@ -25,6 +25,7 @@ set(SRC_LIST
     "parser_fp16_t.cc"
     "thread_pool.cc"
     "parser_utils.cc"
+    "auto_mapping_subgraph_io_index_func.cc"
 )
 
 ############ libparser_common.so ############
@@ -45,6 +46,7 @@ target_include_directories(parser_common PRIVATE
     ${CMAKE_CURRENT_LIST_DIR}
     ${PARSER_DIR}
     ${PARSER_DIR}/parser
+    ${METADEF_DIR}
     ${METADEF_DIR}/inc
     ${METADEF_DIR}/inc/graph
     ${METADEF_DIR}/inc/register
