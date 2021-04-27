@@ -41,6 +41,7 @@
 #include "parser/common/parser_fp16_t.h"
 #include "parser/common/pass_manager.h"
 #include "parser/common/pre_checker.h"
+#include "parser/common/prototype_pass_manager.h"
 #include "parser/common/thread_pool.h"
 #include "parser/common/parser_utils.h"
 #include "parser/common/util.h"
@@ -1146,6 +1147,9 @@ Status TensorFlowModelParser::ParseFromMemory(const char *data, uint32_t size, g
     GELOGI("After Trim, The graph_def.node_size():%d", graph_def.node_size());
   }
 
+  GE_RETURN_WITH_LOG_IF_ERROR(ProtoTypePassManager::Instance().Run(&graph_def, domi::TENSORFLOW),
+                              "Run ProtoType Pass Failed");
+
   shared_ptr<ge::ScopeGraph> scope_graph = nullptr;
   Status ret = ExcuteScopeFusionPasses(&graph_def, scope_graph);
   if (ret != SUCCESS) {
@@ -1373,6 +1377,9 @@ Status TensorFlowModelParser::ParseAllGraph(const google::protobuf::Message *pro
   const domi::tensorflow::GraphDef *ori_graph = reinterpret_cast<const domi::tensorflow::GraphDef *>(proto);
   // Make a copy for operation without modifying the original graph def.
   domi::tensorflow::GraphDef graph_def = *ori_graph;
+
+  GE_RETURN_WITH_LOG_IF_ERROR(ProtoTypePassManager::Instance().Run(&graph_def, domi::TENSORFLOW),
+                              "Run ProtoType Pass Failed");
 
   shared_ptr<ge::ScopeGraph> scope_graph = nullptr;
   Status ret = ExcuteScopeFusionPasses(&graph_def, scope_graph);
@@ -2215,6 +2222,9 @@ Status TensorFlowModelParser::ParseProto(const google::protobuf::Message *proto,
   domi::tensorflow::GraphDef graph_def_operation = *graph_def_in;
   domi::tensorflow::GraphDef *graph_def = &graph_def_operation;
   GELOGI("[TF Parser] graph def version:%d", graph_def->version());
+
+  GE_RETURN_WITH_LOG_IF_ERROR(ProtoTypePassManager::Instance().Run(graph_def, domi::TENSORFLOW),
+                              "Run ProtoType Pass Failed");
 
   shared_ptr<ge::ScopeGraph> scope_graph = nullptr;
   Status ret = ExcuteScopeFusionPasses(graph_def, scope_graph);

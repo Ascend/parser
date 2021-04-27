@@ -26,6 +26,7 @@ set(SRC_LIST
     "thread_pool.cc"
     "parser_utils.cc"
     "auto_mapping_subgraph_io_index_func.cc"
+    "prototype_pass_manager.cc"
 )
 
 ############ libparser_common.so ############

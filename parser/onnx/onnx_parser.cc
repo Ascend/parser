@@ -35,6 +35,7 @@
 #include "parser/common/acl_graph_parser_util.h"
 #include "parser/common/model_saver.h"
 #include "parser/common/parser_utils.h"
+#include "parser/common/prototype_pass_manager.h"
 #include "parser/onnx/onnx_util.h"
 #include "register/op_registry.h"
 #include "register/register_fmk_types.h"
@@ -838,6 +839,8 @@ Status OnnxModelParser::ModelParseToGraphImpl(bool is_subgraph, ge::onnx::GraphP
 
   ClearMembers();
 
+  GE_RETURN_WITH_LOG_IF_ERROR(ProtoTypePassManager::Instance().Run(&onnx_graph, domi::ONNX),
+                              "Run ProtoType Pass Failed");
   // 2. Get all inializer.
   std::map<std::string, ge::onnx::TensorProto> initializer_name_tensor;
   for (int i = 0; i < onnx_graph.initializer_size(); i++) {

@@ -177,6 +177,7 @@ set(REGISTER_SRC_FILES
     "${PARSER_DIR}/metadef/register/scope/scope_pattern.cc"
     "${PARSER_DIR}/metadef/register/scope/scope_util.cc"
     "${PARSER_DIR}/metadef/register/tensor_assign.cpp"
+    "${PARSER_DIR}/metadef/register/prototype_pass_registry.cc"
 )
 
 # include directories
@@ -246,6 +247,7 @@ set(PARSER_SRC_FILES
     "${PARSER_DIR}/parser/common/pass_manager.cc"
     "${PARSER_DIR}/parser/common/pre_checker.cc"
     "${PARSER_DIR}/parser/common/proto_file_parser.cc"
+    "${PARSER_DIR}/parser/common/prototype_pass_manager.cc"
     "${PARSER_DIR}/parser/common/register_tbe.cc"
     "${PARSER_DIR}/parser/common/tbe_plugin_loader.cc"
     "${PARSER_DIR}/parser/common/thread_pool.cc"
