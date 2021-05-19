@@ -64,9 +64,8 @@ Status CaffeOpParser::ConvertWeight(const BlobProto &proto, const string &lay_na
     }
 
     if (dim >= INT64_MAX / count) {
-      ErrorManager::GetInstance().ATCReportErrMessage("E11033", {"opname", "blobsize", "reason"},
-                                                      {lay_name, std::to_string(dim) + "*" + std::to_string(count),
-                                                       "it exceeds INT64_MAX[" + std::to_string(INT64_MAX) + "]"});
+      REPORT_INNER_ERROR("E19999", "Convert weight fail, shape:%s of layer:%s will overflow after multi",
+                         shape.ToString().c_str(), lay_name.c_str());
       GELOGE(FAILED, "[Check][Size]Convert weight fail, Blob size exceeds INT64_MAX, dim:%d, count:%d, layer name:%s",
              dim, count, lay_name.c_str());
       return FAILED;

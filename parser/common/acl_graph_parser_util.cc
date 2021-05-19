@@ -667,13 +667,12 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY long GetFileLength(const std::s
                                  return -1, "[Open][File] [%s] failed. %s", input_file.c_str(), strerror(errno));
 
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((file_length == 0),
-                                 ErrorManager::GetInstance().ATCReportErrMessage("E19015", {"filepath"}, {input_file});
+                                 REPORT_INNER_ERROR("E19999", "File[%s] size is 0, not valid.", input_file.c_str());
                                  return -1, "[Check][Param] File[%s] size is 0, not valid.", input_file.c_str());
 
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(file_length > kMaxFileSizeLimit,
-                                 ErrorManager::GetInstance().ATCReportErrMessage(
-                                         "E19016", {"filepath", "filesize", "maxlen"},
-                                         {input_file, std::to_string(file_length), std::to_string(kMaxFileSizeLimit)});
+                                 REPORT_INNER_ERROR("E19999", "File:%s size:%lld is out of limit: %d.",
+                                                    input_file.c_str(), file_length, kMaxFileSizeLimit);
                                  return -1, "[Check][Param] File[%s] size %lld is out of limit: %d.",
                                  input_file.c_str(), file_length, kMaxFileSizeLimit);
   return static_cast<long>(file_length);
@@ -806,7 +805,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadProtoFromText(const ch
   std::ifstream fs(real_path.c_str(), std::ifstream::in);
 
   if (!fs.is_open()) {
-    ErrorManager::GetInstance().ATCReportErrMessage("E19017", {"realpth", "protofile"}, {real_path, file});
+    REPORT_INNER_ERROR("E19999", "open file:%s failed", real_path.c_str());
     GELOGE(ge::FAILED, "[Open][ProtoFile] failed, real path is '%s' when orginal file path is '%s'.",
            real_path.c_str(), file);
     return false;

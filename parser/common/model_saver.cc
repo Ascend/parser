@@ -43,11 +43,11 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status ModelSaver::SaveJsonToFi
   try {
     model_str = model.dump(kInteval, ' ', false, Json::error_handler_t::ignore);
   } catch (std::exception &e) {
-    ErrorManager::GetInstance().ATCReportErrMessage("E19007", {"exception"}, {e.what()});
+    REPORT_INNER_ERROR("E19999", "Failed to convert JSON to string, reason: %s, savefile:%s.", e.what(), file_path);
     GELOGE(FAILED, "[Invoke][Dump] Failed to convert JSON to string, reason: %s, savefile:%s.", e.what(), file_path);
     return FAILED;
   } catch (...) {
-    ErrorManager::GetInstance().ATCReportErrMessage("E19008");
+    REPORT_INNER_ERROR("E19999", "Failed to convert JSON to string, savefile:%s.", file_path);
     GELOGE(FAILED, "[Invoke][Dump] Failed to convert JSON to string, savefile:%s.", file_path);
     return FAILED;
   }
@@ -136,7 +136,9 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY int ModelSaver::CreateDirectory
         int32_t ret = mmMkdir(tmp_dir_path, S_IRUSR | S_IWUSR | S_IXUSR);  // 700
         if (ret != 0) {
           if (errno != EEXIST) {
-            ErrorManager::GetInstance().ATCReportErrMessage("E19006", {"path"}, {directory_path});
+            REPORT_CALL_ERROR("E19999",
+                              "Can not create directory %s. Make sure the directory exists and writable. errmsg:%s",
+                              directory_path.c_str(), strerror(errno));
             GELOGW("Can not create directory %s. Make sure the directory exists and writable. errmsg:%s",
                    directory_path.c_str(), strerror(errno));
             return ret;
@@ -148,7 +150,9 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY int ModelSaver::CreateDirectory
   int32_t ret = mmMkdir(const_cast<char *>(directory_path.c_str()), S_IRUSR | S_IWUSR | S_IXUSR);  // 700
   if (ret != 0) {
     if (errno != EEXIST) {
-      ErrorManager::GetInstance().ATCReportErrMessage("E19006", {"path"}, {directory_path});
+      REPORT_CALL_ERROR("E19999",
+                        "Can not create directory %s. Make sure the directory exists and writable. errmsg:%s",
+                        directory_path.c_str(), strerror(errno));
       GELOGW("Can not create directory %s. Make sure the directory exists and writable. errmsg:%s",
              directory_path.c_str(), strerror(errno));
       return ret;

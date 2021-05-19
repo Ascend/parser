@@ -258,8 +258,8 @@ Status TensorFlowFunsionOPUtil::CheckFusionOpChildren(const string &fusion_node_
   // Number matching of fusion operators
   auto iter_children_nums = tensorflow_fusionop_children_nums_map.find(funsion_op_type);
   if (iter_children_nums == tensorflow_fusionop_children_nums_map.end()) {
-    ErrorManager::GetInstance().ATCReportErrMessage(
-        "E12018", {"opname", "optype"}, {fusion_node_name, funsion_op_type});
+    REPORT_INNER_ERROR("E19999", "Op[%s]'s optype[%s] not a Fusion OP, check invalid",
+                       fusion_node_name.c_str(), funsion_op_type.c_str());
     GELOGE(domi::INTERNAL_ERROR,
         "Op[%s]'s optype[%s] not a Fusion OP!", fusion_node_name.c_str(), funsion_op_type.c_str());
     return domi::INTERNAL_ERROR;
@@ -276,8 +276,8 @@ Status TensorFlowFunsionOPUtil::CheckFusionOpChildren(const string &fusion_node_
   }
 
   if (!find) {
-    ErrorManager::GetInstance().ATCReportErrMessage("E12019",
-        {"opname", "optype", "childrennum"}, {fusion_node_name, funsion_op_type, std::to_string(children_num)});
+    REPORT_INNER_ERROR("E19999", "CheckFusionOp op[%s]'s optype[%s] children_nums[%d] is not the same for define",
+                       fusion_node_name.c_str(), funsion_op_type.c_str(), children_num);
     GELOGE(domi::INTERNAL_ERROR,
            "Op[%s]'s optype[%s] children_nums:%d is not the same for define.",
            fusion_node_name.c_str(),
@@ -306,8 +306,8 @@ Status TensorFlowFunsionOPUtil::CheckFusionOpChildren(const string &fusion_node_
       }
 
       GE_IF_BOOL_EXEC(count != children_names.size(),
-          ErrorManager::GetInstance().ATCReportErrMessage(
-              "E12020", {"opname", "optype"}, {fusion_node_name, funsion_op_type});
+          REPORT_INNER_ERROR("E19999", "Op[%s]'s optype[%s] has no enough importance child.", fusion_node_name.c_str(),
+              funsion_op_type.c_str());
           GELOGE(domi::INTERNAL_ERROR, "Op[%s]'s optype[%s] has no enough importance child.", fusion_node_name.c_str(),
               funsion_op_type.c_str());
           return domi::INTERNAL_ERROR;);

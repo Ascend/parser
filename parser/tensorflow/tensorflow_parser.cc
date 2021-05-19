@@ -374,7 +374,7 @@ Status TensorFlowModelParser::TransNodeToOpDesc(const domi::tensorflow::NodeDef 
       GE_RETURN_IF_ERROR(DefunToPartitionedCall(node_def, op));
       GE_CHECK_NOTNULL(op);
     } else {
-      ErrorManager::GetInstance().ATCReportErrMessage("E12011", {"opname", "optype"}, {node_name, op_type});
+      ErrorManager::GetInstance().ATCReportErrMessage("E10501", {"opname", "optype"}, {node_name, op_type});
       GELOGE(INTERNAL_ERROR, "IR for op[%s] optype[%s] is not registered.", node_name.c_str(), op_type.c_str());
       return FAILED;
     }
@@ -727,9 +727,9 @@ Status TensorFlowModelParser::AddEdges(ge::ComputeGraphPtr &graph) {
       ge::NodePtr dest = iter1->second;
       GE_CHECK_NOTNULL(dest);
       if (src_output_iter.second.size() != input_iter->second.size()) {
-        ErrorManager::GetInstance().ATCReportErrMessage("E12021", {"opname1", "index1", "opname2", "index2"},
-                                                        {src_op_name, std::to_string(input_iter->second.size()),
-                                                         dest_op_name, std::to_string(src_output_iter.second.size())});
+        REPORT_INNER_ERROR("E19999", "Input size of op[%s]:%zu is not equal to Output size of op[%s]:%zu.",
+                           src_op_name.c_str(), input_iter->second.size(),
+                           dest_op_name.c_str(), src_output_iter.second.size());
         GELOGE(INTERNAL_ERROR, "Input size of op[%s]:%zu is not equal to Output size of op[%s]:%zu.",
                src_op_name.c_str(), input_iter->second.size(), dest_op_name.c_str(), src_output_iter.second.size());
         return INTERNAL_ERROR;
@@ -746,8 +746,8 @@ Status TensorFlowModelParser::AddEdges(ge::ComputeGraphPtr &graph) {
           ge::InDataAnchorPtr in_archor_ptr = dest->GetInDataAnchor(outputpair.second);
           GE_CHECK_NOTNULL(in_archor_ptr);
           GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(ge::GraphUtils::AddEdge(out_archor_ptr, in_archor_ptr) != ge::GRAPH_SUCCESS,
-                                         ErrorManager::GetInstance().ATCReportErrMessage(
-                                             "E12014", {"opname1", "opname2"}, {src->GetName(), dest->GetName()});
+                                         REPORT_INNER_ERROR("E19999", "Add link from op:%s to op:%s failed",
+                                                            src->GetName().c_str(), dest->GetName().c_str());
                                          return INTERNAL_ERROR, "Add link failed from op[%s] to op[%s].",
                                                 src->GetName().c_str(), dest->GetName().c_str());
         } else {
@@ -758,8 +758,8 @@ Status TensorFlowModelParser::AddEdges(ge::ComputeGraphPtr &graph) {
           GE_CHECK_NOTNULL(out_archor_ptr);
           GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
               ge::GraphUtils::AddEdge(out_archor_ptr, in_archor_ptr) != ge::GRAPH_SUCCESS,
-              ErrorManager::GetInstance().ATCReportErrMessage("E12014", {"opname1", "opname2"},
-                                                              {src->GetName(), dest->GetName()});
+              REPORT_INNER_ERROR("E19999", "Add link from op:%s to op:%s failed",
+                                 src->GetName().c_str(), dest->GetName().c_str());
               return INTERNAL_ERROR, "Add link failed from op[%s] to op[%s].", src->GetName().c_str(),
                      dest->GetName().c_str()
           );
@@ -918,7 +918,7 @@ Status TensorFlowModelParser::ParseNodeDef(TensorFlowModelParser *parser, ge::Co
       }
       return SUCCESS;
     } else {
-      REPORT_INPUT_ERROR("E12011", std::vector<std::string>({"opname", "optype"}),
+      REPORT_INPUT_ERROR("E10501", std::vector<std::string>({"opname", "optype"}),
                          std::vector<std::string>({node_name, op_type}));
       GELOGE(INTERNAL_ERROR, "op[%s] type[%s] have no ir factory.]", node_name.c_str(), op_type.c_str());
       return FAILED;
@@ -1361,7 +1361,7 @@ Status TensorFlowModelParser::Parse(const char *model_path, ge::ComputeGraphPtr 
 
     ret = GenSubgraphParseTasks(arg.graph, tasks);
     if (ret != SUCCESS) {
-      ErrorManager::GetInstance().ATCReportErrMessage("E12017", {"graphname"}, {arg.graph->GetName()});
+      REPORT_CALL_ERROR("E19999", "Failed to gen tasks on graph:%s for next iteration", arg.graph->GetName().c_str());
       GELOGE(ret, "Failed to gen tasks on graph %s for next iteration", arg.graph->GetName().c_str());
       return ret;
     }
@@ -1682,13 +1682,13 @@ Status TensorFlowModelParser::RunScopeFusionPass(const vector<string> &scope_pas
   for (auto &pass_name : scope_passes_list) {
     auto pass = impl->CreateScopeFusionPass(pass_name);
     if (pass == nullptr) {
-      ErrorManager::GetInstance().ATCReportErrMessage("E12001", {"passname"}, {pass_name});
+      REPORT_INNER_ERROR("E19999", "Scope fusion pass[%s] is not registered.", pass_name.c_str());
       GELOGE(INTERNAL_ERROR, "Scope fusion pass[%s] is not registered.", pass_name.c_str());
       return INTERNAL_ERROR;
     }
     Status ret = pass_manager.AddPass(pass);
     if (ret != SUCCESS) {
-      ErrorManager::GetInstance().ATCReportErrMessage("E12002", {"passname"}, {pass_name});
+      REPORT_CALL_ERROR("E19999", "Add scope fusion pass[%s] failed.", pass_name.c_str());
       GELOGE(INTERNAL_ERROR, "Add scope fusion pass[%s] failed.", pass_name.c_str());
       return INTERNAL_ERROR;
     }
@@ -3022,8 +3022,9 @@ Status TensorFlowModelParser::TrimGraphByInput(const domi::tensorflow::GraphDef 
     std::set<string> next_inputs;
     for (const string &current_input : current_inputs) {
       delete_nodes.insert(current_input);
-      GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(!node_lookup.count(current_input), ErrorManager::GetInstance().ATCReportErrMessage(
-                                                                            "E12012", {"opname"}, {current_input});
+      GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(!node_lookup.count(current_input),
+                                     ErrorManager::GetInstance().ATCReportErrMessage(
+                                          "E10016", {"parameter", "opname"}, {"input_shape", current_input});
                                      return FAILED, "Input op[%s] not found in graph.", current_input.c_str());
       const NodeDef *current_node = node_lookup[current_input];
       GE_CHECK_NOTNULL(current_node);
@@ -3098,8 +3099,9 @@ Status TensorFlowModelParser::TrimGraphByOutput(const domi::tensorflow::GraphDef
     for (const string &current_input : current_inputs) {
       required_nodes.insert(current_input);
       GE_IF_BOOL_EXEC(input_nodes.count(current_input), continue);
-      GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(!node_lookup.count(current_input), ErrorManager::GetInstance().ATCReportErrMessage(
-                                                                            "E12012", {"opname"}, {current_input});
+      GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(!node_lookup.count(current_input),
+                                     ErrorManager::GetInstance().ATCReportErrMessage(
+                                          "E10016", {"parameter", "opname"}, {"out_nodes", current_input});
                                      return FAILED, "Input op[%s] not found in graph.", current_input.c_str());
       const NodeDef *current_node = node_lookup[current_input];
       GE_CHECK_NOTNULL(current_node);
@@ -3293,7 +3295,8 @@ Status TensorFlowModelParser::OptimizeConstNodes4CustomOp(domi::tensorflow::Grap
       if (it.moveType == domi::OMG_REMOVE_TYPE_WITH_COND) {
         domi::tensorflow::AttrValue attr_value;
         GE_IF_BOOL_EXEC(!(ge::TensorFlowUtil::FindAttrValue(current_node, it.attrName, attr_value)),
-                        ErrorManager::GetInstance().ATCReportErrMessage("E12005", {"attrname"}, {current_op_name});
+                        REPORT_INNER_ERROR("E19999", "Op:%s register AttrName[%s] has no value, check invalid",
+                                           current_op_name.c_str(), it.attrName.c_str());
                         GELOGE(INTERNAL_ERROR, "AttrName[%s] has no value!", it.attrName.c_str());
                         return PARAM_INVALID);
         GE_IF_BOOL_EXEC(attr_value.b() == it.attrValue, unused_inputs.insert(move_index));
@@ -3327,7 +3330,7 @@ Status TensorFlowModelParser::OptimizeConstNodes4CustomOp(domi::tensorflow::Grap
     // 2.4 remove the input const nodes
     Status ret = RemoveInputs(graph_def, current_node, unused_inputs, all_nodedef_map);
     if (ret != SUCCESS) {
-      ErrorManager::GetInstance().ATCReportErrMessage("E12006", {"opname"}, {current_op_name});
+      REPORT_CALL_ERROR("E19999", "remove input for op:%s failed", current_op_name.c_str());
       GELOGE(INTERNAL_ERROR, "Op[%s] remove input failed.", current_op_name.c_str());
       return ret;
     }
@@ -3834,7 +3837,8 @@ Status TensorFlowModelParser::AddFusionNodeDef(shared_ptr<ge::ScopeGraph> &scope
       } else {
         Status ret = AddFusionInnerNodeDef(scope_graph, op_node_name, node_name_list_new);
         if (ret != SUCCESS) {
-          ErrorManager::GetInstance().ATCReportErrMessage("E12028", {"opname"}, {op_node_name});
+          REPORT_INNER_ERROR("E19999", "Failed to add fusion inner nodes for fusion op:%s, "
+                             "please check FusionScopesResult set in scope fusion pass", op_node_name.c_str());
           GELOGE(ret, "Failed to add fusion inner node, fusion_op_name:%s.", op_node_name.c_str());
           return ret;
         }

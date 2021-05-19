@@ -70,7 +70,7 @@ Status ScopePassManager::Run(shared_ptr<ScopeGraph> &graph) {
       not_changed = false;
     } else if (status != domi::SCOPE_NOT_CHANGED) {
       // exception
-      ErrorManager::GetInstance().ATCReportErrMessage("E12003", {"passname"}, {pass->PassName()});
+      REPORT_CALL_ERROR("E19999", "Run scope fusion pass [%s] failed.", pass->PassName().c_str());
       GELOGE(FAILED, "Pass Run failed, pass name:%s", pass->PassName().c_str());
       return status;
     }

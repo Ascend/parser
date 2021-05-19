@@ -258,9 +258,8 @@ Status PostOpProcessForSubgraph(const ParseArg &arg, ge::ComputeGraphPtr sub_gra
 
 Status OnnxModelParser::ParseOutput(ge::onnx::GraphProto &onnx_graph) {
   if (onnx_graph.output_size() == 0) {
-    ErrorManager::GetInstance().ATCReportErrMessage("E16001");
     GELOGE(FAILED, "[Parse][Output] Onnx graph:%s has zero output", onnx_graph.name().c_str());
-    REPORT_INNER_ERROR("E19999", "Onnx graph:%s has zero output", onnx_graph.name().c_str());
+    REPORT_INPUT_ERROR("E16001", std::vector<std::string>({"value"}), std::vector<std::string>({"output"}));
     return FAILED;
   }
 
@@ -276,9 +275,8 @@ Status OnnxModelParser::ParseOutput(ge::onnx::GraphProto &onnx_graph) {
 Status OnnxModelParser::ParseInput(const std::map<std::string, ge::onnx::TensorProto> &initializer_name_tensor,
                                    bool is_subgraph, ge::onnx::GraphProto &onnx_graph) {
   if (!is_subgraph && onnx_graph.input_size() == 0) {
-    ErrorManager::GetInstance().ATCReportErrMessage("E16001");
     GELOGE(FAILED, "[Parse][Input] Root onnx graph:%s has zero input", onnx_graph.name().c_str());
-    REPORT_INNER_ERROR("E19999", "Root onnx graph:%s has zero input", onnx_graph.name().c_str());
+    REPORT_INPUT_ERROR("E16001", std::vector<std::string>({"value"}), std::vector<std::string>({"input"}));
     return FAILED;
   }
 
@@ -447,10 +445,10 @@ Status OnnxModelParser::TransNodeToOperator(const ge::onnx::NodeProto *node_prot
   string node_name = node_proto->name();
   op = ge::OperatorFactory::CreateOperator(node_name, op_type);
   if (op.GetName() != node_name) {
-    ErrorManager::GetInstance().ATCReportErrMessage("E16003", {"opname", "optype"}, {node_name, op_type});
+    REPORT_INPUT_ERROR("E10501", std::vector<std::string>({"opname", "optype"}),
+                       std::vector<std::string>({node_name, op_type}));
     GELOGE(INTERNAL_ERROR, "[Creat][Op] IR for op[%s] optype[%s] is not registered.",
            node_name.c_str(), op_type.c_str());
-    REPORT_INNER_ERROR("E19999", "IR for op[%s] optype[%s] is not registered.", node_name.c_str(), op_type.c_str());
     return INTERNAL_ERROR;
   }
 
@@ -677,8 +675,7 @@ Status OnnxModelParser::GetModelFromFile(const char *file, ge::onnx::ModelProto 
 
   // 1. Get graph from onnx model file.
   if (!ge::parser::ReadProtoFromBinaryFile(file, &onnx_model)) {
-    ErrorManager::GetInstance().ATCReportErrMessage(
-        "E19021", {"reason"}, {"Read onnx model file failed."});
+    REPORT_CALL_ERROR("E19999", "Read onnx model file:%s failed.", file);
     GELOGE(PARAM_INVALID, "[Read][ModeFile] failed.");
     return FAILED;
   }
@@ -690,8 +687,7 @@ Status OnnxModelParser::GetModelFromMemory(const char *data, uint32_t size, ge::
 
   // 1. Get graph from onnx model file.
   if (!ge::parser::ReadProtoFromArray(data, size, &onnx_model)) {
-    ErrorManager::GetInstance().ATCReportErrMessage(
-        "E19021", {"reason"}, {"Read onnx model from memory failed."});
+    REPORT_CALL_ERROR("E19999", "Read onnx model from memory failed.");
     GELOGE(PARAM_INVALID, "[Read][OnnxModel] from memory failed.");
     return FAILED;
   }
