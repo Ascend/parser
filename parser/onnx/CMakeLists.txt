@@ -1,8 +1,3 @@
-set(PROTO_LIST
-    "${METADEF_DIR}/proto/onnx/ge_onnx.proto"
-    "${METADEF_DIR}/proto/om.proto"
-)
-
 set(SRC_LIST
     "onnx_custom_parser_adapter.cc"
     "onnx_parser.cc"
@@ -13,10 +8,12 @@ set(SRC_LIST
     "subgraph_adapter/subgraph_adapter_factory.cc"
 )
 
-protobuf_generate(ge PROTO_SRCS PROTO_HDRS ${PROTO_LIST})
-
 ############ libfmk_onnx_parser.so ############
-add_library(fmk_onnx_parser SHARED ${SRC_LIST} ${PROTO_HDRS})
+add_library(fmk_onnx_parser SHARED ${SRC_LIST})
+
+add_dependencies(fmk_onnx_parser
+    parser_protos
+)
 
 target_compile_options(fmk_onnx_parser PRIVATE
     -Werror
@@ -51,7 +48,7 @@ target_include_directories(fmk_onnx_parser PRIVATE
     ${PARSER_DIR}/../graphengine/inc
     ${PARSER_DIR}/../graphengine/ge
     ${CMAKE_BINARY_DIR}
-    ${CMAKE_BINARY_DIR}/proto/ge
+    ${CMAKE_BINARY_DIR}/proto/parser_protos
     #### blue zone compile #####
     ${PARSER_DIR}/../ge
     ${PARSER_DIR}/../inc

@@ -1,11 +1,7 @@
-set(PROTO_LIST
-    "${METADEF_DIR}/proto/caffe/caffe.proto"
-)
-
-protobuf_generate(ge PROTO_SRCS PROTO_HDRS ${PROTO_LIST})
-
 ############ lib_caffe_parser.so ############
-add_library(_caffe_parser SHARED ${PROTO_SRCS})
+add_library(_caffe_parser SHARED
+    $<TARGET_OBJECTS:parser_caffe_proto_obj>
+)
 
 target_compile_definitions(_caffe_parser PRIVATE
     google=ascend_private
