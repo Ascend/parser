@@ -41,6 +41,7 @@
 #include "register/register_fmk_types.h"
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/node_utils.h"
+#include "graph/utils/type_utils.h"
 #include "subgraph_adapter/subgraph_adapter_factory.h"
 
 namespace ge {
@@ -1004,14 +1005,15 @@ void OnnxModelParser::UpdateDataFormat(ge::Graph &graph) {
     }
     TensorDesc in_desc;
     gn.GetInputDesc(0, in_desc);
-    in_desc.SetOriginFormat(static_cast<ge::Format>(GetParserContext().format));
-    in_desc.SetFormat(static_cast<ge::Format>(GetParserContext().format));
+    ge::Format ge_format = TypeUtils::DomiFormatToFormat(GetParserContext().format);
+    in_desc.SetOriginFormat(ge_format);
+    in_desc.SetFormat(ge_format);
     gn.UpdateInputDesc(0, in_desc);
 
     TensorDesc out_desc;
     gn.GetOutputDesc(0, out_desc);
-    out_desc.SetOriginFormat(static_cast<ge::Format>(GetParserContext().format));
-    out_desc.SetFormat(static_cast<ge::Format>(GetParserContext().format));
+    out_desc.SetOriginFormat(ge_format);
+    out_desc.SetFormat(ge_format);
     gn.UpdateOutputDesc(0, out_desc);
   }
   GELOGD("Update data format success.");
