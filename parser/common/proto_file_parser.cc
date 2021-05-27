@@ -506,7 +506,7 @@ Status ProtoFileParser::CombineProtoFile(const char *caffe_proto_file, const cha
 
   if (!CheckRealPath(caffe_proto_file) || !CheckRealPath(custom_proto_file)) {
     REPORT_CALL_ERROR("E19999", "caffe proto[%s] or custom proto[%s] is not existed.",
-                       caffe_proto_file, custom_proto_file);
+                      caffe_proto_file, custom_proto_file);
     GELOGE(FAILED, "[Check][Param] caffe proto[%s] or custom proto[%s] is not existed.",
            caffe_proto_file, custom_proto_file);
     return FAILED;
