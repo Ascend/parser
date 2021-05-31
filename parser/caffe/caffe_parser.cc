@@ -371,7 +371,7 @@ Status CaffeModelParser::ParseInput(domi::caffe::NetParameter &proto_message, bo
   } else {
     ErrorManager::GetInstance().ATCReportErrMessage("E11002");
     GELOGE(FAILED, "[Check][Size]Model has no input.");
-    return PARAM_INVALID；
+    return PARAM_INVALID;
   }
   return SUCCESS;
 }
