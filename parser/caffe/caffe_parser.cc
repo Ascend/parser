@@ -282,9 +282,6 @@ Status CaffeModelParser::ParseInput(domi::caffe::NetParameter &proto_message, bo
         return FAILED;
       }
       int input_dim_size = proto_message.input_dim_size();
-      GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((proto_message.input_size() == 0),
-                                     ErrorManager::GetInstance().ATCReportErrMessage("E11002");
-                                     return PARAM_INVALID, "[Check][Size]Model has no input.");
 
       GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((input_dim_size / proto_message.input_size() != parser::DIM_DEFAULT_SIZE ||
                                       input_dim_size % proto_message.input_size() != 0),
@@ -371,8 +368,11 @@ Status CaffeModelParser::ParseInput(domi::caffe::NetParameter &proto_message, bo
         input_data_flag = true;
       }
     }
+  } else {
+    ErrorManager::GetInstance().ATCReportErrMessage("E11002");
+    GELOGE(FAILED, "[Check][Size]Model has no input.");
+    return PARAM_INVALID；
   }
-
   return SUCCESS;
 }
 
