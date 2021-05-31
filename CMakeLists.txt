@@ -67,6 +67,134 @@ else()
 
 endif()
 
+set(PARSER_PROTO_LIST
+    "${METADEF_DIR}/proto/onnx/ge_onnx.proto"
+    "${METADEF_DIR}/proto/om.proto"
+    "${METADEF_DIR}/proto/caffe/caffe.proto"
+    "${METADEF_DIR}/proto/tensorflow/graph_library.proto"
+    "${METADEF_DIR}/proto/tensorflow/graph.proto"
+    "${METADEF_DIR}/proto/tensorflow/node_def.proto"
+    "${METADEF_DIR}/proto/tensorflow/function.proto"
+    "${METADEF_DIR}/proto/tensorflow/versions.proto"
+    "${METADEF_DIR}/proto/tensorflow/attr_value.proto"
+    "${METADEF_DIR}/proto/tensorflow/op_def.proto"
+    "${METADEF_DIR}/proto/tensorflow/tensor.proto"
+    "${METADEF_DIR}/proto/tensorflow/tensor_shape.proto"
+    "${METADEF_DIR}/proto/tensorflow/types.proto"
+    "${METADEF_DIR}/proto/tensorflow/resource_handle.proto"
+)
+
+protobuf_generate(parser_protos PARSER_PROTO_SRCS PARSER_PROTO_HDRS ${PARSER_PROTO_LIST} TARGET)
+
+set(PARSER_GRAPH_LIBRARY_PROTO_SRC
+    "${CMAKE_BINARY_DIR}/proto/parser_protos/proto/tensorflow/graph_library.pb.cc"
+)
+
+set(PARSER_TENSORFLOW_PROTO_SRCS
+    "${CMAKE_BINARY_DIR}/proto/parser_protos/proto/tensorflow/graph.pb.cc"
+    "${CMAKE_BINARY_DIR}/proto/parser_protos/proto/tensorflow/node_def.pb.cc"
+    "${CMAKE_BINARY_DIR}/proto/parser_protos/proto/tensorflow/function.pb.cc"
+    "${CMAKE_BINARY_DIR}/proto/parser_protos/proto/tensorflow/versions.pb.cc"
+    "${CMAKE_BINARY_DIR}/proto/parser_protos/proto/tensorflow/attr_value.pb.cc"
+    "${CMAKE_BINARY_DIR}/proto/parser_protos/proto/tensorflow/op_def.pb.cc"
+    "${CMAKE_BINARY_DIR}/proto/parser_protos/proto/tensorflow/tensor.pb.cc"
+    "${CMAKE_BINARY_DIR}/proto/parser_protos/proto/tensorflow/tensor_shape.pb.cc"
+    "${CMAKE_BINARY_DIR}/proto/parser_protos/proto/tensorflow/types.pb.cc"
+    "${CMAKE_BINARY_DIR}/proto/parser_protos/proto/tensorflow/resource_handle.pb.cc"
+)
+
+set(PARSER_ONNX_PROTO_SRCS
+    "${CMAKE_BINARY_DIR}/proto/parser_protos/proto/onnx/ge_onnx.pb.cc"
+    "${CMAKE_BINARY_DIR}/proto/parser_protos/proto/om.pb.cc"
+)
+
+set(PARSER_CAFFE_PROTO_SRC
+    "${CMAKE_BINARY_DIR}/proto/parser_protos/proto/caffe/caffe.pb.cc"
+)
+
+add_library(parser_graph_library_proto_obj OBJECT ${PARSER_GRAPH_LIBRARY_PROTO_SRC})
+add_dependencies(parser_graph_library_proto_obj parser_protos)
+target_include_directories(parser_graph_library_proto_obj PRIVATE
+    #### blue zone ####
+    ${PROTOBUF_SHARED_PKG_DIR}/include
+    #### yellow zone ####
+    ${ASCEND_PROTOBUF_SHARED_PKG_DIR}/include
+)
+target_compile_definitions(parser_graph_library_proto_obj PRIVATE
+    google=ascend_private
+)
+target_link_libraries(parser_graph_library_proto_obj PRIVATE ascend_protobuf $<BUILD_INTERFACE:intf_pub>)
+target_compile_options(parser_graph_library_proto_obj PRIVATE
+    $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC>
+    $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:-fexceptions>
+    $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -Wno-deprecated-declarations -fno-common>
+    $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Debug>>:/MTd>
+    $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Release>>:/MT>
+)
+
+
+add_library(parser_tensorflow_protos_obj OBJECT ${PARSER_TENSORFLOW_PROTO_SRCS})
+add_dependencies(parser_tensorflow_protos_obj parser_protos)
+target_include_directories(parser_tensorflow_protos_obj PRIVATE
+    #### blue zone ####
+    ${PROTOBUF_SHARED_PKG_DIR}/include
+    #### yellow zone ####
+    ${ASCEND_PROTOBUF_SHARED_PKG_DIR}/include
+)
+target_compile_definitions(parser_tensorflow_protos_obj PRIVATE
+    google=ascend_private
+)
+target_link_libraries(parser_tensorflow_protos_obj PRIVATE ascend_protobuf $<BUILD_INTERFACE:intf_pub>)
+target_compile_options(parser_tensorflow_protos_obj PRIVATE
+    $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC>
+    $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:-fexceptions>
+    $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -Wno-deprecated-declarations -fno-common>
+    $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Debug>>:/MTd>
+    $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Release>>:/MT>
+)
+
+
+add_library(parser_onnx_protos_obj OBJECT ${PARSER_ONNX_PROTO_SRCS})
+add_dependencies(parser_onnx_protos_obj parser_protos)
+target_include_directories(parser_onnx_protos_obj PRIVATE
+    #### blue zone ####
+    ${PROTOBUF_SHARED_PKG_DIR}/include
+    #### yellow zone ####
+    ${ASCEND_PROTOBUF_SHARED_PKG_DIR}/include
+)
+target_compile_definitions(parser_onnx_protos_obj PRIVATE
+    google=ascend_private
+)
+target_link_libraries(parser_onnx_protos_obj PRIVATE ascend_protobuf $<BUILD_INTERFACE:intf_pub>)
+target_compile_options(parser_onnx_protos_obj PRIVATE
+    $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC>
+    $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:-fexceptions>
+    $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -Wno-deprecated-declarations -fno-common>
+    $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Debug>>:/MTd>
+    $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Release>>:/MT>
+)
+
+
+add_library(parser_caffe_proto_obj OBJECT ${PARSER_CAFFE_PROTO_SRC})
+add_dependencies(parser_caffe_proto_obj parser_protos)
+target_include_directories(parser_caffe_proto_obj PRIVATE
+    #### blue zone ####
+    ${PROTOBUF_SHARED_PKG_DIR}/include
+    #### yellow zone ####
+    ${ASCEND_PROTOBUF_SHARED_PKG_DIR}/include
+)
+target_compile_definitions(parser_caffe_proto_obj PRIVATE
+    google=ascend_private
+)
+target_link_libraries(parser_caffe_proto_obj PRIVATE ascend_protobuf $<BUILD_INTERFACE:intf_pub>)
+target_compile_options(parser_caffe_proto_obj PRIVATE
+    $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC>
+    $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:-fexceptions>
+    $<$<OR:$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>,$<STREQUAL:${TARGET_SYSTEM_NAME},Android>>: -Wno-deprecated-declarations -fno-common>
+    $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Debug>>:/MTd>
+    $<$<AND:$<STREQUAL:${TARGET_SYSTEM_NAME},Windows>,$<STREQUAL:${CMAKE_CONFIGURATION_TYPES},Release>>:/MT>
+)
+
 add_subdirectory(parser)
 add_subdirectory(parser/common)
 add_subdirectory(parser/func_to_graph)

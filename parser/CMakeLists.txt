@@ -1,7 +1,3 @@
-set(PROTO_LIST
-    "${METADEF_DIR}/proto/tensorflow/graph_library.proto"
-)
-
 set(SRC_LIST
     "tensorflow/tensorflow_arg_parser.cc"
     "tensorflow/tensorflow_auto_mapping_parser_adapter.cc"
@@ -41,10 +37,11 @@ set(SRC_LIST
     "common/op_def/variable_op.cc"
 )
 
-protobuf_generate(ge PROTO_SRCS PROTO_HDRS ${PROTO_LIST})
-
 ############ libfmk_parser.so ############
-add_library(fmk_parser SHARED ${SRC_LIST} ${PROTO_SRCS})
+add_library(fmk_parser SHARED
+    ${SRC_LIST}
+    $<TARGET_OBJECTS:parser_graph_library_proto_obj>
+)
 
 target_compile_options(fmk_parser PRIVATE
     -Werror
@@ -78,7 +75,7 @@ target_include_directories(fmk_parser PRIVATE
     ${PARSER_DIR}/../graphengine/inc
     ${PARSER_DIR}/../graphengine/ge
     ${CMAKE_BINARY_DIR}
-    ${CMAKE_BINARY_DIR}/proto/ge
+    ${CMAKE_BINARY_DIR}/proto/parser_protos
     #### blue zone compile #####
     ${PARSER_DIR}/../ge
     ${PARSER_DIR}/../inc
@@ -178,7 +175,7 @@ target_link_libraries(fmk_parser_stub PRIVATE
 
 set_target_properties(fmk_parser_stub PROPERTIES
     OUTPUT_NAME fmk_parser
-    LIBRARY_OUTPUT_DIRECTORY stub 
+    LIBRARY_OUTPUT_DIRECTORY stub
 )
 
 ############ install ############

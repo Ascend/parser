@@ -32,6 +32,10 @@ set(SRC_LIST
 ############ libparser_common.so ############
 add_library(parser_common SHARED ${SRC_LIST})
 
+add_dependencies(parser_common
+    parser_protos
+)
+
 target_compile_options(parser_common PRIVATE
     -Werror
     -Wno-deprecated-declarations
@@ -61,7 +65,7 @@ target_include_directories(parser_common PRIVATE
     ${PARSER_DIR}/../graphengine/inc
     ${PARSER_DIR}/../graphengine/ge
     ${CMAKE_BINARY_DIR}
-    ${CMAKE_BINARY_DIR}/proto/ge
+    ${CMAKE_BINARY_DIR}/proto/parser_protos
     #### blue zone compile #####
     ${PARSER_DIR}/../ge
     ${PARSER_DIR}/../inc
