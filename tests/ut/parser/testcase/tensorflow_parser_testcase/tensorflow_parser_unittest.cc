@@ -17,6 +17,8 @@
 #include <gtest/gtest.h>
 #include <iostream>
 #include "parser/common/op_parser_factory.h"
+#include "parser/tensorflow/tensorflow_parser.h"
+#include "framework/omg/parser/parser_factory.h"
 #include "graph/operator_reg.h"
 #include "external/graph/types.h"
 #include "register/op_registry.h"
@@ -85,5 +87,34 @@ TEST_F(UtestTensorflowParser, tensorflow_parser_success) {
   EXPECT_EQ(ret, domi::SUCCESS);
 }
 
+TEST_F(UtestTensorflowParser, tensorflow_parser_with_serialized_proto1) {
+  ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>("tmpGraph");
+  auto model_parser = domi::ModelParserFactory::Instance()->CreateModelParser(domi::TENSORFLOW);
+  ge::graphStatus ret = model_parser->ParseProtoWithSubgraph(std::string(""),
+      [](std::string)->std::string{ return "";}, compute_graph);
+  EXPECT_NE(ret, ge::SUCCESS);
+}
+
+TEST_F(UtestTensorflowParser, tensorflow_parser_with_serialized_proto2) {
+  ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>("tmpGraph");
+  auto model_parser = domi::ModelParserFactory::Instance()->CreateModelParser(domi::TENSORFLOW);
+  ge::graphStatus ret = model_parser->ParseProtoWithSubgraph(std::string("null"),
+      [](std::string)->std::string{ return "";}, compute_graph);
+  EXPECT_NE(ret, ge::SUCCESS);
+}
+
+TEST_F(UtestTensorflowParser, tensorflow_parser_with_serialized_proto3) {
+  ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>("tmpGraph");
+  auto model_parser = domi::ModelParserFactory::Instance()->CreateModelParser(domi::TENSORFLOW);
+
+  domi::tensorflow::GraphDef graph_def;
+  auto arg_node = graph_def.add_node();
+  arg_node->set_name("noop");
+  arg_node->set_op("NoOp");
+
+  ge::graphStatus ret = model_parser->ParseProtoWithSubgraph(graph_def.SerializeAsString(),
+      [](std::string)->std::string{ return "";}, compute_graph);
+  EXPECT_EQ(ret, ge::SUCCESS);
+}
 
 } // namespace ge

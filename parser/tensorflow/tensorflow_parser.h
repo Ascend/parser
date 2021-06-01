@@ -138,6 +138,27 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
 
   Status ParseAllGraph(const google::protobuf::Message *root_proto, ge::ComputeGraphPtr &root_graph) override ;
 
+  /**
+   * @ingroup domi_omg
+   * @brief Analyze network model data
+   * @param [in] proto  serialized network model
+   * @param [in|out]  graph Save the network information after analysis
+   * @return SUCCESS
+   * @return Others failed
+   */
+  Status ParseProto(const std::string &serialized_proto, ge::ComputeGraphPtr &graph) override;
+
+  /**
+   * @ingroup domi_omg
+   * @brief Analyze callback model data in subgraph
+   * @param [in] proto serialized network model
+   * @param [in] callback callback of subgraph
+   * @param [in|out] graph Save the network information after analysis
+   * @return SUCCESS
+   * @return Others failed
+   */
+  Status ParseProtoWithSubgraph(const std::string &serialized_proto, domi::GetGraphCallbackV2 callback,
+                                ge::ComputeGraphPtr &graph) override;
  private:
   Status Parse(const char *file, ge::ComputeGraphPtr &graph);
 
