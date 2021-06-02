@@ -657,8 +657,8 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY long GetFileLength(const std::s
   std::string real_path = RealPath(input_file.c_str());
 
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(real_path.empty(),
-                                 REPORT_CALL_ERROR("E19999", "input_file path '%s' not valid, realpath failed",
-                                                   input_file.c_str());
+                                 REPORT_INPUT_ERROR("E19000", std::vector<std::string>({"path", "errmsg"}),
+                                                    std::vector<std::string>({real_path, strerror(errno)}));
                                  return -1, "[Get][Path] input_file path '%s' not valid", input_file.c_str());
   unsigned long long file_length = 0;
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(mmGetFileSize(input_file.c_str(), &file_length) != EN_OK,
@@ -666,14 +666,12 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY long GetFileLength(const std::s
                                                                                  {input_file, strerror(errno)});
                                  return -1, "[Open][File] [%s] failed. %s", input_file.c_str(), strerror(errno));
 
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((file_length == 0),
-                                 REPORT_INNER_ERROR("E19999", "File[%s] size is 0, not valid.", input_file.c_str());
-                                 return -1, "[Check][Param] File[%s] size is 0, not valid.", input_file.c_str());
-
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(file_length > kMaxFileSizeLimit,
-                                 REPORT_INNER_ERROR("E19999", "File:%s size:%lld is out of limit: %d.",
-                                                    input_file.c_str(), file_length, kMaxFileSizeLimit);
-                                 return -1, "[Check][Param] File[%s] size %lld is out of limit: %d.",
+  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((file_length == 0 || file_length > kMaxFileSizeLimit),
+                                 REPORT_INPUT_ERROR(
+                                     "E19015", std::vector<std::string>({"file", "size", "maxsize"}),
+                                     std::vector<std::string>({input_file, std::to_string(file_length),
+                                                              std::to_string(kMaxFileSizeLimit)}));
+                                 return -1, "[Check][Param] File[%s] size %lld is out of range(0,%d).",
                                  input_file.c_str(), file_length, kMaxFileSizeLimit);
   return static_cast<long>(file_length);
 }
