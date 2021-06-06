@@ -21,6 +21,7 @@
 #include "register/op_registry.h"
 
 using domi::ParseParamFunc;
+using domi::ParseParamByOpFunc;
 using domi::ONNX;
 
 namespace ge{
@@ -37,6 +38,16 @@ Status OnnxCustomParserAdapter::ParseParams(const Message *op_src, ge::Operator 
     GELOGE(FAILED, "[Invoke][Custom_Op_Parser] Custom parser params failed.");
     return FAILED;
   }
+  return SUCCESS;
+}
+
+Status OnnxCustomParserAdapter::ParseParams(const Operator &op_src, Operator &op_dest) {
+  ParseParamByOpFunc custom_op_parser = domi::OpRegistry::Instance()->GetParseParamByOperatorFunc(op_src.GetOpType());
+  GE_CHECK_NOTNULL(custom_op_parser);
+
+  GE_CHK_BOOL_RET_STATUS(custom_op_parser(op_src, op_dest) == SUCCESS, FAILED,
+                         "[Invoke][CustomOpParser] failed, node name:%s, type:%s",
+                         op_src.GetName().c_str(), op_src.GetOpType().c_str());
   return SUCCESS;
 }
 

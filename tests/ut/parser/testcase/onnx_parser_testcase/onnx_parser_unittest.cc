@@ -39,6 +39,10 @@ static Status ParseParams(const google::protobuf::Message* op_src, ge::Operator&
   return SUCCESS;
 }
 
+static Status ParseParamByOpFunc(const ge::Operator &op_src, ge::Operator& op_dest) {
+  return SUCCESS;
+}
+
 Status ParseSubgraphPostFnIf(const std::string& subgraph_name, const ge::Graph& graph) {
   domi::AutoMappingSubgraphIOIndexFunc auto_mapping_subgraph_index_func =
       domi::FrameworkRegistry::Instance().GetAutoMappingSubgraphIOIndexFunc(domi::ONNX);
@@ -77,7 +81,8 @@ void UtestOnnxParser::RegisterCustomOp() {
   REGISTER_CUSTOM_OP("Add")
   .FrameworkType(domi::ONNX)
       .OriginOpType("ai.onnx::11::Add")
-      .ParseParamsFn(ParseParams);
+      .ParseParamsFn(ParseParams)
+      .ParseParamsByOperatorFn(ParseParamByOpFunc);
 
   REGISTER_CUSTOM_OP("Identity")
   .FrameworkType(domi::ONNX)
