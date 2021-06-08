@@ -40,6 +40,10 @@ static Status ParseParams(const google::protobuf::Message* op_src, ge::Operator&
 }
 
 static Status ParseParamByOpFunc(const ge::Operator &op_src, ge::Operator& op_dest) {
+  string node_info;
+  if(op_src.GetAttr("attribute", node_info)==ge::GRAPH_SUCCESS) {
+    //std::cout<<node_info<<std::endl;
+  }
   return SUCCESS;
 }
 
@@ -76,6 +80,7 @@ void UtestOnnxParser::RegisterCustomOp() {
                  "ai.onnx::12::If",
                  "ai.onnx::13::If"})
   .ParseParamsFn(ParseParams)
+  .ParseParamsByOperatorFn(ParseParamByOpFunc)
   .ParseSubgraphPostFn(ParseSubgraphPostFnIf);
 
   REGISTER_CUSTOM_OP("Add")

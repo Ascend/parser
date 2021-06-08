@@ -18,6 +18,7 @@
 #include <algorithm>
 #include <iostream>
 #include <queue>
+#include "common/convert/message2operator.h"
 #include "common/convert/pb2json.h"
 #include "common/util.h"
 #include "common/util/error_manager/error_manager.h"
@@ -570,13 +571,13 @@ Status OnnxModelParser::ParseOpParam(const ge::onnx::NodeProto *node_proto, ge::
     status = op_parser->ParseParams(node_proto, op);
   } else {
     ge::Operator op_src(node_proto->name(), op_type);
-    /*status = domi::AutoMappingFn(node_def, op_src);
+    status = Message2Operator::ParseOperatorAttrs(node_proto, 1, op_src);
     if (status != SUCCESS) {
-      REPORT_CALL_ERROR("E19999", "Auto mapping node_def:%s(%s) to operator failed",
-                        node_def->name().c_str(), node_def->op().c_str());
-      GELOGE(status, "Node[%s] auto mapping failed.", node_name.c_str());
+      REPORT_CALL_ERROR("E19999", "Auto mapping node:%s(%s) to operator failed",
+                        node_proto->name().c_str(), op_type.c_str());
+      GELOGE(status, "Node[%s] auto mapping failed.", node_proto->name().c_str());
       return status;
-    }*/
+    }
     std::shared_ptr<ge::OnnxCustomParserAdapter> onnx_custom_op_parser =
             std::dynamic_pointer_cast<ge::OnnxCustomParserAdapter>(op_parser);
     status = onnx_custom_op_parser->ParseParams(op_src, op);

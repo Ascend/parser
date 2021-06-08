@@ -221,6 +221,7 @@ set(PARSER_SRC_FILES
     "${PARSER_DIR}/parser/caffe/caffe_reshape_parser.cc"
     "${PARSER_DIR}/parser/common/acl_graph_parser_util.cc"
     "${PARSER_DIR}/parser/common/convert/pb2json.cc"
+    "${PARSER_DIR}/parser/common/convert/message2operator.cc"
     "${PARSER_DIR}/parser/common/data_op_parser.cc"
     "${PARSER_DIR}/parser/common/model_saver.cc"
     "${PARSER_DIR}/parser/common/op_def/arg_op.cc"
