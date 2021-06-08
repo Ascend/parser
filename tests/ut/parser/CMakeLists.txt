@@ -306,6 +306,7 @@ include_directories(${PARSER_DIR}/metadef/third_party/graphengine/inc/framework)
 
 set(PARSER_UT_FILES
     "testcase/onnx_parser_testcase/onnx_parser_unittest.cc"
+    "testcase/onnx_parser_testcase/message2operator_unittest.cc"
     "testcase/tensorflow_parser_testcase/tensorflow_parser_unittest.cc"
 )
 
