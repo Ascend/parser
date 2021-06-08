@@ -63,13 +63,13 @@ Status Message2Operator::ParseField(const google::protobuf::Reflection *reflecti
                                     const google::protobuf::FieldDescriptor *field, int depth, ge::Operator &ops) {
   GELOGD("Start to parse field: %s.", field->name().c_str());
   switch (field->cpp_type()) {
-#define CASE_FIELD_TYPE(cpptype, method, valuetype, logtype)                  \
-  case google::protobuf::FieldDescriptor::CPPTYPE_##cpptype: {                \
-    valuetype value = reflection->Get##method(*message, field);               \
-    GELOGD("Parse result(%s : %" #logtype ")", field->name().c_str(), value); \
-    (void)ops.SetAttr(field->name(), value);                                  \
-    break;                                                                    \
-  }
+#define CASE_FIELD_TYPE(cpptype, method, valuetype, logtype)                    \
+    case google::protobuf::FieldDescriptor::CPPTYPE_##cpptype: {                \
+      valuetype value = reflection->Get##method(*message, field);               \
+      GELOGD("Parse result(%s : %" #logtype ")", field->name().c_str(), value); \
+      (void)ops.SetAttr(field->name(), value);                                  \
+      break;                                                                    \
+    }
     CASE_FIELD_TYPE(INT32, Int32, int32_t, d);
     CASE_FIELD_TYPE(UINT32, UInt32, uint32_t, u);
     CASE_FIELD_TYPE(INT64, Int64, int64_t, ld);
@@ -121,16 +121,16 @@ Status Message2Operator::ParseRepeatedField(const google::protobuf::Reflection *
   }
 
   switch (field->cpp_type()) {
-#define CASE_FIELD_TYPE_REPEATED(cpptype, method, valuetype)                 \
-  case google::protobuf::FieldDescriptor::CPPTYPE_##cpptype: {               \
-    std::vector<valuetype> attr_value;                                       \
-    for (int i = 0; i < field_size; i++) {                                   \
-      valuetype value = reflection->GetRepeated##method(*message, field, i); \
-      attr_value.push_back(value);                                           \
-    }                                                                        \
-    (void)ops.SetAttr(field->name(), attr_value);                            \
-    break;                                                                   \
-  }
+#define CASE_FIELD_TYPE_REPEATED(cpptype, method, valuetype)                   \
+    case google::protobuf::FieldDescriptor::CPPTYPE_##cpptype: {               \
+      std::vector<valuetype> attr_value;                                       \
+      for (int i = 0; i < field_size; i++) {                                   \
+        valuetype value = reflection->GetRepeated##method(*message, field, i); \
+        attr_value.push_back(value);                                           \
+      }                                                                        \
+      (void)ops.SetAttr(field->name(), attr_value);                            \
+      break;                                                                   \
+    }
     CASE_FIELD_TYPE_REPEATED(INT32, Int32, int32_t);
     CASE_FIELD_TYPE_REPEATED(UINT32, UInt32, uint32_t);
     CASE_FIELD_TYPE_REPEATED(INT64, Int64, int64_t);
