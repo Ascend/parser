@@ -15,24 +15,25 @@
  */
 
 #include "parser/onnx/onnx_custom_parser_adapter.h"
+
 #include "common/util.h"
 #include "framework/common/debug/ge_log.h"
 #include "parser/common/op_parser_factory.h"
 #include "register/op_registry.h"
 
-using domi::ParseParamFunc;
-using domi::ParseParamByOpFunc;
 using domi::ONNX;
+using domi::ParseParamByOpFunc;
+using domi::ParseParamFunc;
 
-namespace ge{
+namespace ge {
 Status OnnxCustomParserAdapter::ParseParams(const Message *op_src, ge::Operator &op_dest) {
   GE_CHECK_NOTNULL(op_src);
   const ge::onnx::NodeProto *node_src = reinterpret_cast<const ge::onnx::NodeProto *>(op_src);
   GE_CHECK_NOTNULL(node_src);
   GELOGI("Onnx op node name = %s, op type= %s, parse params.", node_src->name().c_str(), node_src->op_type().c_str());
 
-  ParseParamFunc
-      custom_op_parser = domi::OpRegistry::Instance()->GetParseParamFunc(op_dest.GetOpType(), node_src->op_type());
+  ParseParamFunc custom_op_parser =
+      domi::OpRegistry::Instance()->GetParseParamFunc(op_dest.GetOpType(), node_src->op_type());
   GE_CHECK_NOTNULL(custom_op_parser);
   if (custom_op_parser(op_src, op_dest) != SUCCESS) {
     GELOGE(FAILED, "[Invoke][Custom_Op_Parser] Custom parser params failed.");
@@ -45,9 +46,12 @@ Status OnnxCustomParserAdapter::ParseParams(const Operator &op_src, Operator &op
   ParseParamByOpFunc custom_op_parser = domi::OpRegistry::Instance()->GetParseParamByOperatorFunc(op_src.GetOpType());
   GE_CHECK_NOTNULL(custom_op_parser);
 
-  GE_CHK_BOOL_RET_STATUS(custom_op_parser(op_src, op_dest) == SUCCESS, FAILED,
-                         "[Invoke][CustomOpParser] failed, node name:%s, type:%s",
-                         op_src.GetName().c_str(), op_src.GetOpType().c_str());
+  if (custom_op_parser(op_src, op_dest) != SUCCESS) {
+    GELOGE(FAILED, "[Invoke][Custom_Op_Parser] failed, node name:%s, type:%s", op_src.GetName().c_str(),
+           op_src.GetOpType().c_str());
+    return FAILED;
+  }
+
   return SUCCESS;
 }
 

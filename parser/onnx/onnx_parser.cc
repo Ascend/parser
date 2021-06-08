@@ -623,7 +623,7 @@ Status OnnxModelParser::ParseAllNodeProto(ge::onnx::GraphProto &onnx_graph, ge::
     GE_CHECK_NOTNULL(op_parser);
     status = ParseOpParam(node_proto, op, op_parser);
     if (status != SUCCESS) {
-      GELOGE(status, "Parse params for node[%s] failed", node_name.c_str());
+      GELOGE(status, "[Parse][Params] for %s:%s failed ret:%d.", node_name.c_str(), op_type.c_str(), status);
       return status;
     }
 

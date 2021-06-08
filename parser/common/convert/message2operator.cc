@@ -29,6 +29,7 @@ const uint32_t kInteval = 2;
 }  // namespace
 
 Status Message2Operator::ParseOperatorAttrs(const google::protobuf::Message *message, int depth, ge::Operator &ops) {
+  GE_CHECK_NOTNULL(message);
   if (depth > kMaxParseDepth) {
     REPORT_INNER_ERROR("E19999", "Message depth:%d can not exceed %d.", depth, kMaxParseDepth);
     GELOGE(FAILED, "[Check][Param]Message depth can not exceed %d.", kMaxParseDepth);
