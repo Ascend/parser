@@ -98,8 +98,8 @@ Status Message2Operator::ParseField(const google::protobuf::Reflection *reflecti
       break;
     }
     default: {
-      ErrorManager::GetInstance().ATCReportErrMessage("E11032", {"name", "reason"},
-                                                      {field->name().c_str(), "Unsupported field type"});
+      REPORT_INPUT_ERROR("E11032", std::vector<std::string>({"message_type", "name", "reason"}),
+                         std::vector<std::string>({"model", field->name(), "Unsupported field type"}));
       GELOGE(FAILED, "[Check][FieldType]Unsupported field type, name: %s.", field->name().c_str());
       return FAILED;
     }
@@ -146,11 +146,11 @@ Status Message2Operator::ParseRepeatedField(const google::protobuf::Reflection *
       try {
         repeated_message_str = message_json.dump(kInteval, ' ', false, Json::error_handler_t::ignore);
       } catch (std::exception &e) {
-        ErrorManager::GetInstance().ATCReportErrMessage("E19007", {"exception"}, {e.what()});
+        REPORT_INNER_ERROR("E19999", "Failed to convert JSON to string, reason: %s.", e.what());
         GELOGE(FAILED, "[Parse][JSON]Failed to convert JSON to string, reason: %s.", e.what());
         return FAILED;
       } catch (...) {
-        ErrorManager::GetInstance().ATCReportErrMessage("E19008");
+        REPORT_INNER_ERROR("E19999", "Failed to convert JSON to string.");
         GELOGE(FAILED, "[Parse][JSON]Failed to convert JSON to string.");
         return FAILED;
       }
@@ -158,8 +158,8 @@ Status Message2Operator::ParseRepeatedField(const google::protobuf::Reflection *
       break;
     }
     default: {
-      ErrorManager::GetInstance().ATCReportErrMessage("E11032", {"name", "reason"},
-                                                      {field->name().c_str(), "Unsupported field type"});
+      REPORT_INPUT_ERROR("E11032", std::vector<std::string>({"message_type", "name", "reason"}),
+                         std::vector<std::string>({"model", field->name(), "Unsupported field type"}));
       GELOGE(FAILED, "[Check][FieldType]Unsupported field type, name: %s.", field->name().c_str());
       return FAILED;
     }
