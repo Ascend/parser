@@ -579,6 +579,7 @@ Status OnnxModelParser::ParseOpParam(const ge::onnx::NodeProto *node_proto, ge::
     std::shared_ptr<ge::OnnxCustomParserAdapter> onnx_custom_op_parser =
             std::dynamic_pointer_cast<ge::OnnxCustomParserAdapter>(op_parser);
     status = onnx_custom_op_parser->ParseParams(op_src, op);
+    op_src.BreakConnect();
   }
 
   if (status != SUCCESS) {
