@@ -566,8 +566,6 @@ Status OnnxModelParser::ParseOpParam(const ge::onnx::NodeProto *node_proto, ge::
   Status status = FAILED;
   domi::ParseParamByOpFunc parse_param_func = domi::OpRegistry::Instance()->GetParseParamByOperatorFunc(op_type);
   if (parse_param_func == nullptr) {
-    //std::shared_ptr<ge::OnnxOpParser> onnx_op_parser = std::static_pointer_cast<ge::OnnxOpParser>(op_parser);
-    //GE_CHECK_NOTNULL(onnx_op_parser);
     status = op_parser->ParseParams(node_proto, op);
   } else {
     ge::Operator op_src(node_proto->name(), op_type);
