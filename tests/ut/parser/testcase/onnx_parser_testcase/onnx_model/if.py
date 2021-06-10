@@ -1,3 +1,10 @@
+#!/usr/bin/env python3
+# -*- coding: UTF-8 -*-
+#-------------------------------------------------------------------
+# Purpose:
+# Copyright 2021 Huawei Technologies Co., Ltd. All rights reserved.
+#-------------------------------------------------------------------
+
 # Given a bool scalar input cond.
 # return constant tensor x if cond is True, otherwise return constant tensor y.
 import numpy as np
