@@ -56,7 +56,9 @@ Status CaffeDataParser::ParseParams(const Message *op_src, ge::OpDescPtr &op) {
     GE_CHK_STATUS_RET(ParseParamsForDummyData(layer, op), "[Parse][Params] failed, Caffe layer name = %s, "
                       "layer type= %s", layer->name().c_str(), layer->type().c_str());
   } else {
-    ErrorManager::GetInstance().ATCReportErrMessage("E11030");
+    REPORT_INNER_ERROR("E19999", "layer:%s(%s) type is not %s or %s, check invalid",
+                       layer->name().c_str(), layer->type().c_str(),
+                       ge::parser::INPUT_TYPE.c_str(), ge::parser::DUMMY_DATA.c_str());
     GELOGE(PARAM_INVALID, "[Check][Param] Caffe prototxt has no optype [Input]");
     return FAILED;
   }
@@ -93,8 +95,7 @@ Status CaffeDataParser::ParseParamsForInput(const domi::caffe::LayerParameter *l
     string name = layer->name();
     auto search = input_dims.find(name);
     if (search == input_dims.end()) {
-      ErrorManager::GetInstance().ATCReportErrMessage(
-          "E11028", {"layername", "layertype"}, {layer->name(), layer->type()});
+      REPORT_INPUT_ERROR("E11005", std::vector<std::string>({"input"}), std::vector<std::string>({layer->name()}));
       GELOGE(PARAM_INVALID, "[Check][Param] Caffe prototxt has no input_param or user "
              "should set --input_shape in atc parameter, caffe layer name [%s], layer type [%s].",
              layer->name().c_str(), layer->type().c_str());
@@ -139,8 +140,7 @@ Status CaffeDataParser::ParseParamsForDummyData(const domi::caffe::LayerParamete
     string name = layer->name();
     auto search = input_dims.find(name);
     if (search == input_dims.end()) {
-      ErrorManager::GetInstance().ATCReportErrMessage(
-          "E11028", {"layername", "layertype"}, {layer->name(), layer->type()});
+      REPORT_INPUT_ERROR("E11005", std::vector<std::string>({"input"}), std::vector<std::string>({layer->name()}));
       GELOGE(PARAM_INVALID, "[Check][Param] Caffe prototxt has no input_param or user "
              "should set --input_shape in atc parameter, caffe layer name [%s], layer type [%s].",
              layer->name().c_str(), layer->type().c_str());

@@ -166,35 +166,6 @@ class PARSER_FUNC_VISIBILITY CaffeModelParser : public domi::ModelParser {
 
   /*
    * @ingroup domi_omg
-   * @brief Parse caffe proto file
-   * @param [in] proto_file, file path of caffe proto
-   * @param [out] identifier_op_map, identifer and op map
-   * @return SUCCESS parse successfully
-   * @return FAILED parse failed
-   */
-  Status ParseProtoFile(const string &proto_file, std::map<int32_t, string> &identifier_op_map);
-
-  /*
-   * @ingroup domi_omg
-   * @brief Save identifier op map info
-   * @param [in] line, line of proto
-   * @param [out] identifier_op_map, identifer and op map
-   * @return SUCCESS parse successfully
-   * @return FAILED parse failed
-   */
-  Status SaveIdentifierOpMapInfo(const string &line,  std::map<int32_t, string> &identifier_op_map);
-
-  /*
-   * @ingroup domi_omg
-   * @brief Get op identifier
-   * @param [in] line, line of proto
-   * @param [out] identifier, identifer of op
-   * @return SUCCESS parse successfully
-   * @return FAILED parse failed
-   */
-  Status GetIdentifier(const std::string &line, int32_t &identifier);
-  /*
-   * @ingroup domi_omg
    * @brief Read caffe model and shield google warning
    * @param [in] model_path, file path of model(prototxt file)
    * @param [out] message, message saving custom info
