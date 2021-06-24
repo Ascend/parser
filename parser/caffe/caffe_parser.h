@@ -209,46 +209,6 @@ class PARSER_FUNC_VISIBILITY CaffeModelParser : public domi::ModelParser {
    */
   Status CreateCustomOperator(std::string op_name, std::string op_type, const google::protobuf::Message *message,
                               int index, std::vector<ge::Operator> &operators);
-
-  /*
-   * @ingroup domi_omg
-   * @brief Parse message and set operator attrs
-   * @param [in] message, message of model
-   * @param [in/out] depth, depth of recursion
-   * @param [out] ops, operator saving custom info
-   * @return SUCCESS parse message successfully
-   * @return FAILED parse message failed
-   */
-  Status ParseOperatorAttrs(const google::protobuf::Message *message, int depth, ge::Operator &ops);
-
-  /*
-   * @ingroup domi_omg
-   * @brief Parse field and set operator attrs
-   * @param [in] reflection, reflection of message
-   * @param [in] message, message of model
-   * @param [in] field, field of message
-   * @param [in/out] depth, depth of recursion
-   * @param [out] ops, operator saving custom info
-   * @return SUCCESS parse field successfully
-   * @return FAILED parse field failed
-   */
-  Status ParseField(const google::protobuf::Reflection *reflection, const google::protobuf::Message *message,
-                    const google::protobuf::FieldDescriptor *field, int depth, ge::Operator &ops);
-
-  /*
-   * @ingroup domi_omg
-   * @brief Parse repeated field and set operator attrs
-   * @param [in] reflection, reflection of message
-   * @param [in] message, message of model
-   * @param [in] field, field of message
-   * @param [in/out] depth, depth of recursion
-   * @param [out] ops, operator saving custom info by vector
-   * @return SUCCESS parse field successfully
-   * @return FAILED parse field failed
-   */
-  Status ParseRepeatedField(const google::protobuf::Reflection *reflection, const google::protobuf::Message *message,
-                            const google::protobuf::FieldDescriptor *field, int depth, ge::Operator &ops);
-
   /**
    * @ingroup domi_omg
    * @brief Add blob information to the bottom_blobs_map and top_blobs_map_
