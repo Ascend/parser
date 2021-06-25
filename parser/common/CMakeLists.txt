@@ -15,6 +15,7 @@ set(SRC_LIST
     "../tensorflow/tensorflow_fusion_op_parser.cc"
     "../tensorflow/tensorflow_util.cc"
     "convert/pb2json.cc"
+    "convert/message2operator.cc"
     "op_def/ir_pb_converter.cc"
     "op_def/defs.cc"
     "op_def/op_schema.cc"

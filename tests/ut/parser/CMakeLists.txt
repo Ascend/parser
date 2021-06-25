@@ -221,6 +221,7 @@ set(PARSER_SRC_FILES
     "${PARSER_DIR}/parser/caffe/caffe_reshape_parser.cc"
     "${PARSER_DIR}/parser/common/acl_graph_parser_util.cc"
     "${PARSER_DIR}/parser/common/convert/pb2json.cc"
+    "${PARSER_DIR}/parser/common/convert/message2operator.cc"
     "${PARSER_DIR}/parser/common/data_op_parser.cc"
     "${PARSER_DIR}/parser/common/model_saver.cc"
     "${PARSER_DIR}/parser/common/op_def/arg_op.cc"
@@ -305,6 +306,7 @@ include_directories(${PARSER_DIR}/metadef/third_party/graphengine/inc/framework)
 
 set(PARSER_UT_FILES
     "testcase/onnx_parser_testcase/onnx_parser_unittest.cc"
+    "testcase/onnx_parser_testcase/message2operator_unittest.cc"
     "testcase/tensorflow_parser_testcase/tensorflow_parser_unittest.cc"
 )
 

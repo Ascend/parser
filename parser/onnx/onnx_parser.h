@@ -110,6 +110,8 @@ class PARSER_FUNC_VISIBILITY OnnxModelParser : public domi::ModelParser {
 
   void ClearMembers();
 
+  Status ParseOpParam(const ge::onnx::NodeProto *node_proto, ge::Operator &op, std::shared_ptr<OpParser> &op_parser);
+
   Status AdaptAndFindAllOnnxGraph(ge::onnx::GraphProto &root_onnx_graph,
                                   std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph);
 
