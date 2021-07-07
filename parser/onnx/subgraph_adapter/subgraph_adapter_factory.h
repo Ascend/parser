@@ -55,7 +55,7 @@ public:
    */
   std::shared_ptr<SubgraphAdapter> CreateSubgraphAdapter(const std::string &op_type);
 
-
+  ~SubgraphAdapterFactory() = default;
 protected:
   /**
    * @brief SubgraphAdapter creation function
