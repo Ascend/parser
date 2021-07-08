@@ -42,7 +42,7 @@ class PARSER_FUNC_VISIBILITY OnnxDataParser : public OnnxOpParser {
 
   std::vector<int64_t> user_input_dims_v_;
 
-  bool is_subgraph_data_op_;
+  bool is_subgraph_data_op_ = false;
 };
 }  // namespace ge
 
