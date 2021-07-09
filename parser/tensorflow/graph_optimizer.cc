@@ -1457,6 +1457,7 @@ Status CollectNodeFuncs(vector<ge::NodePtr> &nodes, FunctionDefLibrary *library)
 
     GE_IF_BOOL_EXEC(
         AttrUtils::GetBytes(opDef, ge::ATTR_NAME_FRAMEWORK_FUNC_DEF, funcDefBytes), FunctionDefLibrary funcLib;
+        GE_CHECK_NOTNULL(funcDefBytes.GetData());
         string str(reinterpret_cast<char *>(funcDefBytes.GetData()), funcDefBytes.GetSize());
         GELOGI("FUNCDEF: Get function -> %s.", str.c_str()); GE_IF_BOOL_EXEC(
             funcLib.ParseFromArray(funcDefBytes.GetData(), funcDefBytes.GetSize()), library->MergeFrom(funcLib)));
