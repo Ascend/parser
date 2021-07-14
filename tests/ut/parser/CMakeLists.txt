@@ -79,7 +79,6 @@ set(MATEDEF_SRC_FILES
     "${PARSER_DIR}/metadef/graph/detail/attributes_holder.cc"
     "${PARSER_DIR}/metadef/graph/format_refiner.cc"
     "${PARSER_DIR}/metadef/graph/ge_attr_define.cc"
-    "${PARSER_DIR}/metadef/graph/ge_attr_value.cc"
     "${PARSER_DIR}/metadef/graph/ge_tensor.cc"
     "${PARSER_DIR}/metadef/graph/gnode.cc"
     "${PARSER_DIR}/metadef/graph/graph.cc"
@@ -308,6 +307,7 @@ set(PARSER_UT_FILES
     "testcase/onnx_parser_testcase/onnx_parser_unittest.cc"
     "testcase/onnx_parser_testcase/message2operator_unittest.cc"
     "testcase/tensorflow_parser_testcase/tensorflow_parser_unittest.cc"
+    "testcase/tensorflow_parser_testcase/tensorflow_auto_mapping_parser_adapter_unittest.cc"
 )
 
 ############ libut_parser_common.a ############
@@ -349,6 +349,6 @@ target_link_libraries(ut_parser
     $<BUILD_INTERFACE:intf_pub>
     ut_parser_proto
     -Wl,--whole-archive ut_parser_common -Wl,--no-whole-archive
-    ut_parser_graph ut_parser_register error_manager_stub mmpa_stub
+    ut_parser_graph ut_parser_register error_manager_stub mmpa_stub attr_util_stub
     gtest gtest_main slog_stub ascend_protobuf c_sec  -lrt -ldl -lgcov
 )
