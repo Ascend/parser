@@ -371,7 +371,8 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
    * @brief Normalized I / O relationship: according to context map, de duplicate and de outliers
 
    */
-  Status NormalizeInputOrOutputMap(std::map<std::string, std::vector<std::pair<int32_t, int32_t>>> &context_map);
+  Status NormalizeInputOrOutputMap(const string &node_name,
+                                   std::map<std::string, std::vector<std::pair<int32_t, int32_t>>> &context_map);
 
   /**
    * @ingroup domi_omg
