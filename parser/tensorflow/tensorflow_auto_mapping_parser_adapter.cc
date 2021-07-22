@@ -87,7 +87,7 @@ Status TensorFlowAutoMappingParserAdapter::ParseParams(const Message *op_src, ge
   if (op_dest->GetType() == SIZE) {
     ge::DataType out_type = DT_INT32;
     if (AttrUtils::GetDataType(op_dest, kShapeAttrOutType, out_type)) {
-      if (!AttrUtils::SetDataType(op_dest, kShapeAttrDtype, out_type)) {
+      if (!AttrUtils::SetInt(op_dest, kShapeAttrDtype, static_cast<int64_t>(out_type))) {
         REPORT_CALL_ERROR("E19999", "Set Attr:%s to op:%s(%s) failed", kShapeAttrDtype,
                           op_dest->GetName().c_str(), op_dest->GetType().c_str());
         GELOGE(FAILED, "Set attr dtype for op:%s failed.", op_dest->GetName().c_str());
