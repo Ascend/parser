@@ -48,6 +48,7 @@ Status OnnxDataParser::ParseParams(const Message *op_src, ge::Operator &op_def) 
 
   ge::TensorDesc tensor_desc;
   tensor_desc.SetShape(ge::Shape(user_input_dims_v_));
+  tensor_desc.SetOriginShape(ge::Shape(user_input_dims_v_));
   int64_t type = 1;
   (void)op_def.GetAttr(ge::DATA_ATTR_NAME_DATA_TYPE, type);
   tensor_desc.SetDataType(static_cast<DataType>(type));
