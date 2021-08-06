@@ -296,6 +296,7 @@ include_directories(${PARSER_DIR})
 include_directories(${PARSER_DIR}/inc)
 include_directories(${PARSER_DIR}/parser)
 include_directories(${PARSER_DIR}/parser/onnx)
+include_directories(${PARSER_DIR}/tests)
 include_directories(${PARSER_DIR}/metadef/inc)
 include_directories(${PARSER_DIR}/metadef/inc/external)
 include_directories(${PARSER_DIR}/metadef/inc/register)
@@ -306,7 +307,10 @@ include_directories(${PARSER_DIR}/metadef/third_party/graphengine/inc/framework)
 
 
 set(PARSER_UT_FILES
+    "parser_ut_utils.cc"
+    "testcase/common/acl_graph_parser_unittest.cc"
     "testcase/onnx_parser_testcase/onnx_parser_unittest.cc"
+    "testcase/caffe_parser_testcase/caffe_parser_unittest.cc"
     "testcase/onnx_parser_testcase/message2operator_unittest.cc"
     "testcase/tensorflow_parser_testcase/tensorflow_parser_unittest.cc"
     "testcase/tensorflow_parser_testcase/tensorflow_auto_mapping_parser_adapter_unittest.cc"

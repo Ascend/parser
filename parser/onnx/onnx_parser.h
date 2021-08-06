@@ -38,6 +38,7 @@
 #include "omg/parser/model_parser.h"
 #include "omg/parser/op_parser.h"
 #include "omg/parser/weights_parser.h"
+#include "common/parser_utils.h"
 #include "proto/onnx/ge_onnx.pb.h"
 
 namespace ge {
@@ -80,7 +81,7 @@ class PARSER_FUNC_VISIBILITY OnnxModelParser : public domi::ModelParser {
   Status ParseInitializer(ge::onnx::GraphProto &onnx_graph,
                           std::map<std::string, ge::onnx::TensorProto> &initializer_name_tensor);
 
-  Status UpdateAllNodeName(ge::onnx::GraphProto &onnx_graph);
+  void UpdateAllNodeName(ge::onnx::GraphProto &onnx_graph);
 
   Status ConstructOriType(const ge::onnx::NodeProto *node_proto, std::string &ori_type);
 
@@ -94,7 +95,8 @@ class PARSER_FUNC_VISIBILITY OnnxModelParser : public domi::ModelParser {
 
   Status GetGraphInputs(ge::onnx::GraphProto &onnx_graph, std::vector<ge::Operator> &input_ops);
 
-  Status GetGraphOutputs(std::vector<std::pair<Operator, std::vector<size_t>>> &outputs);
+  Status GetGraphOutputs(std::vector<std::pair<Operator, std::vector<size_t>>> &outputs,
+                         ParserUtils::OutputMapping &out_tensor_to_nodes);
 
   Status Prechecker(ge::onnx::GraphProto &onnx_graph);
   
@@ -114,6 +116,9 @@ class PARSER_FUNC_VISIBILITY OnnxModelParser : public domi::ModelParser {
 
   Status AdaptAndFindAllOnnxGraph(ge::onnx::GraphProto &root_onnx_graph,
                                   std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph);
+
+  Status SetOutputsInfo(const ParserUtils::OutputMapping &final_output_nodes,
+                        const ParserUtils::OutputMapping &tensor_to_nodes);
 
   std::map<std::string, std::string> ori_to_om_type_;
 

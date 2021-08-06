@@ -360,7 +360,7 @@ Status OnnxModelParser::ParseInitializer(ge::onnx::GraphProto &onnx_graph,
   return SUCCESS;
 }
 
-Status OnnxModelParser::UpdateAllNodeName(ge::onnx::GraphProto &onnx_graph) {
+void OnnxModelParser::UpdateAllNodeName(ge::onnx::GraphProto &onnx_graph) {
   int index = 0;
   for (int i = 0; i < onnx_graph.node_size(); i++) {
     ge::onnx::NodeProto *node = onnx_graph.mutable_node(i);
@@ -369,8 +369,6 @@ Status OnnxModelParser::UpdateAllNodeName(ge::onnx::GraphProto &onnx_graph) {
       node->set_name(node_name);
     }
   }
-
-  return SUCCESS;
 }
 
 Status OnnxModelParser::ConstructOriType(const ge::onnx::NodeProto *node_proto, std::string &ori_type) {
@@ -676,7 +674,8 @@ Status OnnxModelParser::GetGraphInputs(ge::onnx::GraphProto &onnx_graph, std::ve
     return SUCCESS;
 }
 
-Status OnnxModelParser::GetGraphOutputs(std::vector<std::pair<Operator, std::vector<size_t>>> &output_ops) {
+Status OnnxModelParser::GetGraphOutputs(std::vector<std::pair<Operator, std::vector<size_t>>> &output_ops,
+                                        ParserUtils::OutputMapping &out_tensor_to_nodes) {
   for (auto output_name : output_node_names_) {
     auto itr = outputs_map_.find(output_name);
     if (itr == outputs_map_.end()) {
@@ -696,6 +695,7 @@ Status OnnxModelParser::GetGraphOutputs(std::vector<std::pair<Operator, std::vec
       }
       int index = node_name_index.second;
       output_ops.emplace_back(out_op_itr->second, vector<size_t>{static_cast<size_t>(index)});
+      out_tensor_to_nodes[output_name] = std::make_pair(node_name, index);
       GELOGI("out node index %d, node:%s", index, node_name.c_str());
     }
   }
@@ -870,7 +870,7 @@ Status OnnxModelParser::ModelParseToGraphImpl(bool is_subgraph, ge::onnx::GraphP
 
   GE_RETURN_WITH_LOG_IF_ERROR(ProtoTypePassManager::Instance().Run(&onnx_graph, domi::ONNX),
                               "Run ProtoType Pass Failed");
-  // 2. Get all inializer.
+  // 1. Get all inializer.
   std::map<std::string, ge::onnx::TensorProto> initializer_name_tensor;
   for (int i = 0; i < onnx_graph.initializer_size(); i++) {
     ge::onnx::TensorProto initializer_tensor = onnx_graph.initializer(i);
@@ -880,7 +880,7 @@ Status OnnxModelParser::ModelParseToGraphImpl(bool is_subgraph, ge::onnx::GraphP
     }
   }
 
-  // 3. Parse Input from graph.
+  // 2. Parse Input from graph.
   GELOGI("The size of initializer_name_tensor is %zu ", initializer_name_tensor.size());
 
   Status ret = ParseInput(initializer_name_tensor, is_subgraph, onnx_graph);
@@ -890,13 +890,14 @@ Status OnnxModelParser::ModelParseToGraphImpl(bool is_subgraph, ge::onnx::GraphP
   }
   GELOGI("The size of initializer_name_tensor is %zu after ParseInput", initializer_name_tensor.size());
 
-  // 4. Parse Constant from graph.
+  // 3. Parse Constant from graph.
   ret = ParseInitializer(onnx_graph, initializer_name_tensor);
   if (ret != SUCCESS) {
     GELOGE(ret, "[Parse][Initializer] for onnx failed.");
     return ret;
   }
 
+  // 4. Get all output name form origin graph
   ret = ParseOutput(onnx_graph);
   if (ret != SUCCESS) {
     GELOGE(ret, "[Parse][Output] Parse output for onnx failed.");
@@ -904,11 +905,7 @@ Status OnnxModelParser::ModelParseToGraphImpl(bool is_subgraph, ge::onnx::GraphP
   }
 
   // 5. Update node name for node do not has name.
-  ret = UpdateAllNodeName(onnx_graph);
-  if (ret != SUCCESS) {
-    GELOGE(ret, "[Update][Name] of all node for onnx failed.");
-    return ret;
-  }
+  UpdateAllNodeName(onnx_graph);
 
   // 6 Precheck.
   ret = Prechecker(onnx_graph);
@@ -950,18 +947,31 @@ Status OnnxModelParser::ModelParseToGraphImpl(bool is_subgraph, ge::onnx::GraphP
   }
   graph.SetInputs(input_ops);
 
+  // 10. Get output info and set outpus for subgraph
+  std::vector<std::pair<Operator, std::vector<size_t>>> output_ops;
+  ParserUtils::OutputMapping out_tensor_to_nodes;
+  ret = GetGraphOutputs(output_ops, out_tensor_to_nodes);
+  if (ret != SUCCESS) {
+    GELOGE(ret, "[Get][Outputs] failed.");
+    return ret;
+  }
   // root graph needn't set outputs.
   if(is_subgraph) {
-    std::vector<std::pair<Operator, std::vector<size_t>>> output_ops;
-    ret = GetGraphOutputs(output_ops);
-    if (ret != SUCCESS) {
-      GELOGE(ret, "[Get][Outputs] failed.");
-      return ret;
-    }
     graph.SetOutputs(output_ops);
   }
 
-  GE_RETURN_IF_ERROR(ParserUtils::ExpandOneToManyGraph(graph));
+  // 11. Expand node to graph if need
+  ParserUtils::OutputMapping final_output_nodes;
+  GE_RETURN_IF_ERROR(ParserUtils::ExpandOneToManyGraph(graph, final_output_nodes));
+
+  // 12. Set outputs info in ParserContext for root graph
+  if (!is_subgraph) {
+    ret = SetOutputsInfo(final_output_nodes, out_tensor_to_nodes);
+    if (ret != SUCCESS) {
+      GELOGE(ret, "[Set][OutputsInfo] Graph:%s.", graph.GetName().c_str());
+      return ret;
+    }
+  }
 
   GELOGI("Onnx model parser success.");
   return SUCCESS;
@@ -1048,6 +1058,50 @@ void OnnxModelParser::UpdateDataFormat(ge::Graph &graph) {
   return;
 }
 
+Status OnnxModelParser::SetOutputsInfo(const ParserUtils::OutputMapping &final_output_nodes,
+                                       const ParserUtils::OutputMapping &tensor_to_nodes) {
+  auto &user_specified_nodes = ge::GetParserContext().user_out_nodes;
+  if (!user_specified_nodes.empty()) {
+    GELOGI("User specified the output nodes with node_name and index.");
+    for (auto &output_node_info : user_specified_nodes) {
+      ParserUtils::UpdateOutputNodeInfo(final_output_nodes, output_node_info);
+    }
+    return SUCCESS;
+  }
+
+  auto final_tensor_to_nodes = tensor_to_nodes;
+  ParserUtils::UpdateOutputCtx(final_output_nodes, final_tensor_to_nodes);
+  auto &user_specified_tensors = ge::GetParserContext().user_out_tensors;
+  auto &output_tensor_names = ge::GetParserContext().out_tensor_names;
+  output_tensor_names.clear();
+  if (!user_specified_tensors.empty()) {
+    for (auto &tensor_name : user_specified_tensors) {
+      auto iter = final_tensor_to_nodes.find(tensor_name);
+      if (iter != final_tensor_to_nodes.end()) {
+        user_specified_nodes.emplace_back(iter->second);
+        output_tensor_names.emplace_back(tensor_name);
+        GELOGI("[UserSpecified]Add network output node[%s], index[%d], tensor name[%s].",
+               iter->second.first.c_str(), iter->second.second, tensor_name.c_str());
+      } else {
+        REPORT_INNER_ERROR("E19999", "User specified tensor[%s] is not output of graph.", tensor_name.c_str());
+        GELOGE(FAILED, "[Set][OutputsInfo]User specified tensor[%s] is not output of graph.", tensor_name.c_str());
+        return FAILED;
+      }
+    }
+    return SUCCESS;
+  }
+
+  // for default output
+  auto &default_out_nodes = ge::GetParserContext().default_out_nodes;
+  for (auto &tensor_name : output_node_names_) {
+    auto &output_node_info = final_tensor_to_nodes[tensor_name];
+    default_out_nodes.emplace_back(output_node_info);
+    output_tensor_names.emplace_back(tensor_name);
+    GELOGI("[Default]Add network output node[%s], index[%d], tensor name[%s].",
+           output_node_info.first.c_str(), output_node_info.second, tensor_name.c_str());
+  }
+  return SUCCESS;
+}
 }  // namespace domi
 
 namespace domi {

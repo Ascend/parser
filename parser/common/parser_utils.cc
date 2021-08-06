@@ -71,7 +71,7 @@ Status HandleNewOp(const NodePtr &node,
 }
 }
 
-Status ParserUtils::ExpandOneToManyGraph(Graph &graph) {
+Status ParserUtils::ExpandOneToManyGraph(Graph &graph, OutputMapping &output_mapping) {
   GELOGD("Begin run ParserUtils::ExpandOneToManyGraph.");
   for (const auto &gn : graph.GetDirectNode()) {
     NodePtr n = NodeAdapter::GNode2Node(gn);
@@ -95,7 +95,7 @@ Status ParserUtils::ExpandOneToManyGraph(Graph &graph) {
       GELOGE(FAILED, "[Invoke][ParseOpToGraphFunc]Get one to many graph failed for op:%s.", op.GetName().c_str());
       return FAILED;
     }
-    ret = ExpandNodeToSubgraph(subgraph, n, graph);
+    ret = ExpandNodeToSubgraph(subgraph, n, graph, output_mapping);
     if (ret != SUCCESS) {
       GELOGE(FAILED, "[Invoke][ExpandNodeToSubgraph]Expand one to many graph failed for op:%s.", op.GetName().c_str());
       return FAILED;
@@ -105,7 +105,8 @@ Status ParserUtils::ExpandOneToManyGraph(Graph &graph) {
   return SUCCESS;
 }
 
-Status ParserUtils::ExpandNodeToSubgraph(const Graph &subgraph, const NodePtr &node, Graph &graph) {
+Status ParserUtils::ExpandNodeToSubgraph(const Graph &subgraph, const NodePtr &node, Graph &graph,
+                                         OutputMapping &output_mapping) {
   ComputeGraphPtr sub_compute_graph = GraphUtils::GetComputeGraph(subgraph);
   GE_CHECK_NOTNULL(sub_compute_graph);
   ComputeGraphPtr compute_graph = GraphUtils::GetComputeGraph(graph);
@@ -135,7 +136,7 @@ Status ParserUtils::ExpandNodeToSubgraph(const Graph &subgraph, const NodePtr &n
 
   // handle output context.
   std::vector<std::pair<NodePtr, int32_t>> out_node_index = sub_compute_graph->GetGraphOutNodesInfo();
-  ret = HandleOutputContext(node, out_node_index);
+  ret = HandleOutputContext(node, out_node_index, output_mapping);
   if (ret != SUCCESS) {
     GELOGE(FAILED, "[Run][HandleOutputContext] failed, node:%s.", node->GetName().c_str());
     return FAILED;
@@ -235,7 +236,8 @@ Status ParserUtils::HandleInputContext(const NodePtr &node,
 }
 
 Status ParserUtils::HandleOutputContext(const NodePtr &node,
-                                        const std::vector<std::pair<NodePtr, int32_t>> &out_node_index) {
+                                        const std::vector<std::pair<NodePtr, int32_t>> &out_node_index,
+                                        OutputMapping &output_mapping) {
   GE_CHECK_NOTNULL(node);
   GELOGD("The size of out node is %zu", out_node_index.size());
   for (size_t index = 0; index < out_node_index.size(); index++) {
@@ -247,6 +249,8 @@ Status ParserUtils::HandleOutputContext(const NodePtr &node,
     NodePtr out_node = out_node_index[index].first;
     int32_t out_index = out_node_index[index].second;
     GELOGD("Begin to handle output node:%s[%d] with index:%zu", out_node->GetName().c_str(), out_index, index);
+    std::string key = GenOutputKey({node->GetName(), index});
+    output_mapping[key] = std::make_pair(out_node->GetName(), out_index);
     auto src_out_anchor = out_node->GetOutDataAnchor(out_index); // get out node's out anchor.
     GE_CHECK_NOTNULL(src_out_anchor);
     for (const auto &dest_in_anchor : node_out_anchor->GetPeerInDataAnchors()) {
@@ -272,5 +276,27 @@ Status ParserUtils::HandleOutputContext(const NodePtr &node,
     }
   }
   return SUCCESS;
+}
+
+string ParserUtils::GenOutputKey(const OutputNodeInfo &node_info) {
+  return node_info.first + ":" + std::to_string(node_info.second);
+}
+
+void ParserUtils::UpdateOutputNodeInfo(const OutputMapping &final_output_nodes, OutputNodeInfo &output_node_info) {
+  std::string key = ParserUtils::GenOutputKey(output_node_info);
+  auto iter = final_output_nodes.find(key);
+  if (iter != final_output_nodes.end()) {
+    output_node_info = iter->second;
+    GELOGD("Update output node info, origin[%s], now[%s].",
+           key.c_str(), ParserUtils::GenOutputKey(output_node_info).c_str());
+  }
+}
+
+void ParserUtils::UpdateOutputCtx(const OutputMapping &final_output_nodes, OutputMapping &tensor_to_nodes) {
+  for (auto &tensor_to_node : tensor_to_nodes) {
+    std::string tensor_name = tensor_to_node.first;
+    auto &output_node_info = tensor_to_node.second;
+    UpdateOutputNodeInfo(final_output_nodes, output_node_info);
+  }
 }
 }  // namespace ge

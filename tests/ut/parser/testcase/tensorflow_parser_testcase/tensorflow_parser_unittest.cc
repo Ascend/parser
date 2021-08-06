@@ -24,12 +24,14 @@
 #include "register/op_registry.h"
 #include "parser/common/register_tbe.h"
 #include "external/parser/tensorflow_parser.h"
-
+#include "ut/parser/parser_ut_utils.h"
 
 namespace ge {
 class UtestTensorflowParser : public testing::Test {
  protected:
-  void SetUp() {}
+  void SetUp() {
+    ParerUTestsUtils::ClearParserInnerCtx();
+  }
 
   void TearDown() {}
 

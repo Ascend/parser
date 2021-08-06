@@ -1494,7 +1494,9 @@ Status TensorFlowModelParser::ParseAllGraph(const google::protobuf::Message *pro
 
   GE_RETURN_IF_ERROR(AddEdges(graph));
   Graph dest_graph = GraphUtils::CreateGraphFromComputeGraph(graph);
-  GE_RETURN_IF_ERROR(ParserUtils::ExpandOneToManyGraph(dest_graph));
+  ParserUtils::OutputMapping final_output_nodes;
+  GE_RETURN_IF_ERROR(ParserUtils::ExpandOneToManyGraph(dest_graph, final_output_nodes));
+  GE_RETURN_IF_ERROR(UpdateOutputsInfo(final_output_nodes));
   GE_RETURN_IF_ERROR(RemoveIsolateNode(graph));
   GE_RETURN_IF_ERROR(CheckAndUpdateInputDesc(graph));
   GE_RETURN_IF_ERROR(graph->TopologicalSorting());
@@ -2304,7 +2306,9 @@ Status TensorFlowModelParser::ParseProto(const google::protobuf::Message *proto,
   ret = AddEdges(graph);
 
   Graph dest_graph = GraphUtils::CreateGraphFromComputeGraph(graph);
-  GE_RETURN_IF_ERROR(ParserUtils::ExpandOneToManyGraph(dest_graph));
+  ParserUtils::OutputMapping final_output_nodes;
+  GE_RETURN_IF_ERROR(ParserUtils::ExpandOneToManyGraph(dest_graph, final_output_nodes));
+  GE_RETURN_IF_ERROR(UpdateOutputsInfo(final_output_nodes));
 
   DeleteFuisonNodeDef();
   GE_CHK_STATUS_EXEC(ret, return ret, "AddEdges failed");
@@ -4016,6 +4020,16 @@ Status TensorFlowModelParser::CheckAndUpdateInputDesc(ge::ComputeGraphPtr &compu
         }
         GELOGI("Update input desc to invalid, node:%s, index:%d.", node->GetName().c_str(), in_anchor->GetIdx());
       }
+    }
+  }
+  return SUCCESS;
+}
+
+Status TensorFlowModelParser::UpdateOutputsInfo(const ParserUtils::OutputMapping &final_output_nodes) {
+  auto &user_specified_nodes = ge::GetParserContext().user_out_nodes;
+  if (!user_specified_nodes.empty()) {
+    for (auto &output_node_info : user_specified_nodes) {
+      ParserUtils::UpdateOutputNodeInfo(final_output_nodes, output_node_info);
     }
   }
   return SUCCESS;

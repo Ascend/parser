@@ -17,6 +17,7 @@
 #ifndef PARSER_COMMON_PARSER_UTILS_H_
 #define PARSER_COMMON_PARSER_UTILS_H_
 
+#include <unordered_map>
 #include "graph/graph.h"
 #include "graph/node.h"
 #include "external/ge/ge_api_error_codes.h"
@@ -24,15 +25,22 @@
 namespace ge {
 class ParserUtils {
  public:
-  static Status ExpandOneToManyGraph(Graph &graph);
+  using OutputNodeInfo = std::pair<std::string, int32_t>;
+  using OutputMapping = std::unordered_map<std::string, OutputNodeInfo>;
+  static Status ExpandOneToManyGraph(Graph &graph, OutputMapping &output_mapping);
+  static string GenOutputKey(const OutputNodeInfo &node_info);
+  static void UpdateOutputNodeInfo(const OutputMapping &final_output_nodes, OutputNodeInfo &output_node_info);
+  static void UpdateOutputCtx(const OutputMapping &final_output_nodes, OutputMapping &tensor_to_nodes);
 
  private:
-  static Status ExpandNodeToSubgraph(const Graph &subgraph, const NodePtr &node, Graph &graph);
+  static Status ExpandNodeToSubgraph(const Graph &subgraph, const NodePtr &node, Graph &graph,
+                                     OutputMapping &output_mapping);
   static Status HandleInputContext(const NodePtr &node,
                                    const std::vector<NodePtr> &input_nodes,
                                    const ComputeGraphPtr &compute_graph);
   static Status HandleOutputContext(const NodePtr &node, 
-                                    const std::vector<std::pair<NodePtr, int32_t>> &out_node_index);
+                                    const std::vector<std::pair<NodePtr, int32_t>> &out_node_index,
+                                    OutputMapping &output_mapping);
 };
 }  // namespace ge
 #endif  // PARSER_COMMON_PARSER_UTILS_H_
