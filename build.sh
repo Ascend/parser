@@ -151,6 +151,8 @@ build_parser()
 
   if [ "X$ENABLE_PARSER_UT" = "Xon" ]; then
     make ut_parser -j8
+  elif [ "X$ENABLE_PARSER_ST" = "Xon" ]; then
+    make st_parser -j8
   else
     make ${VERBOSE} -j${THREAD_NUM} && make install
   fi
@@ -192,6 +194,17 @@ if [[ "X$ENABLE_PARSER_UT" = "Xon" || "X$ENABLE_PARSER_COV" = "Xon" ]]; then
     lcov -r cov/tmp.info '*/output/*' '*/build/opensrc/*' '*/build/proto/*' '*/third_party/*' '*/tests/*' '/usr/local/*' '*/metadef/inc/*' -o cov/coverage.info
     cd ${BASEPATH}/cov
     genhtml coverage.info
+fi
+
+if [[ "X$ENABLE_PARSER_ST" = "Xon" ]]; then
+    cp ${BUILD_PATH}/tests/st/st_parser ${OUTPUT_PATH}
+
+    RUN_TEST_CASE=${OUTPUT_PATH}/st_parser && ${RUN_TEST_CASE}
+    if [[ "$?" -ne 0 ]]; then
+        echo "!!! ST FAILED, PLEASE CHECK YOUR CHANGES !!!"
+        echo -e "\033[31m${RUN_TEST_CASE}\033[0m"
+        exit 1;
+    fi
 fi
 
 # generate output package in tar form, including ut/st libraries/executables
@@ -236,7 +249,7 @@ generate_package()
   tar -cf parser_lib.tar fwkacllib acllib atc
 }
 
-if [[ "X$ENABLE_PARSER_UT" = "Xoff" ]]; then
+if [[ "X$ENABLE_PARSER_UT" = "Xoff" && "X$ENABLE_PARSER_ST" = "Xoff" ]]; then
   generate_package
 fi
 echo "---------------- Parser package archive generated ----------------"

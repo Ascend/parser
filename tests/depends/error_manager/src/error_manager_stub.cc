@@ -50,7 +50,7 @@ int ErrorManager::ReportInterErrMessage(std::string error_code, const std::strin
 
 
 const std::string &ErrorManager::GetLogHeader() {
-  static const std::string kLogHeader("GeUtStub");
+  static const std::string kLogHeader("[ParserStub]");
   return kLogHeader;
 }
 
