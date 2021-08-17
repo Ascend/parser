@@ -69,6 +69,8 @@ protobuf_generate(ge DUP_PROTO_SRCS DUP_PROTO_HDRS ${DUPLICATE_PROTO_LIST})
 
 ################################################################################
 set(MATEDEF_SRC_FILES
+    "${PARSER_DIR}/metadef/graph/utils/constant_utils.cc"
+    "${PARSER_DIR}/metadef/graph/resource_context_mgr.cc"
     "${PARSER_DIR}/metadef/graph/aligned_ptr.cc"
     "${PARSER_DIR}/metadef/graph/anchor.cc"
     "${PARSER_DIR}/metadef/graph/ascend_string.cc"
