@@ -44,6 +44,7 @@
 #include "proto/tensorflow/graph_library.pb.h"
 #include "external/register/scope/scope_fusion_pass_register.h"
 #include "scope/scope_pass_manager.h"
+#include "common/parser_utils.h"
 
 using ge::ScopePassManager;
 using domi::tensorflow::GraphDef;
@@ -647,6 +648,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
 
   Status ParseOpParams(const domi::tensorflow::NodeDef *node_def, ge::OpDescPtr &op, shared_ptr<OpParser> &op_parser);
   Status CheckAndUpdateInputDesc(ge::ComputeGraphPtr &compute_graph);
+  static Status UpdateOutputsInfo(const ParserUtils::OutputMapping &final_output_nodes);
 
     /**
    * save <node_name, node_def>

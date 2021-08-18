@@ -275,10 +275,10 @@ INT32 mmGetPid()
 }
 
 INT32 mmDup2(INT32 oldFd, INT32 newFd) {
-  return -1;
+  return 0;
 }
 
 INT32 mmDup(INT32 fd) {
-  return -1;
+  return 0;
 }
 

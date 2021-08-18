@@ -50,8 +50,8 @@ class AclGrphParseUtil {
   bool parser_initialized = false;
   domi::Status CheckOptions(const std::map<AscendString, AscendString> &parser_params);
   domi::Status GetOutputLeaf(NodePtr node, std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info);
-  void GetOutputNodesNameAndIndex(std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info,
-                                  std::vector<std::string> &output_nodes_name);
+  void CreateOutputNodesInfo(std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info,
+                             std::vector<std::string> &output_nodes_name);
   void SetDefaultFormat();
   domi::Status ParseAclOutputNodes(const std::string &out_nodes);
   domi::Status ParseAclOutputFp16NodesFormat(const std::string &is_output_fp16);

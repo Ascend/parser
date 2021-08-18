@@ -601,17 +601,17 @@ void CaffeModelParser::AddOutputInfoToContext(string layer_name, int32_t top_ind
 }
 
 Status CaffeModelParser::ParseOutputNodeTopInfo(const domi::caffe::NetParameter &proto_message) {
-  if (ge::GetParserContext().user_out_nodes_top_vec.empty()) {
+  if (ge::GetParserContext().user_out_tensors.empty()) {
     return SUCCESS;
   }
 
   ge::GetParserContext().out_nodes_map.clear();
   ge::GetParserContext().user_out_nodes.clear();
   int32_t layer_count = proto_message.layer_size();
-  const std::vector<string> &user_out_nodes_top_vec =
-      ge::GetParserContext().user_out_nodes_top_vec;
+  const std::vector<string> &user_out_tensors =
+      ge::GetParserContext().user_out_tensors;
 
-  for (const auto &top_name : user_out_nodes_top_vec) {
+  for (const auto &top_name : user_out_tensors) {
     bool find_node_falg = false;
     string layer_name;
     int32_t top_index = 0;
@@ -1082,7 +1082,7 @@ Status CaffeModelParser::AddUserOutNodesTop() {
       string top_name = layer_iter->second[out_pair.second];
       auto top_node_iter = node_map.find(out_pair.first);
       if (top_node_iter != node_map.end()) {
-        ge::GetParserContext().out_top_names.push_back(top_name);
+        ge::GetParserContext().out_tensor_names.push_back(top_name);
         GELOGI("The top of out node [%s] is [%s]", out_pair.first.c_str(), top_name.c_str());
       }
       ++index;
@@ -1129,7 +1129,7 @@ Status CaffeModelParser::AddOutputTop(const domi::caffe::NetParameter &proto_mes
       auto top_node_iter = node_map.find(layer.name());
       GELOGI("output in top_blob: %s", layer.name().c_str());
       if (top_node_iter != node_map.end()) {
-        ge::GetParserContext().out_top_names.push_back(top_origin);
+        ge::GetParserContext().out_tensor_names.push_back(top_origin);
         ge::GetParserContext().default_out_nodes.push_back(std::make_pair(layer.name(), (int32_t)i));
         GELOGI("The top of out node [%s] is [%s]", layer.name().c_str(), top_origin.c_str());
       }
@@ -1389,13 +1389,13 @@ Status CaffeModelParser::SaveDataLayerTops(const domi::caffe::LayerParameter &la
     }
 
     string top_name = layer.top(0);
-    auto data_top_names = ge::GetParserContext().data_top_names;
-    if (find(data_top_names.begin(), data_top_names.end(), top_name) != data_top_names.end()) {
+    auto data_tensor_names = ge::GetParserContext().data_tensor_names;
+    if (find(data_tensor_names.begin(), data_tensor_names.end(), top_name) != data_tensor_names.end()) {
       ErrorManager::GetInstance().ATCReportErrMessage("E11036", {"topname"}, {top_name});
       GELOGE(FAILED, "[Check][Node]Different data node can not have same top name: %s.", top_name.c_str());
       return FAILED;
     }
-    ge::GetParserContext().data_top_names.push_back(top_name);
+    ge::GetParserContext().data_tensor_names.push_back(top_name);
   }
 
   return SUCCESS;
@@ -1464,18 +1464,18 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
 
   int32_t layer_count = proto_message.layer_size();
 
-  if (!ge::GetParserContext().user_out_nodes_top_vec.empty()) {
+  if (!ge::GetParserContext().user_out_tensors.empty()) {
     GELOGW("The out_put info has top_name items.");
     GE_RETURN_WITH_LOG_IF_ERROR(ParseOutputNodeTopInfo(proto_message),
                                 "[Parse][OutputNodeTopInfo] failed.");
-    ge::GetParserContext().user_out_nodes_top_vec.clear();
+    ge::GetParserContext().user_out_tensors.clear();
   }
 
   std::map<std::string, std::string> inplace_blob_name_remapping;
   // Map of operator name and occurrence times
   std::map<std::string, int32_t> layer_name_map;
 
-  GetParserContext().data_top_names.clear();
+  GetParserContext().data_tensor_names.clear();
   // <layername,paramnames>
   std::map<std::string, std::vector<std::string>> layer_params_map;
   // same param name set <paramnames,layernames>

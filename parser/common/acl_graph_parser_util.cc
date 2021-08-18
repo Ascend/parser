@@ -52,6 +52,13 @@ const int kMaxFileSizeLimit = INT_MAX;
 const int kMaxBuffSize = 256;
 const int kProtoReadBytesLimit = INT_MAX;    // Max size of 2 GB minus 1 byte.
 const int kWarningThreshold = 536870912 * 2; // 536870912 represent 512M
+const uint32_t kSetOutputWithNodeAndIndex = 0x1;
+const uint32_t kSetOutputWithTensorName = 0x2;
+const uint32_t kSetOutputModeMixed = 0x3;
+const std::unordered_set<domi::FrameworkType> kSupportTensorAsOutput = {
+  domi::CAFFE,
+  domi::ONNX
+};
 
 static string GetSoPath() {
   Dl_info dl_info;
@@ -263,14 +270,19 @@ domi::Status AclGrphParseUtil::ParseAclOutputNodes(const string &out_nodes) {
     if (!out_nodes.empty()) {
       ge::GetParserContext().out_nodes_map.clear();
       ge::GetParserContext().user_out_nodes.clear();
-      ge::GetParserContext().user_out_nodes_top_vec.clear();
+      ge::GetParserContext().user_out_tensors.clear();
+      uint32_t set_output_mode = 0;
 
       vector<string> nodes_v = StringUtils::Split(out_nodes, ';');
       for (const string &node : nodes_v) {
         vector<string> key_value_v = StringUtils::Split(node, ':');
         if (key_value_v.size() != 2) { // The size must be 2.
-          if (key_value_v.size() == 1 && ge::GetParserContext().type == domi::CAFFE) {
-            ge::GetParserContext().user_out_nodes_top_vec.push_back(node);
+          if (key_value_v.size() == 1 && kSupportTensorAsOutput.count(ge::GetParserContext().type) > 0) {
+            set_output_mode |= kSetOutputWithTensorName;
+            if (set_output_mode == kSetOutputModeMixed) {
+              break;
+            }
+            ge::GetParserContext().user_out_tensors.push_back(node);
             continue;
           }
           ErrorManager::GetInstance().ATCReportErrMessage(
@@ -281,12 +293,9 @@ domi::Status AclGrphParseUtil::ParseAclOutputNodes(const string &out_nodes) {
                  node.c_str());
           return PARAM_INVALID;
         }
-        if (!ge::GetParserContext().user_out_nodes_top_vec.empty()) {
-          ErrorManager::GetInstance().ATCReportErrMessage("E10001", {"parameter", "value", "reason"},
-                                                          {"out_nodes", out_nodes, "is not all index or top_name"});
-          GELOGE(PARAM_INVALID, "[Check][Param] This out_nodes str must be all index or top_name, "
-                 "while the actual input is %s", out_nodes.c_str());
-          return PARAM_INVALID;
+        set_output_mode |= kSetOutputWithNodeAndIndex;
+        if (set_output_mode == kSetOutputModeMixed) {
+          break;
         }
         // stoi: The method may throw an exception: invalid_argument/out_of_range
         if (!CheckDigitStr(key_value_v[1])) {
@@ -308,6 +317,13 @@ domi::Status AclGrphParseUtil::ParseAclOutputNodes(const string &out_nodes) {
           ge::GetParserContext().out_nodes_map.emplace(key_value_v[0], index_v);
         }
         ge::GetParserContext().user_out_nodes.push_back(std::make_pair(key_value_v[0], index));
+      }
+      if (set_output_mode == kSetOutputModeMixed) {
+        ErrorManager::GetInstance().ATCReportErrMessage("E10001", {"parameter", "value", "reason"},
+                                                        {"--out_nodes", out_nodes, "is not all index or top_name"});
+        GELOGE(PARAM_INVALID, "[Parse][Param]This out_nodes str must be all index or tensor_name, "
+                              "while the actual input is %s", out_nodes.c_str());
+        return PARAM_INVALID;
       }
     }
   } catch (std::invalid_argument &) {
@@ -410,10 +426,11 @@ domi::Status AclGrphParseUtil::ParseAclInputFp16Nodes(const ComputeGraphPtr &gra
   return SUCCESS;
 }
 
-void AclGrphParseUtil::GetOutputNodesNameAndIndex(std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info,
-                                                  std::vector<std::string> &output_nodes_name) {
+void AclGrphParseUtil::CreateOutputNodesInfo(std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info,
+                                             std::vector<std::string> &output_nodes_name) {
   output_nodes_name.clear();
-  if (ge::GetParserContext().out_top_names.empty()) {
+  auto &out_tensor_names = ge::GetParserContext().out_tensor_names;
+  if (out_tensor_names.empty()) {
     // tf process, no top name.
     for (const auto output_node_info : output_nodes_info) {
       std::string node_name = output_node_info.first->GetName();
@@ -422,13 +439,18 @@ void AclGrphParseUtil::GetOutputNodesNameAndIndex(std::vector<std::pair<ge::Node
     }
     return;
   }
-  // caffe process, need add top name after node_name:index
+
+  // Need add top name after node_name:index
   for (size_t i = 0; i < output_nodes_info.size(); ++i) {
-    std::string node_name = output_nodes_info[i].first->GetName();
+    auto node = output_nodes_info[i].first;
     int32_t index = output_nodes_info[i].second;
-    if (i < ge::GetParserContext().out_top_names.size()) {
-      output_nodes_name.push_back(node_name + ":" + std::to_string(index) + ":" +
-                                  ge::GetParserContext().out_top_names[i]);
+    std::string node_name = node->GetName();
+    if (i < out_tensor_names.size()) {
+      auto output_desc = node->GetOpDesc()->MutableOutputDesc(static_cast<uint32_t>(index));
+      (void)AttrUtils::SetStr(output_desc, ATTR_NAME_ORIGIN_OUTPUT_TENSOR_NAME, out_tensor_names[i]);
+      std::string output_name = node->GetName() + ":" + std::to_string(index) + ":" + out_tensor_names[i];
+      output_nodes_name.push_back(output_name);
+      GELOGD("Output[%zu] name[%s]", i, output_name.c_str());
     } else {
       GELOGW("Get top name of node [%s] fail.", node_name.c_str());
       output_nodes_name.push_back(node_name + ":" + std::to_string(index));
@@ -469,7 +491,7 @@ domi::Status AclGrphParseUtil::GetOutputLeaf(NodePtr node,
 domi::Status AclGrphParseUtil::GetDefaultOutInfo(ge::ComputeGraphPtr &compute_graph,
                                                  std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info) {
   std::vector<std::pair<std::string, int32_t>> default_out_nodes = ge::GetParserContext().default_out_nodes;
-  if (ge::GetParserContext().type == domi::CAFFE && !default_out_nodes.empty()) {
+  if (!default_out_nodes.empty()) {
     for (uint32_t i = 0; i < default_out_nodes.size(); ++i) {
       ge::NodePtr out_node = compute_graph->FindNode(default_out_nodes[i].first);
       if (out_node == nullptr) {
@@ -543,7 +565,7 @@ domi::Status AclGrphParseUtil::SetOutputNodeInfo(ge::Graph &graph,
       return domi::FAILED;
     }
   }
-  GetOutputNodesNameAndIndex(output_nodes_info, output_nodes_name);
+  CreateOutputNodesInfo(output_nodes_info, output_nodes_name);
   compute_graph->SetGraphOutNodesInfo(output_nodes_info);
   ge::GetParserContext().net_out_nodes = output_nodes_name;
   GELOGI("Set graph %s output node success.", graph.GetName().c_str());

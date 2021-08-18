@@ -15,22 +15,19 @@
  */
 
 #include <gtest/gtest.h>
-#include <iostream>
 #include "parser/common/op_parser_factory.h"
 #include "parser/tensorflow/tensorflow_parser.h"
-#include "framework/omg/parser/parser_factory.h"
 #include "graph/operator_reg.h"
-#include "external/graph/types.h"
 #include "register/op_registry.h"
 #include "parser/common/register_tbe.h"
 #include "external/parser/tensorflow_parser.h"
-#include "ut/parser/parser_ut_utils.h"
+#include "st/parser_st_utils.h"
 
 namespace ge {
-class UtestTensorflowParser : public testing::Test {
+class STestTensorflowParser : public testing::Test {
  protected:
   void SetUp() {
-    ParerUTestsUtils::ClearParserInnerCtx();
+    ParerSTestsUtils::ClearParserInnerCtx();
   }
 
   void TearDown() {}
@@ -43,7 +40,7 @@ static Status ParseParams(const google::protobuf::Message* op_src, ge::Operator&
   return SUCCESS;
 }
 
-void UtestTensorflowParser::RegisterCustomOp() {
+void STestTensorflowParser::RegisterCustomOp() {
   REGISTER_CUSTOM_OP("Add")
   .FrameworkType(domi::TENSORFLOW)
   .OriginOpType("Add")
@@ -77,46 +74,23 @@ REG_OP(Add)
     .OP_END_FACTORY_REG(Add)
 }
 
-TEST_F(UtestTensorflowParser, tensorflow_parser_success) {
+TEST_F(STestTensorflowParser, tensorflow_parser_success) {
   RegisterCustomOp();
 
   std::string case_dir = __FILE__;
   case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
-  std::string model_file = case_dir + "/tensorflow_model/add.pb";
+  std::string model_file = case_dir + "/origin_models/tf_add.pb";
   std::map<ge::AscendString, ge::AscendString> parser_params;
   ge::Graph graph;
   auto ret = ge::aclgrphParseTensorFlow(model_file.c_str(), parser_params, graph);
-  EXPECT_EQ(ret, domi::SUCCESS);
+  ASSERT_EQ(ret, SUCCESS);
+  ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
+  auto output_nodes_info = compute_graph->GetGraphOutNodesInfo();
+  ASSERT_EQ(output_nodes_info.size(), 1);
+  EXPECT_EQ((output_nodes_info.at(0).first->GetName()), "add_test_1");
+  EXPECT_EQ((output_nodes_info.at(0).second), 0);
+  auto &net_out_name = ge::GetParserContext().net_out_nodes;
+  ASSERT_EQ(net_out_name.size(), 1);
+  EXPECT_EQ(net_out_name.at(0), "add_test_1:0");
 }
-
-TEST_F(UtestTensorflowParser, tensorflow_parser_with_serialized_proto1) {
-  ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>("tmpGraph");
-  auto model_parser = domi::ModelParserFactory::Instance()->CreateModelParser(domi::TENSORFLOW);
-  ge::graphStatus ret = model_parser->ParseProtoWithSubgraph(std::string(""),
-      [](std::string)->std::string{ return "";}, compute_graph);
-  EXPECT_NE(ret, ge::SUCCESS);
-}
-
-TEST_F(UtestTensorflowParser, tensorflow_parser_with_serialized_proto2) {
-  ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>("tmpGraph");
-  auto model_parser = domi::ModelParserFactory::Instance()->CreateModelParser(domi::TENSORFLOW);
-  ge::graphStatus ret = model_parser->ParseProtoWithSubgraph(std::string("null"),
-      [](std::string)->std::string{ return "";}, compute_graph);
-  EXPECT_NE(ret, ge::SUCCESS);
-}
-
-TEST_F(UtestTensorflowParser, tensorflow_parser_with_serialized_proto3) {
-  ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>("tmpGraph");
-  auto model_parser = domi::ModelParserFactory::Instance()->CreateModelParser(domi::TENSORFLOW);
-
-  domi::tensorflow::GraphDef graph_def;
-  auto arg_node = graph_def.add_node();
-  arg_node->set_name("noop");
-  arg_node->set_op("NoOp");
-
-  ge::graphStatus ret = model_parser->ParseProtoWithSubgraph(graph_def.SerializeAsString(),
-      [](std::string)->std::string{ return "";}, compute_graph);
-  EXPECT_EQ(ret, ge::SUCCESS);
-}
-
 } // namespace ge

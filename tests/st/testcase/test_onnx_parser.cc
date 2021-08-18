@@ -18,18 +18,17 @@
 #include <iostream>
 #include "parser/common/op_parser_factory.h"
 #include "graph/operator_reg.h"
-#include "external/graph/types.h"
 #include "register/op_registry.h"
 #include "parser/common/register_tbe.h"
 #include "external/parser/onnx_parser.h"
-#include "ut/parser/parser_ut_utils.h"
+#include "st/parser_st_utils.h"
 #include "external/ge/ge_api_types.h"
 
 namespace ge {
-class UtestOnnxParser : public testing::Test {
+class STestOnnxParser : public testing::Test {
  protected:
   void SetUp() {
-    ParerUTestsUtils::ClearParserInnerCtx();
+    ParerSTestsUtils::ClearParserInnerCtx();
     RegisterCustomOp();
   }
 
@@ -65,7 +64,7 @@ Status ParseSubgraphPostFnIf(const std::string& subgraph_name, const ge::Graph& 
                                           });
 }
 
-void UtestOnnxParser::RegisterCustomOp() {
+void STestOnnxParser::RegisterCustomOp() {
   REGISTER_CUSTOM_OP("Conv2D")
   .FrameworkType(domi::ONNX)
   .OriginOpType("ai.onnx::11::Conv")
@@ -156,81 +155,31 @@ REG_OP(Identity)
     .OP_END_FACTORY_REG(Identity)
 }
 
-TEST_F(UtestOnnxParser, onnx_parser_if_node) {
+TEST_F(STestOnnxParser, onnx_parser_user_output_with_default) {
   std::string case_dir = __FILE__;
   case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
-  std::string model_file = case_dir + "/onnx_model/if.onnx";
+  std::string model_file = case_dir + "/origin_models/onnx_conv2d.onnx";
+  std::map<ge::AscendString, ge::AscendString> parser_params;
+  ge::Graph graph;
+  auto ret = ge::aclgrphParseONNX(model_file.c_str(), parser_params, graph);
+  ASSERT_EQ(ret, GRAPH_SUCCESS);
+  ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
+  auto output_nodes_info = compute_graph->GetGraphOutNodesInfo();
+  ASSERT_EQ(output_nodes_info.size(), 1);
+  EXPECT_EQ((output_nodes_info.at(0).first->GetName()), "Conv_0");
+  EXPECT_EQ((output_nodes_info.at(0).second), 0);
+  auto &net_out_name = ge::GetParserContext().net_out_nodes;
+  ASSERT_EQ(net_out_name.size(), 1);
+  EXPECT_EQ(net_out_name.at(0), "Conv_0:0:y");
+}
+
+TEST_F(STestOnnxParser, onnx_parser_if_node) {
+  std::string case_dir = __FILE__;
+  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
+  std::string model_file = case_dir + "/origin_models/onnx_if.onnx";
   std::map<ge::AscendString, ge::AscendString> parser_params;
   ge::Graph graph;
   auto ret = ge::aclgrphParseONNX(model_file.c_str(), parser_params, graph);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
-
-TEST_F(UtestOnnxParser, onnx_parser_user_output_with_name_and_index) {
-  std::string case_dir = __FILE__;
-  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
-  std::string model_file = case_dir + "/onnx_model/conv2d.onnx";
-  std::map<ge::AscendString, ge::AscendString> parser_params;
-  parser_params.insert({AscendString(ge::ir_option::OUT_NODES), AscendString("Conv_0:0")});
-  ge::Graph graph;
-  auto ret = ge::aclgrphParseONNX(model_file.c_str(), parser_params, graph);
-  ASSERT_EQ(ret, GRAPH_SUCCESS);
-  ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
-  auto output_nodes_info = compute_graph->GetGraphOutNodesInfo();
-  ASSERT_EQ(output_nodes_info.size(), 1);
-  EXPECT_EQ((output_nodes_info.at(0).first->GetName()), "Conv_0");
-  EXPECT_EQ((output_nodes_info.at(0).second), 0);
-  auto &net_out_name = ge::GetParserContext().net_out_nodes;
-  ASSERT_EQ(net_out_name.size(), 1);
-  EXPECT_EQ(net_out_name.at(0), "Conv_0:0");
-}
-
-TEST_F(UtestOnnxParser, onnx_parser_user_output_with_tensor) {
-  std::string case_dir = __FILE__;
-  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
-  std::string model_file = case_dir + "/onnx_model/conv2d.onnx";
-  std::map<ge::AscendString, ge::AscendString> parser_params;
-  parser_params.insert({AscendString(ge::ir_option::OUT_NODES), AscendString("y")});
-  ge::Graph graph;
-  auto ret = ge::aclgrphParseONNX(model_file.c_str(), parser_params, graph);
-  ASSERT_EQ(ret, GRAPH_SUCCESS);
-  ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
-  auto output_nodes_info = compute_graph->GetGraphOutNodesInfo();
-  ASSERT_EQ(output_nodes_info.size(), 1);
-  EXPECT_EQ((output_nodes_info.at(0).first->GetName()), "Conv_0");
-  EXPECT_EQ((output_nodes_info.at(0).second), 0);
-  auto &net_out_name = ge::GetParserContext().net_out_nodes;
-  ASSERT_EQ(net_out_name.size(), 1);
-  EXPECT_EQ(net_out_name.at(0), "Conv_0:0:y");
-}
-
-TEST_F(UtestOnnxParser, onnx_parser_user_output_with_default) {
-  std::string case_dir = __FILE__;
-  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
-  std::string model_file = case_dir + "/onnx_model/conv2d.onnx";
-  std::map<ge::AscendString, ge::AscendString> parser_params;
-  ge::Graph graph;
-  auto ret = ge::aclgrphParseONNX(model_file.c_str(), parser_params, graph);
-  ASSERT_EQ(ret, GRAPH_SUCCESS);
-  ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
-  auto output_nodes_info = compute_graph->GetGraphOutNodesInfo();
-  ASSERT_EQ(output_nodes_info.size(), 1);
-  EXPECT_EQ((output_nodes_info.at(0).first->GetName()), "Conv_0");
-  EXPECT_EQ((output_nodes_info.at(0).second), 0);
-  auto &net_out_name = ge::GetParserContext().net_out_nodes;
-  ASSERT_EQ(net_out_name.size(), 1);
-  EXPECT_EQ(net_out_name.at(0), "Conv_0:0:y");
-}
-
-TEST_F(UtestOnnxParser, onnx_parser_user_output_with_tensor_failed) {
-  std::string case_dir = __FILE__;
-  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
-  std::string model_file = case_dir + "/onnx_model/conv2d.onnx";
-  std::map<ge::AscendString, ge::AscendString> parser_params;
-  parser_params.insert({AscendString(ge::ir_option::OUT_NODES), AscendString("not_exist_output")});
-  ge::Graph graph;
-  auto ret = ge::aclgrphParseONNX(model_file.c_str(), parser_params, graph);
-  EXPECT_EQ(ret, FAILED);
-}
-
 } // namespace ge

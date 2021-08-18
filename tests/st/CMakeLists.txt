@@ -13,7 +13,7 @@
 # limitations under the License.
 # ============================================================================
 
-project(ut_parser)
+project(st_parser)
 
 set(CMAKE_CXX_STANDARD 11)
 
@@ -40,21 +40,21 @@ set(PARSER_PROTO_LIST
 
 protobuf_generate(ge PARSER_PROTO_SRCS PARSER_PROTO_HDRS ${PARSER_PROTO_LIST})
 
-############ libut_parser_proto.a ############
-add_library(ut_parser_proto STATIC
+############ libst_parser_proto.a ############
+add_library(st_parser_proto STATIC
     ${PARSER_PROTO_HDRS} ${PARSER_PROTO_SRCS}
 )
 
-target_compile_definitions(ut_parser_proto PRIVATE
+target_compile_definitions(st_parser_proto PRIVATE
     PROTOBUF_INLINE_NOT_IN_HEADERS=0
     google=ascend_private
 )
 
-target_compile_options(ut_parser_proto PRIVATE
+target_compile_options(st_parser_proto PRIVATE
     -O2 -g -fno-common
 )
 
-target_link_libraries(ut_parser_proto PRIVATE
+target_link_libraries(st_parser_proto PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     ascend_protobuf
 )
@@ -69,8 +69,6 @@ protobuf_generate(ge DUP_PROTO_SRCS DUP_PROTO_HDRS ${DUPLICATE_PROTO_LIST})
 
 ################################################################################
 set(MATEDEF_SRC_FILES
-    "${PARSER_DIR}/metadef/graph/utils/constant_utils.cc"
-    "${PARSER_DIR}/metadef/graph/resource_context_mgr.cc"
     "${PARSER_DIR}/metadef/graph/aligned_ptr.cc"
     "${PARSER_DIR}/metadef/graph/anchor.cc"
     "${PARSER_DIR}/metadef/graph/ascend_string.cc"
@@ -132,20 +130,20 @@ include_directories(${PARSER_DIR}/metadef)
 include_directories(${CMAKE_BINARY_DIR}/proto/ge)
 include_directories(${CMAKE_BINARY_DIR}/proto/ge/proto)
 
-############ libut_parser_graph.a ############
-add_library(ut_parser_graph STATIC
+############ libst_parser_graph.a ############
+add_library(st_parser_graph STATIC
     ${MATEDEF_SRC_FILES} ${PARSER_PROTO_HDRS} ${DUP_PROTO_HDRS}
 )
 
-target_compile_definitions(ut_parser_graph PRIVATE
+target_compile_definitions(st_parser_graph PRIVATE
     google=ascend_private
 )
 
-target_compile_options(ut_parser_graph PRIVATE
+target_compile_options(st_parser_graph PRIVATE
     -O2 -g -fno-common
 )
 
-target_link_libraries(ut_parser_graph PRIVATE
+target_link_libraries(st_parser_graph PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     c_sec ascend_protobuf
 )
@@ -194,20 +192,20 @@ include_directories(${PARSER_DIR}/metadef/third_party/graphengine/inc)
 include_directories(${PARSER_DIR}/metadef/third_party/graphengine/inc/external)
 include_directories(${PARSER_DIR}/metadef/third_party/graphengine/inc/framework)
 
-############ libut_parser_register.a ############
-add_library(ut_parser_register STATIC
+############ libst_parser_register.a ############
+add_library(st_parser_register STATIC
     ${REGISTER_SRC_FILES} ${PARSER_PROTO_HDRS}
 )
 
-target_compile_definitions(ut_parser_register PRIVATE
+target_compile_definitions(st_parser_register PRIVATE
     google=ascend_private
 )
 
-target_compile_options(ut_parser_register PRIVATE
+target_compile_options(st_parser_register PRIVATE
     -O2 -g -fno-common
 )
 
-target_link_libraries(ut_parser_register PRIVATE
+target_link_libraries(st_parser_register PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     c_sec ascend_protobuf json
 )
@@ -306,55 +304,53 @@ include_directories(${PARSER_DIR}/metadef/third_party/graphengine/inc/external)
 include_directories(${PARSER_DIR}/metadef/third_party/graphengine/inc/framework)
 
 
-set(PARSER_UT_FILES
-    "parser_ut_utils.cc"
-    "testcase/common/acl_graph_parser_unittest.cc"
-    "testcase/onnx_parser_testcase/onnx_parser_unittest.cc"
-    "testcase/caffe_parser_testcase/caffe_parser_unittest.cc"
-    "testcase/onnx_parser_testcase/message2operator_unittest.cc"
-    "testcase/tensorflow_parser_testcase/tensorflow_parser_unittest.cc"
-    "testcase/tensorflow_parser_testcase/tensorflow_auto_mapping_parser_adapter_unittest.cc"
+set(PARSER_ST_FILES
+    "parser_st_utils.cc"
+    "testcase/test_main.cc"
+    "testcase/test_onnx_parser.cc"
+    "testcase/test_caffe_parser.cc"
+    "testcase/test_tensorflow_parser.cc"
 )
 
-############ libut_parser_common.a ############
-add_library(ut_parser_common STATIC
+############ libst_parser_common.a ############
+add_library(st_parser_common STATIC
     ${PARSER_SRC_FILES} ${PARSER_PROTO_HDRS}
 )
 
-target_compile_definitions(ut_parser_common PRIVATE
+target_compile_definitions(st_parser_common PRIVATE
     google=ascend_private
 )
 
-target_compile_options(ut_parser_common PRIVATE
+target_compile_options(st_parser_common PRIVATE
     -g --coverage -fprofile-arcs -ftest-coverage
     -Werror=format
 )
 
-target_link_libraries(ut_parser_common PRIVATE
+target_link_libraries(st_parser_common PRIVATE
     $<BUILD_INTERFACE:intf_pub>
-    ut_parser_proto ut_parser_graph c_sec
+    st_parser_proto st_parser_graph c_sec
     ascend_protobuf
     json
 )
 
 
 ################################################################################
-add_executable(ut_parser
-    ${PARSER_UT_FILES} ${PARSER_PROTO_SRCS}
+add_executable(st_parser
+    ${PARSER_ST_FILES} ${PARSER_PROTO_SRCS}
 )
 
-target_compile_options(ut_parser PRIVATE
+target_compile_options(st_parser PRIVATE
     -g
 )
 
-target_compile_definitions(ut_parser PRIVATE
+target_compile_definitions(st_parser PRIVATE
     google=ascend_private
 )
 
-target_link_libraries(ut_parser
+target_link_libraries(st_parser
     $<BUILD_INTERFACE:intf_pub>
-    ut_parser_proto
-    -Wl,--whole-archive ut_parser_common -Wl,--no-whole-archive
-    ut_parser_graph ut_parser_register error_manager_stub mmpa_stub attr_util_stub
+    st_parser_proto
+    -Wl,--whole-archive st_parser_common -Wl,--no-whole-archive
+    st_parser_graph st_parser_register error_manager_stub mmpa_stub attr_util_stub
     gtest gtest_main slog_stub ascend_protobuf c_sec  -lrt -ldl -lgcov
 )
