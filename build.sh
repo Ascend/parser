@@ -249,7 +249,45 @@ generate_package()
   tar -cf parser_lib.tar fwkacllib acllib atc
 }
 
+# generate output package in tar form, including ut/st libraries/executables for cann
+generate_package_for_cann()
+{
+  cd "${BASEPATH}"
+
+  PARSER_LIB_PATH="lib"
+  COMPILER_PATH="compiler/lib64"
+
+  COMMON_LIB=("libgraph.so" "libregister.so" "liberror_manager.so")
+  PARSER_LIB=("lib_caffe_parser.so" "libfmk_onnx_parser.so" "libfmk_parser.so" "libparser_common.so")
+
+  rm -rf ${OUTPUT_PATH:?}/${COMPILER_PATH}/
+
+  mk_dir "${OUTPUT_PATH}/${COMPILER_PATH}"
+
+  find output/ -name parser_lib.tar -exec rm {} \;
+
+  cd "${OUTPUT_PATH}"
+
+  for lib in "${PARSER_LIB[@]}";
+  do
+    find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "$lib" -exec cp -f {} ${OUTPUT_PATH}/${COMPILER_PATH} \;
+  done
+
+  for lib in "${COMMON_LIB[@]}";
+  do
+    find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "$lib" -exec cp -f {} ${OUTPUT_PATH}/${COMPILER_PATH} \;
+  done
+
+  find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "libc_sec.so" -exec cp -f {} ${OUTPUT_PATH}/${COMPILER_PATH} \;
+
+  tar -cf parser_lib.tar compiler
+}
+
 if [[ "X$ENABLE_PARSER_UT" = "Xoff" && "X$ENABLE_PARSER_ST" = "Xoff" ]]; then
-  generate_package
+  if [[ "X$ALL_IN_ONE_ENABLE" = "X1" ]]; then
+    generate_package_for_cann
+  else
+    generate_package
+  fi
 fi
 echo "---------------- Parser package archive generated ----------------"
