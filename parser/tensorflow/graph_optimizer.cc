@@ -1508,9 +1508,19 @@ Status ParserGraphOptimizer::UpdateGraph(vector<NodePtr> &nodes) {
 
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(nodes.size() == 0, return PARAM_INVALID, "nodes is empty.");
 
+  std::string fusion_op_name;
+  for (auto node : nodes) {
+    fusion_op_name += node->GetName();
+  }
+
+  const uint32_t kFusionOpNameMaxLen = 1024;
+  if (fusion_op_name.size() > kFusionOpNameMaxLen) {
+    fusion_op_name = nodes[0]->GetName();
+  }
+
   OpDescPtr fusion_node_opdef = nullptr;
   GE_MAKE_SHARED(
-      fusion_node_opdef = std::make_shared<OpDesc>(nodes[0]->GetOpDesc()->GetName(), nodes[0]->GetOpDesc()->GetType()),
+      fusion_node_opdef = std::make_shared<OpDesc>(fusion_op_name, nodes[0]->GetOpDesc()->GetType()),
       fusion_node_opdef = nullptr;
       return FAILED);
 
