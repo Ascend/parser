@@ -55,7 +55,7 @@ const int kWarningThreshold = 536870912 * 2; // 536870912 represent 512M
 const uint32_t kSetOutputWithNodeAndIndex = 0x1;
 const uint32_t kSetOutputWithTensorName = 0x2;
 const uint32_t kSetOutputModeMixed = 0x3;
-const std::unordered_set<domi::FrameworkType> kSupportTensorAsOutput = {
+const std::set<domi::FrameworkType> kSupportTensorAsOutput = {
   domi::CAFFE,
   domi::ONNX
 };
