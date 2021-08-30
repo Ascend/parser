@@ -424,7 +424,7 @@ domi::Status GraphToFunctionDef::DavGraphToFunctionDef(ge::ComputeGraphPtr graph
     }
 
     // Analysis of nodedef of original tensorflow
-    ge::GeAttrValue::BYTES nodedef_bytes;
+    ge::Buffer nodedef_bytes;
     GE_CHK_BOOL_RET_STATUS(ge::AttrUtils::GetBytes(node->GetOpDesc(), ge::ATTR_NAME_FRAMEWORK_NODE_DEF, nodedef_bytes),
                            PARAM_INVALID, "Get type attr nodedef failed.");
     domi::tensorflow::NodeDef node_def_;

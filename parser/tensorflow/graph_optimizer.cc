@@ -515,10 +515,10 @@ Status SetNodedefProto(domi::tensorflow::NodeDef &proto, ge::NodePtr n, string o
   return SUCCESS;
 }
 
-typedef Status (*PIOListHandle)(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_INT &output_list,
+typedef Status (*PIOListHandle)(std::vector<int64_t> &input_list, std::vector<int64_t> &output_list,
                                 ge::OpDescPtr &opDesc);
 
-Status GatherV2IOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_INT &output_list,
+Status GatherV2IOList(std::vector<int64_t> &input_list, std::vector<int64_t> &output_list,
                       ge::OpDescPtr &opDesc) {
   int tparams;
   GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "Tparams", tparams)),
@@ -546,7 +546,7 @@ Status GatherV2IOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LI
   return SUCCESS;
 }
 
-Status ConstIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_INT &output_list,
+Status ConstIOList(std::vector<int64_t> &input_list, std::vector<int64_t> &output_list,
                    ge::OpDescPtr &opDesc) {
   int dtype;
   GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "dtype", dtype)), return PARAM_INVALID, "Get dtype error.");
@@ -556,7 +556,7 @@ Status ConstIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_
   return SUCCESS;
 }
 
-Status MaxMinIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_INT &output_list,
+Status MaxMinIOList(std::vector<int64_t> &input_list, std::vector<int64_t> &output_list,
                     ge::OpDescPtr &opDesc) {
   int attrT;
   GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", attrT)),
@@ -574,7 +574,7 @@ Status MaxMinIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST
   return SUCCESS;
 }
 
-Status CastIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_INT &output_list,
+Status CastIOList(std::vector<int64_t> &input_list, std::vector<int64_t> &output_list,
                   ge::OpDescPtr &opDesc) {
   int srcT;
   int dstT;
@@ -592,7 +592,7 @@ Status CastIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_I
   return SUCCESS;
 }
 
-Status AddIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_INT &output_list, ge::OpDescPtr &opDesc) {
+Status AddIOList(std::vector<int64_t> &input_list, std::vector<int64_t> &output_list, ge::OpDescPtr &opDesc) {
   int type;
   GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", type)),
                    REPORT_CALL_ERROR("E19999", "Get Attr:T from op:%s(%s) failed",
@@ -607,7 +607,7 @@ Status AddIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_IN
   return SUCCESS;
 }
 
-Status LessIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_INT &output_list,
+Status LessIOList(std::vector<int64_t> &input_list, std::vector<int64_t> &output_list,
                   ge::OpDescPtr &opDesc) {
   int dtype;
   GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", dtype)),
@@ -622,7 +622,7 @@ Status LessIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_I
   return SUCCESS;
 }
 
-Status MulIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_INT &output_list, ge::OpDescPtr &opDesc) {
+Status MulIOList(std::vector<int64_t> &input_list, std::vector<int64_t> &output_list, ge::OpDescPtr &opDesc) {
   int dataType;
   GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, ge::ATTR_NAME_T, dataType)),
                    REPORT_CALL_ERROR("E19999", "Get Attr:%s from op:%s(%s) failed", ge::ATTR_NAME_T.c_str(),
@@ -638,7 +638,7 @@ Status MulIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_IN
   return SUCCESS;
 }
 
-Status RealDivIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_INT &output_list,
+Status RealDivIOList(std::vector<int64_t> &input_list, std::vector<int64_t> &output_list,
                      ge::OpDescPtr &opDesc) {
   int t;
   GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", t)),
@@ -654,7 +654,7 @@ Status RealDivIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIS
   return SUCCESS;
 }
 
-Status SelectIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_INT &output_list,
+Status SelectIOList(std::vector<int64_t> &input_list, std::vector<int64_t> &output_list,
                     ge::OpDescPtr &opDesc) {
   int t;
   GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", t)),
@@ -671,7 +671,7 @@ Status SelectIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST
   return SUCCESS;
 }
 
-Status SqrtIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_INT &output_list,
+Status SqrtIOList(std::vector<int64_t> &input_list, std::vector<int64_t> &output_list,
                   ge::OpDescPtr &opDesc) {
   int dataType;
   GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, ge::ATTR_NAME_T, dataType)),
@@ -687,7 +687,7 @@ Status SqrtIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_I
   return SUCCESS;
 }
 
-Status TruncatedNormalIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_INT &output_list,
+Status TruncatedNormalIOList(std::vector<int64_t> &input_list, std::vector<int64_t> &output_list,
                              ge::OpDescPtr &opDesc) {
   int t;
   int dtype;
@@ -707,7 +707,7 @@ Status TruncatedNormalIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrVa
   return SUCCESS;
 }
 
-Status PackIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_INT &output_list,
+Status PackIOList(std::vector<int64_t> &input_list, std::vector<int64_t> &output_list,
                   ge::OpDescPtr &opDesc) {
   int t;
   int n;
@@ -729,7 +729,7 @@ Status PackIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_I
   return SUCCESS;
 }
 
-Status DropOutGenMaskIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_INT &output_list,
+Status DropOutGenMaskIOList(std::vector<int64_t> &input_list, std::vector<int64_t> &output_list,
                             ge::OpDescPtr &opDesc) {
   input_list.push_back(domi::tensorflow::DT_INT64);
   input_list.push_back(domi::tensorflow::DT_FLOAT);
@@ -738,7 +738,7 @@ Status DropOutGenMaskIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrVal
   return SUCCESS;
 }
 
-Status ExpandDimsIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_INT &output_list,
+Status ExpandDimsIOList(std::vector<int64_t> &input_list, std::vector<int64_t> &output_list,
                         ge::OpDescPtr &opDesc) {
   int dataType;
   int dimType;
@@ -759,7 +759,7 @@ Status ExpandDimsIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::
   return SUCCESS;
 }
 
-Status SqueezeIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIST_INT &output_list,
+Status SqueezeIOList(std::vector<int64_t> &input_list, std::vector<int64_t> &output_list,
                      ge::OpDescPtr &opDesc) {
   // Set - TENSORFLOW_IN_DATATYPE/TENSORFLOW_OUT_DATATYPE
   int dataType;
@@ -785,7 +785,7 @@ Status SqueezeIOList(ge::GeAttrValue::LIST_INT &input_list, ge::GeAttrValue::LIS
   return SUCCESS;
 }
 
-Status TopKV2IOList(ge::GeAttrValue::LIST_INT &inputList, ge::GeAttrValue::LIST_INT &outputList,
+Status TopKV2IOList(std::vector<int64_t> &inputList, std::vector<int64_t> &outputList,
                     ge::OpDescPtr &opDesc) {
   int t;
   GE_CHK_BOOL_EXEC((ge::AttrUtils::GetInt(opDesc, "T", t)),
@@ -829,8 +829,8 @@ Status CreateNodeDefBytes(ge::NodePtr n, string originalType, map<string, PIOLis
   GELOGI("n->GetName() = %s.\n", n->GetName().c_str());
   // Set - NodeDef PROTO
   domi::tensorflow::NodeDef proto;
-  ge::GeAttrValue::LIST_INT inputList;
-  ge::GeAttrValue::LIST_INT outputList;
+  std::vector<int64_t> inputList;
+  std::vector<int64_t> outputList;
   ret = SetNodedefProto(proto, n, originalType);
   GE_CHK_BOOL_RET_STATUS(ret == SUCCESS, ret, "SetNodedefProto failed.");
 
@@ -891,7 +891,7 @@ Status CreateNodeDefBytes(ge::NodePtr n, string originalType, map<string, PIOLis
                   return PARAM_INVALID);
 
   // Set - ATTR_NAME_FRAMEWORK_NODE_DEF
-  ge::GeAttrValue::BYTES nodeDefBytes;
+  ge::Buffer nodeDefBytes;
   (void)ge::AttrUtils::SetZeroCopyBytes(
       opDesc, ge::ATTR_NAME_FRAMEWORK_NODE_DEF,
       nodeDefBytes.CopyFrom(reinterpret_cast<const uint8_t *>(nodefStr.data()), nodefStr.length()));
@@ -1279,7 +1279,7 @@ Status CreateFuncDefBytes(ge::NodePtr n, string original_type, string func_bin_p
 
   GELOGI("len =%d\n", len);
 
-  ge::GeAttrValue::BYTES funcDefBytes;
+  ge::Buffer funcDefBytes;
   funcDefBytes = ge::Buffer::CopyFrom((std::uint8_t *)buf, len);
   (void)ge::AttrUtils::SetBytes(opDesc, ge::ATTR_NAME_FRAMEWORK_FUNC_DEF, funcDefBytes);
   GELOGI("funcDefBytes.GetSize() =%zu", funcDefBytes.GetSize());
@@ -1453,7 +1453,7 @@ Status CollectNodeFuncs(vector<ge::NodePtr> &nodes, FunctionDefLibrary *library)
     GE_CHECK_NOTNULL(node);
     OpDescPtr opDef = node->GetOpDesc();
     string funcdefStr;
-    ge::GeAttrValue::BYTES funcDefBytes;
+    ge::Buffer funcDefBytes;
 
     GE_IF_BOOL_EXEC(
         AttrUtils::GetBytes(opDef, ge::ATTR_NAME_FRAMEWORK_FUNC_DEF, funcDefBytes), FunctionDefLibrary funcLib;
@@ -1648,7 +1648,7 @@ Status ParserGraphOptimizer::LinkInnerAnchor(unordered_map<string, ge::NodePtr> 
 // rebuild output anchor
 Status ParserGraphOptimizer::RebuildOutputAnchors(vector<ge::OutDataAnchorPtr> &output_anchors,
                                                   ge::OpDescPtr fusion_op_desc) {
-  ge::GeAttrValue::LIST_INT output_list;
+  std::vector<int64_t> output_list;
   GE_CHECK_NOTNULL(fusion_op_desc);
 
   // create input desc
@@ -1679,7 +1679,7 @@ Status ParserGraphOptimizer::RebuildOutputAnchors(vector<ge::OutDataAnchorPtr> &
 // rebuild input desc
 Status ParserGraphOptimizer::RebuildInputAnchors(vector<ge::InDataAnchorPtr> &input_anchors,
                                                  ge::OpDescPtr fusion_op_desc) {
-  ge::GeAttrValue::LIST_INT input_list;
+  std::vector<int64_t> input_list;
   GE_CHECK_NOTNULL(fusion_op_desc);
   // add input desc
   for (auto in_anchor : input_anchors) {
