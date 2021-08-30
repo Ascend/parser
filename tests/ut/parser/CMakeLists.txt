@@ -356,5 +356,5 @@ target_link_libraries(ut_parser
     ut_parser_proto
     -Wl,--whole-archive ut_parser_common -Wl,--no-whole-archive
     ut_parser_graph ut_parser_register error_manager_stub mmpa_stub attr_util_stub
-    gtest gtest_main slog_stub ascend_protobuf c_sec  -lrt -ldl -lgcov
+    gtest gtest_main slog_stub ascend_protobuf c_sec json -lrt -ldl -lgcov
 )

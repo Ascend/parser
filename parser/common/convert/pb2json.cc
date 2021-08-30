@@ -18,6 +18,7 @@
 // Description: This imply file for protobuf message and json interconversion
 
 #include "common/convert/pb2json.h"
+#include <google/protobuf/text_format.h>
 #include <set>
 #include <string>
 #include "securec.h"
@@ -129,8 +130,11 @@ void Pb2Json::OneField2Json(const ProtobufMsg &message, const ProtobufFieldDescr
 
     case ProtobufFieldDescriptor::TYPE_BYTES: {
       string field_name = field->name();
-      string type_bytes = reflection->GetString(message, field);
-      json[field_name] = TypeBytes2String(field_name, type_bytes);
+      std::string scratch;
+      std::string value = reflection->GetStringReference(message, field, &scratch);
+      std::string cescape_value = google::protobuf::CEscape(value);
+      GELOGD("After cescape data:%s", cescape_value.c_str());
+      json[field_name] = cescape_value;
       break;
     }
 
