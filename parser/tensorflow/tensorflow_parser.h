@@ -649,6 +649,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
   Status ParseOpParams(const domi::tensorflow::NodeDef *node_def, ge::OpDescPtr &op, shared_ptr<OpParser> &op_parser);
   Status CheckAndUpdateInputDesc(ge::ComputeGraphPtr &compute_graph);
   static Status UpdateOutputsInfo(const ParserUtils::OutputMapping &final_output_nodes);
+  static Status AddExternalGraph(ComputeGraphPtr &root_graph);
 
     /**
    * save <node_name, node_def>
