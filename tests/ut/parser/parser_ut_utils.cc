@@ -16,6 +16,7 @@
 
 #include "ut/parser/parser_ut_utils.h"
 #include "framework/common/debug/ge_log.h"
+#include "graph/utils/graph_utils.h"
 
 namespace ge {
 void ParerUTestsUtils::ClearParserInnerCtx() {
@@ -41,4 +42,29 @@ void ParerUTestsUtils::ClearParserInnerCtx() {
   ge::GetParserContext().enable_scope_fusion_passes = "";
   GELOGI("Clear parser inner context successfully.");
 }
+namespace ut {
+NodePtr GraphBuilder::AddNode(const std::string &name, const std::string &type, int in_cnt, int out_cnt, Format format,
+                              DataType data_type, std::vector<int64_t> shape) {
+  auto tensor_desc = std::make_shared<GeTensorDesc>();
+  tensor_desc->SetShape(GeShape(std::move(shape)));
+  tensor_desc->SetFormat(format);
+  tensor_desc->SetDataType(data_type);
+
+  auto op_desc = std::make_shared<OpDesc>(name, type);
+  for (int i = 0; i < in_cnt; ++i) {
+    op_desc->AddInputDesc(tensor_desc->Clone());
+  }
+  for (int i = 0; i < out_cnt; ++i) {
+    op_desc->AddOutputDesc(tensor_desc->Clone());
+  }
+
+  return graph_->AddNode(op_desc);
+}
+void GraphBuilder::AddDataEdge(const NodePtr &src_node, int src_idx, const NodePtr &dst_node, int dst_idx) {
+  GraphUtils::AddEdge(src_node->GetOutDataAnchor(src_idx), dst_node->GetInDataAnchor(dst_idx));
+}
+void GraphBuilder::AddControlEdge(const NodePtr &src_node, const NodePtr &dst_node) {
+  GraphUtils::AddEdge(src_node->GetOutControlAnchor(), dst_node->GetInControlAnchor());
+}
+}  // namespace ut
 }  // namespace ge
