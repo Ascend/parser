@@ -266,11 +266,12 @@ void AclGrphParseUtil::SetDefaultFormat() {
 
 domi::Status AclGrphParseUtil::ParseAclOutputNodes(const string &out_nodes) {
   try {
+    ge::GetParserContext().out_nodes_map.clear();
+    ge::GetParserContext().user_out_nodes.clear();
+    ge::GetParserContext().user_out_tensors.clear();
+    ge::GetParserContext().default_out_nodes.clear();
     // parse output node
     if (!out_nodes.empty()) {
-      ge::GetParserContext().out_nodes_map.clear();
-      ge::GetParserContext().user_out_nodes.clear();
-      ge::GetParserContext().user_out_tensors.clear();
       uint32_t set_output_mode = 0;
 
       vector<string> nodes_v = StringUtils::Split(out_nodes, ';');
