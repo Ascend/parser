@@ -52,7 +52,7 @@ namespace {
   }
 }
 
-TEST_F(UtestGraphOptimizer, graph_optimizer) {
+TEST_F(UtestGraphOptimizer, graph_optimizer) {
   ge::ComputeGraphPtr graph = MakeGraph();
   ge::IteratorFusionPass iteratorFusionPass(domi::TENSORFLOW);
   EXPECT_NE(iteratorFusionPass.Run(graph),ge::SUCCESS);
@@ -61,11 +61,11 @@ TEST_F(UtestGraphOptimizer, graph_optimizer) {
 TEST_F(UtestGraphOptimizer, graph_optimizer_output) {
   ge::ComputeGraphPtr graph = MakeGraph();
   domi::FrameworkType type = domi::TENSORFLOW;
-  ge::ParserGraphOptimizer parserGraphOptimizer(graph,type);
-  vector<ge::InDataAnchorPtr> input_anchors;
-  vector<ge::OutDataAnchorPtr> output_anchors;
-  ge::OpDescPtr fusion_op_desc;
-  EXPECT_NE(parserGraphOptimizer.RebuildInputAnchors(input_anchors,fusion_op_desc),ge::SUCCESS);
+  ge::ParserGraphOptimizer parserGraphOptimizer(graph,type);
+  vector<ge::InDataAnchorPtr> input_anchors;
+  vector<ge::OutDataAnchorPtr> output_anchors;
+  ge::OpDescPtr fusion_op_desc;
+  EXPECT_NE(parserGraphOptimizer.RebuildInputAnchors(input_anchors,fusion_op_desc),ge::SUCCESS);
   EXPECT_NE(parserGraphOptimizer.RebuildOutputAnchors(output_anchors,fusion_op_desc),ge::SUCCESS);
 }
 }
