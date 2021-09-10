@@ -91,9 +91,6 @@ const char *const kShapeNodeName = "Shape";
 
 Status ParserGraphOptimizer::FusionFmkop() {
   GELOGI("graph_optimizer.cpp && FustionFmkop()");
-  GELOGI("GetLocalFmkopFlag() =%d", GetLocalFmkopFlag());
-  GE_IF_BOOL_EXEC(GetLocalFmkopFlag() == 1, MakeTfProtoDef());
-
   GE_CHECK_NOTNULL(graph_);
   std::unordered_map<string, std::vector<NodePtr>> node_cluser_Map;
   GE_CHK_STATUS_RET(MarkForFusion(node_cluser_Map), "find framework node to be fused fail.");
