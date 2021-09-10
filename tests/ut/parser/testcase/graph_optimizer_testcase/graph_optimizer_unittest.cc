@@ -59,7 +59,7 @@ TEST_F(UtestGraphOptimizer, graph_optimizer) {
 }
 
 TEST_F(UtestGraphOptimizer, graph_optimizer_output) {
-  ge::ComputeGraph graph = MakeGraph();
+  ge::ComputeGraphPtr graph = MakeGraph();
   domi::FrameworkType type = domi::TENSORFLOW;
   ge::ParserGraphOptimizer parserGraphOptimizer(graph,type);
   vector<ge::InDataAnchorPtr> input_anchors;
