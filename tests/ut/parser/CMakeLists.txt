@@ -307,7 +307,6 @@ include_directories(${PARSER_DIR}/metadef/third_party/graphengine/inc/framework)
 
 
 set(PARSER_UT_FILES
-    "graph_builder_utils.cc"
     "parser_ut_utils.cc"
     "testcase/common/acl_graph_parser_unittest.cc"
     "testcase/onnx_parser_testcase/onnx_parser_unittest.cc"

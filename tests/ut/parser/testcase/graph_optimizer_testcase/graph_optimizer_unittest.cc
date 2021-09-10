@@ -2,7 +2,7 @@
 #include <iostream>
 #include "graph/utils/attr_utils.h"
 #include "graph/debug/ge_attr_define.h"
-#include "graph_builder_utils.h"
+#include "parser_ut_utils.cc"
 #include "common/util.h"
 #include "tensorflow/iterator_fusion_pass.h"
 #include "parser/common/acl_graph_parser_util.h"
