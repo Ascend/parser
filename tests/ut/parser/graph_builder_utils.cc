@@ -40,9 +40,9 @@ NodePtr GraphBuilder::AddNode(const std::string &name, const std::string &type, 
 void GraphBuilder::AddDataEdge(const NodePtr &src_node, int src_idx, const NodePtr &dst_node, int dst_idx) {
   GraphUtils::AddEdge(src_node->GetOutDataAnchor(src_idx), dst_node->GetInDataAnchor(dst_idx));
 }
-void GraphBuilder::AddControlEdge(const NodePtr &src_node, const NodePtr &dst_node) {
-  GraphUtils::AddEdge(src_node->GetOutControlAnchor(), dst_node->GetInControlAnchor());
-}
+// void GraphBuilder::AddControlEdge(const NodePtr &src_node, const NodePtr &dst_node) {
+//   GraphUtils::AddEdge(src_node->GetOutControlAnchor(), dst_node->GetInControlAnchor());
+// }
 
 }  // namespace ut
 }  // namespace ge
