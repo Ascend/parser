@@ -2375,7 +2375,7 @@ Status TensorFlowModelParser::ParseProto(const google::protobuf::Message *proto,
   ge::parser::PassManager iterator_fusion_pass;
   try {
     (void)iterator_fusion_pass.AddPass("ParseProto::IteratorFusionPass",
-                                       new ge::IteratorFusionPass(domi::TENSORFLOW, false));
+                                       new ge::IteratorFusionPass(domi::TENSORFLOW));
   } catch (std::bad_alloc &e) {
     GELOGE(INTERNAL_ERROR, "Add pass failed, bad memory allocation occurs.");
     return INTERNAL_ERROR;

@@ -35,68 +35,16 @@ namespace ge {
 class ParserGraphOptimizer {
  public:
   explicit ParserGraphOptimizer(ge::ComputeGraphPtr graph, domi::FrameworkType type = domi::TENSORFLOW)
-      : graph_(graph), fmktype_(type), local_fmk_op_flag_(false) {}
+      : graph_(graph), fmktype_(type) {}
 
   ~ParserGraphOptimizer() {}
 
-  domi::Status Optimize();
-
-  domi::Status OptimizeAfterCal();
-
   domi::Status FusionFmkop();
-
-  inline bool IsHCOMOp(const string &op_type) {
-    return (op_type == ge::parser::HCOMALLREDUCE) || (op_type == ge::parser::HCOMALLGATHER) ||
-           (op_type == ge::parser::HCOMBROADCAST) || (op_type == ge::parser::HCOMSEND) ||
-           (op_type == ge::parser::HCOMRECEIVE) || (op_type == "HcomReduceScatter");
-  }
-
-  void SetLocalFmkopFlag(bool isLocalFmkopFlag) { local_fmk_op_flag_ = isLocalFmkopFlag; }
-
-  const bool GetLocalFmkopFlag() const { return local_fmk_op_flag_; }
-
-  void SetFuncBinPath(std::string isFuncBinPath) { func_bin_path_ = isFuncBinPath; }
-  const std::string GetFuncBinPath() const { return func_bin_path_; }
-
-  domi::Status InsertHWCK2FZ(ge::OutDataAnchorPtr src_anchor, ge::InDataAnchorPtr dst_anchor,
-                             enum ge::Format srcOutFormat, enum ge::DataType srcOutDatatype,
-                             enum ge::Format dstInFormat, enum ge::DataType dstInDatatype);
-
-  domi::Status Insert4DTo5DTransOp(ge::OutDataAnchorPtr src_anchor, ge::InDataAnchorPtr dst_anchor,
-                                   enum ge::Format src_out_format, enum ge::DataType src_out_data_type,
-                                   enum ge::Format dst_in_format, enum ge::DataType dst_in_data_type);
-
-  domi::Status InsertFZ2HWCK(ge::OutDataAnchorPtr src_anchor, ge::InDataAnchorPtr dst_anchor,
-                             enum ge::Format srcOutFormat, enum ge::DataType srcOutDatatype,
-                             enum ge::Format dstInFormat, enum ge::DataType dstInDatatype);
-
-  domi::Status Insert5DTo4DTransOp(ge::OutDataAnchorPtr src_anchor, ge::InDataAnchorPtr dst_anchor,
-                                   enum ge::Format src_out_format, enum ge::DataType src_out_data_type,
-                                   enum ge::Format dst_in_format, enum ge::DataType dst_in_data_type);
-
-  ge::OpDescPtr CreateCastOp(enum ge::DataType input_datatype, enum ge::DataType output_datatype, ge::Format format);
-
-  ge::OpDescPtr CreatePermuteOp(enum ge::Format input_format, enum ge::Format output_format);
-
-  ge::OpDescPtr CreateTransDataOp(enum ge::Format input_format);
-
-  domi::Status NewNodeAddEdges(ge::OutDataAnchorPtr src_anchor, ge::InDataAnchorPtr dst_anchor, ge::NodePtr first,
-                               ge::NodePtr second, ge::NodePtr third);
-
-  domi::Status InsertVar5DTo4D(ge::OutDataAnchorPtr src_anchor, ge::InDataAnchorPtr dst_anchor,
-                               enum ge::Format srcOutFormat, enum ge::DataType srcOutDatatype,
-                               enum ge::Format dstInFormat, enum ge::DataType dstInDatatype);
-
-  ge::OpDescPtr CreateTranslateOp(enum ge::Format inFormat, ge::DataType inDatatype, enum ge::Format outFormat,
-                                  ge::DataType outDatatype);
 
  private:
   ge::ComputeGraphPtr graph_;
   domi::FrameworkType fmktype_;
-  // local fmkop flag
-  bool local_fmk_op_flag_;
-  std::string func_bin_path_;
-
+ 
   domi::Status FindFmkNodeCluser(unordered_map<string, vector<ge::NodePtr>> &node_cluser_Map);
 
   domi::Status MarkForFusion(unordered_map<string, vector<ge::NodePtr>> &node_cluser_Map);
@@ -122,7 +70,6 @@ class ParserGraphOptimizer {
                                  vector<ge::InControlAnchorPtr> &input_control_anchors,
                                  vector<ge::OutControlAnchorPtr> &output_control_anchors, ge::NodePtr fusion_node);
 
-  domi::Status MakeTfProtoDef();
 };
 }  // namespace ge
 #endif  // GE_GRAPH_OPTIMIZE_GRAPH_OPTIMIZER_H_
