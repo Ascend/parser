@@ -20,7 +20,8 @@ namespace ge
   namespace
   {
     ComputeGraphPtr MakeGraph() {
-      ge::ut::GraphBuilder builder("graph");
+      auto builder = ut::GraphBuilder("graph");
+      //ge::ut::GraphBuilder builder("graph");
       std::string name = "graph";
       std::string original_type;
       original_type = "IteratorV2"; //
