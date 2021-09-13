@@ -2,7 +2,7 @@
 #include <iostream>
 #include "graph/utils/attr_utils.h"
 #include "graph/debug/ge_attr_define.h"
-#include "parser_ut_utils.cc"
+#include "ut/parser/parser_ut_utils.h"
 #include "common/util.h"
 #include "tensorflow/iterator_fusion_pass.h"
 #include "parser/common/acl_graph_parser_util.h"
@@ -20,8 +20,7 @@ namespace ge
   namespace
   {
     ComputeGraphPtr MakeGraph() {
-      auto builder = ut::GraphBuilder("graph");
-      //ge::ut::GraphBuilder builder("graph");
+      ge::ut::GraphBuilder builder("graph");
       std::string name = "graph";
       std::string original_type;
       original_type = "IteratorV2"; //
