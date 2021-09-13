@@ -44,7 +44,7 @@ class ParserGraphOptimizer {
  private:
   ge::ComputeGraphPtr graph_;
   domi::FrameworkType fmktype_;
- 
+
   domi::Status FindFmkNodeCluser(unordered_map<string, vector<ge::NodePtr>> &node_cluser_Map);
 
   domi::Status MarkForFusion(unordered_map<string, vector<ge::NodePtr>> &node_cluser_Map);
