@@ -11,9 +11,9 @@
 #undef private
 namespace ge {
   class UtestGraphOptimizer : public testing::Test {
-    protected:
-      void SetUp() {}
-      void TearDown() {}
+   protected:
+    void SetUp() {}
+    void TearDown() {}
   };
 namespace {
   ComputeGraphPtr MakeGraph() {
