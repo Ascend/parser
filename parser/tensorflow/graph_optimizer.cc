@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright 2020-2021 Huawei Technologies Co., Ltd
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,66 +15,15 @@
  */
 
 #include "graph_optimizer.h"
-#include <map>
-#include <memory>
-#include <unordered_map>
-#include <utility>
-#include "./graph_insert_trans_op.h"
-#include "cce/cce.h"
-#include "cce/dnn.h"
-#include "parser/common/acl_graph_parser_util.h"
-#include "common/op_map.h"
 #include "common/op_types.h"
 #include "common/types_map.h"
 #include "common/util.h"
-#include "framework/common/debug/ge_log.h"
 #include "framework/omg/parser/parser_inner_ctx.h"
-#include "framework/omg/parser/parser_types.h"
 #include "graph/debug/ge_attr_define.h"
-#include "graph/ge_tensor.h"
-#include "graph/types.h"
-#include "graph/utils/attr_utils.h"
-#include "graph/utils/graph_utils.h"
-#include "graph/utils/tensor_utils.h"
 #include "graph/utils/type_utils.h"
 #include "graph_functiondef.h"
 #include "parser/common/acl_graph_parser_util.h"
-#include "proto/tensorflow/attr_value.pb.h"
 #include "register/op_registry.h"
-
-using domi::tensorflow::NodeDef;
-using domi::tensorflow::TensorProto;
-using domi::tensorflow::TensorShapeProto;
-using domi::tensorflow::TensorShapeProto_Dim;
-
-using ge::FORMAT_NC1HWC0;
-using ge::FORMAT_NCHW;
-using ge::FORMAT_NHWC;
-
-using ge::AttrUtils;
-using ge::Buffer;
-using ge::ComputeGraph;
-using ge::ComputeGraphPtr;
-using ge::GE_TENSORFLOW_DATA_TYPE_MAP;
-using ge::GeShape;
-using ge::GeTensorDesc;
-using ge::GeTensorPtr;
-using ge::GRAPH_SUCCESS;
-using ge::GraphToFunctionDef;
-using ge::GraphUtils;
-using ge::InControlAnchorPtr;
-using ge::InDataAnchorPtr;
-using ge::is_dataset_op_vec;
-using ge::local_framework_op_vec;
-using ge::NodePtr;
-using ge::OpDesc;
-using ge::OpDescPtr;
-using ge::OutControlAnchorPtr;
-using ge::OutDataAnchorPtr;
-using ge::TensorUtils;
-
-using ge::ATTR_NAME_INPUT_DATATYPE;
-using ge::ATTR_NAME_OUTPUT_DATATYPE;
 
 namespace ge {
 REGISTER_OPTYPE_DEFINE(TF_MAXIMUM_GRAD, "MaximumGrad");
