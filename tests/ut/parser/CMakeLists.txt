@@ -314,6 +314,7 @@ set(PARSER_UT_FILES
     "testcase/onnx_parser_testcase/message2operator_unittest.cc"
     "testcase/tensorflow_parser_testcase/tensorflow_parser_unittest.cc"
     "testcase/tensorflow_parser_testcase/tensorflow_auto_mapping_parser_adapter_unittest.cc"
+    "testcase/graph_optimizer_testcase/graph_optimizer_unittest.cc"
 )
 
 ############ libut_parser_common.a ############

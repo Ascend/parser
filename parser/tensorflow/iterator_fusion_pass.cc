@@ -32,8 +32,6 @@ Status IteratorFusionPass::Run(ge::ComputeGraphPtr graph) {
     REPORT_CALL_ERROR("E19999", "New ParserGraphOptimizer failed");
     return FAILED;
   }
-
-  graph_optimizer->SetLocalFmkopFlag(local_fmk_op_flag_);
   return graph_optimizer->FusionFmkop();
 }
 }  // namespace ge

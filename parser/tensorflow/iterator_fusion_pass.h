@@ -23,8 +23,8 @@
 namespace ge {
 class IteratorFusionPass : public GraphPass {
  public:
-  IteratorFusionPass(domi::FrameworkType type, bool local_fmk_op_flag)
-      : fmk_type_(type), local_fmk_op_flag_(local_fmk_op_flag) {}
+  IteratorFusionPass(domi::FrameworkType type)
+      : fmk_type_(type) {}
 
   virtual ~IteratorFusionPass() {}
 
@@ -32,7 +32,6 @@ class IteratorFusionPass : public GraphPass {
 
  private:
   domi::FrameworkType fmk_type_;
-  bool local_fmk_op_flag_;
 };
 }  // namespace ge
 

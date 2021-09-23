@@ -83,61 +83,61 @@ class GeAttrValueImp {
   static map<proto::AttrDef::ValueCase, GeAttrValue::ValueType> attr_val_one_type_map_;
   static map<proto::AttrDef_ListValue_ListValueType, GeAttrValue::ValueType> attr_val_list_type_map_;
 
-  static bool SetValue(proto::AttrDef &attr_def, GeAttrValue::INT val);
-  static bool SetValue(proto::AttrDef &attr_def, GeAttrValue::FLOAT val);
-  static bool SetValue(proto::AttrDef &attr_def, GeAttrValue::BOOL val);
-  static bool SetValue(proto::AttrDef &attr_def, const GeAttrValue::STR &val);
+  static bool SetValue(proto::AttrDef &attr_def, int64_t val);
+  static bool SetValue(proto::AttrDef &attr_def, float val);
+  static bool SetValue(proto::AttrDef &attr_def, bool val);
+  static bool SetValue(proto::AttrDef &attr_def, const std::string &val);
   static bool SetValue(proto::AttrDef &attr_def, const ConstGeTensorPtr &val);
   static bool SetValue(proto::AttrDef &attr_def, const GeTensor &val);
-  static bool SetValue(proto::AttrDef &attr_def, const GeAttrValue::TENSOR_DESC &val);
-  static bool SetValue(proto::AttrDef &attr_def, const GeAttrValue::BYTES &val);
-  static bool SetValue(proto::AttrDef &attr_def, const GeAttrValue::NAMED_ATTRS &val);
-  static bool SetValue(proto::AttrDef &attr_def, const GeAttrValue::GRAPH &val);
+  static bool SetValue(proto::AttrDef &attr_def, const GeTensorDesc &val);
+  static bool SetValue(proto::AttrDef &attr_def, const Buffer &val);
+  static bool SetValue(proto::AttrDef &attr_def, const NamedAttrs &val);
+  static bool SetValue(proto::AttrDef &attr_def, const ComputeGraphPtr &val);
   static bool SetValue(proto::AttrDef &attr_def, const vector<int64_t> &val);
   static bool SetValue(proto::AttrDef &attr_def, const vector<int32_t> &val);
   static bool SetValue(proto::AttrDef &attr_def, const vector<uint32_t> &val);
-  static bool SetValue(proto::AttrDef &attr_def, const GeAttrValue::LIST_FLOAT &val);
-  static bool SetValue(proto::AttrDef &attr_def, const GeAttrValue::LIST_BOOL &val);
-  static bool SetValue(proto::AttrDef &attr_def, const GeAttrValue::LIST_STR &val);
+  static bool SetValue(proto::AttrDef &attr_def, const std::vector<float> &val);
+  static bool SetValue(proto::AttrDef &attr_def, const std::vector<bool> &val);
+  static bool SetValue(proto::AttrDef &attr_def, const std::vector<std::string> &val);
   static bool SetValue(proto::AttrDef &proto_attr_val, const vector<GeTensorPtr> &value);
   static bool SetValue(proto::AttrDef &proto_attr_val, const vector<ConstGeTensorPtr> &value);
   static bool SetValue(proto::AttrDef &attr_def, const vector<GeTensor> &val);
-  static bool SetValue(proto::AttrDef &attr_def, const GeAttrValue::LIST_TENSOR_DESC &val);
-  static bool SetValue(proto::AttrDef &attr_def, const GeAttrValue::LIST_BYTES &val);
-  static bool SetValue(proto::AttrDef &attr_def, const GeAttrValue::LIST_NAMED_ATTRS &val);
-  static bool SetValue(proto::AttrDef &attr_def, const GeAttrValue::LIST_GRAPH &val);
+  static bool SetValue(proto::AttrDef &attr_def, const std::vector<GeTensorDesc> &val);
+  static bool SetValue(proto::AttrDef &attr_def, const std::vector<Buffer> &val);
+  static bool SetValue(proto::AttrDef &attr_def, const std::vector<NamedAttrs> &val);
+  static bool SetValue(proto::AttrDef &attr_def, const std::vector<ComputeGraphPtr> &val);
 
-  static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner, GeAttrValue::INT &val);
-  static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner, GeAttrValue::FLOAT &val);
-  static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner, GeAttrValue::BOOL &val);
-  static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner, GeAttrValue::STR &val);
-  static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner, GeAttrValue::TENSOR &val);
+  static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner, int64_t &val);
+  static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner, float &val);
+  static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner, bool &val);
+  static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner, std::string &val);
+  static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner, GeTensorPtr &val);
   static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner, GeTensor &val);
   static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner,
-                       GeAttrValue::TENSOR_DESC &val);
-  static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner, GeAttrValue::BYTES &val);
+                       GeTensorDesc &val);
+  static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner, Buffer &val);
   static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner,
-                       GeAttrValue::NAMED_ATTRS &val);
-  static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner, GeAttrValue::GRAPH &val);
+                       NamedAttrs &val);
+  static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner, ComputeGraphPtr &val);
   static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner,
-                       GeAttrValue::LIST_INT &val);
+                       std::vector<int64_t> &val);
   static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner,
-                       GeAttrValue::LIST_FLOAT &val);
+                       std::vector<float> &val);
   static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner,
-                       GeAttrValue::LIST_BOOL &val);
+                       std::vector<bool> &val);
   static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner,
-                       GeAttrValue::LIST_STR &val);
+                       std::vector<std::string> &val);
   static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner,
-                       GeAttrValue::LIST_TENSOR &val);
+                       std::vector<GeTensorPtr> &val);
   static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner, vector<GeTensor> &val);
   static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner,
-                       GeAttrValue::LIST_TENSOR_DESC &val);
+                       std::vector<GeTensorDesc> &val);
   static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner,
-                       GeAttrValue::LIST_BYTES &val);
+                       std::vector<Buffer> &val);
   static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner,
-                       GeAttrValue::LIST_NAMED_ATTRS &val);
+                       std::vector<NamedAttrs> &val);
   static bool GetValue(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner,
-                       GeAttrValue::LIST_GRAPH &val);
+                       std::vector<ComputeGraphPtr> &val);
   // Value will be moved
   static bool SetZeroCopyBytes(proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner, Buffer &&buffer);
   static bool GetZeroCopyBytes(const proto::AttrDef &attr_def, const ProtoMsgOwner &proto_msg_owner, Buffer &buffer);
@@ -246,30 +246,30 @@ GeAttrValue GeAttrValue::Copy() const {
     return GRAPH_FAILED;                                                       \
   }
 
-ATTR_VALUE_SET_GET_IMP(GeAttrValue::STR)
-ATTR_VALUE_SET_GET_IMP(vector<GeAttrValue::STR>)
-ATTR_VALUE_SET_GET_IMP(GeAttrValue::INT)
-ATTR_VALUE_SET_GET_IMP(vector<GeAttrValue::INT>)
-ATTR_VALUE_SET_GET_IMP(GeAttrValue::FLOAT)  // lint !e524
-ATTR_VALUE_SET_GET_IMP(vector<GeAttrValue::FLOAT>)
-ATTR_VALUE_SET_GET_IMP(GeAttrValue::BOOL)
-ATTR_VALUE_SET_GET_IMP(vector<GeAttrValue::BOOL>)
-ATTR_VALUE_SET_GET_IMP(GeAttrValue::TENSOR_DESC)
-ATTR_VALUE_SET_GET_IMP(vector<GeAttrValue::TENSOR_DESC>)
-ATTR_VALUE_SET_GET_IMP(GeAttrValue::TENSOR)
-ATTR_VALUE_SET_GET_IMP(vector<GeAttrValue::TENSOR>)
-ATTR_VALUE_SET_GET_IMP(GeAttrValue::GRAPH)
-ATTR_VALUE_SET_GET_IMP(vector<GeAttrValue::GRAPH>)
-ATTR_VALUE_SET_GET_IMP(GeAttrValue::BYTES)
-ATTR_VALUE_SET_GET_IMP(vector<GeAttrValue::BYTES>)
-ATTR_VALUE_SET_GET_IMP(GeAttrValue::NAMED_ATTRS)
-ATTR_VALUE_SET_GET_IMP(vector<GeAttrValue::NAMED_ATTRS>)
+ATTR_VALUE_SET_GET_IMP(std::string)
+ATTR_VALUE_SET_GET_IMP(vector<std::string>)
+ATTR_VALUE_SET_GET_IMP(int64_t)
+ATTR_VALUE_SET_GET_IMP(vector<int64_t>)
+ATTR_VALUE_SET_GET_IMP(float)  // lint !e524
+ATTR_VALUE_SET_GET_IMP(vector<float>)
+ATTR_VALUE_SET_GET_IMP(bool)
+ATTR_VALUE_SET_GET_IMP(vector<bool>)
+ATTR_VALUE_SET_GET_IMP(GeTensorDesc)
+ATTR_VALUE_SET_GET_IMP(vector<GeTensorDesc>)
+ATTR_VALUE_SET_GET_IMP(GeTensorPtr)
+ATTR_VALUE_SET_GET_IMP(vector<GeTensorPtr>)
+ATTR_VALUE_SET_GET_IMP(ComputeGraphPtr)
+ATTR_VALUE_SET_GET_IMP(vector<ComputeGraphPtr>)
+ATTR_VALUE_SET_GET_IMP(Buffer)
+ATTR_VALUE_SET_GET_IMP(vector<Buffer>)
+ATTR_VALUE_SET_GET_IMP(NamedAttrs)
+ATTR_VALUE_SET_GET_IMP(vector<NamedAttrs>)
 /*lint -e665*/
 ATTR_VALUE_SET_GET_IMP(vector<vector<int64_t>>)
 ATTR_VALUE_SET_GET_IMP(vector<vector<float>>)
 /*lint +e665*/
 ATTR_VALUE_SET_GET_IMP(vector<DataType>)        // lint !e665
-ATTR_VALUE_SET_GET_IMP(GeAttrValue::DATA_TYPE)  // lint !e665
+ATTR_VALUE_SET_GET_IMP(DataType)  // lint !e665
 
 #undef ATTR_VALUE_SET_GET_IMP
 
@@ -569,7 +569,7 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<GeTen
   return true;
 }
 
-bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const GeAttrValue::BYTES &value) {
+bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const Buffer &value) {
   if (!AttrUtilsHelper::SetValueCheckType(proto_attr_val, proto::AttrDef::kBt)) {
     return false;
   }
@@ -578,7 +578,7 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const GeAttrValue:
   return true;
 }
 
-bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<GeAttrValue::BYTES> &value) {
+bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<Buffer> &value) {
   if (!AttrUtilsHelper::SetValueCheckAndSetListType(proto_attr_val,
                                                     proto::AttrDef_ListValue_ListValueType_VT_LIST_BYTES)) {
     return false;
@@ -592,7 +592,7 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<GeAtt
   return true;
 }
 
-bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const GeAttrValue::NAMED_ATTRS &value) {
+bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const NamedAttrs &value) {
   if (!AttrUtilsHelper::SetValueCheckType(proto_attr_val, proto::AttrDef::kFunc)) {
     return false;
   }
@@ -606,7 +606,7 @@ bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const GeAttrValue:
   return true;
 }
 
-bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<GeAttrValue::NAMED_ATTRS> &value) {
+bool GeAttrValueImp::SetValue(proto::AttrDef &proto_attr_val, const vector<NamedAttrs> &value) {
   if (!AttrUtilsHelper::SetValueCheckAndSetListType(proto_attr_val,
                                                     proto::AttrDef_ListValue_ListValueType_VT_LIST_NAMED_ATTRS)) {
     return false;
@@ -822,7 +822,7 @@ bool GeAttrValueImp::GetValue(const proto::AttrDef &proto_attr_val, const ProtoM
   return true;
 }
 
-bool GeAttrValueImp::GetValue(const proto::AttrDef &proto_attr_val, const ProtoMsgOwner &, GeAttrValue::BYTES &value) {
+bool GeAttrValueImp::GetValue(const proto::AttrDef &proto_attr_val, const ProtoMsgOwner &, Buffer &value) {
   if (!AttrUtilsHelper::GetValueCheckType(proto_attr_val, proto::AttrDef::kBt)) {
     return false;
   }
@@ -833,7 +833,7 @@ bool GeAttrValueImp::GetValue(const proto::AttrDef &proto_attr_val, const ProtoM
 }
 
 bool GeAttrValueImp::GetValue(const proto::AttrDef &proto_attr_val, const ProtoMsgOwner &,
-                              vector<GeAttrValue::BYTES> &value) {
+                              vector<Buffer> &value) {
   value.clear();
   if (!AttrUtilsHelper::GetValueCheckListType(proto_attr_val, proto::AttrDef_ListValue_ListValueType_VT_LIST_BYTES,
                                               ListValueItemCheck(bt))) {
@@ -847,7 +847,7 @@ bool GeAttrValueImp::GetValue(const proto::AttrDef &proto_attr_val, const ProtoM
 }
 
 bool GeAttrValueImp::GetValue(const proto::AttrDef &proto_attr_val, const ProtoMsgOwner &,
-                              GeAttrValue::NAMED_ATTRS &value) {
+                              NamedAttrs &value) {
   if (!AttrUtilsHelper::GetValueCheckType(proto_attr_val, proto::AttrDef::kFunc)) {
     return false;
   }
@@ -860,7 +860,7 @@ bool GeAttrValueImp::GetValue(const proto::AttrDef &proto_attr_val, const ProtoM
 }
 
 bool GeAttrValueImp::GetValue(const proto::AttrDef &proto_attr_val, const ProtoMsgOwner &,
-                              vector<GeAttrValue::NAMED_ATTRS> &value) {
+                              vector<NamedAttrs> &value) {
   value.clear();
   if (!AttrUtilsHelper::GetValueCheckListType(
           proto_attr_val, proto::AttrDef_ListValue_ListValueType_VT_LIST_NAMED_ATTRS, ListValueItemCheck(na))) {
@@ -868,7 +868,7 @@ bool GeAttrValueImp::GetValue(const proto::AttrDef &proto_attr_val, const ProtoM
   }
   auto &list = proto_attr_val.list();
   for (const auto &item : list.na()) {
-    value.emplace_back(GeAttrValue::NAMED_ATTRS());
+    value.emplace_back(NamedAttrs());
     if (value.empty()) {
       return false;
     }
@@ -1107,7 +1107,7 @@ ATTR_UTILS_SET_GET_IMP(TensorDesc, GeTensorDesc)
 ATTR_UTILS_SET_IMP(Tensor, GeTensorPtr)
 ATTR_UTILS_SET_IMP(Tensor, ConstGeTensorPtr)
 ATTR_UTILS_SET_IMP(Tensor, GeTensor)
-ATTR_UTILS_SET_GET_IMP(NamedAttrs, GeAttrValue::NAMED_ATTRS)
+ATTR_UTILS_SET_GET_IMP(NamedAttrs, NamedAttrs)
 ATTR_UTILS_SET_GET_IMP(Bytes, Buffer)
 ATTR_UTILS_SET_GET_IMP(Graph, ComputeGraphPtr)
 /*lint -e665*/
@@ -1124,7 +1124,7 @@ ATTR_UTILS_SET_GET_IMP(ListTensorDesc, vector<GeTensorDesc>)
 ATTR_UTILS_SET_IMP(ListTensor, vector<GeTensorPtr>)
 ATTR_UTILS_SET_IMP(ListTensor, vector<ConstGeTensorPtr>)
 ATTR_UTILS_SET_IMP(ListTensor, vector<GeTensor>)
-ATTR_UTILS_SET_GET_IMP(ListNamedAttrs, vector<GeAttrValue::NAMED_ATTRS>)
+ATTR_UTILS_SET_GET_IMP(ListNamedAttrs, vector<NamedAttrs>)
 ATTR_UTILS_SET_GET_IMP(ListBytes, vector<Buffer>)
 ATTR_UTILS_SET_GET_IMP(ListGraph, vector<ComputeGraphPtr>)
 ATTR_UTILS_SET_GET_IMP(ListDataType, vector<ge::DataType>)  // lint !e665
