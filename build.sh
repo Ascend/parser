@@ -205,6 +205,14 @@ if [[ "X$ENABLE_PARSER_ST" = "Xon" ]]; then
         echo -e "\033[31m${RUN_TEST_CASE}\033[0m"
         exit 1;
     fi
+    echo "Generating coverage statistics, please wait..."
+    cd ${BASEPATH}
+    rm -rf ${BASEPATH}/cov
+    mkdir ${BASEPATH}/cov
+    lcov -c -d build/tests/st -o cov/tmp.info
+    lcov -r cov/tmp.info '*/output/*' '*/build/opensrc/*' '*/build/proto/*' '*/third_party/*' '*/tests/*' '/usr/local/*' '*/metadef/inc/*' -o cov/coverage.info
+    cd ${BASEPATH}/cov
+    genhtml coverage.info
 fi
 
 # generate output package in tar form, including ut/st libraries/executables
