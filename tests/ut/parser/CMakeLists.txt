@@ -81,6 +81,23 @@ set(MATEDEF_SRC_FILES
     "${PARSER_DIR}/metadef/graph/detail/attributes_holder.cc"
     "${PARSER_DIR}/metadef/graph/format_refiner.cc"
     "${PARSER_DIR}/metadef/graph/ge_attr_define.cc"
+    "${PARSER_DIR}/metadef/graph/any_value.cc"
+    "${PARSER_DIR}/metadef/graph/attr_store.cc"
+    "${PARSER_DIR}/metadef/graph/serialization/attr_serializer_registry.cc"
+    "${PARSER_DIR}/metadef/graph/serialization/attr_serializer.cc"
+    "${PARSER_DIR}/metadef/graph/serialization/bool_serializer.cc"
+    "${PARSER_DIR}/metadef/graph/serialization/buffer_serializer.cc"
+    "${PARSER_DIR}/metadef/graph/serialization/data_type_serializer.cc"
+    "${PARSER_DIR}/metadef/graph/serialization/float_serializer.cc"
+    "${PARSER_DIR}/metadef/graph/serialization/graph_serializer.cc"
+    "${PARSER_DIR}/metadef/graph/serialization/int_serializer.cc"
+    "${PARSER_DIR}/metadef/graph/serialization/list_list_float_serializer.cc"
+    "${PARSER_DIR}/metadef/graph/serialization/list_list_int_serializer.cc"
+    "${PARSER_DIR}/metadef/graph/serialization/list_value_serializer.cc"
+    "${PARSER_DIR}/metadef/graph/serialization/named_attrs_serializer.cc"
+    "${PARSER_DIR}/metadef/graph/serialization/string_serializer.cc"
+    "${PARSER_DIR}/metadef/graph/serialization/tensor_desc_serializer.cc"
+    "${PARSER_DIR}/metadef/graph/serialization/tensor_serializer.cc"
     "${PARSER_DIR}/metadef/graph/ge_tensor.cc"
     "${PARSER_DIR}/metadef/graph/gnode.cc"
     "${PARSER_DIR}/metadef/graph/graph.cc"
@@ -122,6 +139,7 @@ include_directories(${PARSER_DIR}/metadef/inc/graph)
 include_directories(${PARSER_DIR}/metadef/inc/external)
 include_directories(${PARSER_DIR}/metadef/inc/external/graph)
 include_directories(${PARSER_DIR}/metadef/graph)
+include_directories(${PARSER_DIR}/metadef/register)
 include_directories(${PARSER_DIR}/metadef/third_party)
 include_directories(${PARSER_DIR}/metadef/third_party/graphengine/inc)
 include_directories(${PARSER_DIR}/metadef/third_party/graphengine/inc/external)
@@ -167,8 +185,8 @@ set(REGISTER_SRC_FILES
     "${PARSER_DIR}/metadef/register/infer_data_slice_registry.cc"
     "${PARSER_DIR}/metadef/register/ops_kernel_builder_registry.cc"
     "${PARSER_DIR}/metadef/register/op_kernel_registry.cpp"
-    "${PARSER_DIR}/metadef/register/op_tiling.cpp"
-    "${PARSER_DIR}/metadef/register/op_tiling_registry.cpp"
+    "${PARSER_DIR}/metadef/register/op_tiling/op_tiling.cc"
+    "${PARSER_DIR}/metadef/register/op_tiling/op_tiling_registry.cc"
     "${PARSER_DIR}/metadef/register/register.cpp"
     "${PARSER_DIR}/metadef/register/register_format_transfer.cc"
     "${PARSER_DIR}/metadef/register/register_pass.cpp"
@@ -186,6 +204,7 @@ include_directories(${CMAKE_CURRENT_LIST_DIR})
 include_directories(${CMAKE_BINARY_DIR}/proto/ge)
 include_directories(${PARSER_DIR}/metadef)
 include_directories(${PARSER_DIR}/metadef/graph)
+include_directories(${PARSER_DIR}/metadef/register)
 include_directories(${PARSER_DIR}/metadef/inc)
 include_directories(${PARSER_DIR}/metadef/inc/external)
 include_directories(${PARSER_DIR}/metadef/inc/register)
