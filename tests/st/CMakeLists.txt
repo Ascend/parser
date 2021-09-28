@@ -14,7 +14,7 @@
 # ============================================================================
 
 project(st_parser)
-
+add_compile_options(-g --coverage -fprofile-arcs -fPIC -O0 -ftest-coverage)
 set(CMAKE_CXX_STANDARD 11)
 
 ################################################################################
@@ -115,6 +115,8 @@ set(MATEDEF_SRC_FILES
     "${PARSER_DIR}/metadef/graph/shape_refiner.cc"
     "${PARSER_DIR}/metadef/graph/tensor.cc"
     "${PARSER_DIR}/metadef/graph/types.cc"
+    "${PARSER_DIR}/metadef/graph/resource_context_mgr.cc"
+    "${PARSER_DIR}/metadef/graph/utils/constant_utils.cc"
     "${PARSER_DIR}/metadef/graph/utils/anchor_utils.cc"
     "${PARSER_DIR}/metadef/graph/utils/ge_ir_utils.cc"
     "${PARSER_DIR}/metadef/graph/utils/graph_utils.cc"
