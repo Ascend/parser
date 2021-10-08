@@ -77,7 +77,7 @@ protected:
   void RegisterCreator(const std::string &type, CREATOR_FUN fun);
 
 private:
-  std::map<std::string, CREATOR_FUN> subgraph_adapter_creator_map_;  // lint !e1073
+  std::map<std::string, CREATOR_FUN> subgraph_adapter_creator_map_;
 
   friend class SubgraphAdapterRegisterar;
 };

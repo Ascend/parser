@@ -101,7 +101,7 @@ class OpParserFactory {
    * @ingroup domi_omg
    * @brief Each Op corresponds to a Creator function
    */
-  std::map<std::string, CREATOR_FUN> op_parser_creator_map_;  // lint !e1073
+  std::map<std::string, CREATOR_FUN> op_parser_creator_map_;
   std::map<std::string, CREATOR_FUN> fusion_op_parser_creator_map_;
 
   friend class OpParserRegisterar;

@@ -21,7 +21,6 @@
 #include <string>
 #include <vector>
 
-/*lint -e1073*/
 namespace ge {
 // the operator type mapping table of caffe and  mindspore
 extern std::map<std::string, std::string> caffe_op_map;
@@ -41,5 +40,4 @@ extern std::vector<std::string> is_dataset_op_vec;
 // output tensor num
 extern std::map<std::string, int32_t> op_output_tensor_num;
 }  // namespace ge
-/*lint +e1073*/
 #endif  // GE_COMMON_OP_MAP_H_
