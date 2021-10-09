@@ -240,7 +240,7 @@ Status ParserGraphOptimizer::UpdateGraph(vector<NodePtr> &nodes) {
 
   // reconstruct fusion_node and edges
   GE_CHK_STATUS_RET(RebuildOutputAnchors(output_anchors, fusion_node_opdef),
-                    "rebuild output edges to fusion node failed.")
+                    "rebuild output edges to fusion node failed.");
   GE_CHK_STATUS_RET(RebuildInputAnchors(input_anchors, fusion_node_opdef),
                     "rebuild input edges to fusion node failed.");
   NodePtr fusion_node = graph_->AddNode(fusion_node_opdef);
