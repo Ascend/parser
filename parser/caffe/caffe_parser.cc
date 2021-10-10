@@ -52,6 +52,7 @@
 #include "parser/common/proto_file_parser.h"
 #include "register/op_registry.h"
 #include "register/register_fmk_types.h"
+#include "mmpa/mmpa_api.h"
 
 using domi::caffe::LayerParameter;
 using domi::caffe::NetParameter;
