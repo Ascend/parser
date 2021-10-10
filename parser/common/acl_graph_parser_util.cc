@@ -38,6 +38,7 @@
 #include "omg/parser/parser_inner_ctx.h"
 #include "parser/common/register_tbe.h"
 #include "tbe_plugin_loader.h"
+#include "mmpa/mmpa_api.h"
 
 using google::protobuf::io::CodedInputStream;
 using google::protobuf::io::FileInputStream;

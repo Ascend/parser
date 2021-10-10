@@ -28,6 +28,7 @@
 #include "parser/common/acl_graph_parser_util.h"
 #include "ge/ge_api_types.h"
 #include "framework/common/debug/ge_log.h"
+#include "mmpa/mmpa_api.h"
 
 using std::ifstream;
 using std::vector;
