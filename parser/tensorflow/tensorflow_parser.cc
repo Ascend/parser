@@ -429,11 +429,11 @@ Status TensorFlowModelParser::TransNodeToOpDesc(const domi::tensorflow::NodeDef 
   } else {
     op = ge::OpDescUtils::GetOpDescFromOperator(op_factory);
     GE_CHECK_NOTNULL(op);
-    GELOGI("After GetOpDescFromOperator op[%s]: type[%s] have input size: %zu, output size: %zu", op->GetName().c_str(),
+    GELOGI("After GetOpDescFromOperator op[%s]: type[%s] has input size: %zu, output size: %zu", op->GetName().c_str(),
            op->GetType().c_str(), op->GetInputsSize(), op->GetOutputsSize());
 
     GE_RETURN_IF_ERROR(AddTensorDescToOpDesc(op, node_def));
-    GELOGI("After AddTensorDescToOpDesc op[%s]: type[%s] have input size: %zu, output size: %zu", op->GetName().c_str(),
+    GELOGI("After AddTensorDescToOpDesc op[%s]: type[%s] has input size: %zu, output size: %zu", op->GetName().c_str(),
            op->GetType().c_str(), op->GetInputsSize(), op->GetOutputsSize());
   }
   op_factory.BreakConnect();
@@ -477,6 +477,11 @@ Status TensorFlowModelParser::ParseOpParams(const domi::tensorflow::NodeDef *nod
       return status;
     }
   }
+  domi::tensorflow::AttrValue attr;
+  if (ge::TensorFlowUtil::FindAttrValue(node_def, ATTR_NAME_QOS_SERVICE_LABEL, attr)) {
+    (void)ge::AttrUtils::SetInt(*op, ATTR_NAME_QOS_SERVICE_LABEL, static_cast<int64_t>(attr.i()));
+  }
+
   return SUCCESS;
 }
 
