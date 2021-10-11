@@ -118,9 +118,7 @@ TEST_F(UtestTensorflowParser, tensorflow_parser_with_serialized_proto3) {
   auto arg_node = graph_def.add_node();
   arg_node->set_name("noop");
   arg_node->set_op("NoOp");
-  ge::TensorFlowModelParser modelparser;
-  modelparser.nodedef_map_ = {0};
-  
+
   ge::graphStatus ret = model_parser->ParseProtoWithSubgraph(graph_def.SerializeAsString(),
       [](std::string)->std::string{ return "";}, compute_graph);
   EXPECT_EQ(ret, ge::SUCCESS);
