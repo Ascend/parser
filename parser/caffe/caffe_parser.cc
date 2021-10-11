@@ -1097,8 +1097,8 @@ Status CaffeModelParser::AddUserOutNodesTop() {
 }
 
 Status CaffeModelParser::AddOutputTop(const domi::caffe::NetParameter &proto_message) {
-  for (int32_t i = 0; i < proto_message.layer_size(); i++) {
-    const domi::caffe::LayerParameter &layer = proto_message.layer(i);
+  for (int32_t j = 0; j < proto_message.layer_size(); j++) {
+    const domi::caffe::LayerParameter &layer = proto_message.layer(j);
 
     if (!CheckValidLayer(layer)) {
       continue;
@@ -1296,8 +1296,8 @@ Status CaffeModelParser::ParseFromMemory(const char *data, uint32_t size, ge::Co
 
     // parse ParamSpec
     std::vector<string> v_param_names;
-    for (int i = 0; i < layer.param_size(); i++) {
-      const domi::caffe::ParamSpec &param = layer.param(i);
+    for (int j = 0; j < layer.param_size(); j++) {
+      const domi::caffe::ParamSpec &param = layer.param(j);
       GE_IF_BOOL_EXEC((param.has_name()), v_param_names.emplace_back(param.name()));
     }
 
@@ -1515,8 +1515,8 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
 
     // parse ParamSpec
     std::vector<string> v_param_names;
-    for (int i = 0; i < layer.param_size(); i++) {
-      const domi::caffe::ParamSpec &param = layer.param(i);
+    for (int j = 0; j < layer.param_size(); j++) {
+      const domi::caffe::ParamSpec &param = layer.param(j);
       GE_IF_BOOL_EXEC((param.has_name()), v_param_names.emplace_back(param.name()));
     }
 
@@ -2095,17 +2095,17 @@ Status CaffeWeightsParser::ConvertLayerParameter(const google::protobuf::Message
                                                  ge::ComputeGraphPtr &graph) {
   vector<string> need_share_layers;
   const domi::caffe::LayerParameter *layer = reinterpret_cast<const domi::caffe::LayerParameter *>(layer_message);
-  const string &layer_name = layer->name();
+  const string &share_layer_name = layer->name();
   const string &layer_type = layer->type();
   for (auto p_iter = params_share_map.begin(); p_iter != params_share_map.end(); ++p_iter) {
-    if (find(p_iter->second.begin(), p_iter->second.end(), layer_name) != p_iter->second.end()) {
-      GELOGI("layer:%s need share weights !", layer_name.c_str());
+    if (find(p_iter->second.begin(), p_iter->second.end(), share_layer_name) != p_iter->second.end()) {
+      GELOGI("layer:%s need share weights !", share_layer_name.c_str());
       need_share_layers = p_iter->second;
     }
   }
 
   if (need_share_layers.size() == 0) {
-    need_share_layers.push_back(layer_name);
+    need_share_layers.push_back(share_layer_name);
   }
 
   for (auto share_iter = need_share_layers.begin(); share_iter != need_share_layers.end(); ++share_iter) {
@@ -2211,27 +2211,27 @@ Status CaffeWeightsParser::ConvertNetParameter(const NetParameter &param, ge::Co
 
   for (int i = 0; i < num_layer; ++i) {
     const LayerParameter &layer = param.layer(i);
-    const string &layer_name = layer.name();
+    const string &share_layer_name = layer.name();
 
     // Skip some layer types
     if (skiped_layer_type_.find(layer.type()) != skiped_layer_type_.end()) {
-      GELOGI("Skip layer %s", layer_name.c_str());
+      GELOGI("Skip layer %s", share_layer_name.c_str());
       continue;
     }
 
-    GELOGI("Parse layer %s", layer_name.c_str());
+    GELOGI("Parse layer %s", share_layer_name.c_str());
 
     vector<string> need_share_layers;
 
     for (auto p_iter = params_share_map.begin(); p_iter != params_share_map.end(); ++p_iter) {
-      if (find(p_iter->second.begin(), p_iter->second.end(), layer_name) != p_iter->second.end()) {
-        GELOGI("Layer: %s need share weights !", layer_name.c_str());
+      if (find(p_iter->second.begin(), p_iter->second.end(), share_layer_name) != p_iter->second.end()) {
+        GELOGI("Layer: %s need share weights !", share_layer_name.c_str());
         need_share_layers = p_iter->second;
       }
     }
 
     if (need_share_layers.size() == 0) {
-      need_share_layers.push_back(layer_name);
+      need_share_layers.push_back(share_layer_name);
     }
 
     for (auto share_iter = need_share_layers.begin(); share_iter != need_share_layers.end(); ++share_iter) {
