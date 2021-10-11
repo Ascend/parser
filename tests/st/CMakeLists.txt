@@ -14,7 +14,6 @@
 # ============================================================================
 
 project(st_parser)
-add_compile_options(-g --coverage -fprofile-arcs -fPIC -O0 -ftest-coverage)
 set(CMAKE_CXX_STANDARD 11)
 
 ################################################################################
