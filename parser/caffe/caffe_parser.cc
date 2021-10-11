@@ -857,8 +857,7 @@ Status CaffeModelParser::AddNode(const domi::caffe::LayerParameter &layer, ge::C
   // AddConstInput is a function defined in caffe_op_parser, override in caffe_reshape_parser.
   std::shared_ptr<CaffeOpParser> caffe_op_parser = std::static_pointer_cast<CaffeOpParser>(op_parser);
   GE_CHECK_NOTNULL(caffe_op_parser);
-  Status status;
-  status = caffe_op_parser->AddConstInput(node);
+  Status status = caffe_op_parser->AddConstInput(node);
   if (status != SUCCESS) {
     REPORT_CALL_ERROR("E19999", "AddConstInput failed for node:%s", node->GetOpDesc()->GetName().c_str());
     GELOGE(FAILED, "[Add][ConstInput] to node %s fail.", node->GetOpDesc()->GetName().c_str());
@@ -938,7 +937,7 @@ Status CaffeModelParser::AddTensorDescToOpDescByIr(ge::OpDescPtr &op_desc, const
     for (int i = 0; i < valid_input_size; i++) {
       ge::GeTensorDesc input_tensor;
       std::string input_name;
-      ge::graphStatus ret = ge::GRAPH_SUCCESS;
+      ge::graphStatus ret;
       // Below cases are supported fow now when there are optional inputs
       // x means optional, o means requierd input
       // a. ooxxx, number of o and x>=layer.bottom_size+layer.blobs_size>=number of o

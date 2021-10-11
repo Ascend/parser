@@ -1,3 +1,4 @@
+
 /**
  * Copyright 2020 Huawei Technologies Co., Ltd
  *
@@ -675,8 +676,7 @@ static uint16_t Fp16Div(uint16_t v_1, uint16_t v_2) {
     uint64_t m_tmp;
     if (e_a > e_b) {
       m_tmp = m_a;
-      uint16_t tmp;
-      tmp = e_a - e_b;
+      uint16_t tmp = e_a - e_b;
       for (int i = 0; i < tmp; i++) {
         m_tmp = m_tmp << 1;
       }
@@ -690,8 +690,7 @@ static uint16_t Fp16Div(uint16_t v_1, uint16_t v_2) {
       m_b = m_tmp;
     }
     m_div = static_cast<float>(m_a * 1.0f / m_b);
-    fp16_t fp_div;
-    fp_div = m_div;
+    fp16_t fp_div = m_div;
     ret = fp_div.val;
     if (s_a != s_b) {
       ret |= kFp16SignMask;

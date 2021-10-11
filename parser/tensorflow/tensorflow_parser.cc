@@ -1049,11 +1049,9 @@ Status TensorFlowModelParser::AdaptOpType(const domi::tensorflow::NodeDef *node_
     op_type = tensorflow_train_op_map.at(node_op);
     GE_CHK_STATUS_RET(CheckOpType(node_def, op_type), "Failed to check op type");
   } else {
-    op_type = ge::parser::FRAMEWORKOP;
     domi::tensorflow::AttrValue attr_call_inference;
     if ((node_name == node_op) &&
         ge::TensorFlowUtil::FindAttrValue(node_def, "_disable_call_shape_inference", attr_call_inference)) {
-      op_type = node_op;
     }
   }
 
@@ -1688,7 +1686,6 @@ Status TensorFlowModelParser::CheckInputNodeName(const string &input_node_name, 
     }
   }
 
-  int32_t tmp_index = 0;
   auto find = tmp_input_node_name.find(":");
   if (find == string::npos) {
     *node_name = tmp_input_node_name;
@@ -1696,6 +1693,7 @@ Status TensorFlowModelParser::CheckInputNodeName(const string &input_node_name, 
     if (index == nullptr) {
       return SUCCESS;
     }
+    int32_t tmp_index = 0;
     *index = tmp_index;
 
     return SUCCESS;
@@ -2060,15 +2058,14 @@ Status TensorFlowModelParser::EraseNormalOpOutputIfChild(shared_ptr<ge::ScopeGra
   for (auto iter = normal_op_node_context.output_map.begin(); iter != normal_op_node_context.output_map.end();) {
     string output_node_name = iter->first;
     ge::ScopeFusionOpInfo to_info;
-    int32_t from_index = 0;
-    int32_t to_index = 0;
 
     if (IsFusionOpChild(output_node_name, &to_info) &&
         nodedef_map_[output_node_name]->op() != TENSORFLOWF_NODE_OP_CONST) {
       // Fuse operator, update index
       std::vector<std::pair<int32_t, int32_t>> &pairs = iter->second;
       for (auto &pair : pairs) {
-        from_index = pair.first;
+        int32_t from_index = pair.first;
+        int32_t to_index = 0;
         GE_RETURN_WITH_LOG_IF_ERROR(GetInPutIndex(scope_graph, to_info, pair.second, to_index),
                                     "GetInPutIndex failed ,output_node_name %s.", output_node_name.c_str());
         tmp_output_map[to_info.fusion_node_name].push_back({from_index, to_index});
@@ -2097,15 +2094,14 @@ Status TensorFlowModelParser::UpdateNormalOpContext(shared_ptr<ge::ScopeGraph> &
   for (auto iter = normal_op_node_context.input_map.begin(); iter != normal_op_node_context.input_map.end();) {
     string input_node_name = iter->first;
     ge::ScopeFusionOpInfo from_info;
-    int32_t from_index = 0;
-    int32_t to_index = 0;
 
     if (IsFusionOpChild(input_node_name, &from_info) &&
         nodedef_map_[input_node_name]->op() != TENSORFLOWF_NODE_OP_CONST) {
       // Fuse operator, update index
       std::vector<std::pair<int32_t, int32_t>> &pairs = iter->second;
       for (auto &pair : pairs) {
-        to_index = pair.second;
+        int32_t from_index = 0;
+        int32_t to_index = pair.second;
         GE_RETURN_WITH_LOG_IF_ERROR(GetOutPutIndex(scope_graph, from_info, pair.first, from_index),
                                     "GetOutPutIndex failed ,input_node_name %s.", input_node_name.c_str());
         tmp_input_map[from_info.fusion_node_name].push_back({from_index, to_index});
@@ -3180,8 +3176,7 @@ Status TensorFlowModelParser::TrimGraphByInput(const domi::tensorflow::GraphDef 
   output_graph_def->Clear();
   for (const NodeDef &node : filtered_graph_def.node()) {
     if (input_nodes.count(node.name())) {
-      NodeDef placeholder_node;
-      placeholder_node = node;
+      NodeDef placeholder_node = node;
       placeholder_node.clear_input();
       GE_IF_BOOL_EXEC(node.op() != "Placeholder", placeholder_node.set_op("Placeholder"));
       domi::tensorflow::AttrValue attr_value;
@@ -3778,8 +3773,8 @@ void TensorFlowModelParser::UpdateInnerInputMap(const string &fusion_op_name, Op
       std::map<std::string, std::vector<std::pair<int32_t, int32_t>>> tmp_input_map;
       for (auto iter = op_node_context.input_map.begin(); iter != op_node_context.input_map.end();) {
         string src_name = iter->first;
-        std::vector<std::pair<int32_t, int32_t>> &input_idx = iter->second;
         if (src_name == ge::kInputFromFusionScope) {
+          std::vector<std::pair<int32_t, int32_t>> &input_idx = iter->second;
           for (const auto &in_pair : input_idx) {
             if (in_pair.second != kControlSlot) {
               auto data = remap_data_input[fusion_op_name + std::to_string(in_pair.first)];
@@ -3825,8 +3820,8 @@ void TensorFlowModelParser::UpdateInnerOutputMap(const string &fusion_op_name, O
       std::map<std::string, std::vector<std::pair<int32_t, int32_t>>> tmp_output_map;
       for (auto iter = op_node_context.output_map.begin(); iter != op_node_context.output_map.end();) {
         string dst_name = iter->first;
-        std::vector<std::pair<int32_t, int32_t>> &output_idx = iter->second;
         if (dst_name == ge::kOutputToFusionScope) {
+          std::vector<std::pair<int32_t, int32_t>> &output_idx = iter->second;
           for (const auto &out_pair : output_idx) {
             if (out_pair.second != kControlSlot) {
               auto data_outputs = remap_data_output[fusion_op_name + std::to_string(out_pair.second)];

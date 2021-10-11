@@ -85,10 +85,10 @@ Status CaffeCustomParserAdapter::ParseWeights(const Message *op_src, ge::NodePtr
     return SUCCESS;
   }
 
-  bool bias_en = false;
   bool update_in_turn = (static_cast<int64_t >(op->GetAllInputsSize()) == (layer->bottom_size() + layer->blobs_size()));
   int start_pos = layer->bottom_size();
   for (int i = 0; i < layer->blobs_size(); ++i) {
+    bool bias_en = false;
     ge::GeTensorPtr weight = ge::parser::MakeShared<ge::GeTensor>();
     GE_CHECK_NOTNULL(weight);
     GE_CHK_STATUS_RET(ConvertWeight(layer->blobs(i), layer->name(), weight),
