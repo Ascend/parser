@@ -858,7 +858,6 @@ Status CreateNodeDefBytes(ge::NodePtr n, string originalType, map<string, PIOLis
   // Set size
   for (auto ge_desc : opDesc->GetAllOutputsDescPtr()) {
     int64_t real_size = 1;
-    int64_t tmp_dim = 0;
     auto data_type = ge_desc->GetDataType();
 
     uint32_t size_type = 1;
@@ -873,7 +872,7 @@ Status CreateNodeDefBytes(ge::NodePtr n, string originalType, map<string, PIOLis
 
     // calculate size
     for (uint32_t j = 0; j < ge_desc->GetShape().GetDimNum(); ++j) {
-      tmp_dim = ge_desc->GetShape().GetDim(j);
+      int64_t tmp_dim = ge_desc->GetShape().GetDim(j);
       GE_CHECK_GE(tmp_dim, 0);
       PARSER_INT64_MULCHECK(real_size, tmp_dim);
       real_size *= tmp_dim;
@@ -1279,8 +1278,7 @@ Status CreateFuncDefBytes(ge::NodePtr n, string original_type, string func_bin_p
 
   GELOGI("len =%d\n", len);
 
-  ge::GeAttrValue::BYTES funcDefBytes;
-  funcDefBytes = ge::Buffer::CopyFrom((std::uint8_t *)buf, len);
+  ge::GeAttrValue::BYTES funcDefBytes = ge::Buffer::CopyFrom((std::uint8_t *)buf, len);
   (void)ge::AttrUtils::SetBytes(opDesc, ge::ATTR_NAME_FRAMEWORK_FUNC_DEF, funcDefBytes);
   GELOGI("funcDefBytes.GetSize() =%zu", funcDefBytes.GetSize());
 

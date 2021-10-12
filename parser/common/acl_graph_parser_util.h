@@ -230,8 +230,6 @@ inline domi::Status CheckInt64Uint32MulOverflow(int64_t a, uint32_t b) {
 }  // namespace parser
 }  // namespace ge
 
-/*lint --emacro((773),GE_TIMESTAMP_START)*/
-/*lint -esym(773,GE_TIMESTAMP_START)*/
 #define PARSER_TIMESTAMP_START(stage) uint64_t startUsec_##stage = ge::parser::GetCurrentTimestamp()
 
 #define PARSER_TIMESTAMP_END(stage, stage_name)                                       \
