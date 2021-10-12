@@ -1049,9 +1049,11 @@ Status TensorFlowModelParser::AdaptOpType(const domi::tensorflow::NodeDef *node_
     op_type = tensorflow_train_op_map.at(node_op);
     GE_CHK_STATUS_RET(CheckOpType(node_def, op_type), "Failed to check op type");
   } else {
+    op_type = ge::parser::FRAMEWORKOP;
     domi::tensorflow::AttrValue attr_call_inference;
     if ((node_name == node_op) &&
         ge::TensorFlowUtil::FindAttrValue(node_def, "_disable_call_shape_inference", attr_call_inference)) {
+      op_type = node_op;
     }
   }
 
