@@ -1526,7 +1526,7 @@ Status TensorFlowModelParser::ParseAllGraph(const google::protobuf::Message *pro
     if (tensorflow_op_map.find(node_op) == tensorflow_op_map.end()) {
       GELOGW("%s not found in tensorflow_op_map.", node_op.c_str());
     }
-    Status ret = AddNode(node_def, graph, scope_graph);
+    ret = AddNode(node_def, graph, scope_graph);
     if (ret != SUCCESS) {
       GELOGE(ret, "Add op[%s] failed", node_def->name().c_str());
       DeleteFuisonNodeDef();
@@ -2321,7 +2321,7 @@ Status TensorFlowModelParser::ParseProto(const google::protobuf::Message *proto,
     }
 
     // Do not exit immediately when there is an error, wait until all errors are collected before exiting
-    Status ret = AddFmkNodeDefToMap(*graph_def, node_def, op_node_name_list);
+    ret = AddFmkNodeDefToMap(*graph_def, node_def, op_node_name_list);
     GE_CHK_STATUS_EXEC(ret, return PARAM_INVALID, "add node_def to map failed");
   }
   PARSER_TIMESTAMP_END(AddFmkNodeDefToMap, "TensorFlowModelParser::AddFmkNodeDefToMap");

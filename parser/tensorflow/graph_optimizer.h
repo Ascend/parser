@@ -55,7 +55,7 @@ class ParserGraphOptimizer {
 
   const bool GetLocalFmkopFlag() const { return local_fmk_op_flag_; }
 
-  void SetFuncBinPath(std::string isFuncBinPath) { func_bin_path_ = isFuncBinPath; }
+  void SetFuncBinPath(const std::string &isFuncBinPath) { func_bin_path_ = isFuncBinPath; }
   const std::string GetFuncBinPath() const { return func_bin_path_; }
 
   domi::Status InsertHWCK2FZ(ge::OutDataAnchorPtr src_anchor, ge::InDataAnchorPtr dst_anchor,
