@@ -598,6 +598,19 @@ domi::Status AclGrphParseUtil::CheckOptions(const std::map<AscendString, AscendS
 domi::Status AclGrphParseUtil::ParseParamsBeforeGraph(const std::map<AscendString, AscendString> &parser_params,
                                                       string &graph_name) {
   GELOGI("Parse graph user options start.");
+  ge::GetParserContext().input_nodes_format_map.clear();
+  ge::GetParserContext().output_formats.clear();
+  ge::GetParserContext().user_input_dims.clear();
+  ge::GetParserContext().input_dims.clear();
+  ge::GetParserContext().op_conf_map.clear();
+  ge::GetParserContext().user_out_nodes.clear();
+  ge::GetParserContext().default_out_nodes.clear();
+  ge::GetParserContext().out_nodes_map.clear();
+  ge::GetParserContext().user_out_tensors.clear();
+  ge::GetParserContext().net_out_nodes.clear();
+  ge::GetParserContext().out_tensor_names.clear();
+  ge::GetParserContext().data_tensor_names.clear();
+
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(CheckOptions(parser_params) != SUCCESS,
                                  return PARAM_INVALID, "[Check][Options] Parse paragrams invalid, graph:%s.",
                                  graph_name.c_str());
