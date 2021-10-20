@@ -45,6 +45,7 @@ static map<int32_t, int32_t> GE_TENSORFLOW_DATA_TYPE_MAP = {
     {ge::DataType::DT_QINT32, domi::tensorflow::DT_QINT32},
     {ge::DataType::DT_QUINT8, domi::tensorflow::DT_QUINT8},
     {ge::DataType::DT_QUINT16, domi::tensorflow::DT_QUINT16},
+    {ge::DataType::DT_VARIANT, domi::tensorflow::DT_VARIANT},
     {ge::DataType::DT_DUAL, domi::tensorflow::DT_INVALID},
     {ge::DataType::DT_DUAL_SUB_INT8, domi::tensorflow::DT_INVALID},
     {ge::DataType::DT_DUAL_SUB_UINT8, domi::tensorflow::DT_INVALID},
