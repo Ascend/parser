@@ -104,6 +104,7 @@ set(MATEDEF_SRC_FILES
     "${PARSER_DIR}/metadef/graph/node.cc"
     "${PARSER_DIR}/metadef/graph/op_desc.cc"
     "${PARSER_DIR}/metadef/graph/operator.cc"
+    "${PARSER_DIR}/metadef/graph/operator_impl.cc"
     "${PARSER_DIR}/metadef/graph/operator_factory.cc"
     "${PARSER_DIR}/metadef/graph/operator_factory_impl.cc"
     "${PARSER_DIR}/metadef/graph/opsproto/opsproto_manager.cc"
