@@ -27,13 +27,7 @@ using ge::StringTuple;
 using ge::UintTuple;
 
 namespace ge {
-ParserOperator::ParserOperator(const std::string &type) {
-  type_ = type;
-  op_schema_ = ge::OpSchemaFactory::Instance().Get(type);
-  if (op_schema_ == nullptr) {
-    GELOGW("Cannot find op schema of op type: %s", type.c_str());
-  }
-}
+ParserOperator::ParserOperator(const std::string &type) : type_(type) {}
 
 ParserOperator &ParserOperator::Input(const ParserOperator &in_op, uint32_t index) {
   if (index == 0) {
@@ -61,14 +55,14 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY ParserOperator &ParserOperator:
 }
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY ParserOperator &ParserOperator::OutputTensorDesc(
-  const ge::GeTensorDesc &output_tensordesc) {
+    const ge::GeTensorDesc &output_tensordesc) {
   output_descs_.push_back(output_tensordesc);
   return *this;
 }
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY ParserOperator &ParserOperator::AttrVector(
-  std::string key,
-  std::vector<int32_t> &value) {
+    std::string key,
+    std::vector<int32_t> &value) {
   domi::AttrDef out;
   auto it = op_attrs_.find(key);
   if (it != op_attrs_.end()) {
@@ -159,10 +153,6 @@ ATTR_SETTER_WITH_LIST_VALUE(uint32_t, i)
     auto it = op_attrs_.find(name);                                          \
     if (it != op_attrs_.end()) {                                             \
       single_val = it->second.value_;                                        \
-    } else {                                                                 \
-      if (op_schema_ && op_schema_->HasDefaultAttr(name)) {                  \
-        single_val = op_schema_->GetDefaultAttr(name);                       \
-      }                                                                      \
     }                                                                        \
     return single_val.field();                                               \
   }
@@ -178,10 +168,6 @@ ATTR_GET_SINGLE_VALUE(std::string, s, String)
     auto it = op_attrs_.find(name);                                                           \
     if (it != op_attrs_.end()) {                                                              \
       value = it->second.value_;                                                              \
-    } else {                                                                                  \
-      if (op_schema_ && op_schema_->HasDefaultAttr(name)) {                                   \
-        value = op_schema_->GetDefaultAttr(name);                                             \
-      }                                                                                       \
     }                                                                                         \
     const auto attr_def = value.list();                                                       \
     std::size_t n = attr_def.field##_size();                                                  \
