@@ -104,15 +104,7 @@ def file_endswith_white_list_suffix(file):
     belows are patterns used for analyse .h file
 """
 # pattern function
-pattern_func = re.compile(r"""(^[\s]*)          #leading with space,we will find and delete after
-([a-zA-Z~_]            # void int likely
-.*
-[)]                     #we find )
-(?!.*{)                 # we do not want the case int abc() const { return 1;}
-.*)
-(;.*)                   #we want to find ; and after for we will replace these later
-\n$
-""", re.VERBOSE | re.MULTILINE | re.DOTALL)
+pattern_func = re.compile(r"""(^[\s]*)([a-zA-Z~_].*[)](?!.*{).*)(;.*)\n$""", re.VERBOSE | re.MULTILINE | re.DOTALL)
 
 # pattern comment
 pattern_comment = re.compile(r'^\s*//')
