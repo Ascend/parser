@@ -78,6 +78,7 @@ TEST_F(STestTensorflowParser, tensorflow_parser_success) {
   RegisterCustomOp();
 
   std::string case_dir = __FILE__;
+  ParserOperator unused("Add");
   case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
   std::string model_file = case_dir + "/origin_models/tf_add.pb";
   std::map<ge::AscendString, ge::AscendString> parser_params;

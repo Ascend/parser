@@ -28,8 +28,6 @@ COMMON_LOCAL_SRC_FILES := \
     ../tensorflow/tensorflow_util.cc \
     convert/pb2json.cc \
     op_def/ir_pb_converter.cc \
-    op_def/defs.cc \
-    op_def/op_schema.cc \
     op_def/operator.cc \
     op_map.cc \
     parser_types.cc \

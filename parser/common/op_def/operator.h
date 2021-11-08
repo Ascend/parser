@@ -21,7 +21,6 @@
 #include <unordered_map>
 #include <vector>
 #include "framework/common/fmk_types.h"
-#include "common/op_def/op_schema.h"
 #include "common/tuple.h"
 #include "graph/ge_tensor.h"
 #include "proto/om.pb.h"
@@ -35,9 +34,9 @@ struct OpAttribute {
 class FMK_FUNC_HOST_VISIBILITY ParserOperator {
  public:
   explicit ParserOperator(const std::string &type);
-  ParserOperator() { op_schema_ = nullptr; }
+  ParserOperator() {}
 
-  virtual ~ParserOperator() { op_schema_ = nullptr; }
+  virtual ~ParserOperator() = default;
 
   ParserOperator &Input(const ParserOperator &in_op, uint32_t index = 0);
 
@@ -56,17 +55,26 @@ class FMK_FUNC_HOST_VISIBILITY ParserOperator {
 
   ParserOperator &Attr_bt(const std::string &name, const std::string &value);
 
-// Register "optional" attribute with default value.
-#define ATTR_SETTER_WITH_VALUE(TypeName)                                       \
-  ParserOperator &Attr(const std::string &name, const TypeName &value);              \
-  ParserOperator &Attr(const std::string &name, const std::vector<TypeName> &value); \
-  ParserOperator &Attr(const std::string &name, const ge::Tuple<TypeName> &value)
+ // Register "optional" attribute with default value.
+  ParserOperator &Attr(const std::string &name, const uint32_t &value);
+  ParserOperator &Attr(const std::string &name, const std::vector<uint32_t> &value);
+  ParserOperator &Attr(const std::string &name, const ge::Tuple<uint32_t> &value);
 
-  ATTR_SETTER_WITH_VALUE(uint32_t);
-  ATTR_SETTER_WITH_VALUE(int64_t);
-  ATTR_SETTER_WITH_VALUE(bool);
-  ATTR_SETTER_WITH_VALUE(float);
-  ATTR_SETTER_WITH_VALUE(std::string);
+  ParserOperator &Attr(const std::string &name, const int64_t &value);
+  ParserOperator &Attr(const std::string &name, const std::vector<int64_t> &value);
+  ParserOperator &Attr(const std::string &name, const ge::Tuple<int64_t> &value);
+
+  ParserOperator &Attr(const std::string &name, const bool &value);
+  ParserOperator &Attr(const std::string &name, const std::vector<bool> &value);
+  ParserOperator &Attr(const std::string &name, const ge::Tuple<bool> &value);
+
+  ParserOperator &Attr(const std::string &name, const float &value);
+  ParserOperator &Attr(const std::string &name, const std::vector<float> &value);
+  ParserOperator &Attr(const std::string &name, const ge::Tuple<float> &value);
+
+  ParserOperator &Attr(const std::string &name, const std::string &value);
+  ParserOperator &Attr(const std::string &name, const std::vector<std::string> &value);
+  ParserOperator &Attr(const std::string &name, const ge::Tuple<std::string> &value);
 
   const std::string &GetName() const { return name_; }
 
@@ -81,8 +89,6 @@ class FMK_FUNC_HOST_VISIBILITY ParserOperator {
   const std::unordered_map<std::string, OpAttribute> GetOpAttrs() const { return op_attrs_; }
 
   bool HasAttr(const std::string &name) const { return op_attrs_.find(name) != op_attrs_.end(); }
-
-  const ge::OpSchema *GetSchema() const { return op_schema_; }
 
   int64_t GetIntAttr(const std::string &name) const;
 
@@ -105,7 +111,6 @@ class FMK_FUNC_HOST_VISIBILITY ParserOperator {
   ge::StringTuple GetStringTupleAttr(const std::string &name) const;
 
  private:
-  const ge::OpSchema *op_schema_;
   std::string name_;
   std::string type_;
   std::vector<std::string> inputs_;

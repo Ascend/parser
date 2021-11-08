@@ -17,8 +17,6 @@ set(SRC_LIST
     "convert/pb2json.cc"
     "convert/message2operator.cc"
     "op_def/ir_pb_converter.cc"
-    "op_def/defs.cc"
-    "op_def/op_schema.cc"
     "op_def/operator.cc"
     "op_map.cc"
     "parser_types.cc"

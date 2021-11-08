@@ -18,7 +18,6 @@
 #define DOMI_COMMON_OP_DEF_IR_PB_CONVERTER_H
 
 #include "framework/common/fmk_error_codes.h"
-#include "common/op_def/op_schema.h"
 #include "parser/common/op_def/operator.h"
 #include "graph/ge_attr_value.h"
 #include "graph/ge_tensor.h"

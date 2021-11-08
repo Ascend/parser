@@ -99,11 +99,6 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY domi::Status ConvertToOpDesc(co
     GELOGE(ge::FAILED, "[Check][Param] param op_def is nullptr, check invalid.");
     return ge::FAILED;
   }
-  if (op.GetSchema() == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Op schema is nullptr, op type: %s", op.GetType().c_str());
-    GELOGE(domi::PARAM_INVALID, "[Get][Schema] Op schema is nullptr, op type: %s", op.GetType().c_str());
-    return domi::PARAM_INVALID;
-  }
   op_def->SetName(op.GetName());
   op_def->SetType(op.GetType());
   GE_IF_BOOL_EXEC(op.GetType() == ge::parser::YOLO, op_def->SetType(ge::parser::REGION));
@@ -138,11 +133,6 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY domi::Status ConvertToOpDesc(co
         (void)ge::AttrUtils::SetInt(op_def, op_attr_pair.first, op_attr_pair.second.value_.u());
       }
     }
-  }
-  if (!op.GetSchema()->Verify(op_def)) {
-    REPORT_CALL_ERROR("E19999", "Op schema verify failed, op name: %s", op.GetName().c_str());
-    GELOGE(domi::PARAM_INVALID, "[Invoke][Verify] Op schema verify failed, op name: %s", op.GetName().c_str());
-    return domi::PARAM_INVALID;
   }
   return domi::SUCCESS;
 }
