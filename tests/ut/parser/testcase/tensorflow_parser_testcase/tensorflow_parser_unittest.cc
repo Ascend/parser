@@ -188,4 +188,33 @@ TEST_F(UtestTensorflowParser, tensorflow_parser_with_external_graph) {
   ret = TensorFlowModelParser::AddExternalGraph(root_graph);
   EXPECT_EQ(ret, INTERNAL_ERROR);
 }
+
+TEST_F(UtestTensorflowParser, optimize_snapshot) {
+  domi::tensorflow::GraphDef graph_def;
+
+  auto mul_node = graph_def.add_node();
+  mul_node->set_name("optimizer/Mul");
+  mul_node->set_op("Mul");
+  mul_node->add_input("Snapshot:0");
+
+  auto snapshot_node = graph_def.add_node();
+  snapshot_node->set_name("Snapshot");
+  snapshot_node->set_op("Snapshot");
+  snapshot_node->add_input("loss_scale/read:0");
+  snapshot_node->add_input("^ShuffleNet/AssignMovingAvg");
+
+  auto identity_node = graph_def.add_node();
+  identity_node->set_name("loss_scale/read");
+  identity_node->set_op("Identity");
+  identity_node->add_input("loss_scale/ref:0");
+
+  auto assign_node = graph_def.add_node();
+  assign_node->set_name("ShuffleNet/AssignMovingAvg");
+  assign_node->set_op("AssignSub");
+  assign_node->add_input("ShuffleNet/moving_mean:0");
+
+  Status ret = TensorFlowModelParser().GraphDefOptimize(&graph_def);
+  EXPECT_EQ(ret, ge::SUCCESS);
+}
+
 } // namespace ge
