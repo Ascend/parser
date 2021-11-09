@@ -98,7 +98,7 @@ void ErrorManager::SetStage(const std::string &first_stage, const std::string &s
 }
 
   struct error_message::Context &ErrorManager::GetErrorManagerContext() {
-    struct error_message::Context error_context;
+    static struct error_message::Context error_context;
     return error_context;
   }
 

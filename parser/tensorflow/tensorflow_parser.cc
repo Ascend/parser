@@ -2563,6 +2563,7 @@ Status TensorFlowModelParser::OptimizeSnapShot(domi::tensorflow::NodeDef *curr_m
     domi::tensorflow::NodeDef *output_node_def = nodedef_map[output_node_name];
     GE_CHECK_NOTNULL(output_node_def);
     auto inputs = output_node_def->mutable_input();
+    std::vector<std::string> added_inputs;
     for (auto &input : *inputs) {
       string node_name;
       bool is_control = false;
@@ -2596,11 +2597,14 @@ Status TensorFlowModelParser::OptimizeSnapShot(domi::tensorflow::NodeDef *curr_m
             }
           }
           if (!is_exist_input) {
-            output_node_def->add_input("^" + item);
-            GELOGD("Optimize Snapshot node, dest:%s, set control input:%s.", output_node_name.c_str(), item.c_str());
+            added_inputs.push_back("^" + item);
           }
         }
       }
+    }
+    for (std::string added_input : added_inputs) {
+      GELOGD("Optimize Snapshot node, dest:%s, set control input:%s.", output_node_name.c_str(), added_input.c_str());
+      output_node_def->add_input(added_input);
     }
   }
   // Clear the input of snapshot and become an isolated node
