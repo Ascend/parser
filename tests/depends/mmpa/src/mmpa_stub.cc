@@ -16,6 +16,7 @@
 
 #include "mmpa/mmpa_api.h"
 
+typedef int mmErrorMSg;
 
 INT32 mmOpen(const CHAR *path_name, INT32 flags) {
   INT32 fd = HANDLE_INVALID_VALUE;
@@ -282,3 +283,10 @@ INT32 mmDup(INT32 fd) {
   return 0;
 }
 
+CHAR *mmGetErrorFormatMessage(mmErrorMSg errnum, CHAR *buf, mmSize size)
+{
+  if ((buf == NULL) || (size <= 0)) {
+    return NULL;
+  }
+  return strerror_r(errnum, buf, size);
+}
