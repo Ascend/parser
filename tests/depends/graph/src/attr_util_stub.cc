@@ -185,29 +185,6 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CopyOpDesc(c
   return op_desc;
 }
 
-template<typename T>
-bool SetAttrValue(AttrStore &attrs, const string &name, T &&value) {
-  return attrs.SetByName(name, std::forward<T>(value));
-}
-
-template<typename T>
-bool GetAttrValue(const AttrStore &attrs, const string &name, T &value) {
-  auto p = attrs.GetByName<T>(name);
-  if (p == nullptr) {
-    return false;
-  }
-  value = *p;
-  return true;
-}
-
-template<typename T, typename RT = typename std::decay<T>::type>
-RT *SetAndGetAttrValue(AttrStore &attrs, const string &name, T &&value) {
-  if (!attrs.SetByName(name, std::forward<T>(value))) {
-    return nullptr;
-  }
-  return attrs.MutableGetByName<RT>(name);
-}
-
 #define SET_ATTR_FUNC(type_name, type)  \
     GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY  \
     bool AttrUtils::Set##type_name(AttrHolderAdapter &&obj, const string &name, const type &value) {  \
