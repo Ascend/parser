@@ -48,15 +48,12 @@
 #include "parser/tensorflow/tensorflow_custom_parser_adapter.h"
 #include "parser/tensorflow/tensorflow_fusion_custom_parser_adapter.h"
 #include "parser/tensorflow/tensorflow_fusion_op_parser.h"
-#include "parser/tensorflow/tensorflow_fusionop_util.h"
 #include "parser/tensorflow/tensorflow_op_parser.h"
 #include "parser/tensorflow/tensorflow_util.h"
 #include "register/op_registry.h"
-#include "register/scope/scope_graph_impl.h"
 #include "register/scope/scope_pass_registry_impl.h"
 #include "parser/common/auto_mapping_subgraph_io_index_func.h"
 
-using ge::const_op_update_vec;
 using ge::OpParserFactory;
 using ge::Pb2Json;
 using ge::PreChecker;
@@ -80,7 +77,6 @@ using ge::TENSORFLOWF_NODE_OP_SWITCH;
 using ge::TENSORFLOWF_NODE_OP_TRANSPOSE;
 using ge::TENSORFLOWF_TENSOR_NCHW;
 using ge::TENSORFLOWF_TENSOR_NHWC;
-using ge::TensorFlowFunsionOPUtil;
 using ge::TensorFlowFusionCustomParserAdapter;
 using ge::TensorFlowFusionOpParser;
 using ge::TensorFlowOpParser;
@@ -1239,9 +1235,6 @@ Status TensorFlowModelParser::ParseFromMemory(const char *data, uint32_t size, g
                        "add node failed.");
   }
 
-  // Verify the validity of fusionop
-  GE_RETURN_IF_ERROR(CheckFusionOpValid());
-
   // The fusion operator has passed the verification.
   // The errors of internal non key operators (which will be ignored later)
   // do not affect the transformation of the whole model,
@@ -1475,9 +1468,6 @@ Status TensorFlowModelParser::ParseAllGraph(const google::protobuf::Message *pro
     // Do not exit immediately when there is an error, wait until all errors are collected before exiting
     GE_CHK_STATUS_EXEC(AddFmkNodeDefToMap(graph_def, node_def, op_node_name_list), has_error = true);
   }
-
-  // Verify the validity of fusionop
-  GE_RETURN_IF_ERROR(CheckFusionOpValid());
 
   // The fusion operator has passed the verification.
   // The errors of internal non key operators (which will be ignored later)
@@ -1764,8 +1754,7 @@ bool TensorFlowModelParser::MaybeFusionOp(shared_ptr<ge::ScopeGraph> &scope_grap
   ge::ScopeFusionOpInfo info;
   std::vector<ge::ScopeFusionOpInfo> info_list;
   auto &impl = scope_graph->impl_;
-  if (TensorFlowFunsionOPUtil::MaybeFusionOp(node_def->name(), &info) ||
-      impl->IsFusionOpChild(node_def->name(), info_list)) {
+  if (impl->IsFusionOpChild(node_def->name(), info_list)) {
     GE_IF_BOOL_EXEC(
         info_list.size() > 0, for (size_t i = 0; i < info_list.size(); ++i) {
           fusion_op_type_map_[info_list[i].fusion_node_name].push_back(info_list[i].fusion_op_type);
@@ -1821,9 +1810,6 @@ bool TensorFlowModelParser::FusionOpChildIgnore(shared_ptr<ge::ScopeGraph> &scop
     // Scope fusion strategy
     auto &impl = scope_graph->impl_;
     ignore = impl->FusionOpChildIgnore(info);
-  } else {
-    // Full match fusion strategy
-    ignore = TensorFlowFunsionOPUtil::FusionOpChildIgnore(info);
   }
   return ignore;
 }
@@ -1832,11 +1818,7 @@ bool TensorFlowModelParser::IsFusionOp(shared_ptr<ge::ScopeGraph> &scope_graph,
                                        const domi::tensorflow::NodeDef *node_def) {
   // The caller guarantees that the pointer is not null
   auto &impl = scope_graph->impl_;
-  if (TensorFlowFunsionOPUtil::IsFusionOp(node_def) || impl->IsFusionOp(node_def)) {
-    return true;
-  }
-
-  return false;
+  return (impl->IsFusionOp(node_def));
 }
 Status TensorFlowModelParser::GetInPutIndex(shared_ptr<ge::ScopeGraph> &scope_graph, const ge::ScopeFusionOpInfo &info,
                                             const int32_t old_index, int32_t &new_index) {
@@ -1845,10 +1827,7 @@ Status TensorFlowModelParser::GetInPutIndex(shared_ptr<ge::ScopeGraph> &scope_gr
   if (info.scope_pass) {
     auto &impl = scope_graph->impl_;
     ret = impl->GetInputOrOutputIndex(info, old_index, true, new_index);
-  } else {
-    ret = TensorFlowFunsionOPUtil::GetInPutIndex(info, old_index, new_index);
   }
-
   return ret;
 }
 Status TensorFlowModelParser::GetOutPutIndex(shared_ptr<ge::ScopeGraph> &scope_graph, const ge::ScopeFusionOpInfo &info,
@@ -1858,31 +1837,8 @@ Status TensorFlowModelParser::GetOutPutIndex(shared_ptr<ge::ScopeGraph> &scope_g
   if (info.scope_pass) {
     auto &impl = scope_graph->impl_;
     ret = impl->GetInputOrOutputIndex(info, old_index, false, new_index);
-  } else {
-    ret = TensorFlowFunsionOPUtil::GetOutPutIndex(info, old_index, new_index);
   }
-
   return ret;
-}
-
-Status TensorFlowModelParser::CheckFusionOpValid() {
-  for (auto &iter : fusion_op_nodedef_map_) {
-    const string fusion_node_name = iter.first;
-    vector<const NodeDef *> nodedef_list = iter.second;
-    vector<string> funsion_op_info = fusion_op_type_map_[fusion_node_name];
-    // vecotr index 0 is fusion_op_type
-    const string funsion_op_type = funsion_op_info[0];
-    if (!fusion_op_policy_[fusion_node_name]) {
-      // Check the validity of the fusion_op_nodedef_map children operator
-      GE_RETURN_IF_ERROR(
-          TensorFlowFunsionOPUtil::CheckFusionOpChildren(fusion_node_name, nodedef_list, funsion_op_type));
-
-      // Because there are many scenes in tensorflow graph,
-      // in order to avoid the problem of omission, the error is returned directly.
-      // In the future, functions like rollback can be implemented according to the definition of fusion operator
-    }
-  }
-  return SUCCESS;
 }
 
 bool TensorFlowModelParser::ConstOpNeedUpdate(const string &op_name) {
@@ -1899,9 +1855,6 @@ bool TensorFlowModelParser::ConstOpNeedUpdate(const string &op_name) {
         if (!IsFusionOpChild(out_node.first, &info)) {
           return true;
         }
-      }
-      if (std::find(const_op_update_vec.begin(), const_op_update_vec.end(), op_name) == const_op_update_vec.end()) {
-        return false;
       }
     }
     return true;
@@ -2335,9 +2288,6 @@ Status TensorFlowModelParser::ParseProto(const google::protobuf::Message *proto,
   }
   PARSER_TIMESTAMP_END(AddFmkNodeDefToMap, "TensorFlowModelParser::AddFmkNodeDefToMap");
   GELOGI("[TF Parser] TF subgraph isDatasetInit: %d.", isDatasetInit);
-
-  // Verify the validity of fusionop
-  GE_RETURN_IF_ERROR(CheckFusionOpValid());
 
   // Build input and output relationships for all OP nodes
   PARSER_TIMESTAMP_START(GetOpNodesContextFromGraph);

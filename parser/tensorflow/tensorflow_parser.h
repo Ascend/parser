@@ -36,12 +36,12 @@
 #include "omg/parser/op_parser.h"
 #include "omg/parser/weights_parser.h"
 #include "parser/tensorflow/tensorflow_fusion_op_parser.h"
-#include "parser/tensorflow/tensorflow_fusionop_util.h"
 #include "parser/tensorflow/tensorflow_util.h"
 #include "proto/om.pb.h"
 #include "proto/tensorflow/graph.pb.h"
 #include "proto/tensorflow/node_def.pb.h"
 #include "proto/tensorflow/graph_library.pb.h"
+#include "register/scope/scope_graph_impl.h"
 #include "external/register/scope/scope_fusion_pass_register.h"
 #include "scope/scope_pass_manager.h"
 #include "common/parser_utils.h"
@@ -312,15 +312,6 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
                                const ge::ScopeFusionOpInfo &info,
                                const int32_t old_index,
                                int32_t &new_index);
-  /**
-    * @ingroup domi_omg
-    * @brief Check the validity of fusionop，put it into op_node_name_list if Misjudgement
-    * @param op_node_name_list
-    * @return SUCCESS check successfully
-    * @return FAILED check failed
-
-    */
-  Status CheckFusionOpValid();
 
   /**
    * @ingroup domi_omg

@@ -23,6 +23,7 @@
 #include "external/parser/onnx_parser.h"
 #include "st/parser_st_utils.h"
 #include "external/ge/ge_api_types.h"
+#include "tests/depends/ops_stub/ops_stub.h"
 
 namespace ge {
 class STestOnnxParser : public testing::Test {
@@ -98,61 +99,6 @@ void STestOnnxParser::RegisterCustomOp() {
     domi::OpRegistry::Instance()->Register(reg_data);
   }
   domi::OpRegistry::Instance()->registrationDatas.clear();
-}
-
-namespace {
-REG_OP(Data)
-    .INPUT(x, TensorType::ALL())
-    .OUTPUT(y, TensorType::ALL())
-    .ATTR(index, Int, 0)
-    .OP_END_FACTORY_REG(Data)
-
-REG_OP(Const)
-    .OUTPUT(y, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT8, DT_INT16, DT_UINT16, \
-        DT_UINT8, DT_INT32, DT_INT64, DT_UINT32, DT_UINT64, DT_BOOL, DT_DOUBLE}))
-    .ATTR(value, Tensor, Tensor())
-    .OP_END_FACTORY_REG(Const)
-
-REG_OP(Conv2D)
-    .INPUT(x, TensorType({DT_FLOAT16, DT_FLOAT, DT_INT8}))
-    .INPUT(filter, TensorType({DT_FLOAT16, DT_FLOAT, DT_INT8}))
-    .OPTIONAL_INPUT(bias, TensorType({DT_FLOAT16, DT_FLOAT, DT_INT32}))
-    .OPTIONAL_INPUT(offset_w, TensorType({DT_INT8}))
-    .OUTPUT(y, TensorType({DT_FLOAT16, DT_FLOAT, DT_INT32}))
-    .REQUIRED_ATTR(strides, ListInt)
-    .REQUIRED_ATTR(pads, ListInt)
-    .ATTR(dilations, ListInt, {1, 1, 1, 1})
-    .ATTR(groups, Int, 1)
-    .ATTR(data_format, String, "NHWC")
-    .ATTR(offset_x, Int, 0)
-    .OP_END_FACTORY_REG(Conv2D)
-
-REG_OP(If)
-    .INPUT(cond, TensorType::ALL())
-    .DYNAMIC_INPUT(input, TensorType::ALL())
-    .DYNAMIC_OUTPUT(output, TensorType::ALL())
-    .GRAPH(then_branch)
-    .GRAPH(else_branch)
-    .OP_END_FACTORY_REG(If)
-
-REG_OP(Add)
-    .INPUT(x1, TensorType({DT_FLOAT, DT_INT32, DT_INT64, DT_FLOAT16, DT_INT16,
-                           DT_INT8, DT_UINT8, DT_DOUBLE, DT_COMPLEX128,
-                           DT_COMPLEX64, DT_STRING}))
-    .INPUT(x2, TensorType({DT_FLOAT, DT_INT32, DT_INT64, DT_FLOAT16, DT_INT16,
-                           DT_INT8, DT_UINT8, DT_DOUBLE, DT_COMPLEX128,
-                           DT_COMPLEX64, DT_STRING}))
-    .OUTPUT(y, TensorType({DT_FLOAT, DT_INT32, DT_INT64, DT_FLOAT16, DT_INT16,
-                           DT_INT8, DT_UINT8, DT_DOUBLE, DT_COMPLEX128,
-                           DT_COMPLEX64, DT_STRING}))
-    .OP_END_FACTORY_REG(Add)
-
-REG_OP(Identity)
-    .INPUT(x, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT8, DT_INT16, DT_UINT16, DT_UINT8,
-                          DT_INT32, DT_INT64, DT_UINT32, DT_UINT64, DT_BOOL, DT_DOUBLE}))
-    .OUTPUT(y, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT8, DT_INT16, DT_UINT16, DT_UINT8,
-                           DT_INT32, DT_INT64, DT_UINT32, DT_UINT64, DT_BOOL, DT_DOUBLE}))
-    .OP_END_FACTORY_REG(Identity)
 }
 
 TEST_F(STestOnnxParser, onnx_parser_user_output_with_default) {
