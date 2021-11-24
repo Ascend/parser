@@ -24,6 +24,7 @@
 #include "external/parser/onnx_parser.h"
 #include "ut/parser/parser_ut_utils.h"
 #include "external/ge/ge_api_types.h"
+#include "tests/depends/ops_stub/ops_stub.h"
 
 namespace ge {
 class UtestOnnxParser : public testing::Test {
@@ -39,121 +40,13 @@ class UtestOnnxParser : public testing::Test {
   void RegisterCustomOp();
 };
 
-static Status ParseParams(const google::protobuf::Message* op_src, ge::Operator& op_dest) {
-  return SUCCESS;
-}
-
-static Status ParseParamByOpFunc(const ge::Operator &op_src, ge::Operator& op_dest) {
-  return SUCCESS;
-}
-
-Status ParseSubgraphPostFnIf(const std::string& subgraph_name, const ge::Graph& graph) {
-  domi::AutoMappingSubgraphIOIndexFunc auto_mapping_subgraph_index_func =
-      domi::FrameworkRegistry::Instance().GetAutoMappingSubgraphIOIndexFunc(domi::ONNX);
-  if (auto_mapping_subgraph_index_func == nullptr) {
-    std::cout<<"auto mapping if subgraph func is nullptr!"<<std::endl;
-    return FAILED;
-  }
-  return auto_mapping_subgraph_index_func(graph,
-                                          [&](int data_index, int &parent_index) -> Status {
-                                            parent_index = data_index + 1;
-                                            return SUCCESS;
-                                          },
-                                          [&](int output_index, int &parent_index) -> Status {
-                                            parent_index = output_index;
-                                            return SUCCESS;
-                                          });
-}
-
 void UtestOnnxParser::RegisterCustomOp() {
-  REGISTER_CUSTOM_OP("Conv2D")
-  .FrameworkType(domi::ONNX)
-  .OriginOpType("ai.onnx::11::Conv")
-  .ParseParamsFn(ParseParams);
-
-  // register if op info to GE
-  REGISTER_CUSTOM_OP("If")
-  .FrameworkType(domi::ONNX)
-  .OriginOpType({"ai.onnx::9::If",
-                 "ai.onnx::10::If",
-                 "ai.onnx::11::If",
-                 "ai.onnx::12::If",
-                 "ai.onnx::13::If"})
-  .ParseParamsFn(ParseParams)
-  .ParseParamsByOperatorFn(ParseParamByOpFunc)
-  .ParseSubgraphPostFn(ParseSubgraphPostFnIf);
-
-  REGISTER_CUSTOM_OP("Add")
-  .FrameworkType(domi::ONNX)
-      .OriginOpType("ai.onnx::11::Add")
-      .ParseParamsFn(ParseParams);
-
-  REGISTER_CUSTOM_OP("Identity")
-  .FrameworkType(domi::ONNX)
-      .OriginOpType("ai.onnx::11::Identity")
-      .ParseParamsFn(ParseParams);
-
   std::vector<OpRegistrationData> reg_datas = domi::OpRegistry::Instance()->registrationDatas;
   for (auto reg_data : reg_datas) {
     OpRegistrationTbe::Instance()->Finalize(reg_data);
     domi::OpRegistry::Instance()->Register(reg_data);
   }
   domi::OpRegistry::Instance()->registrationDatas.clear();
-}
-
-namespace {
-REG_OP(Data)
-    .INPUT(x, TensorType::ALL())
-    .OUTPUT(y, TensorType::ALL())
-    .ATTR(index, Int, 0)
-    .OP_END_FACTORY_REG(Data)
-
-REG_OP(Const)
-    .OUTPUT(y, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT8, DT_INT16, DT_UINT16, \
-        DT_UINT8, DT_INT32, DT_INT64, DT_UINT32, DT_UINT64, DT_BOOL, DT_DOUBLE}))
-    .ATTR(value, Tensor, Tensor())
-    .OP_END_FACTORY_REG(Const)
-
-REG_OP(Conv2D)
-    .INPUT(x, TensorType({DT_FLOAT16, DT_FLOAT, DT_INT8}))
-    .INPUT(filter, TensorType({DT_FLOAT16, DT_FLOAT, DT_INT8}))
-    .OPTIONAL_INPUT(bias, TensorType({DT_FLOAT16, DT_FLOAT, DT_INT32}))
-    .OPTIONAL_INPUT(offset_w, TensorType({DT_INT8}))
-    .OUTPUT(y, TensorType({DT_FLOAT16, DT_FLOAT, DT_INT32}))
-    .REQUIRED_ATTR(strides, ListInt)
-    .REQUIRED_ATTR(pads, ListInt)
-    .ATTR(dilations, ListInt, {1, 1, 1, 1})
-    .ATTR(groups, Int, 1)
-    .ATTR(data_format, String, "NHWC")
-    .ATTR(offset_x, Int, 0)
-    .OP_END_FACTORY_REG(Conv2D)
-
-REG_OP(If)
-    .INPUT(cond, TensorType::ALL())
-    .DYNAMIC_INPUT(input, TensorType::ALL())
-    .DYNAMIC_OUTPUT(output, TensorType::ALL())
-    .GRAPH(then_branch)
-    .GRAPH(else_branch)
-    .OP_END_FACTORY_REG(If)
-
-REG_OP(Add)
-    .INPUT(x1, TensorType({DT_FLOAT, DT_INT32, DT_INT64, DT_FLOAT16, DT_INT16,
-                           DT_INT8, DT_UINT8, DT_DOUBLE, DT_COMPLEX128,
-                           DT_COMPLEX64, DT_STRING}))
-    .INPUT(x2, TensorType({DT_FLOAT, DT_INT32, DT_INT64, DT_FLOAT16, DT_INT16,
-                           DT_INT8, DT_UINT8, DT_DOUBLE, DT_COMPLEX128,
-                           DT_COMPLEX64, DT_STRING}))
-    .OUTPUT(y, TensorType({DT_FLOAT, DT_INT32, DT_INT64, DT_FLOAT16, DT_INT16,
-                           DT_INT8, DT_UINT8, DT_DOUBLE, DT_COMPLEX128,
-                           DT_COMPLEX64, DT_STRING}))
-    .OP_END_FACTORY_REG(Add)
-
-REG_OP(Identity)
-    .INPUT(x, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT8, DT_INT16, DT_UINT16, DT_UINT8,
-                          DT_INT32, DT_INT64, DT_UINT32, DT_UINT64, DT_BOOL, DT_DOUBLE}))
-    .OUTPUT(y, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT8, DT_INT16, DT_UINT16, DT_UINT8,
-                           DT_INT32, DT_INT64, DT_UINT32, DT_UINT64, DT_BOOL, DT_DOUBLE}))
-    .OP_END_FACTORY_REG(Identity)
 }
 
 TEST_F(UtestOnnxParser, onnx_parser_if_node) {

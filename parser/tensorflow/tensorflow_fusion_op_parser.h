@@ -20,7 +20,6 @@
 #include <vector>
 #include "graph/ge_tensor.h"
 #include "omg/parser/op_parser.h"
-#include "parser/tensorflow/tensorflow_fusionop_util.h"
 #include "parser/tensorflow/tensorflow_op_parser.h"
 #include "parser/tensorflow/tensorflow_util.h"
 #include "proto/tensorflow/graph.pb.h"

@@ -291,7 +291,6 @@ set(PARSER_SRC_FILES
     "${PARSER_DIR}/parser/tensorflow/tensorflow_enter_parser.cc"
     "${PARSER_DIR}/parser/tensorflow/tensorflow_fill_parser.cc"
     "${PARSER_DIR}/parser/tensorflow/tensorflow_frameworkop_parser.cc"
-    "${PARSER_DIR}/parser/tensorflow/tensorflow_fusionop_util.cc"
     "${PARSER_DIR}/parser/tensorflow/tensorflow_fusion_custom_parser_adapter.cc"
     "${PARSER_DIR}/parser/tensorflow/tensorflow_fusion_op_parser.cc"
     "${PARSER_DIR}/parser/tensorflow/tensorflow_identity_parser.cc"

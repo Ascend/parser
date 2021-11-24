@@ -22,6 +22,7 @@
 #include "parser/common/register_tbe.h"
 #include "external/parser/tensorflow_parser.h"
 #include "st/parser_st_utils.h"
+#include "tests/depends/ops_stub/ops_stub.h"
 
 namespace ge {
 class STestTensorflowParser : public testing::Test {
@@ -52,26 +53,6 @@ void STestTensorflowParser::RegisterCustomOp() {
     domi::OpRegistry::Instance()->Register(reg_data);
   }
   domi::OpRegistry::Instance()->registrationDatas.clear();
-}
-
-namespace {
-REG_OP(Data)
-    .INPUT(x, TensorType::ALL())
-    .OUTPUT(y, TensorType::ALL())
-    .ATTR(index, Int, 0)
-    .OP_END_FACTORY_REG(Data)
-
-REG_OP(Add)
-    .INPUT(x1, TensorType({DT_FLOAT, DT_INT32, DT_INT64, DT_FLOAT16, DT_INT16,
-                           DT_INT8, DT_UINT8, DT_DOUBLE, DT_COMPLEX128,
-                           DT_COMPLEX64, DT_STRING}))
-    .INPUT(x2, TensorType({DT_FLOAT, DT_INT32, DT_INT64, DT_FLOAT16, DT_INT16,
-                           DT_INT8, DT_UINT8, DT_DOUBLE, DT_COMPLEX128,
-                           DT_COMPLEX64, DT_STRING}))
-    .OUTPUT(y, TensorType({DT_FLOAT, DT_INT32, DT_INT64, DT_FLOAT16, DT_INT16,
-                           DT_INT8, DT_UINT8, DT_DOUBLE, DT_COMPLEX128,
-                           DT_COMPLEX64, DT_STRING}))
-    .OP_END_FACTORY_REG(Add)
 }
 
 TEST_F(STestTensorflowParser, tensorflow_parser_success) {

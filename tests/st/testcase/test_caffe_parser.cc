@@ -24,6 +24,7 @@
 #include "external/parser/caffe_parser.h"
 #include "st/parser_st_utils.h"
 #include "external/ge/ge_api_types.h"
+#include "tests/depends/ops_stub/ops_stub.h"
 
 namespace ge {
 class STestCaffeParser : public testing::Test {
@@ -59,19 +60,6 @@ void STestCaffeParser::RegisterCustomOp() {
     domi::OpRegistry::Instance()->Register(reg_data);
   }
   domi::OpRegistry::Instance()->registrationDatas.clear();
-}
-
-namespace {
-REG_OP(Data)
-    .INPUT(x, TensorType::ALL())
-    .OUTPUT(y, TensorType::ALL())
-    .ATTR(index, Int, 0)
-    .OP_END_FACTORY_REG(Data)
-
-REG_OP(Abs)
-    .INPUT(x, TensorType({DT_FLOAT16, DT_FLOAT, DT_DOUBLE, DT_INT32, DT_INT64}))
-    .OUTPUT(y, TensorType({DT_FLOAT16, DT_FLOAT, DT_DOUBLE, DT_INT32, DT_INT64}))
-    .OP_END_FACTORY_REG(Abs)
 }
 
 TEST_F(STestCaffeParser, caffe_parser_user_output_with_default) {

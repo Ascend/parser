@@ -6,7 +6,6 @@ set(SRC_LIST
     "tensorflow/tensorflow_enter_parser.cc"
     "tensorflow/tensorflow_fill_parser.cc"
     "tensorflow/tensorflow_frameworkop_parser.cc"
-    "tensorflow/tensorflow_fusionop_util.cc"
     "tensorflow/tensorflow_identity_parser.cc"
     "tensorflow/tensorflow_merge_parser.cc"
     "tensorflow/tensorflow_no_op_parser.cc"

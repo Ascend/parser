@@ -26,6 +26,7 @@
 #include "external/parser/caffe_parser.h"
 #include "ut/parser/parser_ut_utils.h"
 #include "external/ge/ge_api_types.h"
+#include "tests/depends/ops_stub/ops_stub.h"
 
 namespace ge {
 class UtestCaffeParser : public testing::Test {
@@ -41,39 +42,13 @@ class UtestCaffeParser : public testing::Test {
   void RegisterCustomOp();
 };
 
-static Status ParseParams(const google::protobuf::Message* op_src, ge::Operator& op_dest) {
-  return SUCCESS;
-}
 void UtestCaffeParser::RegisterCustomOp() {
-  REGISTER_CUSTOM_OP("Data")
-  .FrameworkType(domi::CAFFE)
-  .OriginOpType("Input")
-  .ParseParamsFn(ParseParams);
-
-  REGISTER_CUSTOM_OP("Abs")
-    .FrameworkType(domi::CAFFE)
-    .OriginOpType("AbsVal")
-    .ParseParamsFn(ParseParams);
-
   std::vector<OpRegistrationData> reg_datas = domi::OpRegistry::Instance()->registrationDatas;
   for (auto reg_data : reg_datas) {
     OpRegistrationTbe::Instance()->Finalize(reg_data);
     domi::OpRegistry::Instance()->Register(reg_data);
   }
   domi::OpRegistry::Instance()->registrationDatas.clear();
-}
-
-namespace {
-REG_OP(Data)
-    .INPUT(x, TensorType::ALL())
-    .OUTPUT(y, TensorType::ALL())
-    .ATTR(index, Int, 0)
-    .OP_END_FACTORY_REG(Data)
-
-REG_OP(Abs)
-    .INPUT(x, TensorType({DT_FLOAT16, DT_FLOAT, DT_DOUBLE, DT_INT32, DT_INT64}))
-    .OUTPUT(y, TensorType({DT_FLOAT16, DT_FLOAT, DT_DOUBLE, DT_INT32, DT_INT64}))
-    .OP_END_FACTORY_REG(Abs)
 }
 
 TEST_F(UtestCaffeParser, caffe_parser_user_output_with_name_and_index) {

@@ -30,6 +30,7 @@
 #include "external/parser/tensorflow_parser.h"
 #include "ut/parser/parser_ut_utils.h"
 #include "graph/model.h"
+#include "tests/depends/ops_stub/ops_stub.h"
 
 namespace ge {
 class UtestTensorflowParser : public testing::Test {
@@ -44,42 +45,13 @@ class UtestTensorflowParser : public testing::Test {
   void RegisterCustomOp();
 };
 
-static Status ParseParams(const google::protobuf::Message* op_src, ge::Operator& op_dest) {
-  return SUCCESS;
-}
-
 void UtestTensorflowParser::RegisterCustomOp() {
-  REGISTER_CUSTOM_OP("Add")
-  .FrameworkType(domi::TENSORFLOW)
-  .OriginOpType("Add")
-  .ParseParamsFn(ParseParams);
-
   std::vector<OpRegistrationData> reg_datas = domi::OpRegistry::Instance()->registrationDatas;
   for (auto reg_data : reg_datas) {
     OpRegistrationTbe::Instance()->Finalize(reg_data);
     domi::OpRegistry::Instance()->Register(reg_data);
   }
   domi::OpRegistry::Instance()->registrationDatas.clear();
-}
-
-namespace {
-REG_OP(Data)
-    .INPUT(x, TensorType::ALL())
-    .OUTPUT(y, TensorType::ALL())
-    .ATTR(index, Int, 0)
-    .OP_END_FACTORY_REG(Data)
-
-REG_OP(Add)
-    .INPUT(x1, TensorType({DT_FLOAT, DT_INT32, DT_INT64, DT_FLOAT16, DT_INT16,
-                           DT_INT8, DT_UINT8, DT_DOUBLE, DT_COMPLEX128,
-                           DT_COMPLEX64, DT_STRING}))
-    .INPUT(x2, TensorType({DT_FLOAT, DT_INT32, DT_INT64, DT_FLOAT16, DT_INT16,
-                           DT_INT8, DT_UINT8, DT_DOUBLE, DT_COMPLEX128,
-                           DT_COMPLEX64, DT_STRING}))
-    .OUTPUT(y, TensorType({DT_FLOAT, DT_INT32, DT_INT64, DT_FLOAT16, DT_INT16,
-                           DT_INT8, DT_UINT8, DT_DOUBLE, DT_COMPLEX128,
-                           DT_COMPLEX64, DT_STRING}))
-    .OP_END_FACTORY_REG(Add)
 }
 
 TEST_F(UtestTensorflowParser, tensorflow_parser_success) {
