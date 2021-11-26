@@ -38,8 +38,8 @@ class AclGrphParseUtil {
  public:
   AclGrphParseUtil() {}
   virtual ~AclGrphParseUtil() {}
-  domi::Status LoadOpsProtoLib();
-  void SaveCustomCaffeProtoPath();
+  static domi::Status LoadOpsProtoLib();
+  static void SaveCustomCaffeProtoPath();
   domi::Status AclParserInitialize(const std::map<std::string, std::string> &options);
   domi::Status SetOutputNodeInfo(ge::Graph &graph, const std::map<AscendString, AscendString> &parser_params);
   domi::Status ParseParamsBeforeGraph(const std::map<AscendString, AscendString> &parser_params,
@@ -52,7 +52,7 @@ class AclGrphParseUtil {
   domi::Status GetOutputLeaf(NodePtr node, std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info);
   void CreateOutputNodesInfo(std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info,
                              std::vector<std::string> &output_nodes_name);
-  void SetDefaultFormat();
+  static void SetDefaultFormat();
   domi::Status ParseAclOutputNodes(const std::string &out_nodes);
   domi::Status ParseAclOutputFp16NodesFormat(const std::string &is_output_fp16);
   domi::Status ParseAclEnableScope(const std::string &enable_scope_fusion_passes);
@@ -158,7 +158,7 @@ std::string CurrentTimeInStr();
 
 template <typename T, typename... Args>
 static inline std::shared_ptr<T> MakeShared(Args &&... args) {
-  typedef typename std::remove_const<T>::type T_nc;
+  using T_nc = typename std::remove_const<T>::type;
   std::shared_ptr<T> ret(new (std::nothrow) T_nc(std::forward<Args>(args)...));
   return ret;
 }

@@ -83,7 +83,7 @@ string NameMapHelper::Renormalize(const string &name) const {
 }
 
 domi::Status ComputeArgRange(const domi::tensorflow::NodeDef &node_def, const domi::tensorflow::OpDef::ArgDef &arg_def,
-                             const domi::tensorflow::OpDef &op_def, int *num) {
+                             int *num) {
   GE_CHECK_NOTNULL(num);
   if (!arg_def.number_attr().empty()) {
     // Same type repeated "num" times.
@@ -120,12 +120,12 @@ using NameRangeMap = std::map<string, std::pair<int, int>>;
 
 domi::Status NameRangesHelper(const domi::tensorflow::NodeDef &node_def,
                               const google::protobuf::RepeatedPtrField<domi::tensorflow::OpDef_ArgDef> &args,
-                              const domi::tensorflow::OpDef &op_def, NameRangeMap *result) {
+                              NameRangeMap *result) {
   GE_CHECK_NOTNULL(result);
   int start = 0;
   int num = 0;
   for (const auto &arg : args) {
-    GE_RETURN_IF_ERROR(ComputeArgRange(node_def, arg, op_def, &num));
+    GE_RETURN_IF_ERROR(ComputeArgRange(node_def, arg, &num));
     (*result)[arg.name()] = std::make_pair(start, start + num);
     start += num;
   }
@@ -136,7 +136,7 @@ domi::Status NameRangesForNode(const domi::tensorflow::NodeDef &node_def, const 
                                NameRangeMap *outputs) {
   GE_IF_BOOL_EXEC(outputs == nullptr, return FAILED);
 
-  return NameRangesHelper(node_def, op_def.output_arg(), op_def, outputs);
+  return NameRangesHelper(node_def, op_def.output_arg(), outputs);
 }
 
 domi::Status RemapFunctionDef(FunctionDef *fdef, const string &name, NameMapHelper &node_names,

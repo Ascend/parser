@@ -68,7 +68,7 @@ class GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY ThreadPool {
     return future;
   }
 
-  static void ThreadFunc(ThreadPool *thread_pool);
+  static void ThreadFunc(ThreadPool *const thread_pool);
 
  private:
   std::vector<std::thread> pool_;

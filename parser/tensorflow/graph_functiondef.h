@@ -58,7 +58,7 @@ class GraphToFunctionDef {
                                  vector<ge::InDataAnchorPtr> &in_anchor,
                                  vector<ge::OutDataAnchorPtr> &out_anchor);
 
-  static bool FindAttrValue(const domi::tensorflow::NodeDef *nodeDef,
+  static bool FindAttrValue(const domi::tensorflow::NodeDef *node_def,
                             const string attr_name,
                             domi::tensorflow::AttrValue &attr_value);
 

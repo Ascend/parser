@@ -45,24 +45,6 @@
 #include "omg/parser/op_parser.h"
 #include "proto/caffe/caffe.pb.h"
 
-using domi::caffe::ArgMaxParameter;
-using domi::caffe::BatchNormParameter;
-using domi::caffe::BlobProto;
-using domi::caffe::BlobShape;
-using domi::caffe::ConcatParameter;
-using domi::caffe::ConvolutionParameter;
-using domi::caffe::DetectionOutputParameter;
-using domi::caffe::EltwiseParameter;
-using domi::caffe::FillerParameter;
-using domi::caffe::InnerProductParameter;
-using domi::caffe::LayerParameter;
-using domi::caffe::PoolingParameter;
-using domi::caffe::PReLUParameter;
-using domi::caffe::ReshapeParameter;
-using domi::caffe::ROIAlignParameter;
-using domi::caffe::TanHParameter;
-using domi::caffe::UpsampleParameter;
-
 namespace ge {
 /**
  * @ingroup ge_omg
@@ -107,7 +89,7 @@ class PARSER_FUNC_VISIBILITY CaffeOpParser : public OpParser {
    * @return SUCCESS parse successfully
    * @return FAILED parse failed
    */
-  static Status ConvertWeight(const BlobProto &proto, const string &lay_name, ge::GeTensorPtr &weight);
+  static Status ConvertWeight(const domi::caffe::BlobProto &proto, const string &lay_name, ge::GeTensorPtr &weight);
 
   /**
    * @ingroup ge_omg
@@ -115,7 +97,7 @@ class PARSER_FUNC_VISIBILITY CaffeOpParser : public OpParser {
    * @param [in] proto Shape information before conversion
    * @param [out] shape Save converted shape information
    */
-  static void ConvertShape(const BlobProto &proto, std::vector<int64_t> &shape);
+  static void ConvertShape(const domi::caffe::BlobProto &proto, std::vector<int64_t> &shape);
 
  private:
   /**
@@ -126,7 +108,7 @@ class PARSER_FUNC_VISIBILITY CaffeOpParser : public OpParser {
    * @return SUCCESS parse weight type successfully
    * @return FAILED parse failed
    */
-  static Status ParseWeightType(const BlobProto &proto, const ge::GeShape &shape,
+  static Status ParseWeightType(const domi::caffe::BlobProto &proto, const ge::GeShape &shape,
                                 int size, const string &lay_name, ge::GeTensorPtr &weight);
 };
 }  // namespace ge

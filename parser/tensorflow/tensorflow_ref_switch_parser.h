@@ -65,7 +65,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowRefSwitchParser : public TensorFlowOpPars
    * @return SUCCESS 解析成功
    * @return FAILED 解析失败
    */
-  Status ParseT(const domi::tensorflow::NodeDef *node, RefSwitchOperator *op);
+  static Status ParseT(const domi::tensorflow::NodeDef *node, RefSwitchOperator *op);
 
   // AUTO GEN PLEASE DO NOT MODIFY IT
 };

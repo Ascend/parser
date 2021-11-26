@@ -31,7 +31,8 @@ Status TensorFlowCustomParserAdapter::ParseParams(const Message *op_src, ge::OpD
   GELOGD("TF op node name = %s, op type= %s, parse params", node_src->name().c_str(), node_src->op().c_str());
   GE_CHECK_NOTNULL(op_dest);
 
-  ParseParamFunc custom_op_parser = domi::OpRegistry::Instance()->GetParseParamFunc(op_dest->GetType(), node_src->op());
+  ParseParamFunc custom_op_parser = domi::OpRegistry::Instance()->GetParseParamFunc(
+      op_dest->GetType(), node_src->op());
   if (custom_op_parser == nullptr) {
     REPORT_CALL_ERROR("E19999", "No ParseParamFunc of node:%s exist in OpRegistry", node_src->name().c_str());
     GELOGE(FAILED, "No ParseParamFunc of node:%s exist in OpRegistry", node_src->name().c_str());

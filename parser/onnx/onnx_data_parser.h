@@ -32,7 +32,7 @@ class PARSER_FUNC_VISIBILITY OnnxDataParser : public OnnxOpParser {
 
   Status ParseInputFromUser(const ge::Operator &op_def);
 
-  bool IsSubgraphDataOp() {
+  bool IsSubgraphDataOp() const {
     return is_subgraph_data_op_;
   }
 

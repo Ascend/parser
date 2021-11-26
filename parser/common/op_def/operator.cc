@@ -49,7 +49,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY ParserOperator &ParserOperator:
 }
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY ParserOperator &ParserOperator::InputTensorDesc(
-  const ge::GeTensorDesc &input_tensordesc) {
+    const ge::GeTensorDesc &input_tensordesc) {
   input_descs_.push_back(input_tensordesc);
   return *this;
 }
@@ -76,8 +76,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY ParserOperator &ParserOperator:
   return *this;
 }
 FMK_FUNC_DEV_VISIBILITY FMK_FUNC_DEV_VISIBILITY ParserOperator &ParserOperator::AttrVector(
-  std::string key,
-  std::vector<int64_t> &value) {
+    std::string key, std::vector<int64_t> &value) {
   domi::AttrDef out;
   auto it = op_attrs_.find(key);
   if (it != op_attrs_.end()) {
@@ -91,12 +90,12 @@ FMK_FUNC_DEV_VISIBILITY FMK_FUNC_DEV_VISIBILITY ParserOperator &ParserOperator::
   return *this;
 }
 
-ParserOperator &ParserOperator::Attr(const OpAttribute &attr) {
-  auto it = op_attrs_.find(attr.name_);
+ParserOperator &ParserOperator::Attr(const OpAttribute &op_attr) {
+  auto it = op_attrs_.find(op_attr.name_);
   if (it != op_attrs_.end()) {
     (void)op_attrs_.erase(it);
   }
-  (void)op_attrs_.insert(std::make_pair(attr.name_, attr));
+  (void)op_attrs_.insert(std::make_pair(op_attr.name_, op_attr));
   return *this;
 }
 

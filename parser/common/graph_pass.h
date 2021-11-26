@@ -17,9 +17,6 @@
 #ifndef PARSER_COMMON_GRAPH_PASS_H_
 #define PARSER_COMMON_GRAPH_PASS_H_
 
-#include <string>
-#include <vector>
-
 #include "framework/common/debug/ge_log.h"
 #include "graph/compute_graph.h"
 #include "common/pass.h"

@@ -21,9 +21,6 @@
 #include "external/register/scope/scope_fusion_pass_register.h"
 #include "proto/tensorflow/graph.pb.h"
 
-using std::shared_ptr;
-using std::unique_ptr;
-
 namespace ge {
 /**
  * @ingroup domi_omg
@@ -36,15 +33,15 @@ class ScopePassManager {
   ScopePassManager &operator=(const ScopePassManager &scope_pass_manager) = delete;
   ~ScopePassManager() {}
 
-  shared_ptr<ScopeGraph> BuildScopeGraph(domi::tensorflow::GraphDef *graph_def);
+  std::shared_ptr<ScopeGraph> BuildScopeGraph(domi::tensorflow::GraphDef *graph_def);
 
-  domi::Status AddPass(unique_ptr<ScopeBasePass> &pass);
-  domi::Status Run(shared_ptr<ScopeGraph> &graph);
+  domi::Status AddPass(std::unique_ptr<ScopeBasePass> &pass);
+  domi::Status Run(std::shared_ptr<ScopeGraph> &graph);
 
   std::shared_ptr<ScopeGraph> scope_graph_;
 
  private:
-  std::vector<unique_ptr<ScopeBasePass>> graph_passes_;
+  std::vector<std::unique_ptr<ScopeBasePass>> graph_passes_;
 };
 }  // namespace ge
 

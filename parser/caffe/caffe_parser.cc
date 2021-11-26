@@ -21,6 +21,13 @@
 #include <sstream>
 #include <memory>
 #include <algorithm>
+#include <google/protobuf/compiler/importer.h>
+#include <google/protobuf/descriptor.h>
+#include <google/protobuf/dynamic_message.h>
+#include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <google/protobuf/text_format.h>
+
 #include "common/convert/message2operator.h"
 #include "parser/common/convert/pb2json.h"
 #include "parser/common/acl_graph_parser_util.h"
@@ -32,12 +39,6 @@
 #include "external/ge/ge_api_types.h"
 #include "framework/common/debug/ge_log.h"
 #include "graph/utils/graph_utils.h"
-#include <google/protobuf/compiler/importer.h>
-#include <google/protobuf/descriptor.h>
-#include <google/protobuf/dynamic_message.h>
-#include <google/protobuf/io/coded_stream.h>
-#include <google/protobuf/io/zero_copy_stream_impl.h>
-#include <google/protobuf/text_format.h>
 #include "omg/parser/op_parser.h"
 #include "omg/parser/parser_factory.h"
 #include "omg/parser/parser_inner_ctx.h"
@@ -54,6 +55,8 @@
 #include "register/register_fmk_types.h"
 #include "mmpa/mmpa_api.h"
 
+using domi::caffe::ConvolutionParameter;
+using domi::caffe::InnerProductParameter;
 using domi::caffe::LayerParameter;
 using domi::caffe::NetParameter;
 using domi::ParseParamByOpFunc;
@@ -68,7 +71,7 @@ using std::ifstream;
 
 #define CAFFE_CHECK_NULL_AND_REPROT_ERRORMSG(val, errormsg)                                     \
   do {                                                                                          \
-    if (val == nullptr) {                                                                       \
+    if ((val) == nullptr) {                                                                     \
       GELOGE(ge::PARAM_INVALID, errormsg);                                                      \
       REPORT_INNER_ERROR("E19999", errormsg);                                                   \
       return ge::PARAM_INVALID;                                                                 \
@@ -1384,7 +1387,7 @@ Status CaffeModelParser::SaveDataLayerTops(const domi::caffe::LayerParameter &la
   if (node->GetType() == ge::parser::DATA) {
     if (layer.top_size() != 1) {
       ErrorManager::GetInstance().ATCReportErrMessage("E11035", {"opname", "size"},
-        {name, std::to_string(layer.top_size())});
+                                                      {name, std::to_string(layer.top_size())});
       GELOGE(FAILED, "[Check][Type]Data layer[%s] top size must be 1, real size: %d", name.c_str(), layer.top_size());
       return FAILED;
     }
@@ -1895,7 +1898,7 @@ Status CaffeWeightsParser::ParseLayerField(const google::protobuf::Reflection *r
 #define CASE_FIELD_NAME(kName, method)                                 \
   if (filed_name == kField##kName) {                                   \
     string value = reflection->GetString(*message, field);             \
-    GELOGD("Parse result(%s : %s)", filed_name.c_str(), value.c_str());\
+    GELOGD("Parse res: (%s : %s)", filed_name.c_str(), value.c_str()); \
     layer_proto->set_##method(value);                                  \
     return SUCCESS;                                                    \
   }
@@ -1906,7 +1909,7 @@ Status CaffeWeightsParser::ParseLayerField(const google::protobuf::Reflection *r
   if (filed_name == kField##kName) {                                   \
     int field_size = reflection->FieldSize(*message, field);           \
     for (int i = 0; i < field_size; ++i) {                             \
-      string value = reflection->GetRepeatedString(*message, field, i);\
+      auto value = reflection->GetRepeatedString(*message, field, i);  \
       layer_proto->add_##method(value);                                \
     }                                                                  \
     return SUCCESS;                                                    \
@@ -1917,7 +1920,7 @@ Status CaffeWeightsParser::ParseLayerField(const google::protobuf::Reflection *r
   if (filed_name == kFieldBlobs) {
     int field_size = reflection->FieldSize(*message, field);
     for (int i = 0; i < field_size; ++i) {
-      BlobProto *item_message = layer_proto->add_blobs();
+      domi::caffe::BlobProto *item_message = layer_proto->add_blobs();
       const google::protobuf::Message &sub_message = reflection->GetRepeatedMessage(*message, field, i);
       if (ConvertBlobsProto(&sub_message, item_message) != SUCCESS) {
         GELOGE(FAILED, "[Invoke][ConvertBlobsProto] ParseLayerField of field: %s failed.", field->name().c_str());

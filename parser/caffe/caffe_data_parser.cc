@@ -25,10 +25,11 @@
 #include "parser/common/op_parser_factory.h"
 
 using namespace ge::parser;
+using domi::CAFFE;
 
 namespace ge {
-Status CaffeDataParser::GetOutputDesc(const string &name, int dim_size, const std::vector<int64_t> &input_dims,
-                                      ge::OpDescPtr &op) {
+Status CaffeDataParser::GetOutputDesc(const string &name, const std::vector<int64_t> &input_dims,
+                                      const ge::OpDescPtr &op) {
   GE_CHECK_NOTNULL(op);
   GELOGI("The input dim size is %zu in layer %s.", input_dims.size(), name.c_str());
 
@@ -52,7 +53,7 @@ Status CaffeDataParser::ParseParams(const Message *op_src, ge::OpDescPtr &op) {
   if (layer->type() == ge::parser::INPUT_TYPE) {
     GE_CHK_STATUS_RET(ParseParamsForInput(layer, op), "[Parse][Params] failed, Caffe layer name = %s, "
                       "layer type= %s", layer->name().c_str(), layer->type().c_str());
-  } else if(layer->type() == ge::parser::DUMMY_DATA) {
+  } else if (layer->type() == ge::parser::DUMMY_DATA) {
     GE_CHK_STATUS_RET(ParseParamsForDummyData(layer, op), "[Parse][Params] failed, Caffe layer name = %s, "
                       "layer type= %s", layer->name().c_str(), layer->type().c_str());
   } else {
@@ -85,7 +86,7 @@ Status CaffeDataParser::ParseParamsForInput(const domi::caffe::LayerParameter *l
       }
       string name = layer->name();
       GE_IF_BOOL_EXEC(shape_map.count(name) != 0, model_dims = shape_map.at(name));
-      GE_CHK_STATUS_RET(GetOutputDesc(name, model_dims.size(), model_dims, op),
+      GE_CHK_STATUS_RET(GetOutputDesc(name, model_dims, op),
                         "[Get][OutputDesc] failed in layer %s", name.c_str());
     }
   } else {
@@ -102,7 +103,7 @@ Status CaffeDataParser::ParseParamsForInput(const domi::caffe::LayerParameter *l
       return FAILED;
     }
     std::vector<int64_t> dims = search->second;
-    GE_CHK_STATUS_RET(GetOutputDesc(name, dims.size(), dims, op),
+    GE_CHK_STATUS_RET(GetOutputDesc(name, dims, op),
                       "[Get][OutputDesc] failed in layer %s.", name.c_str());
   }
   return SUCCESS;
@@ -130,7 +131,7 @@ Status CaffeDataParser::ParseParamsForDummyData(const domi::caffe::LayerParamete
 
       string name = layer->name();
       GE_IF_BOOL_EXEC(shape_map.count(name) != 0, model_dims = shape_map.at(name));
-      GE_CHK_STATUS_RET(GetOutputDesc(name, model_dims.size(), model_dims, op),
+      GE_CHK_STATUS_RET(GetOutputDesc(name, model_dims, op),
                         "[Get][OutputDesc] failed in layer %s", name.c_str());
     }
   } else {
@@ -147,7 +148,7 @@ Status CaffeDataParser::ParseParamsForDummyData(const domi::caffe::LayerParamete
       return FAILED;
     }
     std::vector<int64_t> dims = search->second;
-    GE_CHK_STATUS_RET(GetOutputDesc(name, dims.size(), dims, op),
+    GE_CHK_STATUS_RET(GetOutputDesc(name, dims, op),
                       "[Get][OutputDesc] failed in layer %s.", name.c_str());
   }
   return SUCCESS;

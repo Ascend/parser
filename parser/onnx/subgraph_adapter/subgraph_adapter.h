@@ -38,9 +38,6 @@
 #include "framework/omg/parser/parser_types.h"
 #include "parser/onnx/onnx_util.h"
 
-using Status = domi::Status;
-using namespace ge::parser;
-
 namespace ge {
 class PARSER_FUNC_VISIBILITY SubgraphAdapter {
  public:
@@ -50,7 +47,7 @@ class PARSER_FUNC_VISIBILITY SubgraphAdapter {
   /// @param [in/out] name_to_onnx_graph      map name to onnx graph
   /// @return SUCCESS                         parse success
   /// @return FAILED                          Parse failed
-  virtual Status AdaptAndFindAllSubgraphs(ge::onnx::NodeProto *parent_op,
+  virtual domi::Status AdaptAndFindAllSubgraphs(ge::onnx::NodeProto *parent_op,
                                           std::vector<ge::onnx::GraphProto *> &onnx_graphs,
                                           std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph) {
     return domi::SUCCESS;

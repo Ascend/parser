@@ -169,7 +169,7 @@ static Status InitOutTensor(const vector<int64_t> &shape, int64_t data_type, ge:
                             ge::Format format) {
   out_tensor_desc.SetFormat(format);
 
-  out_tensor_desc.SetDataType((ge::DataType)data_type);
+  out_tensor_desc.SetDataType(static_cast<ge::DataType>(data_type));
   ge::TensorUtils::SetReuseInput(out_tensor_desc, false);
   ge::TensorUtils::SetRealDimCnt(out_tensor_desc, shape.size());
 
@@ -180,7 +180,7 @@ static Status InitOutTensor(const vector<int64_t> &shape, int64_t data_type, ge:
   return SUCCESS;
 }
 
-static Status ParseVarShape(const domi::tensorflow::NodeDef *node, VariableOperator *op) {
+static Status ParseVarShape(const domi::tensorflow::NodeDef *node, VariableOperator *const op) {
   // The upper caller guarantees input params is not empty.
   string node_src_name = node->name();
   domi::tensorflow::AttrValue attr_value;

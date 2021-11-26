@@ -20,8 +20,6 @@
 #include <algorithm>
 #include <iostream>
 #include <string>
-#include <type_traits>
-#include <utility>
 #include <vector>
 #include "framework/common/debug/ge_log.h"
 
@@ -43,12 +41,12 @@ class Tuple {
   /// @brief constructor from initializer list
   /// @param init the initializer_list
   ///
-  inline Tuple(const std::initializer_list<ValueType> &init) { this->assign(init.begin(), init.end()); }
+  explicit Tuple(const std::initializer_list<ValueType> &init) { this->assign(init.begin(), init.end()); }
   ///
   /// @brief constructor from vector
   /// @param init the vector
   ///
-  inline Tuple(const std::vector<ValueType> &init) {  // NOLINT(runtime/explicit)
+  explicit Tuple(const std::vector<ValueType> &init) {  // NOLINT(runtime/explicit)
     this->assign(init.begin(), init.end());
   }
   ///
@@ -125,7 +123,9 @@ class Tuple {
   /// @param s the tuple to compare against
   ///
   inline bool operator==(const Tuple<ValueType> &s) const {
-    if (ndim_ != s.ndim_) return false;
+    if (ndim_ != s.ndim_) {
+      return false;
+    }
     return std::equal(begin(), end(), s.begin());
   }
   ///
@@ -178,7 +178,9 @@ class Tuple {
     const ValueType *begin = t.begin();
     const ValueType *end = t.end();
     for (const ValueType *it = begin; it != end; ++it) {
-      if (it != begin) os << ',';
+      if (it != begin) {
+        os << ',';
+      }
       os << *it;
     }
     os << ']';
@@ -229,7 +231,9 @@ class Tuple {
           }
           break;
         }
-        if (IsRightBracket(ch)) break;
+        if (IsRightBracket(ch)) {
+          break;
+        }
       } else if (IsRightBracket(ch)) {
         break;
       } else {

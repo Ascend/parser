@@ -29,8 +29,6 @@
 #include "omg/omg_inner_types.h"
 #include "external/register/register.h"
 
-using domi::CAFFE;
-
 namespace ge {
 class OpParser;
 

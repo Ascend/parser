@@ -20,16 +20,10 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
-#include "framework/omg/parser/parser_types.h"
 #include "graph/anchor.h"
 #include "graph/compute_graph.h"
 #include "graph/node.h"
 #include "omg/omg_inner_types.h"
-
-using std::map;
-using std::string;
-using std::unordered_map;
-using std::vector;
 
 namespace ge {
 class ParserGraphOptimizer {
@@ -45,31 +39,34 @@ class ParserGraphOptimizer {
   ge::ComputeGraphPtr graph_;
   domi::FrameworkType fmktype_;
 
-  domi::Status FindFmkNodeCluser(unordered_map<string, vector<ge::NodePtr>> &node_cluser_Map);
+  domi::Status FindFmkNodeCluser(std::unordered_map<std::string, std::vector<ge::NodePtr>> &node_cluser_Map) const;
 
-  domi::Status MarkForFusion(unordered_map<string, vector<ge::NodePtr>> &node_cluser_Map);
+  domi::Status MarkForFusion(std::unordered_map<std::string, std::vector<ge::NodePtr>> &node_cluser_Map);
 
-  domi::Status UpdateGraph(vector<ge::NodePtr> &nodes);
+  domi::Status UpdateGraph(std::vector<ge::NodePtr> &nodes);
 
-  domi::Status InsertNode(ge::ComputeGraphPtr sub_graph, vector<ge::NodePtr> &nodes,
-                          vector<ge::InDataAnchorPtr> &input_anchors, vector<ge::OutDataAnchorPtr> &output_anchors,
-                          map<ge::OutDataAnchorPtr, vector<ge::InDataAnchorPtr>> &output_in_map,
-                          vector<ge::InControlAnchorPtr> &input_control_anchors,
-                          vector<ge::OutControlAnchorPtr> &output_control_anchors,
-                          unordered_map<string, ge::NodePtr> &node_map);
+  static domi::Status InsertNode(ge::ComputeGraphPtr sub_graph, std::vector<ge::NodePtr> &nodes,
+                                 std::vector<ge::InDataAnchorPtr> &input_anchors,
+                                 std::vector<ge::OutDataAnchorPtr> &output_anchors,
+                                 std::map<ge::OutDataAnchorPtr, std::vector<ge::InDataAnchorPtr>> &output_in_map,
+                                 std::vector<ge::InControlAnchorPtr> &input_control_anchors,
+                                 std::vector<ge::OutControlAnchorPtr> &output_control_anchors,
+                                 std::unordered_map<std::string, ge::NodePtr> &node_map);
 
-  domi::Status LinkInnerAnchor(unordered_map<string, ge::NodePtr> &node_map);
+  domi::Status LinkInnerAnchor(std::unordered_map<std::string, ge::NodePtr> &node_map) const;
 
-  domi::Status RebuildOutputAnchors(vector<ge::OutDataAnchorPtr> &output_anchors, ge::OpDescPtr fusion_op_desc);
+  static domi::Status RebuildOutputAnchors(std::vector<ge::OutDataAnchorPtr> &output_anchors,
+                                           ge::OpDescPtr fusion_op_desc);
 
-  domi::Status RebuildInputAnchors(vector<ge::InDataAnchorPtr> &input_anchors, ge::OpDescPtr fusion_op_desc);
+  static domi::Status RebuildInputAnchors(std::vector<ge::InDataAnchorPtr> &input_anchors,
+                                          ge::OpDescPtr fusion_op_desc);
 
-  domi::Status RebuildFusionNode(vector<ge::InDataAnchorPtr> &input_anchors,
-                                 vector<ge::OutDataAnchorPtr> &output_anchors,
-                                 map<ge::OutDataAnchorPtr, vector<ge::InDataAnchorPtr>> &output_in_map,
-                                 vector<ge::InControlAnchorPtr> &input_control_anchors,
-                                 vector<ge::OutControlAnchorPtr> &output_control_anchors, ge::NodePtr fusion_node);
-
+  static domi::Status RebuildFusionNode(std::vector<ge::InDataAnchorPtr> &input_anchors,
+                                        std::vector<ge::OutDataAnchorPtr> &output_anchors,
+                                        std::map<ge::OutDataAnchorPtr, std::vector<ge::InDataAnchorPtr>> &output_in_map,
+                                        std::vector<ge::InControlAnchorPtr> &input_control_anchors,
+                                        std::vector<ge::OutControlAnchorPtr> &output_control_anchors,
+                                        ge::NodePtr fusion_node);
 };
 }  // namespace ge
 #endif  // GE_GRAPH_OPTIMIZE_GRAPH_OPTIMIZER_H_

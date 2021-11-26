@@ -57,8 +57,8 @@ const uint32_t kSetOutputWithNodeAndIndex = 0x1;
 const uint32_t kSetOutputWithTensorName = 0x2;
 const uint32_t kSetOutputModeMixed = 0x3;
 const std::set<domi::FrameworkType> kSupportTensorAsOutput = {
-  domi::CAFFE,
-  domi::ONNX
+    domi::CAFFE,
+    domi::ONNX
 };
 
 static string GetSoPath() {
@@ -318,7 +318,7 @@ domi::Status AclGrphParseUtil::ParseAclOutputNodes(const string &out_nodes) {
           index_v.emplace_back(index);
           ge::GetParserContext().out_nodes_map.emplace(key_value_v[0], index_v);
         }
-        ge::GetParserContext().user_out_nodes.push_back(std::make_pair(key_value_v[0], index));
+        ge::GetParserContext().user_out_nodes.emplace_back(key_value_v[0], index);
       }
       if (set_output_mode == kSetOutputModeMixed) {
         ErrorManager::GetInstance().ATCReportErrMessage("E10001", {"parameter", "value", "reason"},

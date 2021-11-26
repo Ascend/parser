@@ -25,9 +25,7 @@ namespace ge {
 class ProtoFileParser {
 public:
   ProtoFileParser(){};
-  ProtoFileParser(const char *dest_path){
-    fusion_proto_path = dest_path;
-  }
+  explicit ProtoFileParser(const char *dest_path) : fusion_proto_path(dest_path) {}
   ~ProtoFileParser();
   Status CombineProtoFile(const char *caffe_proto_file, const char *custom_proto_file,
                           std::string &dest_proto_file);
@@ -37,14 +35,13 @@ private:
   Status ParseProtoFile(const std::string &proto_file,
                         std::map<int, std::pair<std::string, std::string> > &identifier_op_map,
                         std::map<std::string, std::pair<int, std::string> > &op_identifier_map);
-  Status WriteCaffeProtoFile(const char *custom_proto_file,
-                             std::ifstream &read_caffe,
-                             std::ofstream &write_tmp);
+  Status WriteCaffeProtoFile(const char *custom_proto_file, std::ifstream &read_caffe,
+                             std::ofstream &write_tmp) const;
   Status WriteProtoFile(const char *caffe_proto_file, const char *custom_proto_file);
-  Status FindConflictLine(const char *proto_file, int identifier,
+  static Status FindConflictLine(const char *proto_file, int identifier,
                           std::string &dest_line);
-  Status AddCustomAndConflictLayer(const char *custom_proto_file, std::ofstream &write_tmp);
-  Status AddCustomAndConflictMessage(const char *custom_proto_file, std::ofstream &write_tmp);
+  Status AddCustomAndConflictLayer(const char *custom_proto_file, std::ofstream &write_tmp) const;
+  static Status AddCustomAndConflictMessage(const char *custom_proto_file, std::ofstream &write_tmp);
   void CheckConflictOp(const char *caffe_proto_file, const char *custom_proto_file,
                        std::map<std::string, std::pair<int, std::string>> &caffe_op_identifier_map,
                        std::map<std::string, std::pair<int, std::string>> &custom_op_identifier_map);

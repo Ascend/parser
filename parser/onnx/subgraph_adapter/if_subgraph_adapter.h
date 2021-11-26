@@ -21,17 +21,17 @@
 #include <string>
 #include "subgraph_adapter.h"
 
-using ge::onnx::NodeProto;
-
 namespace ge {
 class PARSER_FUNC_VISIBILITY IfSubgraphAdapter : public SubgraphAdapter {
  public:
-  Status AdaptAndFindAllSubgraphs(ge::onnx::NodeProto *parent_op, std::vector<ge::onnx::GraphProto *> &onnx_graphs,
-                                  std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph) override;
-private:
-  Status ParseIfNodeSubgraphs(ge::onnx::NodeProto *parent_node, std::vector<ge::onnx::GraphProto *> &onnx_graphs,
-                              std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph);
-  Status GetSubgraphsAllInputs(ge::onnx::GraphProto &onnx_graph, std::set<std::string> &all_inputs);
+  domi::Status AdaptAndFindAllSubgraphs(ge::onnx::NodeProto *parent_op,
+                                        std::vector<ge::onnx::GraphProto *> &onnx_graphs,
+                                        std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph) override;
+
+ private:
+  domi::Status ParseIfNodeSubgraphs(ge::onnx::NodeProto *parent_node, std::vector<ge::onnx::GraphProto *> &onnx_graphs,
+                                    std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph);
+  domi::Status GetSubgraphsAllInputs(ge::onnx::GraphProto &onnx_graph, std::set<std::string> &all_inputs);
   void AddInputNodeForGraph(const std::set<std::string> &all_inputs, ge::onnx::GraphProto &onnx_graph);
   void AddInputForParentNode(const std::set<std::string> &all_inputs, ge::onnx::NodeProto &parent_node);
 };

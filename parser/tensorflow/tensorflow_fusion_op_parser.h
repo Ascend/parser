@@ -25,7 +25,6 @@
 #include "proto/tensorflow/graph.pb.h"
 #include "proto/tensorflow/node_def.pb.h"
 
-using std::vector;
 using google::protobuf::Message;
 using domi::tensorflow::NodeDef;
 using domi::tensorflow::TensorProto;
@@ -45,7 +44,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowFusionOpParser : public TensorFlowOpParse
    * @return SUCCESS Parsing success
    * @return FAILED Parsing failed
    */
-  virtual Status ParseParams(const vector<const NodeDef *> &v_input_const, ge::NodePtr &node);
+  virtual Status ParseParams(const std::vector<const NodeDef *> &v_input_const, ge::NodePtr &node);
 
   /**
    * @ingroup domi_omg
@@ -68,19 +67,19 @@ class PARSER_FUNC_VISIBILITY TensorFlowFusionOpParser : public TensorFlowOpParse
    *
    */
   // template <class T>
-  Status ParseParamFromConst(const NodeDef *input_const, int32_t &param);
+  static Status ParseParamFromConst(const NodeDef *input_const, int32_t &param);
 
-  Status ParseParamFromConst(const NodeDef *nodeDef, int32_t &param, int index);
+  static Status ParseParamFromConst(const NodeDef *node_def, int32_t &param, int index);
 
-  Status ParseParamFromConst(const NodeDef *input_const, float &param);
+  static Status ParseParamFromConst(const NodeDef *input_const, float &param);
 
-  Status ParseParamFromConst(const NodeDef *nodeDef, float &param, int index);
+  static Status ParseParamFromConst(const NodeDef *node_def, float &param, int index);
 
-  Status GetTensorFromNode(const NodeDef *nodeDef, TensorProto &tensor);
+  static Status GetTensorFromNode(const NodeDef *node_def, TensorProto &tensor);
 
-  Status ParseHalfFromConst(const NodeDef *node_def, float &param, int index = 0);
+  static Status ParseHalfFromConst(const NodeDef *node_def, float &param, int index = 0);
 
-  Status ParseWeightFromConst(const NodeDef *node_def, ge::GeTensorPtr &weight);
+  static Status ParseWeightFromConst(const NodeDef *node_def, ge::GeTensorPtr &weight);
 };
 }  // namespace ge
 

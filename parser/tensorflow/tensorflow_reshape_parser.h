@@ -22,7 +22,7 @@
 namespace ge {
 class PARSER_FUNC_VISIBILITY TensorFlowReshapeParser : public TensorFlowOpParser {
  private:
-  Status ParseDesc(const domi::tensorflow::AttrValue &attr_value, ge::GeTensorDesc &ge_desc);
+  static Status ParseDesc(const domi::tensorflow::AttrValue &attr_value, ge::GeTensorDesc &ge_desc);
 
  public:
   /**

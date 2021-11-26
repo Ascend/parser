@@ -51,7 +51,7 @@ class TensorflowParserBuilder;
 
 class PARSER_FUNC_VISIBILITY TensorflowWeightParserBuilder : public TensorflowFinalizeable {
  public:
-  virtual ~TensorflowWeightParserBuilder() {}
+  ~TensorflowWeightParserBuilder() override {}
 };
 
 template <typename Param>
@@ -64,7 +64,7 @@ class PARSER_FUNC_VISIBILITY TensorflowParserBuilder : public TensorflowWeightPa
 
   explicit TensorflowParserBuilder(const std::string &davinci_optype) : davinci_optype_(davinci_optype) {}
 
-  ~TensorflowParserBuilder() {}
+  ~TensorflowParserBuilder() override {}
 
   TensorflowParserBuilder &SetParseParamsFn(ParseParamsFn parse_params_fn) {
     parse_params_fn_ = parse_params_fn;
@@ -95,9 +95,10 @@ class PARSER_FUNC_VISIBILITY TensorflowOpParserAdapter : public TensorFlowOpPars
   using ParseParamsFn = std::function<domi::Status(const domi::tensorflow::NodeDef *, Param *)>;
 
  public:
-  TensorflowOpParserAdapter(TensorflowParserBuilder<Param> builder) { parse_params_fn_ = builder.parse_params_fn_; }
+  explicit TensorflowOpParserAdapter(TensorflowParserBuilder<Param> builder) {
+    parse_params_fn_ = builder.parse_params_fn_; }
 
-  ~TensorflowOpParserAdapter() {}
+  ~TensorflowOpParserAdapter() override {}
 
   Status ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) override {
     const domi::tensorflow::NodeDef *node = static_cast<const domi::tensorflow::NodeDef *>(op_src);

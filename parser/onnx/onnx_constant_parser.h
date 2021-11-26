@@ -19,6 +19,7 @@
 
 #include <string>
 #include "common/util.h"
+#include "external/graph/tensor.h"
 #include "parser/common/data_op_parser.h"
 #include "parser/onnx/onnx_op_parser.h"
 
@@ -30,12 +31,12 @@ class PARSER_FUNC_VISIBILITY OnnxConstantParser : public OnnxOpParser {
   Status ParseParams(const Message *op_src, ge::Operator &op_def) override;
 
  private:
-  Status ParseConstFromInput(const ge::onnx::NodeProto *op_src, ge::Operator &op_def);
-  Status ParseConvertTensor(const ge::onnx::TensorProto &tensor_proto, ge::Tensor &tensor);
-  Status ParseConvertData(const ge::onnx::TensorProto &tensor_proto, ge::Tensor &tensor, int count);
-  void ParseConvertDataElements(const ge::onnx::TensorProto &tensor_proto, ge::Tensor &tensor, int count,
+  static Status ParseConstFromInput(const ge::onnx::NodeProto *op_src, ge::Operator &op_def);
+  static Status ParseConvertTensor(const ge::onnx::TensorProto &tensor_proto, ge::Tensor &tensor);
+  static Status ParseConvertData(const ge::onnx::TensorProto &tensor_proto, ge::Tensor &tensor, int count);
+  static void ParseConvertDataElements(const ge::onnx::TensorProto &tensor_proto, ge::Tensor &tensor, int count,
                                int64_t data_type);
-  Status ParseConvertDataType(const ge::onnx::TensorProto &tensor_proto, ge::Tensor &tensor);
+  static Status ParseConvertDataType(const ge::onnx::TensorProto &tensor_proto, ge::Tensor &tensor);
 
   template <typename T>
   static Status SetTensorData(int32_t val_size, const google::protobuf::RepeatedField<T> &val_vector, int count,

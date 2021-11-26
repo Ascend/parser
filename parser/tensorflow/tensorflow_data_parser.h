@@ -46,7 +46,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowDataParser : public TensorFlowOpParser, p
   * @return FAILED parse failed
   * @author
   */
-  Status ParseInputFromModel(const Message *op_src, ge::OpDescPtr &op_def);
+  Status ParseInputFromModel(const Message *op_src, const ge::OpDescPtr &op_def);
 
   /**
   * @ingroup domi_omg

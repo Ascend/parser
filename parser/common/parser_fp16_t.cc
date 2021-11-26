@@ -25,7 +25,7 @@ namespace ge {
 namespace parser {
 /// @ingroup fp16_t global filed
 /// @brief   round mode of last valid digital
-enum TagFp16RoundMode g_round_mode = kRoundToNearest;
+enum TagFp16RoundMode g_round_mode = TagFp16RoundMode::kRoundToNearest;
 
 void ExtractFp16(const uint16_t &val, uint16_t &s, int16_t &e, uint16_t &m) {
   // 1.Extract
@@ -55,7 +55,7 @@ static bool IsRoundOne(uint64_t man, uint16_t trunc_len) {
   bool last_bit = ((man & mask0) > 0);
   bool trunc_high = false;
   bool trunc_left = false;
-  if (g_round_mode == kRoundToNearest) {
+  if (g_round_mode == TagFp16RoundMode::kRoundToNearest) {
     trunc_high = ((man & mask1) > 0);
     trunc_left = ((man & mask2) > 0);
   }
@@ -480,7 +480,7 @@ static uint32_t Fp16ToUInt32(const uint16_t &fp_val) {
   return m_ret;
 }
 
-static uint16_t Fp16AddCalVal(uint16_t &s_ret, int16_t e_ret, uint16_t m_ret, uint32_t m_trunc, uint16_t shift_out) {
+static uint16_t Fp16AddCalVal(uint16_t s_ret, int16_t e_ret, uint16_t m_ret, uint32_t m_trunc, uint16_t shift_out) {
   uint16_t m_min = kFp16ManHideBit << shift_out;
   uint16_t m_max = m_min << 1;
   // Denormal
@@ -500,8 +500,8 @@ static uint16_t Fp16AddCalVal(uint16_t &s_ret, int16_t e_ret, uint16_t m_ret, ui
   bool b_last_bit = ((m_ret & 1) > 0);
   bool b_trunc_high = 0;
   bool b_trunc_left = 0;
-  b_trunc_high = (kRoundToNearest == g_round_mode) && ((m_trunc & kFp32SignMask) > 0);
-  b_trunc_left = (kRoundToNearest == g_round_mode) && ((m_trunc & kFp32AbsMax) > 0);
+  b_trunc_high = (TagFp16RoundMode::kRoundToNearest == g_round_mode) && ((m_trunc & kFp32SignMask) > 0);
+  b_trunc_left = (TagFp16RoundMode::kRoundToNearest == g_round_mode) && ((m_trunc & kFp32AbsMax) > 0);
   m_ret = ManRoundToNearest(b_last_bit, b_trunc_high, b_trunc_left, m_ret, shift_out);
   while (m_ret >= m_max) {
     m_ret = m_ret >> 1;
@@ -623,8 +623,8 @@ static uint16_t Fp16Mul(uint16_t v_1, uint16_t v_2) {
   bool b_last_bit = ((mul_m & 1) > 0);
   bool b_trunc_high = 0;
   bool b_trunc_left = 0;
-  b_trunc_high = (kRoundToNearest == g_round_mode) && ((m_trunc & kFp32SignMask) > 0);
-  b_trunc_left = (kRoundToNearest == g_round_mode) && ((m_trunc & kFp32AbsMax) > 0);
+  b_trunc_high = (TagFp16RoundMode::kRoundToNearest == g_round_mode) && ((m_trunc & kFp32SignMask) > 0);
+  b_trunc_left = (TagFp16RoundMode::kRoundToNearest == g_round_mode) && ((m_trunc & kFp32AbsMax) > 0);
   mul_m = ManRoundToNearest(b_last_bit, b_trunc_high, b_trunc_left, mul_m);
 
   while (mul_m >= m_max || e_ret < 0) {
@@ -701,25 +701,25 @@ static uint16_t Fp16Div(uint16_t v_1, uint16_t v_2) {
 }
 
 // operate
-fp16_t fp16_t::operator+(const fp16_t fp) {
+fp16_t fp16_t::operator+(const fp16_t fp) const {
   uint16_t ret_val = Fp16Add(val, fp.val);
   fp16_t ret(ret_val);
   return ret;
 }
 
-fp16_t fp16_t::operator-(const fp16_t fp) {
+fp16_t fp16_t::operator-(const fp16_t fp) const {
   uint16_t ret_val = Fp16Sub(val, fp.val);
   fp16_t ret(ret_val);
   return ret;
 }
 
-fp16_t fp16_t::operator*(const fp16_t fp) {
+fp16_t fp16_t::operator*(const fp16_t fp) const {
   uint16_t ret_val = Fp16Mul(val, fp.val);
   fp16_t ret(ret_val);
   return ret;
 }
 
-fp16_t fp16_t::operator/(const fp16_t fp) {
+fp16_t fp16_t::operator/(const fp16_t fp) const {
   uint16_t ret_val = Fp16Div(val, fp.val);
   fp16_t ret(ret_val);
   return ret;
@@ -968,7 +968,7 @@ static void SetValByUint16Val(const uint16_t &input_val, const uint16_t &sign, u
       bool b_last_bit = ((m_tmp & 1) > 0);
       bool b_trunc_high = 0;
       bool b_trunc_left = 0;
-      if (kRoundToNearest == g_round_mode) {  // trunc
+      if (TagFp16RoundMode::kRoundToNearest == g_round_mode) {  // trunc
         b_trunc_high = ((m_trunc & kFp32SignMask) > 0);
         b_trunc_left = ((m_trunc & kFp32AbsMax) > 0);
       }
@@ -1027,7 +1027,7 @@ fp16_t &fp16_t::operator=(const uint16_t &ui_val) {
       bool b_last_bit = ((m_ret & 1) > 0);
       bool b_trunc_high = 0;
       bool b_trunc_left = 0;
-      if (kRoundToNearest == g_round_mode) {  // trunc
+      if (TagFp16RoundMode::kRoundToNearest == g_round_mode) {  // trunc
         b_trunc_high = ((m_trunc & kFp32SignMask) > 0);
         b_trunc_left = ((m_trunc & kFp32AbsMax) > 0);
       }
@@ -1071,7 +1071,7 @@ static void SetValByUint32Val(const uint32_t &input_val, const uint16_t &sign, u
     bool b_last_bit = ((m_tmp & 1) > 0);
     bool b_trunc_high = 0;
     bool b_trunc_left = 0;
-    if (kRoundToNearest == g_round_mode) {  // trunc
+    if (TagFp16RoundMode::kRoundToNearest == g_round_mode) {  // trunc
       b_trunc_high = ((m_trunc & kFp32SignMask) > 0);
       b_trunc_left = ((m_trunc & kFp32AbsMax) > 0);
     }
@@ -1133,7 +1133,7 @@ fp16_t &fp16_t::operator=(const uint32_t &ui_val) {
       bool b_last_bit = ((m_tmp & 1) > 0);
       bool b_trunc_high = false;
       bool b_trunc_left = false;
-      if (g_round_mode == kRoundToNearest) {  // trunc
+      if (g_round_mode == TagFp16RoundMode::kRoundToNearest) {  // trunc
         b_trunc_high = ((m_trunc & kFp32SignMask) > 0);
         b_trunc_left = ((m_trunc & kFp32AbsMax) > 0);
       }
@@ -1239,7 +1239,7 @@ fp16_t::operator int64_t() const { return 0; }
 // Cannot be used, just in order to solve the compile error
 fp16_t::operator uint64_t() const { return 0; }
 
-FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY int fp16_t::IsInf() {
+FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY int fp16_t::IsInf() const {
   if ((val & kFp16AbsMax) == kFp16ExpMask) {
     if (val & kFp16SignMask) {
       return -1;

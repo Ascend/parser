@@ -43,7 +43,7 @@ Status ParserGraphOptimizer::FusionFmkop() {
   GE_CHECK_NOTNULL(graph_);
   std::unordered_map<string, std::vector<NodePtr>> node_cluser_Map;
   GE_CHK_STATUS_RET(MarkForFusion(node_cluser_Map), "find framework node to be fused fail.");
-  GE_IF_BOOL_EXEC(node_cluser_Map.size() == 0, return SUCCESS);
+  GE_IF_BOOL_EXEC(node_cluser_Map.empty(), return SUCCESS);
 
   for (auto it = node_cluser_Map.begin(); it != node_cluser_Map.end(); ++it) {
     GE_CHK_STATUS_RET(UpdateGraph(it->second), "fusion framework nodes failed. node：%s", (it->first).c_str());
@@ -120,7 +120,7 @@ Status ParserGraphOptimizer::MarkForFusion(unordered_map<string, vector<NodePtr>
 }
 
 // find frameworkOP
-Status ParserGraphOptimizer::FindFmkNodeCluser(unordered_map<string, vector<NodePtr>> &node_cluser_Map) {
+Status ParserGraphOptimizer::FindFmkNodeCluser(unordered_map<string, vector<NodePtr>> &node_cluser_Map) const {
   vector<NodePtr> temp_node_cluser;
 
   for (auto node : graph_->GetDirectNode()) {
@@ -303,7 +303,7 @@ Status ParserGraphOptimizer::InsertNode(ge::ComputeGraphPtr sub_graph, vector<ge
   return SUCCESS;
 }
 
-Status ParserGraphOptimizer::LinkInnerAnchor(unordered_map<string, ge::NodePtr> &node_map) {
+Status ParserGraphOptimizer::LinkInnerAnchor(unordered_map<string, ge::NodePtr> &node_map) const {
   for (auto node : graph_->GetDirectNode()) {
     GE_IF_BOOL_EXEC(node_map.count(node->GetName()) == 0, continue);
     NodePtr dst = node_map[node->GetName()];

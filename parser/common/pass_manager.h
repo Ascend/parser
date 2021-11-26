@@ -21,8 +21,6 @@
 
 #include "common/graph_pass.h"
 
-using std::vector;
-
 namespace ge {
 namespace parser {
 ///
@@ -36,7 +34,7 @@ public:
   /// get graph passes
   /// @author
   ///
-  const vector<std::pair<std::string, GraphPass *>> &GraphPasses() const;
+  const std::vector<std::pair<std::string, GraphPass *>> &GraphPasses() const;
 
   ///
   /// Add graph pass
@@ -64,12 +62,12 @@ public:
   /// @return others optimized failed
   /// @author
   ///
-  static Status Run(const ge::ComputeGraphPtr &graph, vector<std::pair<std::string, GraphPass *>> &passes);
+  static Status Run(const ge::ComputeGraphPtr &graph, std::vector<std::pair<std::string, GraphPass *>> &passes);
 
   ~PassManager();
 
 private:
-  vector<std::pair<std::string, GraphPass *>> names_to_graph_passes_;
+  std::vector<std::pair<std::string, GraphPass *>> names_to_graph_passes_;
 };
 }  // namespace parser
 }  // namespace ge

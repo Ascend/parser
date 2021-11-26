@@ -19,13 +19,14 @@
 #include "common/util.h"
 #include "framework/common/debug/ge_log.h"
 
-namespace ge{
+namespace ge {
+using parser::IF;
 namespace {
 const std::map<std::string, int> kAttrNameToIndex = {{"then_branch", 0}, {"else_branch", 1}};
 const int kIfNodeAttrSize = 2;
-}
-Status IfSubgraphAdapter::AdaptAndFindAllSubgraphs(ge::onnx::NodeProto *parent_node,
-    std::vector<ge::onnx::GraphProto *> &onnx_graphs,
+}  // namespace
+domi::Status IfSubgraphAdapter::AdaptAndFindAllSubgraphs(
+    ge::onnx::NodeProto *parent_node, std::vector<ge::onnx::GraphProto *> &onnx_graphs,
     std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph) {
   GE_CHECK_NOTNULL(parent_node);
   GELOGI("Onnx parent node name=%s, op type=%s, adapt subgraph.", parent_node->name().c_str(),
@@ -41,9 +42,9 @@ Status IfSubgraphAdapter::AdaptAndFindAllSubgraphs(ge::onnx::NodeProto *parent_n
   return SUCCESS;
 }
 
-Status IfSubgraphAdapter::ParseIfNodeSubgraphs(ge::onnx::NodeProto *parent_node,
-                                               std::vector<ge::onnx::GraphProto *> &onnx_graphs,
-                                               std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph) {
+domi::Status IfSubgraphAdapter::ParseIfNodeSubgraphs(
+    ge::onnx::NodeProto *parent_node, std::vector<ge::onnx::GraphProto *> &onnx_graphs,
+    std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph) {
   if (parent_node->attribute_size() != kIfNodeAttrSize) {
     GELOGE(FAILED, "[Parse][Node] Invalid graph, if node attribute size:%d must be 2.", parent_node->attribute_size());
     REPORT_INNER_ERROR("E19999", "Invalid graph, if node attribute size:%d must be 2.", parent_node->attribute_size());
@@ -88,8 +89,8 @@ Status IfSubgraphAdapter::ParseIfNodeSubgraphs(ge::onnx::NodeProto *parent_node,
   return SUCCESS;
 }
 
-Status IfSubgraphAdapter::GetSubgraphsAllInputs(ge::onnx::GraphProto &onnx_graph,
-                                                std::set<std::string> &all_inputs) {
+domi::Status IfSubgraphAdapter::GetSubgraphsAllInputs(ge::onnx::GraphProto &onnx_graph,
+                                                      std::set<std::string> &all_inputs) {
   std::set<std::string> graph_inputs;
   std::set<std::string> graph_outputs;
   for (int i = 0; i < onnx_graph.node_size(); i++) {

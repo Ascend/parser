@@ -27,13 +27,13 @@ class ParserUtils {
  public:
   using OutputNodeInfo = std::pair<std::string, int32_t>;
   using OutputMapping = std::unordered_map<std::string, OutputNodeInfo>;
-  static Status ExpandOneToManyGraph(Graph &graph, OutputMapping &output_mapping);
+  static Status ExpandOneToManyGraph(const Graph &graph, OutputMapping &output_mapping);
   static string GenOutputKey(const OutputNodeInfo &node_info);
   static void UpdateOutputNodeInfo(const OutputMapping &final_output_nodes, OutputNodeInfo &output_node_info);
   static void UpdateOutputCtx(const OutputMapping &final_output_nodes, OutputMapping &tensor_to_nodes);
 
  private:
-  static Status ExpandNodeToSubgraph(const Graph &subgraph, const NodePtr &node, Graph &graph,
+  static Status ExpandNodeToSubgraph(const Graph &subgraph, const NodePtr &node, const Graph &graph,
                                      OutputMapping &output_mapping);
   static Status HandleInputContext(const NodePtr &node,
                                    const std::vector<NodePtr> &input_nodes,

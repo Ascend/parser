@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
+#include "parser/common/model_saver.h"
+
 #include <sys/stat.h>
 #include <fcntl.h>
 
-#include "parser/common/model_saver.h"
 #include "framework/common/debug/ge_log.h"
 #include "common/util.h"
 #include "common/util/error_manager/error_manager.h"
@@ -124,7 +125,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY int ModelSaver::CreateDirectory
   auto dir_path_len = directory_path.length();
   if (dir_path_len >= PATH_MAX) {
     ErrorManager::GetInstance().ATCReportErrMessage(
-            "E19002", {"filepath", "size"}, {directory_path, std::to_string(PATH_MAX)});
+        "E19002", {"filepath", "size"}, {directory_path, std::to_string(PATH_MAX)});
     GELOGW("Path[%s] len is too long, it must be less than %d", directory_path.c_str(), PATH_MAX);
     return -1;
   }

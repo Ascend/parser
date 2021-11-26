@@ -32,9 +32,6 @@
 #include "graph/utils/attr_utils.h"
 #include "graph/utils/tensor_utils.h"
 
-using google::protobuf::Message;
-using std::vector;
-
 namespace ge {
 /**
  * @ingroup domi_omg
@@ -54,7 +51,7 @@ class DataOpParser {
    * @return SUCCESS Parsing success
    * @return FAILED Parsing failed
    */
-  static Status ParseShape(const vector<int64_t> &shape, ge::OpDescPtr op);
+  static Status ParseShape(const std::vector<int64_t> &shape, ge::OpDescPtr op);
 
  private:
   /**
@@ -63,7 +60,7 @@ class DataOpParser {
    * @param [in] 4D shape information (dimensions)
    * @param [out] Save converted shap information
    */
-  static Status Init5DInputTensor(const vector<int64_t> &shape, ge::GeTensorDesc &tensorDesc);
+  static Status Init5DInputTensor(const std::vector<int64_t> &shape, ge::GeTensorDesc &tensorDesc);
 
   /**
    * @ingroup domi_omg
@@ -73,7 +70,7 @@ class DataOpParser {
    * @return SUCCESS Convert success
    * @return FAILED Convert failed
    */
-  static Status Init5DOutputTensor(const vector<int64_t> &shape, ge::GeTensorDesc &output);
+  static Status Init5DOutputTensor(const std::vector<int64_t> &shape, ge::GeTensorDesc &output);
 
   /**
    * @ingroup domi_omg
@@ -81,7 +78,7 @@ class DataOpParser {
    * @param [in] 4D shape information (dimensions)
    * @param [out] input Save converted shap information
    */
-  static Status InitInputTensor(const vector<int64_t> &shape, ge::GeTensorDesc &input);
+  static Status InitInputTensor(const std::vector<int64_t> &shape, ge::GeTensorDesc &input);
 
   /**
    * @ingroup domi_omg
@@ -91,7 +88,7 @@ class DataOpParser {
    * @return SUCCESS Convert success
    * @return FAILED Convert failed
    */
-  static Status InitOutputTensor(const vector<int64_t> &shape, ge::GeTensorDesc &output);
+  static Status InitOutputTensor(const std::vector<int64_t> &shape, ge::GeTensorDesc &output);
 
   /**
    * @ingroup domi_omg
@@ -101,7 +98,7 @@ class DataOpParser {
    * @return SUCCESS Convert success
    * @return FAILED Convert failed
    */
-  static Status InitNDTensor(const vector<int64_t> &shape, ge::DataType data_type, ge::GeTensorDesc &desc);
+  static Status InitNDTensor(const std::vector<int64_t> &shape, ge::DataType data_type, ge::GeTensorDesc &desc);
 };
 }  // namespace ge
 

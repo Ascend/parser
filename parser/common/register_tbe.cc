@@ -36,7 +36,7 @@ FMK_FUNC_HOST_VISIBILITY OpRegistrationTbe *OpRegistrationTbe::Instance() {
 }
 
 bool OpRegistrationTbe::Finalize(const OpRegistrationData &reg_data, bool is_train) {
-  static std::map<domi::FrameworkType, std::map<std::string, std::string> *> op_map = {{CAFFE, &caffe_op_map}};
+  static std::map<domi::FrameworkType, std::map<std::string, std::string> *> op_map = {{domi::CAFFE, &caffe_op_map}};
   if (is_train) {
     op_map[domi::TENSORFLOW] = &tensorflow_train_op_map;
   } else {

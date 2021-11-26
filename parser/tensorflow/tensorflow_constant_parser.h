@@ -30,8 +30,8 @@ class PARSER_FUNC_VISIBILITY TensorFlowConstantParser : public TensorFlowOpParse
   Status ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) override;
 
  private:
-  Status ParseDType(const domi::tensorflow::NodeDef *node, ConstantOperator *op);
-  Status ParseValue(const domi::tensorflow::NodeDef *node, const ge::OpDescPtr &opDesc);
+  static Status ParseDType(const domi::tensorflow::NodeDef *node, ConstantOperator *op);
+  static Status ParseValue(const domi::tensorflow::NodeDef *node, const ge::OpDescPtr &opDesc);
 };
 }  // namespace ge
 

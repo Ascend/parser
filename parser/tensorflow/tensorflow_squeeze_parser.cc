@@ -116,7 +116,7 @@ Status TensorFlowSqueezeParser::ParseParams(const Message *op_src, ge::OpDescPtr
   domi::tensorflow::AttrValue output_attr_value;
 
   GE_IF_BOOL_EXEC(
-      GetParserContext().train_flag == true, ge::GeTensorDesc input_desc; ge::GeTensorDesc output_desc;
+      GetParserContext().train_flag, ge::GeTensorDesc input_desc; ge::GeTensorDesc output_desc;
 
       if (TensorFlowUtil::FindAttrValue(node, ge::ATTR_NAME_INPUT_TENSOR_DESC, input_attr_value)) {
         GE_CHK_BOOL_RET_STATUS(ParseDesc(input_attr_value, input_desc) == SUCCESS, FAILED, "parse input desc failed");

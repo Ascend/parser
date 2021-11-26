@@ -23,10 +23,9 @@
 namespace ge {
 class IteratorFusionPass : public GraphPass {
  public:
-  IteratorFusionPass(domi::FrameworkType type)
-      : fmk_type_(type) {}
+  explicit IteratorFusionPass(domi::FrameworkType type) : fmk_type_(type) {}
 
-  virtual ~IteratorFusionPass() {}
+  ~IteratorFusionPass() override {};
 
   Status Run(ge::ComputeGraphPtr graph) final;
 

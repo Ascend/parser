@@ -55,9 +55,9 @@ Status TensorFlowRefSwitchParser::ParseT(const domi::tensorflow::NodeDef *node, 
   return SUCCESS;
 }
 
-Status TensorFlowRefSwitchParser::ParseParams(const Message *opSrc, ge::OpDescPtr &opDest) {
-  GE_CHECK_NOTNULL(opSrc);
-  const NodeDef *node = DOMI_DYNAMIC_CAST<const NodeDef *>(opSrc);
+Status TensorFlowRefSwitchParser::ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) {
+  GE_CHECK_NOTNULL(op_src);
+  const NodeDef *node = DOMI_DYNAMIC_CAST<const NodeDef *>(op_src);
   GE_CHECK_NOTNULL(node);
 
   RefSwitchOperator op;
@@ -70,7 +70,7 @@ Status TensorFlowRefSwitchParser::ParseParams(const Message *opSrc, ge::OpDescPt
 
   GE_RETURN_IF_ERROR(PostParseParams(node, &op));
 
-  Status status = ConvertToOpDesc(op, opDest);
+  Status status = ConvertToOpDesc(op, op_dest);
 
   return status;
 }

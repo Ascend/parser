@@ -29,7 +29,7 @@ namespace ge {
 namespace {
 const char *const kSerializeFormat = "serialize_format";
 }  // namespace
-Status ParseParams(const Message *op_src, ArgOpOperator *op) {
+Status ParseParams(const Message *op_src, ArgOpOperator *const op) {
   GE_CHECK_NOTNULL(op_src);
   GE_CHECK_NOTNULL(op);
   const NodeDef *node = reinterpret_cast<const NodeDef *>(op_src);

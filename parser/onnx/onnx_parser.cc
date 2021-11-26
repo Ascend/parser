@@ -680,7 +680,7 @@ Status OnnxModelParser::GetGraphOutputs(std::vector<std::pair<Operator, std::vec
     auto itr = outputs_map_.find(output_name);
     if (itr == outputs_map_.end()) {
       GELOGE(PARAM_INVALID, "[Get][Outputs] Can not find output:%s in graph.", output_name.c_str());
-      REPORT_INNER_ERROR( "E19999", "[Get][Outputs] Can not find output:%s in graph.", output_name.c_str());
+      REPORT_INNER_ERROR("E19999", "[Get][Outputs] Can not find output:%s in graph.", output_name.c_str());
       return PARAM_INVALID;
     }
 
@@ -755,7 +755,7 @@ Status OnnxModelParser::AdaptAndFindAllOnnxGraph(ge::onnx::GraphProto &root_onnx
       SubgraphAdapterFactory *factory = SubgraphAdapterFactory::Instance();
       GE_CHECK_NOTNULL(factory);
       std::shared_ptr<SubgraphAdapter> subgraph_adapter = factory->CreateSubgraphAdapter(node_proto->op_type());
-      if(subgraph_adapter == nullptr) {
+      if (subgraph_adapter == nullptr) {
         GELOGD("Do not need adapt subgraph, op type:%s", node_proto->op_type().c_str());
         continue;
       }

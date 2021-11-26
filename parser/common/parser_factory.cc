@@ -24,7 +24,7 @@ FMK_FUNC_HOST_VISIBILITY WeightsParserFactory *WeightsParserFactory::Instance() 
 }
 
 std::shared_ptr<WeightsParser> WeightsParserFactory::CreateWeightsParser(const domi::FrameworkType type) {
-  std::map<domi::FrameworkType, WEIGHTS_PARSER_CREATOR_FUN>::iterator iter = creator_map_.find(type);
+  std::map<domi::FrameworkType, WEIGHTS_PARSER_CREATOR_FUN>::const_iterator iter = creator_map_.find(type);
   if (iter != creator_map_.end()) {
     return iter->second();
   }
@@ -35,7 +35,7 @@ std::shared_ptr<WeightsParser> WeightsParserFactory::CreateWeightsParser(const d
 
 FMK_FUNC_HOST_VISIBILITY void WeightsParserFactory::RegisterCreator(const domi::FrameworkType type,
                                                                     WEIGHTS_PARSER_CREATOR_FUN fun) {
-  std::map<domi::FrameworkType, WEIGHTS_PARSER_CREATOR_FUN>::iterator iter = creator_map_.find(type);
+  std::map<domi::FrameworkType, WEIGHTS_PARSER_CREATOR_FUN>::const_iterator iter = creator_map_.find(type);
   if (iter != creator_map_.end()) {
     GELOGW("WeightsParserFactory::RegisterCreator: %d creator already exist", type);
     return;
@@ -54,7 +54,7 @@ FMK_FUNC_HOST_VISIBILITY ModelParserFactory *ModelParserFactory::Instance() {
 }
 
 std::shared_ptr<ModelParser> ModelParserFactory::CreateModelParser(const domi::FrameworkType type) {
-  std::map<domi::FrameworkType, MODEL_PARSER_CREATOR_FUN>::iterator iter = creator_map_.find(type);
+  std::map<domi::FrameworkType, MODEL_PARSER_CREATOR_FUN>::const_iterator iter = creator_map_.find(type);
   if (iter != creator_map_.end()) {
     return iter->second();
   }
@@ -65,7 +65,7 @@ std::shared_ptr<ModelParser> ModelParserFactory::CreateModelParser(const domi::F
 
 FMK_FUNC_HOST_VISIBILITY void ModelParserFactory::RegisterCreator(const domi::FrameworkType type,
                                                                   MODEL_PARSER_CREATOR_FUN fun) {
-  std::map<domi::FrameworkType, MODEL_PARSER_CREATOR_FUN>::iterator iter = creator_map_.find(type);
+  std::map<domi::FrameworkType, MODEL_PARSER_CREATOR_FUN>::const_iterator iter = creator_map_.find(type);
   if (iter != creator_map_.end()) {
     GELOGW("ModelParserFactory::RegisterCreator: %d creator already exist", type);
     return;

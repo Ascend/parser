@@ -34,7 +34,6 @@
 #include <map>
 #include <string>
 #include <vector>
-#include "external/register/register_error_codes.h"
 #include "omg/parser/model_parser.h"
 #include "omg/parser/op_parser.h"
 #include "omg/parser/weights_parser.h"

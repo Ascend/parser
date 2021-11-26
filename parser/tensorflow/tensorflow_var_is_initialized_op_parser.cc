@@ -23,7 +23,7 @@
 using namespace ge::parser;
 
 namespace ge {
-Status ParseParams(const Message *op_src, VarIsInitializedOpOperator *op) {
+Status ParseParams(const Message *op_src, VarIsInitializedOpOperator *const op) {
   GE_CHECK_NOTNULL(op_src);
   const NodeDef *node = reinterpret_cast<const NodeDef *>(op_src);
   GE_CHECK_NOTNULL(node);

@@ -23,7 +23,9 @@
 
 namespace ge {
 namespace parser {
-const vector<std::pair<std::string, GraphPass *>> &PassManager::GraphPasses() const { return names_to_graph_passes_; }
+const std::vector<std::pair<std::string, GraphPass *>> &PassManager::GraphPasses() const {
+  return names_to_graph_passes_;
+}
 
 Status PassManager::AddPass(const string &pass_name, GraphPass *pass) {
   GE_CHECK_NOTNULL(pass);
@@ -36,7 +38,8 @@ Status PassManager::Run(const ComputeGraphPtr &graph) {
   return Run(graph, names_to_graph_passes_);
 }
 
-Status PassManager::Run(const ComputeGraphPtr &graph, vector<std::pair<std::string, GraphPass *>> &names_to_passes) {
+Status PassManager::Run(const ComputeGraphPtr &graph,
+                        std::vector<std::pair<std::string, GraphPass *>> &names_to_passes) {
   GE_CHECK_NOTNULL(graph);
   bool not_changed = true;
 

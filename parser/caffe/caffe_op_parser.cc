@@ -21,7 +21,7 @@
 #include "framework/omg/parser/parser_types.h"
 
 using namespace ge::parser;
-
+using domi::caffe::BlobProto;
 using domi::CAFFE;
 
 namespace ge {

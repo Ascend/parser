@@ -70,7 +70,7 @@ Status TensorFlowReshapeParser::ParseParams(const Message *op_src, ge::OpDescPtr
   domi::tensorflow::AttrValue output_attr_value;
 
   GE_IF_BOOL_EXEC(
-      GetParserContext().train_flag == true,
+      GetParserContext().train_flag,
 
       ge::GeTensorDesc input_desc;
       ge::GeTensorDesc output_desc;

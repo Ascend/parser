@@ -32,8 +32,7 @@ class GE_FUNC_VISIBILITY OpTypeContainer {
   void Register(const std::string &op_type) { op_type_list_.insert(op_type); }
 
   bool IsExisting(const std::string &op_type) {
-    auto iter_find = op_type_list_.find(op_type);
-    return iter_find != op_type_list_.end();
+    return op_type_list_.count(op_type) > 0UL;
   }
 
  protected:

@@ -30,7 +30,7 @@ const uint32_t kScalarLength = 1;
 }  // namespace
 
 namespace ge {
-FMK_FUNC_HOST_VISIBILITY Status DataOpParser::ParseShape(const vector<int64_t> &shape, ge::OpDescPtr op) {
+FMK_FUNC_HOST_VISIBILITY Status DataOpParser::ParseShape(const std::vector<int64_t> &shape, ge::OpDescPtr op) {
   GE_RETURN_WITH_LOG_IF_FALSE(op != nullptr, "[Check][Param] ParseShape failed for data_op, op is null");
 
   const string &data_op_name = op->GetName();
@@ -45,7 +45,7 @@ FMK_FUNC_HOST_VISIBILITY Status DataOpParser::ParseShape(const vector<int64_t> &
   }
 
   // convert input
-  vector<int64_t> def_format_shape(shape);
+  std::vector<int64_t> def_format_shape(shape);
 
   ge::GeTensorDesc i_tensor_desc;
   ge::GeTensorDesc o_tensor_desc;
@@ -98,7 +98,7 @@ FMK_FUNC_HOST_VISIBILITY Status DataOpParser::ParseShape(const vector<int64_t> &
   return SUCCESS;
 }
 
-Status DataOpParser::Init5DInputTensor(const vector<int64_t> &shape, ge::GeTensorDesc &tensor_desc) {
+Status DataOpParser::Init5DInputTensor(const std::vector<int64_t> &shape, ge::GeTensorDesc &tensor_desc) {
   tensor_desc.SetDataType(ge::DT_FLOAT16);
   tensor_desc.SetFormat(static_cast<ge::Format>(domi::DOMI_TENSOR_NC1HWC0));
   ge::TensorUtils::SetReuseInput(tensor_desc, false);
@@ -117,7 +117,8 @@ Status DataOpParser::Init5DInputTensor(const vector<int64_t> &shape, ge::GeTenso
   return SUCCESS;
 }
 
-Status DataOpParser::InitNDTensor(const vector<int64_t> &shape, ge::DataType data_type, ge::GeTensorDesc &tensor_desc) {
+Status DataOpParser::InitNDTensor(const std::vector<int64_t> &shape, ge::DataType data_type,
+                                  ge::GeTensorDesc &tensor_desc) {
   // Fixed input ND
   tensor_desc.SetFormat(static_cast<ge::Format>(DOMI_TENSOR_ND));
   tensor_desc.SetDataType(data_type);
@@ -143,7 +144,7 @@ Status DataOpParser::InitNDTensor(const vector<int64_t> &shape, ge::DataType dat
   return SUCCESS;
 }
 
-Status DataOpParser::Init5DOutputTensor(const vector<int64_t> &shape, ge::GeTensorDesc &output) {
+Status DataOpParser::Init5DOutputTensor(const std::vector<int64_t> &shape, ge::GeTensorDesc &output) {
   output.SetDataType(ge::DT_FLOAT16);
   output.SetFormat(static_cast<ge::Format>(domi::DOMI_TENSOR_NC1HWC0));
   ge::TensorUtils::SetReuseInput(output, false);
@@ -162,7 +163,7 @@ Status DataOpParser::Init5DOutputTensor(const vector<int64_t> &shape, ge::GeTens
   return SUCCESS;
 }
 
-Status DataOpParser::InitInputTensor(const vector<int64_t> &shape, ge::GeTensorDesc &input) {
+Status DataOpParser::InitInputTensor(const std::vector<int64_t> &shape, ge::GeTensorDesc &input) {
   input.SetFormat(static_cast<ge::Format>(domiTensorFormat_t(DOMI_TENSOR_ND)));
   input.SetDataType(ge::DT_FLOAT);
   input.SetOriginDataType(ge::DT_FLOAT);
@@ -181,7 +182,7 @@ Status DataOpParser::InitInputTensor(const vector<int64_t> &shape, ge::GeTensorD
   return SUCCESS;
 }
 
-Status DataOpParser::InitOutputTensor(const vector<int64_t> &shape, ge::GeTensorDesc &output) {
+Status DataOpParser::InitOutputTensor(const std::vector<int64_t> &shape, ge::GeTensorDesc &output) {
   int64_t output_size = 0;
   ge::GeShape output_shape = ge::GeShape(shape);
   ge::Format format = ge::FORMAT_ND;

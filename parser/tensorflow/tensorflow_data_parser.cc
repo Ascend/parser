@@ -53,7 +53,7 @@ Status TensorFlowDataParser::ParseParams(const Message *op_src, ge::OpDescPtr &o
   return SUCCESS;
 }
 
-Status TensorFlowDataParser::ParseInputFromModel(const Message *op_src, ge::OpDescPtr &op_def) {
+Status TensorFlowDataParser::ParseInputFromModel(const Message *op_src, const ge::OpDescPtr &op_def) {
   GE_CHECK_NOTNULL(op_src);
   GE_CHECK_NOTNULL(op_def);
 

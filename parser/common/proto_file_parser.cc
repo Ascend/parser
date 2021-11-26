@@ -238,7 +238,7 @@ Status ProtoFileParser::ParseProtoFile(const string &proto_file,
   return SUCCESS;
 }
 
-Status ProtoFileParser::AddCustomAndConflictLayer(const char *custom_proto_file, std::ofstream &write_tmp) {
+Status ProtoFileParser::AddCustomAndConflictLayer(const char *custom_proto_file, std::ofstream &write_tmp) const {
   ifstream read_custom;
   read_custom.open(custom_proto_file, std::ios::in);
   if (read_custom.fail()) {
@@ -309,9 +309,8 @@ Status ProtoFileParser::AddCustomAndConflictMessage(const char *custom_proto_fil
   return SUCCESS;
 }
 
-Status ProtoFileParser::WriteCaffeProtoFile(const char *custom_proto_file,
-                                            std::ifstream &read_caffe,
-                                            std::ofstream &write_tmp) {
+Status ProtoFileParser::WriteCaffeProtoFile(const char *custom_proto_file, std::ifstream &read_caffe,
+                                            std::ofstream &write_tmp) const {
   std::string line_caffe;
   bool caffe_in_layer = false;
   bool caffe_in_unrepeated_message = true;
@@ -321,11 +320,11 @@ Status ProtoFileParser::WriteCaffeProtoFile(const char *custom_proto_file,
       tmp_message_name.assign(GetMessageName(line_caffe));
       if (custom_repeat_message_map_.count(tmp_message_name) > 0) {
         caffe_in_unrepeated_message = false;
-      } else {
-        caffe_in_unrepeated_message = true;
-        if (tmp_message_name == kLayerParameter) {
-          caffe_in_layer = true;
-        }
+        continue;
+      }
+      caffe_in_unrepeated_message = true;
+      if (tmp_message_name == kLayerParameter) {
+        caffe_in_layer = true;
       }
     }
     if (!caffe_in_unrepeated_message) {

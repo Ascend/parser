@@ -28,6 +28,10 @@
 
 using domi::ParseParamByOpFunc;
 using domi::ParseParamFunc;
+using domi::CAFFE;
+using domi::caffe::LayerParameter;
+using domi::caffe::InnerProductParameter;
+using domi::caffe::ConvolutionParameter;
 using std::vector;
 
 namespace ge {

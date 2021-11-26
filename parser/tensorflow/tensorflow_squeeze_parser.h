@@ -25,7 +25,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowSqueezeParser : public TensorFlowOpParser
   Status ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) override;
 
  private:
-  Status ParseDesc(const domi::tensorflow::AttrValue &attr_value, ge::GeTensorDesc &ge_desc);
+  static Status ParseDesc(const domi::tensorflow::AttrValue &attr_value, ge::GeTensorDesc &ge_desc);
 };
 }  // namespace ge
 

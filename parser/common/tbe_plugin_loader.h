@@ -17,14 +17,11 @@
 #ifndef PARSER_COMMON_TBE_PLUGIN_LOADER_H_
 #define PARSER_COMMON_TBE_PLUGIN_LOADER_H_
 
-#include <dlfcn.h>
 #include <functional>
 #include <iostream>
 #include <map>
 #include <memory>
 #include <string>
-#include <type_traits>
-#include <typeinfo>
 #include <vector>
 
 #include "external/ge/ge_api_error_codes.h"
@@ -48,8 +45,7 @@ private:
   ~TBEPluginLoader() = default;
   Status ClearHandles_();
   static void ProcessSoFullName(vector<string> &file_list, string &caffe_parser_path, string &full_name,
-                                const string &caffe_parser_so_suff, const string &aicpu_so_suff,
-                                const string &aicpu_host_so_suff);
+                                const string &caffe_parser_so_suff);
   static void GetCustomOpPath(std::string &customop_path);
   static void GetPluginSoFileList(const string &path, vector<string> &file_list, string &caffe_parser_path);
   static void FindParserSo(const string &path, vector<string> &file_list, string &caffe_parser_path);

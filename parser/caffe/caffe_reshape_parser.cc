@@ -26,6 +26,9 @@
 
 using namespace ge::parser;
 using domi::CAFFE;
+using domi::caffe::BlobShape;
+using domi::caffe::LayerParameter;
+using domi::caffe::ReshapeParameter;
 
 namespace ge {
 namespace {
@@ -81,7 +84,7 @@ Status CaffeReshapeParser::ParseParams(const Message *op_src, ge::OpDescPtr &op)
   return SUCCESS;
 }
 
-Status CaffeReshapeParser::ParseWeights(const Message *op_src, ge::OpDescPtr &op) {
+Status CaffeReshapeParser::ParseWeights(const Message *op_src, const ge::OpDescPtr &op) const {
   (void)op_src;
   (void)op;
   return SUCCESS;

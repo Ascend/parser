@@ -23,7 +23,7 @@
 #include "register/scope/scope_pass_impl.h"
 
 namespace ge {
-shared_ptr<ScopeGraph> ScopePassManager::BuildScopeGraph(domi::tensorflow::GraphDef *graph_def) {
+std::shared_ptr<ScopeGraph> ScopePassManager::BuildScopeGraph(domi::tensorflow::GraphDef *graph_def) {
   GE_CHK_BOOL_EXEC(graph_def != nullptr, return nullptr, "graph_def is nullptr");
   scope_graph_ = ge::parser::MakeShared<ScopeGraph>();
   if (scope_graph_ == nullptr) {
@@ -43,7 +43,7 @@ shared_ptr<ScopeGraph> ScopePassManager::BuildScopeGraph(domi::tensorflow::Graph
   return scope_graph_;
 }
 
-Status ScopePassManager::AddPass(unique_ptr<ScopeBasePass> &pass) {
+Status ScopePassManager::AddPass(std::unique_ptr<ScopeBasePass> &pass) {
   GE_CHECK_NOTNULL(pass);
 
   graph_passes_.push_back(std::move(pass));
@@ -51,7 +51,7 @@ Status ScopePassManager::AddPass(unique_ptr<ScopeBasePass> &pass) {
   return SUCCESS;
 }
 
-Status ScopePassManager::Run(shared_ptr<ScopeGraph> &graph) {
+Status ScopePassManager::Run(std::shared_ptr<ScopeGraph> &graph) {
   GE_CHECK_NOTNULL(graph);
   bool not_changed = true;
 

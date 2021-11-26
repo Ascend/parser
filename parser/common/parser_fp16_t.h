@@ -146,22 +146,22 @@ constexpr uint16_t kFp16MinNormal = 1.0f / (2 << 14);
 #define FP16_EXTRAC_MAN(x) ((((x) >> 0) & 0x3FF) | (((((x) >> 10) & 0x1F) > 0 ? 1 : 0) * 0x400))
 /// @ingroup fp16 basic operator
 /// @brief   constructor of fp16 from sign exponent and mantissa
-#define FP16_CONSTRUCTOR(s, e, m) (((s) << kFp16SignIndex) | ((e) << kFp16ManLen) | ((m)&kFp16MaxMan))
+#define FP16_CONSTRUCTOR(s, e, m) (((s) << kFp16SignIndex) | ((e) << kFp16ManLen) | ((m) & kFp16MaxMan))
 /// @ingroup fp16 special value judgment
 /// @brief   whether a fp16 is zero
-#define FP16_IS_ZERO(x) (((x)&kFp16AbsMax) == 0)
+#define FP16_IS_ZERO(x) (((x) & kFp16AbsMax) == 0)
 /// @ingroup fp16 special value judgment
 /// @brief   whether a fp16 is a denormalized value
-#define FP16_IS_DENORM(x) ((((x)&kFp16ExpMask) == 0))
+#define FP16_IS_DENORM(x) ((((x) & kFp16ExpMask) == 0))
 /// @ingroup fp16 special value judgment
 /// @brief   whether a fp16 is infinite
 #define FP16_IS_INF(x) (((x)&kFp16AbsMax) == kFp16ExpMask)
 /// @ingroup fp16 special value judgment
 /// @brief   whether a fp16 is NaN
-#define FP16_IS_NAN(x) (((x & kFp16ExpMask) == kFp16ExpMask) && (x & kFp16ManMask))
+#define FP16_IS_NAN(x) ((((x) & kFp16ExpMask) == kFp16ExpMask) && ((x) & kFp16ManMask))
 /// @ingroup fp16 special value judgment
 /// @brief   whether a fp16 is invalid
-#define FP16_IS_INVALID(x) ((x & kFp16ExpMask) == kFp16ExpMask)
+#define FP16_IS_INVALID(x) (((x) & kFp16ExpMask) == kFp16ExpMask)
 /// @ingroup fp32 basic parameter
 /// @brief   fp32 exponent bias
 constexpr uint16_t kFp32ExpBias = 127;
@@ -197,10 +197,10 @@ constexpr uint32_t kFp32MaxExp = 0xFF;
 constexpr uint32_t kFp32MaxMan = 0x7FFFFF;
 /// @ingroup fp32 special value judgment
 /// @brief   whether a fp32 is NaN
-#define FP32_IS_NAN(x) (((x & kFp32ExpMask) == kFp32ExpMask) && (x & kFp32ManMask))
+#define FP32_IS_NAN(x) ((((x) & kFp32ExpMask) == kFp32ExpMask) && ((x) & kFp32ManMask))
 /// @ingroup fp32 special value judgment
 /// @brief   whether a fp32 is infinite
-#define FP32_IS_INF(x) (((x & kFp32ExpMask) == kFp32ExpMask) && (!(x & kFp32ManMask)))
+#define FP32_IS_INF(x) ((((x) & kFp32ExpMask) == kFp32ExpMask) && (!((x) & kFp32ManMask)))
 /// @ingroup fp32 special value judgment
 /// @brief   whether a fp32 is a denormalized value
 #define FP32_IS_DENORM(x) ((((x)&kFp32ExpMask) == 0))
@@ -215,7 +215,7 @@ constexpr uint32_t kFp32MaxMan = 0x7FFFFF;
 #define FP32_EXTRAC_MAN(x) (((x)&kFp32ManMask) | (((((x) >> kFp32ManLen) & kFp32MaxExp) > 0 ? 1 : 0) * kFp32ManHideBit))
 /// @ingroup fp32 basic operator
 /// @brief   constructor of fp32 from sign exponent and mantissa
-#define FP32_CONSTRUCTOR(s, e, m) (((s) << kFp32SignIndex) | ((e) << kFp32ManLen) | ((m)&kFp32MaxMan))
+#define FP32_CONSTRUCTOR(s, e, m) (((s) << kFp32SignIndex) | ((e) << kFp32ManLen) | ((m) & kFp32MaxMan))
 /// @ingroup fp64 basic parameter
 /// @brief   fp64 exponent bias
 constexpr uint16_t kFp64ExpBias = 1023;
@@ -251,10 +251,10 @@ constexpr uint64_t kFp64MaxExp = 0x07FF;
 constexpr uint64_t kFp64MaxMan = 0xFFFFFFFFFFFLLu;
 /// @ingroup fp64 special value judgment
 /// @brief   whether a fp64 is NaN
-#define FP64_IS_NAN(x) (((x & kFp64ExpMask) == kFp64ExpMask) && (x & kFp64ManMask))
+#define FP64_IS_NAN(x) ((((x) & kFp64ExpMask) == kFp64ExpMask) && ((x) & kFp64ManMask))
 /// @ingroup fp64 special value judgment
 /// @brief   whether a fp64 is infinite
-#define FP64_IS_INF(x) (((x & kFp64ExpMask) == kFp64ExpMask) && (!(x & kFp64ManMask)))
+#define FP64_IS_INF(x) ((((x) & kFp64ExpMask) == kFp64ExpMask) && (!((x) & kFp64ManMask)))
 /// @ingroup integer special value judgment
 /// @brief   maximum positive value of int8_t            (0111 1111)
 constexpr int8_t kInt8Max = 0x7F;
@@ -284,7 +284,7 @@ constexpr uint64_t kBitLen64Max = 0xFFFFFFFFFFFFFFFFu;
 
 /// @ingroup fp16_t enum
 /// @brief   round mode of last valid digital
-enum TagFp16RoundMode {
+enum class TagFp16RoundMode {
   kRoundToNearest = 0,  // < round to nearest even
   kRoundByTruncated,    // < round by truncated
   kRoundModeReserved,
@@ -301,7 +301,7 @@ using fp16_t = struct TagFp16 {
 public:
   /// @ingroup fp16_t constructor
   /// @brief   Constructor without any param(default constructor)
-  TagFp16(void) { val = 0x0u; }
+  TagFp16() : val(0x0u) {}
 
   /// @ingroup fp16_t constructor
   /// @brief   Constructor with an uint16_t value
@@ -315,25 +315,25 @@ public:
   /// @param [in] fp fp16_t object to be added
   /// @brief   Override addition operator to performing fp16_t addition
   /// @return  Return fp16_t result of adding this and fp
-  TagFp16 operator+(const TagFp16 fp);
+  TagFp16 operator+(const TagFp16 fp) const;
 
   /// @ingroup fp16_t math operator
   /// @param [in] fp fp16_t object to be subtracted
   /// @brief   Override addition operator to performing fp16_t subtraction
   /// @return  Return fp16_t result of subtraction fp from this
-  TagFp16 operator-(const TagFp16 fp);
+  TagFp16 operator-(const TagFp16 fp) const;
 
   /// @ingroup fp16_t math operator
   /// @param [in] fp fp16_t object to be multiplied
   /// @brief   Override multiplication operator to performing fp16_t multiplication
   /// @return  Return fp16_t result of multiplying this and fp
-  TagFp16 operator*(const TagFp16 fp);
+  TagFp16 operator*(const TagFp16 fp) const;
 
   /// @ingroup fp16_t math operator divided
   /// @param [in] fp fp16_t object to be divided
   /// @brief   Override division operator to performing fp16_t division
   /// @return  Return fp16_t result of division this by fp
-  TagFp16 operator/(const TagFp16 fp);
+  TagFp16 operator/(const TagFp16 fp) const;
 
   /// @ingroup fp16_t math operator
   /// @param [in] fp fp16_t object to be added
@@ -503,7 +503,7 @@ public:
   /// @param [in] fp fp16_t object to be judgement
   /// @brief   whether a fp16_t is inifinite
   /// @return  Returns 1:+INF -1:-INF 0:not INF
-  int IsInf();
+  int IsInf() const;
 
   /// @ingroup fp16_t math conversion
   /// @brief   Convert fp16_t to float/fp32

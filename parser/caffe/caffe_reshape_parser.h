@@ -41,7 +41,7 @@ class PARSER_FUNC_VISIBILITY CaffeReshapeParser : public CaffeOpParser {
    * @return FAILED parse failed
    * @author
    */
-  Status ParseWeights(const Message *op_src, ge::OpDescPtr &op);
+  Status ParseWeights(const Message *op_src, const ge::OpDescPtr &op) const;
 
   /**
    * @ingroup domi_omg

@@ -57,12 +57,13 @@ void PreChecker::Init() {
 
   // Currently only Caffe and tensorflow are supported
   domi::FrameworkType fmk_type = GetParserContext().type;
-  if (fmk_type == domi::CAFFE)
+  if (fmk_type == domi::CAFFE) {
     fmk_op_types_ = &caffe_op_map;
-  else if (fmk_type == domi::TENSORFLOW)
+  } else if (fmk_type == domi::TENSORFLOW) {
     fmk_op_types_ = &tensorflow_op_map;
-  else
+  } else {
     return;
+  }
 }
 
 PreChecker::~PreChecker() {}

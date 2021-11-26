@@ -71,7 +71,7 @@ Status HandleNewOp(const NodePtr &node,
 }
 }
 
-Status ParserUtils::ExpandOneToManyGraph(Graph &graph, OutputMapping &output_mapping) {
+Status ParserUtils::ExpandOneToManyGraph(const Graph &graph, OutputMapping &output_mapping) {
   GELOGD("Begin run ParserUtils::ExpandOneToManyGraph.");
   for (const auto &gn : graph.GetDirectNode()) {
     NodePtr n = NodeAdapter::GNode2Node(gn);
@@ -105,7 +105,7 @@ Status ParserUtils::ExpandOneToManyGraph(Graph &graph, OutputMapping &output_map
   return SUCCESS;
 }
 
-Status ParserUtils::ExpandNodeToSubgraph(const Graph &subgraph, const NodePtr &node, Graph &graph,
+Status ParserUtils::ExpandNodeToSubgraph(const Graph &subgraph, const NodePtr &node, const Graph &graph,
                                          OutputMapping &output_mapping) {
   ComputeGraphPtr sub_compute_graph = GraphUtils::GetComputeGraph(subgraph);
   GE_CHECK_NOTNULL(sub_compute_graph);

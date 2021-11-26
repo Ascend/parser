@@ -18,10 +18,7 @@
 
 #include <atomic>
 #include <functional>
-#include <queue>
 #include <stdexcept>
-#include <utility>
-#include <vector>
 
 #include "register/register_types.h"
 
@@ -54,7 +51,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY ThreadPool::~ThreadPool() {
   }
 }
 
-void ThreadPool::ThreadFunc(ThreadPool *thread_pool) {
+void ThreadPool::ThreadFunc(ThreadPool *const thread_pool) {
   if (thread_pool == nullptr) {
     return;
   }
@@ -63,7 +60,7 @@ void ThreadPool::ThreadFunc(ThreadPool *thread_pool) {
     {
       std::unique_lock<std::mutex> lock{thread_pool->m_lock_};
       thread_pool->cond_var_.wait(
-        lock, [thread_pool] { return thread_pool->is_stoped_.load() || !thread_pool->tasks_.empty(); });
+          lock, [thread_pool] { return thread_pool->is_stoped_.load() || !thread_pool->tasks_.empty(); });
       if (thread_pool->is_stoped_ && thread_pool->tasks_.empty()) {
         return;
       }

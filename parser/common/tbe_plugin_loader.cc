@@ -17,11 +17,14 @@
 #include "tbe_plugin_loader.h"
 
 #include <dirent.h>
+#include <dlfcn.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <algorithm>
 #include <cstring>
 #include <fstream>
+#include <type_traits>
+#include <typeinfo>
 #include <iostream>
 #include <map>
 #include <memory>
@@ -171,7 +174,7 @@ void TBEPluginLoader::FindParserSo(const string &path, vector<string> &file_list
     GELOGW("%s is not a dir.", real_path.c_str());
     return;
   }
-  struct dirent *dent(0);
+  struct dirent *dent(nullptr);
   DIR *dir = opendir(real_path.c_str());
   // Plugin path does not exist
   if (dir == nullptr) {
@@ -180,16 +183,15 @@ void TBEPluginLoader::FindParserSo(const string &path, vector<string> &file_list
   }
 
   while ((dent = readdir(dir)) != nullptr) {
-    if (strcmp(dent->d_name, ".") == 0 || strcmp(dent->d_name, "..") == 0) continue;
+    if (strcmp(dent->d_name, ".") == 0 || strcmp(dent->d_name, "..") == 0) {
+      continue;
+    }
     string name = dent->d_name;
     string full_name = real_path + "/" + name;
     const string so_suff = ".so";
     const string caffe_parser_so_suff = "lib_caffe_parser.so";
-    const string aicpu_so_suff = "_aicpu.so";
-    const string aicpu_host_so_suff = "_online.so";
     if (name.size() >= so_suff.size() && name.compare(name.size() - so_suff.size(), so_suff.size(), so_suff) == 0) {
-      ProcessSoFullName(file_list, caffe_parser_path, full_name, caffe_parser_so_suff, aicpu_so_suff,
-                        aicpu_host_so_suff);
+      ProcessSoFullName(file_list, caffe_parser_path, full_name, caffe_parser_so_suff);
     } else {
       FindParserSo(full_name, file_list, caffe_parser_path);
     }
@@ -198,8 +200,7 @@ void TBEPluginLoader::FindParserSo(const string &path, vector<string> &file_list
 }
 
 void TBEPluginLoader::ProcessSoFullName(vector<string> &file_list, string &caffe_parser_path, string &full_name,
-                                        const string &caffe_parser_so_suff, const string &aicpu_so_suff,
-                                        const string &aicpu_host_so_suff) {
+                                        const string &caffe_parser_so_suff) {
   if (full_name.size() >= caffe_parser_so_suff.size() &&
       full_name.compare(full_name.size() - caffe_parser_so_suff.size(), caffe_parser_so_suff.size(),
                         caffe_parser_so_suff) == 0) {

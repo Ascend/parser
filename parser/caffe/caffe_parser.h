@@ -37,7 +37,6 @@
 #include <unordered_map>
 #include <utility>
 #include <vector>
-#include "external/graph/operator.h"
 #include "omg/parser/op_parser.h"
 #include "omg/parser/model_parser.h"
 #include "omg/parser/weights_parser.h"

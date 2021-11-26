@@ -122,8 +122,8 @@ Status TensorFlowShapeNParser::ParseParams(const Message *op_src, ge::OpDescPtr 
   domi::tensorflow::AttrValue output_attr_value;
   if (TensorFlowUtil::FindAttrValue(node, ge::ATTR_NAME_OUTPUT_TENSOR_DESC, output_attr_value)) {
     GE_CHK_STATUS_RET(
-      TensorFlowUtil::TransTensorDescriptor(output_attr_value, &op, TENSORFLOW_NORMAL_OUTPUT_TENSOR_FLAG),
-      "trans output_attr_value failed, op: %s", node->name().c_str());
+        TensorFlowUtil::TransTensorDescriptor(output_attr_value, &op, TENSORFLOW_NORMAL_OUTPUT_TENSOR_FLAG),
+        "trans output_attr_value failed, op: %s", node->name().c_str());
     ret = ConvertToOpDesc(op, op_dest);
     if (ret != SUCCESS) {
       return ret;

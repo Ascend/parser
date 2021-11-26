@@ -32,9 +32,9 @@ class PARSER_FUNC_VISIBILITY TensorFlowShapeNParser : public TensorFlowOpParser 
   Status PreParseParams(const domi::tensorflow::NodeDef *node, ShapeNOperator *op);
   Status PostParseParams(const domi::tensorflow::NodeDef *node, ShapeNOperator *op);
 
-  Status ParseN(const domi::tensorflow::NodeDef *node, ShapeNOperator *op);
-  Status ParseInType(const domi::tensorflow::NodeDef *node, ShapeNOperator *op);
-  Status ParseOutType(const domi::tensorflow::NodeDef *node, ShapeNOperator *op);
+  static Status ParseN(const domi::tensorflow::NodeDef *node, ShapeNOperator *op);
+  static Status ParseInType(const domi::tensorflow::NodeDef *node, ShapeNOperator *op);
+  static Status ParseOutType(const domi::tensorflow::NodeDef *node, ShapeNOperator *op);
 
   // AUTO GEN PLEASE DO NOT MODIFY IT
 };
