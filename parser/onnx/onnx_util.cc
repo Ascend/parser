@@ -29,32 +29,12 @@ const std::map<uint32_t, ge::DataType> onnx_data_type_map = {
     {OnnxDataType::COMPLEX64, ge::DataType::DT_COMPLEX64}, {OnnxDataType::COMPLEX128, ge::DataType::DT_COMPLEX128},
     {OnnxDataType::BFLOAT16, ge::DataType::DT_UNDEFINED},
 };
-
-const std::map<uint32_t, int64_t> onnx_data_type_size_map = {
-    {OnnxDataType::FLOAT, sizeof(float)},     {OnnxDataType::UINT8, sizeof(uint8_t)},
-    {OnnxDataType::INT8, sizeof(int8_t)},     {OnnxDataType::UINT16, sizeof(uint16_t)},
-    {OnnxDataType::INT16, sizeof(int16_t)},   {OnnxDataType::INT32, sizeof(int32_t)},
-    {OnnxDataType::INT64, sizeof(int64_t)},   {OnnxDataType::STRING, sizeof(std::string)},
-    {OnnxDataType::BOOL, sizeof(bool)},       {OnnxDataType::FLOAT16, 2},
-    {OnnxDataType::DOUBLE, sizeof(double)},   {OnnxDataType::UINT32, sizeof(uint32_t)},
-    {OnnxDataType::UINT64, sizeof(uint64_t)}, {OnnxDataType::COMPLEX64, 8},
-    {OnnxDataType::COMPLEX128, 16},           {OnnxDataType::BFLOAT16, 2},
-};
 }
 
 namespace ge {
 ge::DataType OnnxUtil::ConvertOnnxDataType(int64_t onnx_data_type) {
   auto search = onnx_data_type_map.find(onnx_data_type);
   if (search != onnx_data_type_map.end()) {
-    return search->second;
-  } else {
-    return ge::DataType::DT_UNDEFINED;
-  }
-}
-
-int64_t OnnxUtil::CaculateDataSize(int64_t onnx_data_type) {
-  auto search = onnx_data_type_size_map.find(onnx_data_type);
-  if (search != onnx_data_type_size_map.end()) {
     return search->second;
   } else {
     return ge::DataType::DT_UNDEFINED;

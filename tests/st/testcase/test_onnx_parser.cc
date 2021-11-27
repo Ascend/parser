@@ -24,6 +24,7 @@
 #include "st/parser_st_utils.h"
 #include "external/ge/ge_api_types.h"
 #include "tests/depends/ops_stub/ops_stub.h"
+#include "parser/onnx/onnx_parser.h"
 
 namespace ge {
 class STestOnnxParser : public testing::Test {
@@ -128,4 +129,48 @@ TEST_F(STestOnnxParser, onnx_parser_if_node) {
   auto ret = ge::aclgrphParseONNX(model_file.c_str(), parser_params, graph);
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
+
+TEST_F(STestOnnxParser, onnx_parser_expand_one_to_many) {
+  std::string case_dir = __FILE__;
+  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
+  std::string model_file = case_dir + "/origin_models/onnx_clip_v9.onnx";
+  std::map<ge::AscendString, ge::AscendString> parser_params;
+  ge::Graph graph;
+  auto ret = ge::aclgrphParseONNX(model_file.c_str(), parser_params, graph);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+
+  MemBuffer *buffer = ParerSTestsUtils::MemBufferFromFile(model_file.c_str());
+  ret = ge::aclgrphParseONNXFromMem(reinterpret_cast<char *>(buffer->data), buffer->size, parser_params, graph);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(STestOnnxParser, onnx_parser_to_json) {
+  std::string case_dir = __FILE__;
+  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
+  std::string model_file = case_dir + "/origin_models/onnx_clip_v9.onnx";
+  std::map<ge::AscendString, ge::AscendString> parser_params;
+  OnnxModelParser onnx_parser;
+
+  const char *json_file = "tmp.json";
+  auto ret = onnx_parser.ToJson(model_file.c_str(), json_file);
+  EXPECT_EQ(ret, SUCCESS);
+
+  const char *json_null = nullptr;
+  ret = onnx_parser.ToJson(model_file.c_str(), json_null);
+  EXPECT_EQ(ret, FAILED);
+  const char *model_null = nullptr;
+  ret = onnx_parser.ToJson(model_null, json_null);
+  EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(STestOnnxParser, onnx_parser_const_data_type) {
+  std::string case_dir = __FILE__;
+  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
+  std::string model_file = case_dir + "/origin_models/onnx_const_type.onnx";
+  std::map<ge::AscendString, ge::AscendString> parser_params;
+  ge::Graph graph;
+  auto ret = ge::aclgrphParseONNX(model_file.c_str(), parser_params, graph);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
 } // namespace ge
