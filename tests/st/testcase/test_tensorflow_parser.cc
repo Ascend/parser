@@ -312,12 +312,6 @@ REG_OP(Add)
     .OP_END_FACTORY_REG(Add)
 }
 
-struct MemBuffer
-{
-    void* data;
-    uint32_t size;
-};
-
 static MemBuffer* MemBufferFromFile(const char *path)
 {
     char path_temp[PATH_MAX + 1] = {0x00};
