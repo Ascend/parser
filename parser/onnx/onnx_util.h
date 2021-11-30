@@ -52,7 +52,6 @@ const char *const kOpTypeInput = "Input";
 class OnnxUtil {
  public:
   static ge::DataType ConvertOnnxDataType(int64_t onnx_data_type);
-  static int64_t CaculateDataSize(int64_t onnx_data_type);
   static void GenUniqueSubgraphName(int subgraph_index, const std::string &original_subgraph_name,
                                     const std::string &parent_node_name, std::string &unique_subgraph_name);
 };

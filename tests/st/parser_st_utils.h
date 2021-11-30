@@ -20,9 +20,15 @@
 #include "framework/omg/parser/parser_inner_ctx.h"
 
 namespace ge {
+struct MemBuffer {
+  void *data;
+  uint32_t size;
+};
+
 class ParerSTestsUtils {
  public:
   static void ClearParserInnerCtx();
+  static MemBuffer* MemBufferFromFile(const char *path);
 };
 }  // namespace ge
 

@@ -19,6 +19,7 @@
 
 #include "external/graph/operator_reg.h"
 #include "register/op_registry.h"
+#include "graph/utils/op_desc_utils.h"
 
 namespace ge {
 // for ir
@@ -99,6 +100,14 @@ REG_OP(Abs)
     .OUTPUT(y, TensorType({DT_FLOAT16, DT_FLOAT, DT_DOUBLE, DT_INT32, DT_INT64}))
     .OP_END_FACTORY_REG(Abs)
 
+REG_OP(PartitionedCall)
+    .DYNAMIC_INPUT(args, TensorType::ALL())
+    .DYNAMIC_OUTPUT(output, TensorType::ALL())
+    .GRAPH(f)
+    .ATTR(config, String, "")
+    .ATTR(config_proto, String, "")
+    .ATTR(executor_type, String, "")
+    .OP_END_FACTORY_REG(PartitionedCall)
 
 // for plugin
 static Status ParseParamsStub(const google::protobuf::Message* op_src, ge::Operator& op_dest) {
@@ -126,6 +135,29 @@ static Status ParseSubgraphPostFnIfStub(const std::string& subgraph_name, const 
                                             return SUCCESS;
                                           });
 }
+
+static Status ParseParamsClipV9Stub(const Message* op_src, ge::Operator& op_dest) {
+  auto opDesc = ge::OpDescUtils::GetOpDescFromOperator(op_dest);
+  // 1.add dynamic input and out
+  opDesc->AddDynamicInputDesc("x", 1);
+  opDesc->AddDynamicOutputDesc("output", 1);
+
+  // 2.set original_type
+  ge::AttrUtils::SetStr(opDesc, "original_type", "ai.onnx::9::Clip");
+  return SUCCESS;
+}
+
+static Status ParseOpToGraphClipV9Stub(const Operator& op, Graph& graph) {
+  auto data0 = op::Data("data0").set_attr_index(0);
+  auto abs0 = op::Abs("abs0").set_input_x(data0);
+
+  std::vector<Operator> inputs{data0};
+  std::vector<std::pair<Operator, std::vector<size_t> > > output_indexs;
+  output_indexs.emplace_back(abs0, vector<std::size_t>{0});
+  graph.SetInputs(inputs).SetOutputs(output_indexs);
+  return SUCCESS;
+}
+
 
 //  caffe plugin
 REGISTER_CUSTOM_OP("Data")
@@ -170,5 +202,12 @@ REGISTER_CUSTOM_OP("Add")
   .FrameworkType(domi::TENSORFLOW)
       .OriginOpType("Add")
       .ParseParamsFn(ParseParamsStub);
+
+
+REGISTER_CUSTOM_OP("PartitionedCall")
+    .FrameworkType(domi::ONNX)
+    .OriginOpType({"ai.onnx::9::Clip"})
+    .ParseParamsFn(ParseParamsClipV9Stub)
+    .ParseOpToGraphFn(ParseOpToGraphClipV9Stub);
 }  // namespace ge
 #endif  // MAIN_OPS_STUB_H
