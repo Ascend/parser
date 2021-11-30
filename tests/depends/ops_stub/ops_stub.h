@@ -108,6 +108,183 @@ REG_OP(PartitionedCall)
     .ATTR(config_proto, String, "")
     .ATTR(executor_type, String, "")
     .OP_END_FACTORY_REG(PartitionedCall)
+REG_OP(TensorArray)
+    .INPUT(size, TensorType({DT_INT32}))
+    .OUTPUT(handle, TensorType({DT_RESOURCE}))
+    .OUTPUT(flow, TensorType({DT_FLOAT}))
+    .REQUIRED_ATTR(dtype, Type)
+    .ATTR(element_shape, ListInt, ge::UNKNOWN_RANK)
+    .ATTR(dynamic_size, Bool, false)
+    .ATTR(clear_after_read, Bool, true)
+    .ATTR(identical_element_shapes, Bool, false)
+    .ATTR(tensor_array_name, String, "")
+    .OP_END_FACTORY_REG(TensorArray)
+
+REG_OP(TensorArrayWrite)
+    .INPUT(handle, TensorType({DT_RESOURCE}))
+    .INPUT(index, TensorType({DT_INT32}))
+    .INPUT(value, TensorType({DT_FLOAT, DT_FLOAT16, DT_DOUBLE, DT_INT8,
+        DT_INT16, DT_UINT16, DT_UINT8, DT_INT32, DT_INT64, DT_BOOL,
+        DT_STRING, DT_COMPLEX64, DT_COMPLEX128}))
+    .INPUT(flow_in, TensorType({DT_FLOAT}))
+    .OUTPUT(flow_out, TensorType({DT_FLOAT}))
+    .OP_END_FACTORY_REG(TensorArrayWrite)
+
+REG_OP(AvgPool3DGrad)
+    .INPUT(orig_input_shape, TensorType({DT_INT32}))
+    .INPUT(grads, TensorType({DT_FLOAT16, DT_FLOAT32, DT_DOUBLE}))
+    .OUTPUT(output, TensorType({DT_FLOAT16, DT_FLOAT32, DT_DOUBLE}))
+    .REQUIRED_ATTR(ksize, ListInt)
+    .REQUIRED_ATTR(strides, ListInt)
+    .REQUIRED_ATTR(pads, ListInt)
+    .ATTR(ceil_mode, Bool, false)
+    .ATTR(count_include_pad, Bool, true)
+    .ATTR(divisor_override, Int, 0)
+    .ATTR(data_format, String, "NDHWC")
+    .OP_END_FACTORY_REG(AvgPool3DGrad)
+
+REG_OP(Merge)
+    .DYNAMIC_INPUT(x, TensorType({DT_FLOAT16, DT_FLOAT, DT_DOUBLE,
+        DT_INT8, DT_INT16, DT_INT32, DT_INT64, DT_UINT8, DT_UINT16, DT_UINT32,
+        DT_UINT64, DT_BOOL}))
+    .OUTPUT(y, TensorType({DT_FLOAT16, DT_FLOAT, DT_DOUBLE,
+        DT_INT8, DT_INT16, DT_INT32, DT_INT64, DT_UINT8, DT_UINT16, DT_UINT32,
+        DT_UINT64, DT_BOOL}))
+    .OUTPUT(value_index, TensorType({DT_INT32}))
+    .OP_END_FACTORY_REG(Merge)
+
+REG_OP(NoOp)
+    .OP_END_FACTORY_REG(NoOp)
+
+REG_OP(VarIsInitializedOp)
+    .INPUT(x, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT8, DT_INT16, DT_UINT16, DT_UINT8,
+                          DT_INT32, DT_INT64, DT_UINT32, DT_UINT64, DT_BOOL, DT_DOUBLE}))
+    .OUTPUT(y, TensorType({DT_BOOL}))
+    .OP_END_FACTORY_REG(VarIsInitializedOp)
+
+REG_OP(AssignVariableOp)
+    .INPUT(resource, TensorType({DT_RESOURCE}))
+    .INPUT(value, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT8, DT_INT16, \
+        DT_UINT16, DT_UINT8, DT_INT32, DT_INT64, DT_BOOL, DT_DOUBLE}))
+    .REQUIRED_ATTR(dtype, Type)
+    .OP_END_FACTORY_REG(AssignVariableOp)
+
+REG_OP(ReadVariableOp)
+    .INPUT(x, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT8, DT_INT16, DT_UINT16, DT_UINT8,
+                          DT_INT32, DT_INT64, DT_UINT32, DT_UINT64, DT_BOOL, DT_DOUBLE}))
+    .OUTPUT(y, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT8, DT_INT16, DT_UINT16, DT_UINT8,
+                           DT_INT32, DT_INT64, DT_UINT32, DT_UINT64, DT_BOOL, DT_DOUBLE}))
+    .ATTR(dtype, Int, DT_INT32)
+    .OP_END_FACTORY_REG(ReadVariableOp)
+
+REG_OP(Reshape)
+    .INPUT(x, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT8, DT_INT16, DT_UINT16, DT_UINT8, DT_INT32,
+        DT_INT64, DT_UINT32, DT_UINT64, DT_BOOL, DT_DOUBLE}))
+    .INPUT(shape, TensorType({DT_INT32, DT_INT64}))
+    .OUTPUT(y, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT8, DT_INT16, DT_UINT16, DT_UINT8, DT_INT32,
+        DT_INT64, DT_UINT32, DT_UINT64, DT_BOOL, DT_DOUBLE}))
+    .ATTR(axis, Int, 0)
+    .ATTR(num_axes, Int, -1)
+    .OP_END_FACTORY_REG(Reshape)
+
+REG_OP(VarHandleOp)
+    .ATTR(container, String, "")
+    .ATTR(shared_name, String, "")
+    .REQUIRED_ATTR(dtype, Type)
+    .ATTR(shape, ListInt, ge::UNKNOWN_SHAPE)
+    .OUTPUT(y, TensorType({DT_RESOURCE}))
+    .OP_END_FACTORY_REG(VarHandleOp)
+
+REG_OP(Squeeze)
+    .INPUT(x, TensorType::ALL())
+    .OUTPUT(y, TensorType::ALL())
+    .ATTR(axis, ListInt, {})
+    .OP_END_FACTORY_REG(Squeeze)
+
+REG_OP(Fill)
+    .INPUT(dims, TensorType::IndexNumberType())
+    .INPUT(value, TensorType({DT_FLOAT, DT_DOUBLE, DT_INT32, DT_UINT8, DT_INT16,
+                              DT_INT8, DT_COMPLEX64, DT_INT64, DT_BOOL, DT_QINT8,
+                              DT_QUINT8, DT_QINT32, DT_QINT16, DT_QUINT16, DT_UINT16,
+                              DT_COMPLEX128, DT_FLOAT16, DT_UINT32, DT_UINT64}))
+    .OUTPUT(y, TensorType({DT_FLOAT, DT_DOUBLE, DT_INT32, DT_UINT8, DT_INT16,
+                              DT_INT8, DT_COMPLEX64, DT_INT64, DT_BOOL, DT_QINT8,
+                              DT_QUINT8, DT_QINT32, DT_QINT16, DT_QUINT16, DT_UINT16,
+                              DT_COMPLEX128, DT_FLOAT16, DT_UINT32, DT_UINT64}))
+    .OP_END_FACTORY_REG(Fill)
+
+REG_OP(ShapeN)
+    .DYNAMIC_INPUT(x, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT8, DT_INT16, DT_UINT16, DT_UINT8,
+        DT_INT32, DT_INT64, DT_UINT32, DT_UINT64, DT_BOOL, DT_DOUBLE}))
+    .DYNAMIC_OUTPUT(y, TensorType({DT_INT32, DT_INT64}))
+    .ATTR(dtype, Int, DT_INT32)
+    .OP_END_FACTORY_REG(ShapeN)
+
+REG_OP(Switch)
+    .INPUT(data, TensorType({DT_FLOAT16, DT_FLOAT, DT_DOUBLE,
+        DT_INT8, DT_INT16, DT_INT32, DT_INT64, DT_UINT8, DT_UINT16, DT_UINT32,
+        DT_UINT64, DT_BOOL}))
+    .INPUT(pred, TensorType({DT_BOOL}))
+    .OUTPUT(output_false, TensorType({DT_FLOAT16, DT_FLOAT, DT_DOUBLE,
+        DT_INT8, DT_INT16, DT_INT32, DT_INT64, DT_UINT8, DT_UINT16, DT_UINT32,
+        DT_UINT64, DT_BOOL}))
+    .OUTPUT(output_true, TensorType({DT_FLOAT16, DT_FLOAT, DT_DOUBLE,
+        DT_INT8, DT_INT16, DT_INT32, DT_INT64, DT_UINT8, DT_UINT16, DT_UINT32,
+        DT_UINT64, DT_BOOL}))
+    .OP_END_FACTORY_REG(Switch)
+
+REG_OP(RefSwitch)
+    .INPUT(data, TensorType({DT_FLOAT16, DT_FLOAT, DT_DOUBLE,
+        DT_INT8, DT_INT16, DT_INT32, DT_INT64, DT_UINT8, DT_UINT16, DT_UINT32,
+        DT_UINT64, DT_BOOL}))
+    .INPUT(pred, TensorType({DT_BOOL}))
+    .OUTPUT(output_false, TensorType({DT_FLOAT16, DT_FLOAT, DT_DOUBLE,
+        DT_INT8, DT_INT16, DT_INT32, DT_INT64, DT_UINT8, DT_UINT16, DT_UINT32,
+        DT_UINT64, DT_BOOL}))
+    .OUTPUT(output_true, TensorType({DT_FLOAT16, DT_FLOAT, DT_DOUBLE,
+        DT_INT8, DT_INT16, DT_INT32, DT_INT64, DT_UINT8, DT_UINT16, DT_UINT32,
+        DT_UINT64, DT_BOOL}))
+    .OP_END_FACTORY_REG(RefSwitch)
+
+REG_OP(Enter)
+    .INPUT(x, TensorType({DT_FLOAT16, DT_FLOAT, DT_DOUBLE,
+        DT_INT8, DT_INT16, DT_INT32, DT_INT64, DT_UINT8, DT_UINT16, DT_UINT32,
+        DT_UINT64, DT_BOOL}))
+    .OUTPUT(y, TensorType({DT_FLOAT16, DT_FLOAT, DT_DOUBLE,
+        DT_INT8, DT_INT16, DT_INT32, DT_INT64, DT_UINT8, DT_UINT16, DT_UINT32,
+        DT_UINT64, DT_BOOL}))
+    .REQUIRED_ATTR(frame_name, String)
+    .REQUIRED_ATTR(is_constant, Bool)
+    .OP_END_FACTORY_REG(Enter)
+
+REG_OP(VariableV2)
+    .INPUT(x, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT8, DT_INT16, DT_UINT16, \
+        DT_UINT8, DT_INT32, DT_INT64, DT_UINT32, DT_UINT64, DT_BOOL, DT_DOUBLE}))
+    .OUTPUT(y, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT8, DT_INT16, DT_UINT16, \
+        DT_UINT8, DT_INT32, DT_INT64, DT_UINT32, DT_UINT64, DT_BOOL, DT_DOUBLE}))
+    .ATTR(index, Int, 0)
+    .ATTR(value, Tensor, Tensor())
+    .ATTR(container, String, "")
+    .ATTR(shared_name, String, "")
+    .OP_END_FACTORY_REG(VariableV2)
+
+REG_OP(Constant)
+    .OUTPUT(y, TensorType({DT_FLOAT, DT_FLOAT16, DT_INT8, DT_INT16, DT_UINT16,
+        DT_UINT8, DT_INT32, DT_INT64, DT_UINT32, DT_UINT64, DT_BOOL, DT_DOUBLE}))
+    .ATTR(value, Tensor, Tensor())
+    .OP_END_FACTORY_REG(Constant)
+
+REG_OP(Mul)
+    .INPUT(x1, TensorType({DT_FLOAT16, DT_FLOAT, DT_DOUBLE, DT_UINT8, DT_INT8,
+                           DI_UINT16, DT_INT16, DT_INT32, DT_INT64,
+                           DT_COMPLEX64, DT_COMPLEX128}))
+    .INPUT(x2, TensorType({DT_FLOAT16, DT_FLOAT, DT_DOUBLE, DT_UINT8, DT_INT8,
+                           DI_UINT16, DT_INT16, DT_INT32, DT_INT64,
+                           DT_COMPLEX64, DT_COMPLEX128}))
+    .OUTPUT(y, TensorType({DT_FLOAT16, DT_FLOAT, DT_DOUBLE, DT_UINT8, DT_INT8,
+                           DI_UINT16, DT_INT16, DT_INT32, DT_INT64,
+                           DT_COMPLEX64, DT_COMPLEX128}))
+    .OP_END_FACTORY_REG(Mul)
 
 // for plugin
 static Status ParseParamsStub(const google::protobuf::Message* op_src, ge::Operator& op_dest) {
@@ -209,5 +386,36 @@ REGISTER_CUSTOM_OP("PartitionedCall")
     .OriginOpType({"ai.onnx::9::Clip"})
     .ParseParamsFn(ParseParamsClipV9Stub)
     .ParseOpToGraphFn(ParseOpToGraphClipV9Stub);
+REGISTER_CUSTOM_OP("TensorArray")
+    .FrameworkType(domi::TENSORFLOW)
+    .OriginOpType("TensorArrayV3")
+    .ParseParamsFn(ParseParamsStub);
+
+REGISTER_CUSTOM_OP("TensorArrayWrite")
+    .FrameworkType(domi::TENSORFLOW)
+    .OriginOpType("TensorArrayWriteV3")
+    .ParseParamsFn(ParseParamsStub);
+
+REGISTER_CUSTOM_OP("DynamicRNN")
+    .FrameworkType(domi::TENSORFLOW)
+    .OriginOpType("BlockLSTM")
+    .ParseParamsFn(ParseParamsStub);
+
+REGISTER_CUSTOM_OP("Merge")
+    .FrameworkType(domi::TENSORFLOW)
+    .OriginOpType("HistogramSummary")
+    .ParseParamsFn(ParseParamsStub);
+
+REGISTER_CUSTOM_OP("NoOp")
+    .FrameworkType(domi::TENSORFLOW)
+    .OriginOpType("NoOp")
+    .ParseParamsFn(ParseParamsStub);
+
+REGISTER_CUSTOM_OP("Fill")
+    .FrameworkType(domi::TENSORFLOW)
+    .OriginOpType("Fill")
+    .ParseParamsFn(ParseParamsStub);
 }  // namespace ge
+
+
 #endif  // MAIN_OPS_STUB_H

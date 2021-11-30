@@ -1,0 +1,71 @@
+{
+  "node": [
+    {
+      "attr": [
+        {
+          "key": "shape",
+          "value": {
+            "shape": {
+              "dim": [
+                {
+                  "size": 1
+                }
+              ]
+            }
+          }
+        },
+        {
+          "key": "dtype",
+          "value": {
+            "type": "DT_HALF"
+          }
+        }
+      ],
+      "name": "Placeholder",
+      "op": "Placeholder"
+    },
+    {
+      "attr": [
+        {
+          "key": "shape",
+          "value": {
+            "shape": {
+              "dim": [
+                {
+                  "size": 1
+                }
+              ]
+            }
+          }
+        },
+        {
+          "key": "dtype",
+          "value": {
+            "type": "DT_HALF"
+          }
+        }
+      ],
+      "name": "Placeholder_1",
+      "op": "Placeholder"
+    },
+    {
+      "attr": [
+        {
+          "key": "T",
+          "value": {
+            "type": "DT_HALF"
+          }
+        }
+      ],
+      "input": [
+        "Placeholder",
+        "Placeholder_1"
+      ],
+      "name": "add_test_1",
+      "op": "Add"
+    }
+  ],
+  "versions": {
+    "producer": 134
+  }
+}
