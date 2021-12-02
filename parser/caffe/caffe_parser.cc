@@ -2180,7 +2180,7 @@ Status CaffeWeightsParser::CheckNodes(ge::ComputeGraphPtr &graph) {
           ErrorManager::GetInstance().ATCReportErrMessage("E11029", {"opname"}, {node->GetName()});
           GELOGE(ge::GRAPH_FAILED, "[Find][Node] Op[%s] in model file does not exist in weight file.",
                  node->GetName().c_str());
-          PreChecker::Instance().RefreshErrorMessageByName(node->GetName(), PreChecker::PARAM_INVALID,
+          PreChecker::Instance().RefreshErrorMessageByName(node->GetName(), PreChecker::ErrorCode::PARAM_INVALID,
                                                            "Node does not exist in weight file.");
         } else {
           REPORT_INNER_ERROR("E19999", "Op:%s(%s)'s input %d is not linked, check invalid",
@@ -2188,7 +2188,8 @@ Status CaffeWeightsParser::CheckNodes(ge::ComputeGraphPtr &graph) {
           GELOGE(ge::GRAPH_FAILED, "[Check][Param] Op[%s]'s input %d is not linked.", node->GetName().c_str(),
                  in_anchor_ptr->GetIdx());
           string check_msg = "input " + to_string(in_anchor_ptr->GetIdx()) + "is not linked in weight file";
-          PreChecker::Instance().RefreshErrorMessageByName(node->GetName(), PreChecker::PARAM_INVALID, check_msg);
+          PreChecker::Instance().RefreshErrorMessageByName(node->GetName(), PreChecker::ErrorCode::PARAM_INVALID,
+                                                           check_msg);
         }
         return FAILED;
       }

@@ -25,7 +25,7 @@ namespace ge {
 class VariableOperator : public ParserOperator {
  public:
   VariableOperator();
-  ~VariableOperator();
+  ~VariableOperator() override;
 
   VariableOperator &Name(const std::string &name);
 

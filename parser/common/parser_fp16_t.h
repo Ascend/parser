@@ -586,7 +586,7 @@ T MinMan(const int16_t &e_a, T &m_a, const int16_t &e_b, T &m_b) {
 template<typename T>
 T RightShift(T man, int16_t shift) {
   int bits = sizeof(T) * 8;  // one byte have 8 bits
-  T mask = (((T) 1u) << ((unsigned int) (bits - 1)));
+  T mask = static_cast<T>(1u) << static_cast<uint32_t>(bits - 1);
   for (int i = 0; i < shift; i++) {
     man = ((man & mask) | (man >> 1));
   }

@@ -20,6 +20,7 @@
 #include <string>
 
 #include "ge/ge_api_error_codes.h"
+#include "ge/ge_api_types.h"
 #include "register/register_types.h"
 #include "nlohmann/json.hpp"
 

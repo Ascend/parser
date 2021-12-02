@@ -24,7 +24,7 @@ namespace ge {
 class ShapeNOperator : public ParserOperator {
  public:
   ShapeNOperator();
-  ~ShapeNOperator();
+  ~ShapeNOperator() override;
 
   ShapeNOperator &Name(const std::string &name);
 

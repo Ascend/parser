@@ -24,7 +24,7 @@ class FrameworkOpOperator : public ParserOperator {
  public:
   FrameworkOpOperator();
 
-  ~FrameworkOpOperator();
+  ~FrameworkOpOperator() override;
 
   FrameworkOpOperator &Name(const std::string &name);
 

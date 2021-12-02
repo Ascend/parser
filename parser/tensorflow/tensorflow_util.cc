@@ -31,6 +31,94 @@
 using domi::tensorflow::DT_INVALID;
 
 namespace ge {
+/***************************TensorFlow attribute type, constant definition*******************************************/
+const std::string TENSORFLOW_ATTR_TYPE_STRING = "string";
+const std::string TENSORFLOW_ATTR_TYPE_INT = "int";
+const std::string TENSORFLOW_ATTR_TYPE_FLOAT = "float";
+const std::string TENSORFLOW_ATTR_TYPE_BOOL = "bool";
+const std::string TENSORFLOW_ATTR_TYPE_TYPE = "type";
+const std::string TENSORFLOW_ATTR_TYPE_SHAPE = "shape";
+const std::string TENSORFLOW_ATTR_TYPE_TENSOR = "tensor";
+const std::string TENSORFLOW_ATTR_TYPE_FUNC = "func";
+
+const std::string TENSORFLOW_ATTR_LIST_TYPE_STRING = "list(string)";
+const std::string TENSORFLOW_ATTR_LIST_TYPE_INT = "list(int)";
+const std::string TENSORFLOW_ATTR_LIST_TYPE_FLOAT = "list(float)";
+const std::string TENSORFLOW_ATTR_LIST_TYPE_BOOL = "list(bool)";
+const std::string TENSORFLOW_ATTR_LIST_TYPE_TYPE = "list(type)";
+const std::string TENSORFLOW_ATTR_LIST_TYPE_SHAPE = "list(shape)";
+const std::string TENSORFLOW_ATTR_LIST_TYPE_TENSOR = "list(tensor)";
+const std::string TENSORFLOW_ATTR_LIST_TYPE_FUNC = "list(func)";
+
+/***************************constant definition*******************************************/
+const std::string TENSORFLOW_ATTR_OUTPUT_OP = "output_op";
+
+const std::string TENSORFLOW_ATTR_T = "T";
+const std::string TENSORFLOW_ATTR_N = "N";
+const std::string TENSORFLOW_ATTR_DATA_FORMAT = "data_format";
+const std::string TENSORFLOW_ATTR_PADDING = "padding";
+const std::string TENSORFLOW_ATTR_KSIZE = "ksize";
+const std::string TENSORFLOW_ATTR_STRIDES = "strides";
+const std::string TENSORFLOW_ATTR_DILATIONS = "dilations";
+const std::string TENSORFLOW_ATTR_DTYPE = "dtype";
+const std::string TENSORFLOW_ATTR_VALUE = "value";
+const std::string TENSORFLOW_ATTR_TRANSINPUT = "transpose_a";
+const std::string TENSORFLOW_ATTR_TRANSWEIGHT = "transpose_b";
+const std::string TENSORFLOW_ATTR_SHAPE = "shape";
+const std::string TENSORFLOW_ATTR_TIDX = "Tidx";
+const std::string TENSORFLOW_ATTR_TPADDINGS = "Tpaddings";
+const std::string TENSORFLOW_ATTR_TMULTIPLES = "Tmultiples";
+const std::string TENSORFLOW_ATTR_TINDICES = "Tindices";
+const std::string TENSORFLOW_ATTR_TPARAMS = "Tparams";
+const std::string TENSORFLOW_ATTR_TAXIS = "Taxis";
+const std::string TENSORFLOW_ATTR_DSTT = "DstT";
+const std::string TENSORFLOW_ATTR_SRCT = "SrcT";
+const std::string TENSORFLOW_ATTR_PERM = "perm";
+const std::string TENSORFLOW_ATTR_INDEX = "Index";
+const std::string TENSORFLOW_ATTR_TSHAPE = "Tshape";
+const std::string TENSORFLOW_ATTR_AXIS = "Axis";
+const std::string TENSORFLOW_ATTR_BIAS = "bias";
+const std::string TENSORFLOW_ATTR_DEPTH_RADIUS = "depth_radius";
+const std::string TENSORFLOW_ATTR_ALPHA = "alpha";
+const std::string TENSORFLOW_ATTR_BETA = "beta";
+const std::string TENSORFLOW_ATTR_MODE = "mode";
+
+// op:Const
+const std::string TENSORFLOWF_NODE_OP_CONST = "Const";
+const std::string TENSORFLOWF_NODE_OP_IDENTITY = "Identity";
+const std::string TENSORFLOWF_NODE_OP_SWITCH = "Switch";
+const std::string TENSORFLOWF_NODE_OP_PLACEHOLDER = "Placeholder";
+const std::string TENSORFLOWF_NODE_OP_ADDN = "AddN";
+const std::string TENSORFLOWF_NODE_OP_MATMUL = "MatMul";
+const std::string TENSORFLOWF_NODE_OP_RELU = "Relu";
+const std::string TENSORFLOWF_NODE_OP_SHAPE = "Shape";
+const std::string TENSORFLOWF_NODE_OP_TRANSPOSE = "Transpose";
+const std::string TENSORFLOWF_NODE_OP_MERGE = "Merge";
+
+// data_format
+const std::string TENSORFLOWF_TENSOR_NCHW = "NCHW";
+const std::string TENSORFLOWF_TENSOR_NHWC = "NHWC";
+
+const int TENSORFLOW_CONV_STRIDE_NUM = 4;
+const int TENSORFLOW_CONV_DILATION_NUM = 4;
+
+// padding
+const std::string TENSORFLOWF_OP_PADDING_VALID = "VALID";
+const std::string TENSORFLOWF_OP_PADDING_SAME = "SAME";
+
+// normal input size
+const uint32_t TENSORFLOW_NORMAL_INPUT_SIZE_MATMUL = 2;
+const uint32_t TENSORFLOW_NORMAL_INPUT_SIZE_RESHAPE = 1;
+const uint32_t TENSORFLOW_NORMAL_INPUT_SIZE_POOL = 1;
+
+// normal weight size
+const uint32_t TENSORFLOW_NORMAL_WEIGHT_SIZE_MATMUL = 1;
+const uint32_t TENSORFLOW_NORMAL_WEIGHT_SIZE_RESHAPE = 1;
+
+// input or output
+const uint32_t TENSORFLOW_NORMAL_INPUT_TENSOR_FLAG = 1;
+const uint32_t TENSORFLOW_NORMAL_OUTPUT_TENSOR_FLAG = 2;
+
 using AttrValueMap = ::google::protobuf::Map<std::string, domi::tensorflow::AttrValue>;
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool TensorFlowUtil::FindAttrValue(
     const domi::tensorflow::NodeDef *node_def, const std::string &attr_name, domi::tensorflow::AttrValue &attr_value) {

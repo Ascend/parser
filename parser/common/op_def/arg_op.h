@@ -23,7 +23,7 @@ class ArgOpOperator : public ParserOperator {
  public:
   ArgOpOperator();
 
-  ~ArgOpOperator();
+  ~ArgOpOperator() override;
 
   ArgOpOperator &Name(const std::string &name);
 

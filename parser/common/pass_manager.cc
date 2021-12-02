@@ -27,7 +27,7 @@ const std::vector<std::pair<std::string, GraphPass *>> &PassManager::GraphPasses
   return names_to_graph_passes_;
 }
 
-Status PassManager::AddPass(const string &pass_name, GraphPass *pass) {
+Status PassManager::AddPass(const string &pass_name, GraphPass *const pass) {
   GE_CHECK_NOTNULL(pass);
   names_to_graph_passes_.emplace_back(pass_name, pass);
   return SUCCESS;

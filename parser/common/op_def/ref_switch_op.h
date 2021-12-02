@@ -24,7 +24,7 @@ namespace ge {
 class RefSwitchOperator : public ParserOperator {
  public:
   RefSwitchOperator();
-  ~RefSwitchOperator();
+  ~RefSwitchOperator() override;
 
   RefSwitchOperator &Name(const std::string &name);
   RefSwitchOperator &T(ge::DataType  t);

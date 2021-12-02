@@ -23,7 +23,7 @@ class FillOperator : public ParserOperator {
  public:
   FillOperator();
 
-  ~FillOperator();
+  ~FillOperator() override;
 
   FillOperator &DataType(int64_t dataType);
 
