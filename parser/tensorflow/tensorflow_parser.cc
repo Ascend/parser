@@ -586,7 +586,7 @@ Status TensorFlowModelParser::AddNode(const domi::tensorflow::NodeDef *node_def,
 }
 
 void TensorFlowModelParser::GetInputOutputTensorNum(const ge::OpDescPtr &op_desc, size_t &input_tensor_num,
-                                                    size_t &output_tensor_num) {
+                                                    size_t &output_tensor_num) const {
   // The caller guarantees that the pointer is not null
   auto iter = op_node_context_map_.find(op_desc->GetName());
   if (iter == op_node_context_map_.end()) {
@@ -817,8 +817,7 @@ Status TensorFlowModelParser::AddEdges(ge::ComputeGraphPtr &graph) {
   return SUCCESS;
 }
 
-Status TensorFlowModelParser::AddFmkNodeDefToMap(const domi::tensorflow::GraphDef &graph_def,
-                                                 const domi::tensorflow::NodeDef *node_def,
+Status TensorFlowModelParser::AddFmkNodeDefToMap(const domi::tensorflow::NodeDef *node_def,
                                                  vector<string> &op_node_name_list) {
   GE_CHECK_NOTNULL(node_def);
   const string &node_name = node_def->name();
@@ -1224,7 +1223,7 @@ Status TensorFlowModelParser::ParseFromMemory(const char *data, uint32_t size, g
                     GELOGI("Node: %s maybe a fusion op.", node_def->name().c_str()););
 
     // Do not exit immediately when there is an error, wait until all errors are collected before exiting
-    GE_CHK_STATUS_EXEC(AddFmkNodeDefToMap(graph_def, node_def, op_node_name_list), has_error = true,
+    GE_CHK_STATUS_EXEC(AddFmkNodeDefToMap(node_def, op_node_name_list), has_error = true,
                        "add node failed.");
   }
 
@@ -1459,7 +1458,7 @@ Status TensorFlowModelParser::ParseAllGraph(const google::protobuf::Message *pro
     }
 
     // Do not exit immediately when there is an error, wait until all errors are collected before exiting
-    GE_CHK_STATUS_EXEC(AddFmkNodeDefToMap(graph_def, node_def, op_node_name_list), has_error = true);
+    GE_CHK_STATUS_EXEC(AddFmkNodeDefToMap(node_def, op_node_name_list), has_error = true);
   }
 
   // The fusion operator has passed the verification.
@@ -1545,7 +1544,7 @@ Status TensorFlowModelParser::ParseAllGraph(const google::protobuf::Message *pro
   return SUCCESS;
 }
 
-Status TensorFlowModelParser::CheckGraphDefValid(const domi::tensorflow::GraphDef &graph_def) {
+Status TensorFlowModelParser::CheckGraphDefValid(const domi::tensorflow::GraphDef &graph_def) const {
   // Number of data nodes
   uint32_t data_node_count = 0;
   for (const domi::tensorflow::NodeDef &node_def : graph_def.node()) {
@@ -2275,7 +2274,7 @@ Status TensorFlowModelParser::ParseProto(const google::protobuf::Message *proto,
     }
 
     // Do not exit immediately when there is an error, wait until all errors are collected before exiting
-    Status ret = AddFmkNodeDefToMap(*graph_def, node_def, op_node_name_list);
+    Status ret = AddFmkNodeDefToMap(node_def, op_node_name_list);
     GE_CHK_STATUS_EXEC(ret, return PARAM_INVALID, "add node_def to map failed");
   }
   PARSER_TIMESTAMP_END(AddFmkNodeDefToMap, "TensorFlowModelParser::AddFmkNodeDefToMap");
@@ -2865,7 +2864,7 @@ Status TensorFlowModelParser::GraphDefOptimize(domi::tensorflow::GraphDef *graph
     // mutable_node return vale is not empty
     domi::tensorflow::NodeDef *node_def = graph_def->mutable_node(i);
     const string &node_name = node_def->name();
-    Status ret = AddFmkNodeDefToMap(*graph_def, node_def, op_node_name_list);
+    Status ret = AddFmkNodeDefToMap(node_def, op_node_name_list);
     GE_CHK_STATUS_EXEC(ret, return PARAM_INVALID, "add node_def to map failed");
     if (node_def->op() == ge::parser::IDENTITY || node_def->op() == ge::parser::READVARIABLEOP) {
       identity_to_optimize.push_back(node_def);

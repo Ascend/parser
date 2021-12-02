@@ -24,7 +24,7 @@ namespace ge {
 class NoOpOperator : public ParserOperator {
  public:
   NoOpOperator();
-  ~NoOpOperator();
+  ~NoOpOperator() override;
 
   NoOpOperator &Name(const std::string &name);
 };

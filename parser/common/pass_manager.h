@@ -41,7 +41,7 @@ public:
   /// @param [in] pass  Pass to be added, it will be destroyed when pass manager destroys.
   /// @author
   ///
-  Status AddPass(const string &pass_name, GraphPass *pass);
+  Status AddPass(const string &pass_name, GraphPass *const pass);
 
   ///
   /// Optimize graph with added pass

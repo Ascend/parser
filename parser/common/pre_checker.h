@@ -44,7 +44,7 @@ class PreChecker {
    * @ingroup domi_omg
    * @brief error code, 1~99:Error, 100~199:Waring。
    */
-  enum ErrorCode {
+  enum class ErrorCode {
     // no error
     OK = 0,
 

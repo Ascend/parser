@@ -98,7 +98,7 @@ Status PreChecker::CheckName(OpId id) {
     // If the name is duplicate, an error is logged
     if (id != v.first && info.name == v.second.name) {
       Cause cause;
-      cause.code = NAME_REPEATED;
+      cause.code = ErrorCode::NAME_REPEATED;
       cause.message = "The name is repeated.";
 
       GELOGI("Name %s repeated.", info.name.c_str());
@@ -248,7 +248,7 @@ Status PreChecker::CheckTypeSupported(OpId id, const string &type, const string 
     std::string op_type;
     if (!domi::OpRegistry::Instance()->GetOmTypeByOriOpType(type, op_type)) {
       Cause cause;
-      cause.code = TYPE_UNSUPPORTED;
+      cause.code = ErrorCode::TYPE_UNSUPPORTED;
       cause.message = "The type is not supported.";
       GELOGI("Check op[%s]'s type[%s] failed, it is not supported.", name.c_str(), type.c_str());
       if (!is_tensorflow) {
@@ -262,7 +262,7 @@ Status PreChecker::CheckTypeSupported(OpId id, const string &type, const string 
   // Log error if type not found
   if (fmk_op_types_->find(type) == fmk_op_types_->end()) {
     Cause cause;
-    cause.code = TYPE_UNSUPPORTED;
+    cause.code = ErrorCode::TYPE_UNSUPPORTED;
     cause.message = "The type is not supported.";
 
     GELOGI("Check op[%s]'s type[%s] failed, it is not supported.", name.c_str(), type.c_str());

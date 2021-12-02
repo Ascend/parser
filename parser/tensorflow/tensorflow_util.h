@@ -44,92 +44,92 @@ using domi::tensorflow::FunctionDefLibrary;
 
 namespace ge {
 /***************************TensorFlow attribute type, constant definition*******************************************/
-static const std::string TENSORFLOW_ATTR_TYPE_STRING = "string";
-static const std::string TENSORFLOW_ATTR_TYPE_INT = "int";
-static const std::string TENSORFLOW_ATTR_TYPE_FLOAT = "float";
-static const std::string TENSORFLOW_ATTR_TYPE_BOOL = "bool";
-static const std::string TENSORFLOW_ATTR_TYPE_TYPE = "type";
-static const std::string TENSORFLOW_ATTR_TYPE_SHAPE = "shape";
-static const std::string TENSORFLOW_ATTR_TYPE_TENSOR = "tensor";
-static const std::string TENSORFLOW_ATTR_TYPE_FUNC = "func";
+extern const std::string TENSORFLOW_ATTR_TYPE_STRING;
+extern const std::string TENSORFLOW_ATTR_TYPE_INT;
+extern const std::string TENSORFLOW_ATTR_TYPE_FLOAT;
+extern const std::string TENSORFLOW_ATTR_TYPE_BOOL;
+extern const std::string TENSORFLOW_ATTR_TYPE_TYPE;
+extern const std::string TENSORFLOW_ATTR_TYPE_SHAPE;
+extern const std::string TENSORFLOW_ATTR_TYPE_TENSOR;
+extern const std::string TENSORFLOW_ATTR_TYPE_FUNC;
 
-static const std::string TENSORFLOW_ATTR_LIST_TYPE_STRING = "list(string)";
-static const std::string TENSORFLOW_ATTR_LIST_TYPE_INT = "list(int)";
-static const std::string TENSORFLOW_ATTR_LIST_TYPE_FLOAT = "list(float)";
-static const std::string TENSORFLOW_ATTR_LIST_TYPE_BOOL = "list(bool)";
-static const std::string TENSORFLOW_ATTR_LIST_TYPE_TYPE = "list(type)";
-static const std::string TENSORFLOW_ATTR_LIST_TYPE_SHAPE = "list(shape)";
-static const std::string TENSORFLOW_ATTR_LIST_TYPE_TENSOR = "list(tensor)";
-static const std::string TENSORFLOW_ATTR_LIST_TYPE_FUNC = "list(func)";
+extern const std::string TENSORFLOW_ATTR_LIST_TYPE_STRING;
+extern const std::string TENSORFLOW_ATTR_LIST_TYPE_INT;
+extern const std::string TENSORFLOW_ATTR_LIST_TYPE_FLOAT;
+extern const std::string TENSORFLOW_ATTR_LIST_TYPE_BOOL;
+extern const std::string TENSORFLOW_ATTR_LIST_TYPE_TYPE;
+extern const std::string TENSORFLOW_ATTR_LIST_TYPE_SHAPE;
+extern const std::string TENSORFLOW_ATTR_LIST_TYPE_TENSOR;
+extern const std::string TENSORFLOW_ATTR_LIST_TYPE_FUNC;
 
 /***************************constant definition*******************************************/
-static const std::string TENSORFLOW_ATTR_OUTPUT_OP = "output_op";
+extern const std::string TENSORFLOW_ATTR_OUTPUT_OP;
 
-static const std::string TENSORFLOW_ATTR_T = "T";
-static const std::string TENSORFLOW_ATTR_N = "N";
-static const std::string TENSORFLOW_ATTR_DATA_FORMAT = "data_format";
-static const std::string TENSORFLOW_ATTR_PADDING = "padding";
-static const std::string TENSORFLOW_ATTR_KSIZE = "ksize";
-static const std::string TENSORFLOW_ATTR_STRIDES = "strides";
-static const std::string TENSORFLOW_ATTR_DILATIONS = "dilations";
-static const std::string TENSORFLOW_ATTR_DTYPE = "dtype";
-static const std::string TENSORFLOW_ATTR_VALUE = "value";
-static const std::string TENSORFLOW_ATTR_TRANSINPUT = "transpose_a";
-static const std::string TENSORFLOW_ATTR_TRANSWEIGHT = "transpose_b";
-static const std::string TENSORFLOW_ATTR_SHAPE = "shape";
-static const std::string TENSORFLOW_ATTR_TIDX = "Tidx";
-static const std::string TENSORFLOW_ATTR_TPADDINGS = "Tpaddings";
-static const std::string TENSORFLOW_ATTR_TMULTIPLES = "Tmultiples";
-static const std::string TENSORFLOW_ATTR_TINDICES = "Tindices";
-static const std::string TENSORFLOW_ATTR_TPARAMS = "Tparams";
-static const std::string TENSORFLOW_ATTR_TAXIS = "Taxis";
-static const std::string TENSORFLOW_ATTR_DSTT = "DstT";
-static const std::string TENSORFLOW_ATTR_SRCT = "SrcT";
-static const std::string TENSORFLOW_ATTR_PERM = "perm";
-static const std::string TENSORFLOW_ATTR_INDEX = "Index";
-static const std::string TENSORFLOW_ATTR_TSHAPE = "Tshape";
-static const std::string TENSORFLOW_ATTR_AXIS = "Axis";
-static const std::string TENSORFLOW_ATTR_BIAS = "bias";
-static const std::string TENSORFLOW_ATTR_DEPTH_RADIUS = "depth_radius";
-static const std::string TENSORFLOW_ATTR_ALPHA = "alpha";
-static const std::string TENSORFLOW_ATTR_BETA = "beta";
-static const std::string TENSORFLOW_ATTR_MODE = "mode";
+extern const std::string TENSORFLOW_ATTR_T;
+extern const std::string TENSORFLOW_ATTR_N;
+extern const std::string TENSORFLOW_ATTR_DATA_FORMAT;
+extern const std::string TENSORFLOW_ATTR_PADDING;
+extern const std::string TENSORFLOW_ATTR_KSIZE;
+extern const std::string TENSORFLOW_ATTR_STRIDES;
+extern const std::string TENSORFLOW_ATTR_DILATIONS;
+extern const std::string TENSORFLOW_ATTR_DTYPE;
+extern const std::string TENSORFLOW_ATTR_VALUE;
+extern const std::string TENSORFLOW_ATTR_TRANSINPUT;
+extern const std::string TENSORFLOW_ATTR_TRANSWEIGHT;
+extern const std::string TENSORFLOW_ATTR_SHAPE;
+extern const std::string TENSORFLOW_ATTR_TIDX;
+extern const std::string TENSORFLOW_ATTR_TPADDINGS;
+extern const std::string TENSORFLOW_ATTR_TMULTIPLES;
+extern const std::string TENSORFLOW_ATTR_TINDICES;
+extern const std::string TENSORFLOW_ATTR_TPARAMS;
+extern const std::string TENSORFLOW_ATTR_TAXIS;
+extern const std::string TENSORFLOW_ATTR_DSTT;
+extern const std::string TENSORFLOW_ATTR_SRCT;
+extern const std::string TENSORFLOW_ATTR_PERM;
+extern const std::string TENSORFLOW_ATTR_INDEX;
+extern const std::string TENSORFLOW_ATTR_TSHAPE;
+extern const std::string TENSORFLOW_ATTR_AXIS;
+extern const std::string TENSORFLOW_ATTR_BIAS;
+extern const std::string TENSORFLOW_ATTR_DEPTH_RADIUS;
+extern const std::string TENSORFLOW_ATTR_ALPHA;
+extern const std::string TENSORFLOW_ATTR_BETA;
+extern const std::string TENSORFLOW_ATTR_MODE;
 
 // op:Const
-static const std::string TENSORFLOWF_NODE_OP_CONST = "Const";
-static const std::string TENSORFLOWF_NODE_OP_IDENTITY = "Identity";
-static const std::string TENSORFLOWF_NODE_OP_SWITCH = "Switch";
-static const std::string TENSORFLOWF_NODE_OP_PLACEHOLDER = "Placeholder";
-static const std::string TENSORFLOWF_NODE_OP_ADDN = "AddN";
-static const std::string TENSORFLOWF_NODE_OP_MATMUL = "MatMul";
-static const std::string TENSORFLOWF_NODE_OP_RELU = "Relu";
-static const std::string TENSORFLOWF_NODE_OP_SHAPE = "Shape";
-static const std::string TENSORFLOWF_NODE_OP_TRANSPOSE = "Transpose";
-static const std::string TENSORFLOWF_NODE_OP_MERGE = "Merge";
+extern const std::string TENSORFLOWF_NODE_OP_CONST;
+extern const std::string TENSORFLOWF_NODE_OP_IDENTITY;
+extern const std::string TENSORFLOWF_NODE_OP_SWITCH;
+extern const std::string TENSORFLOWF_NODE_OP_PLACEHOLDER;
+extern const std::string TENSORFLOWF_NODE_OP_ADDN;
+extern const std::string TENSORFLOWF_NODE_OP_MATMUL;
+extern const std::string TENSORFLOWF_NODE_OP_RELU;
+extern const std::string TENSORFLOWF_NODE_OP_SHAPE;
+extern const std::string TENSORFLOWF_NODE_OP_TRANSPOSE;
+extern const std::string TENSORFLOWF_NODE_OP_MERGE;
 
 // data_format
-static const std::string TENSORFLOWF_TENSOR_NCHW = "NCHW";
-static const std::string TENSORFLOWF_TENSOR_NHWC = "NHWC";
+extern const std::string TENSORFLOWF_TENSOR_NCHW;
+extern const std::string TENSORFLOWF_TENSOR_NHWC;
 
-static const int TENSORFLOW_CONV_STRIDE_NUM = 4;
-static const int TENSORFLOW_CONV_DILATION_NUM = 4;
+extern const int TENSORFLOW_CONV_STRIDE_NUM;
+extern const int TENSORFLOW_CONV_DILATION_NUM;
 
 // padding
-static const std::string TENSORFLOWF_OP_PADDING_VALID = "VALID";
-static const std::string TENSORFLOWF_OP_PADDING_SAME = "SAME";
+extern const std::string TENSORFLOWF_OP_PADDING_VALID;
+extern const std::string TENSORFLOWF_OP_PADDING_SAME;
 
 // normal input size
-static const uint32_t TENSORFLOW_NORMAL_INPUT_SIZE_MATMUL = 2;
-static const uint32_t TENSORFLOW_NORMAL_INPUT_SIZE_RESHAPE = 1;
-static const uint32_t TENSORFLOW_NORMAL_INPUT_SIZE_POOL = 1;
+extern const uint32_t TENSORFLOW_NORMAL_INPUT_SIZE_MATMUL;
+extern const uint32_t TENSORFLOW_NORMAL_INPUT_SIZE_RESHAPE;
+extern const uint32_t TENSORFLOW_NORMAL_INPUT_SIZE_POOL;
 
 // normal weight size
-static const uint32_t TENSORFLOW_NORMAL_WEIGHT_SIZE_MATMUL = 1;
-static const uint32_t TENSORFLOW_NORMAL_WEIGHT_SIZE_RESHAPE = 1;
+extern const uint32_t TENSORFLOW_NORMAL_WEIGHT_SIZE_MATMUL;
+extern const uint32_t TENSORFLOW_NORMAL_WEIGHT_SIZE_RESHAPE;
 
 // input or output
-static const uint32_t TENSORFLOW_NORMAL_INPUT_TENSOR_FLAG = 1;
-static const uint32_t TENSORFLOW_NORMAL_OUTPUT_TENSOR_FLAG = 2;
+extern const uint32_t TENSORFLOW_NORMAL_INPUT_TENSOR_FLAG;
+extern const uint32_t TENSORFLOW_NORMAL_OUTPUT_TENSOR_FLAG;
 
 class TensorFlowUtil {
  public:

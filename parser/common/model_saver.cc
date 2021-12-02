@@ -75,7 +75,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status ModelSaver::SaveJsonToFi
   mmSsize_t mmpa_ret = mmWrite(fd, const_cast<void *>((const void *)model_char), len);
   if (mmpa_ret == EN_ERROR || mmpa_ret == EN_INVALID_PARAM) {
     ErrorManager::GetInstance().ATCReportErrMessage(
-            "E19004", {"file", "errmsg"}, {file_path, strerror(errno)});
+        "E19004", {"file", "errmsg"}, {file_path, strerror(errno)});
     // Need to both print the error info of mmWrite and mmClose, so return ret after mmClose
     GELOGE(FAILED, "[WriteTo][File] %s failed. errno = %ld, %s", file_path, mmpa_ret, strerror(errno));
     ret = FAILED;

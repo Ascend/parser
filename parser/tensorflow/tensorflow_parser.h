@@ -185,7 +185,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
    * @return FAILED add failed
 
    */
-  Status AddFmkNodeDefToMap(const domi::tensorflow::GraphDef &graph_def, const domi::tensorflow::NodeDef *node_def,
+  Status AddFmkNodeDefToMap(const domi::tensorflow::NodeDef *node_def,
                             vector<string> &op_node_name_list);
 
   /**
@@ -243,7 +243,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
   * @return SUCCESS check successfully
   * @return FAILED check failed
   */
-  Status CheckGraphDefValid(const domi::tensorflow::GraphDef &graph_def);
+  Status CheckGraphDefValid(const domi::tensorflow::GraphDef &graph_def) const;
 
   /**
   * @ingroup domi_omg
@@ -516,7 +516,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
   Status UppdateOutputMap(shared_ptr<ge::ScopeGraph> &scope_graph, const ge::ScopeFusionOpInfo &info,
                           OpNodeContext &fusion_op_node_context, OpNodeContext &normal_op_node_context);
   void GetInputOutputTensorNum(const ge::OpDescPtr &op_desc, size_t &input_tensor_num,
-                               size_t &output_tensor_num);
+                               size_t &output_tensor_num) const;
   static Status CheckOpShapeDim(const domi::tensorflow::NodeDef *node_def, const std::set<int> &dims, bool &valid);
   Status CheckOpType(const domi::tensorflow::NodeDef *node_def, string &op_type);
 
