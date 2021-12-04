@@ -36,12 +36,23 @@
 #include "common/types.h"
 #include "parser/common/op_def/variable_op.h"
 #include "parser/tensorflow/tensorflow_ref_switch_parser.h"
+#include "parser/tensorflow/tensorflow_fusion_op_parser.h"
+#include "parser/tensorflow/tensorflow_auto_mapping_parser_adapter.h"
+#include "parser/common/op_def/arg_op.h"
+#include "parser/tensorflow/tensorflow_fusion_custom_parser_adapter.h"
+#include "parser/tensorflow/tensorflow_reshape_parser.h"
+#include "parser/tensorflow/tensorflow_custom_parser_adapter.h"
+#include "parser/tensorflow/tensorflow_squeeze_parser.h"
+#include "parser/tensorflow/graph_functiondef.h"
+#include "parser/tensorflow/graph_optimizer.h"
+#include "cce/dnn_base_def.hpp"
 #undef protected
 #undef private
 
 using namespace std;
 using namespace domi::tensorflow;
 using namespace domi;
+using namespace cce;
 using namespace testing;
 using namespace std;
 using namespace google::protobuf;
@@ -65,6 +76,10 @@ static Status ParseParams(const google::protobuf::Message* op_src, ge::Operator&
   return SUCCESS;
 }
 
+static Status ParseParamByOpFunc(const ge::Operator &op_src, ge::Operator& op_dest) {
+  return SUCCESS;
+}
+
 void STestTensorflowParser::RegisterCustomOp() {
   REGISTER_CUSTOM_OP("Add")
   .FrameworkType(domi::TENSORFLOW)
@@ -80,6 +95,60 @@ void STestTensorflowParser::RegisterCustomOp() {
 }
 
 namespace {
+  NodeDef* AddNode(GraphDef& graph, string type, string name)
+  {
+    NodeDef* nodeDef = graph.add_node();
+    nodeDef->set_op(type);
+    nodeDef->set_name(name);
+
+    tensorflow::OpDef op_def;
+    string op_def_string;
+    op_def.SerializeToString(&op_def_string);
+
+    tensorflow::AttrValue value;
+    value.set_s(op_def_string);
+    nodeDef->mutable_attr()->insert({"op_def", value});
+    return nodeDef;
+  }
+
+  void AddInput(NodeDef* src, NodeDef* dst, int srcIndex)
+  {
+    if(srcIndex == -1){
+        dst->add_input("^"+src->name());
+    } else {
+      if (srcIndex == 0) {
+        dst->add_input(src->name());
+      } else {
+        dst->add_input(src->name() + ":" + std::to_string(srcIndex));
+      }
+      {
+        auto input = (*dst->mutable_attr())[ge::ATTR_NAME_INPUT_TENSOR_DESC].mutable_list()->add_func();
+        tensorflow::AttrValue val1;
+        val1.set_i(0);
+        (*input->mutable_attr())["serialize_format"] = val1;
+        tensorflow::AttrValue val2;
+        val2.set_i(tensorflow::DT_FLOAT);
+        (*input->mutable_attr())["serialize_datatype"] = val2;
+        tensorflow::AttrValue val3;
+        val3.mutable_list()->add_i(10);
+        (*input->mutable_attr())["serialize_shape"] = val3;
+      }
+
+      {
+        auto output = (*src->mutable_attr())[ge::ATTR_NAME_OUTPUT_TENSOR_DESC].mutable_list()->add_func();
+        tensorflow::AttrValue val1;
+        val1.set_i(0);
+        (*output->mutable_attr())["serialize_format"] = val1;
+        tensorflow::AttrValue val2;
+        val2.set_i(tensorflow::DT_FLOAT);
+        (*output->mutable_attr())["serialize_datatype"] = val2;
+        tensorflow::AttrValue val3;
+        val3.mutable_list()->add_i(10);
+        (*output->mutable_attr())["serialize_shape"] = val3;
+      }
+    }
+  }
+
   NodeDef *initNodeDef()
   {
       NodeDef * nodeDef = new NodeDef();
@@ -103,22 +172,189 @@ namespace {
 
       // 设置 tensor 属性
       domi::tensorflow::AttrValue value_attr_value;
-      ::tensorflow::TensorProto* tensor = value_attr_value.mutable_tensor();
-      ::tensorflow::TensorShapeProto* tensor_shape = tensor->mutable_tensor_shape();
+      tensorflow::TensorProto* tensor = value_attr_value.mutable_tensor();
+      tensorflow::TensorShapeProto* tensor_shape = tensor->mutable_tensor_shape();
       tensor_shape->clear_dim();
       tensor_shape->add_dim()->set_size(4);
       tensor_shape->add_dim()->set_size(6);
       tensor->set_dtype(domi::tensorflow::DT_INT32);
 
       float *addr = new float[24];
-      for (int32_t i = 0; i < 24; i++)
-      {
+      for (int32_t i = 0; i < 24; i++) {
           *(addr + i) = 1.0 + i;
       }
       tensor->set_tensor_content((void *)addr, 24 * sizeof(float));
 
       (*node_attr_map)[TENSORFLOW_ATTR_VALUE] = value_attr_value;
       delete[] addr;
+      return nodeDef;
+  }
+
+  NodeDef * initOpNodeDef_VariableV2()
+  {
+    NodeDef * nodeDef = new NodeDef();
+    nodeDef->set_op("VariableV2");
+    google::protobuf::Map<std::string, tensorflow::AttrValue > *node_attr_map = nodeDef->mutable_attr();
+
+    //设置data_format属性
+    domi::tensorflow::AttrValue format_attr_value;
+    format_attr_value.set_s("_FZ");
+    (*node_attr_map)[VAR_ATTR_FORMAT] = format_attr_value;
+
+    domi::tensorflow::AttrValue type_attr;
+    type_attr.set_type(domi::tensorflow::DT_FLOAT);
+    (*node_attr_map)[VAR_ATTR_DTYPE] = type_attr;
+
+    domi::tensorflow::AttrValue container_attr_value;
+    container_attr_value.set_s("container");
+    (*node_attr_map)[VAR_ATTR_CONTAINER] = container_attr_value;
+
+    domi::tensorflow::AttrValue shard_name_attr_value;
+    shard_name_attr_value.set_s("shard_name");
+    (*node_attr_map)[VAR_ATTR_SHARED_NAME] = shard_name_attr_value;
+
+    domi::tensorflow::AttrValue shape_attr_value;
+    shape_attr_value.mutable_shape()->add_dim()->set_size(1);
+    shape_attr_value.mutable_shape()->add_dim()->set_size(2);
+    shape_attr_value.mutable_shape()->add_dim()->set_size(3);
+    shape_attr_value.mutable_shape()->add_dim()->set_size(4);
+    (*node_attr_map)[ge::VAR_ATTR_SHAPE] = shape_attr_value;
+
+    domi::tensorflow::AttrValue shape;
+    shape.mutable_list()->add_i((int64)32);
+    shape.mutable_list()->add_i((int64)32);
+    shape.mutable_list()->add_i((int64)14);
+    shape.mutable_list()->add_i((int64)14);
+
+    //设置data_format属性
+    domi::tensorflow::AttrValue df_attr_value;
+    domi::tensorflow::AttrValue df_attr_value2;
+    df_attr_value2.set_s(TENSORFLOWF_TENSOR_NHWC);
+
+    df_attr_value.set_i((int64_t)ccTensorFormat_t::CC_TENSOR_NHWC);
+    (*node_attr_map)[TENSORFLOW_ATTR_DATA_FORMAT] = df_attr_value2;
+    //设置padding属性
+    domi::tensorflow::AttrValue pad_attr_value;
+    domi::tensorflow::AttrValue pad_attr_value2;
+    pad_attr_value2.set_s(TENSORFLOWF_OP_PADDING_SAME);
+    (*node_attr_map)[TENSORFLOW_ATTR_PADDING] = pad_attr_value2;
+    pad_attr_value.set_i((int64_t)tensorflow::DT_FLOAT);
+
+    domi::tensorflow::NameAttrList name_attr_list;
+    name_attr_list.set_name(std::to_string(0));
+    name_attr_list.mutable_attr()->insert({"serialize_shape", shape});
+    name_attr_list.mutable_attr()->insert({"serialize_format", df_attr_value});
+    name_attr_list.mutable_attr()->insert({"serialize_datatype", pad_attr_value});
+    domi::tensorflow::AttrValue output_tensor_descs;
+    *(output_tensor_descs.mutable_list()->add_func()) = name_attr_list;
+    nodeDef->mutable_attr()->insert({ge::ATTR_NAME_OUTPUT_TENSOR_DESC, output_tensor_descs});
+    return nodeDef;
+  }
+
+  NodeDef *initOpNodeDef_TemporaryVariable()
+  {
+    NodeDef * nodeDef = new NodeDef();
+    nodeDef->set_op("TemporaryVariable");
+    google::protobuf::Map<std::string, tensorflow::AttrValue> *node_attr_map = nodeDef->mutable_attr();
+
+    //设置dtype属性
+    domi::tensorflow::AttrValue type_attr;
+    type_attr.set_type(domi::tensorflow::DT_FLOAT);
+    (*node_attr_map)[VAR_ATTR_DTYPE] = type_attr;
+
+    //设置var_name属性
+    domi::tensorflow::AttrValue var_name_attr_value;
+    var_name_attr_value.set_s("temporary_variable_name");
+    (*node_attr_map)[ge::VAR_ATTR_NAME] = var_name_attr_value;
+
+    //设置shape属性
+    domi::tensorflow::AttrValue shape_attr_value;
+    shape_attr_value.mutable_shape()->add_dim()->set_size(1);
+    shape_attr_value.mutable_shape()->add_dim()->set_size(2);
+    shape_attr_value.mutable_shape()->add_dim()->set_size(3);
+    shape_attr_value.mutable_shape()->add_dim()->set_size(4);
+    (*node_attr_map)[ge::VAR_ATTR_SHAPE] = shape_attr_value;
+
+    domi::tensorflow::AttrValue shape;
+    shape.mutable_list()->add_i((int64)32);
+    shape.mutable_list()->add_i((int64)32);
+    shape.mutable_list()->add_i((int64)14);
+    shape.mutable_list()->add_i((int64)14);
+
+    //设置data_format属性
+    domi::tensorflow::AttrValue df_attr_value2;
+    df_attr_value2.set_s(TENSORFLOWF_TENSOR_NHWC);
+    (*node_attr_map)[TENSORFLOW_ATTR_DATA_FORMAT] = df_attr_value2;
+    domi::tensorflow::AttrValue df_attr_value;
+    df_attr_value.set_i((int64_t)ccTensorFormat_t::CC_TENSOR_NHWC);
+
+    //设置padding属性
+    domi::tensorflow::AttrValue pad_attr_value2;
+    pad_attr_value2.set_s(TENSORFLOWF_OP_PADDING_SAME);
+    (*node_attr_map)[TENSORFLOW_ATTR_PADDING] = pad_attr_value2;
+    domi::tensorflow::AttrValue pad_attr_value;
+    pad_attr_value.set_i((int64_t)tensorflow::DT_FLOAT);
+
+    domi::tensorflow::NameAttrList name_attr_list;
+    name_attr_list.set_name(std::to_string(0));
+    name_attr_list.mutable_attr()->insert({"serialize_shape", shape});
+    name_attr_list.mutable_attr()->insert({"serialize_format", df_attr_value});
+    name_attr_list.mutable_attr()->insert({"serialize_datatype", pad_attr_value});
+    domi::tensorflow::AttrValue output_tensor_descs;
+    *(output_tensor_descs.mutable_list()->add_func()) = name_attr_list;
+    nodeDef->mutable_attr()->insert({ge::ATTR_NAME_OUTPUT_TENSOR_DESC, output_tensor_descs});
+    return nodeDef;
+  }
+
+  NodeDef *fusioninitNodeDef(int index)
+  {
+      NodeDef * nodeDef = new NodeDef();
+      ::google::protobuf::Map< ::std::string, ::tensorflow::AttrValue >* node_attr_map = nodeDef->mutable_attr();
+
+      //设置 type属性
+      domi::tensorflow::AttrValue dtype_attr_value ;
+
+      if (index == 0) {
+          dtype_attr_value.set_type(domi::tensorflow::DT_FLOAT);
+      } else if (index == 1) {
+          dtype_attr_value.set_type(domi::tensorflow::DT_INT32);
+      } else if (index == 2) {
+          dtype_attr_value.set_type(tensorflow::DT_HALF);
+      }
+      (*node_attr_map)[ge::TENSORFLOW_ATTR_DTYPE] = dtype_attr_value;
+      //设置data_format属性
+      domi::tensorflow::AttrValue df_attr_value;
+      df_attr_value.set_s(TENSORFLOWF_TENSOR_NCHW);
+      (*node_attr_map)[TENSORFLOW_ATTR_DATA_FORMAT] = df_attr_value;
+
+      // 设置 tensor 属性
+      domi::tensorflow::AttrValue value_attr_value;
+      ::tensorflow::TensorProto* tensor = value_attr_value.mutable_tensor();
+      ::tensorflow::TensorShapeProto* tensor_shape = tensor->mutable_tensor_shape();
+      tensor_shape->clear_dim();
+      ::tensorflow::TensorShapeProto_Dim* dim = tensor_shape->add_dim();
+      dim->set_name("tensor dim");
+      dim->set_size(1);
+
+      if (index == 0) {
+          tensor->set_dtype(domi::tensorflow::DT_FLOAT);
+          float *addr = new float[1];
+          *addr = 1.0;
+          tensor->set_tensor_content((void *)addr, sizeof(float));
+          (*node_attr_map)[TENSORFLOW_ATTR_VALUE] = value_attr_value;
+          delete[] addr;
+      } else if (index == 1) {
+          tensor->set_dtype(domi::tensorflow::DT_INT32);
+          int32_t *addr = new int32_t[1];
+          *addr = 1;
+          tensor->set_tensor_content((void *)addr, sizeof(int32_t));
+          (*node_attr_map)[TENSORFLOW_ATTR_VALUE] = value_attr_value;
+          delete[] addr;
+      } else if (index == 2) {
+          tensor->set_dtype(tensorflow::DT_HALF);
+          tensor->add_half_val(1);
+          (*node_attr_map)[TENSORFLOW_ATTR_VALUE] = value_attr_value;
+      }
       return nodeDef;
   }
 
@@ -188,6 +424,7 @@ namespace {
       }
     }
   }
+
   void GenFusionScopesResult(shared_ptr<ScopeGraph> &scope_graph, FusionScopesResult *fusion_rlt,
                             const string &fusion_op_name) {
     if (fusion_rlt == nullptr) {
@@ -243,7 +480,9 @@ namespace {
     op_node_context.input_map["pre_node_ctrl_in"].push_back({-1, -1}); // ctrl edges
     op_node_context.output_map["post_node_b"].push_back({0, 0});
     op_node_context.output_map["post_node_c"].push_back({1, 0});
-    op_node_context.output_map["post_node_d"].push_back({-1, -1});  // ctrl edges
+    op_node_context.output_map["post_node_d"].push_back({-1, -1});
+    op_node_context.output_map["_Retval"].push_back({0, 1});
+    // ctrl edges
     tensorflow_parser->op_node_context_map_[fusion_op_name] = op_node_context;
     tensorflow_parser->SaveEdgesControlInfo(fusion_op_name, -1);
 
@@ -264,31 +503,185 @@ namespace {
 
     // op_node_context for post_node_c
     ge::OpNodeContext op_node_context_c;
-    op_node_context_c.input_map[fusion_op_name].push_back({1, 0});
     op_node_context_c.output_map["post_node_d"].push_back({0, 0});
     tensorflow_parser->op_node_context_map_["post_node_c"] = op_node_context_c;
 
     // op_node_context for post_node_d
     ge::OpNodeContext op_node_context_d;
-    op_node_context_d.input_map["post_node_c"].push_back({0, 0});
     op_node_context_d.input_map[fusion_op_name].push_back({-1, -1}); // ctrl edges
     tensorflow_parser->op_node_context_map_["post_node_d"] = op_node_context_d;
-    tensorflow_parser->SaveEdgesControlInfo("post_node_d", -1);
+
+    // op_node_context for Retval
+    ge::OpNodeContext op_node_context_Retval;
+    op_node_context_d.input_map["post_node_d"].push_back({-1, -1});
+    op_node_context_c.output_map["fusion_op_name"].push_back({0,1});
+    tensorflow_parser->op_node_context_map_["_Retval"] = op_node_context_Retval;
+    tensorflow_parser->SaveEdgesControlInfo("op_node_context_Retval", -1);
 
     string fusion_op_type = ge::kScopeToMultiNodes;
     string description = "fusion op description";
     tensorflow_parser->fusion_op_type_map_[fusion_op_name].push_back(fusion_op_type);
     tensorflow_parser->fusion_op_type_map_[fusion_op_name].push_back(description);
   }
-  void register_tbe_op()
+
+  void register_tbe_op() {
+    std::vector<OpRegistrationData> registrationDatas = OpRegistry::Instance()->registrationDatas;
+    for (OpRegistrationData reg_data : registrationDatas) {
+      OpRegistrationTbe::Instance()->Finalize(reg_data);
+      OpRegistry::Instance()->Register(reg_data);
+    }
+    OpRegistry::Instance()->registrationDatas.clear();
+  }
+
+  NodeDef *initNodeDef_axis_dims() {
+    NodeDef *nodeDef = new NodeDef();
+    google::protobuf::Map<std::string, tensorflow::AttrValue> *node_attr_map = nodeDef->mutable_attr();
+
+    //设置T属性
+    domi::tensorflow::AttrValue dtype_attr_value ;
+    dtype_attr_value.set_type(domi::tensorflow::DT_FLOAT);
+    (*node_attr_map)[TENSORFLOW_ATTR_T] = dtype_attr_value;
+
+    //设置strides属性
+    domi::tensorflow::AttrValue axis_attr_value;
+    ::tensorflow::AttrValue_ListValue* list = axis_attr_value.mutable_list();
+    list->add_i(1);
+    list->add_i(2);
+    (*node_attr_map)[ge::SQUEEZE_ATTR_AXIS] = axis_attr_value;
+    (*node_attr_map)[ge::SQUEEZE_ATTR_DIMS] = axis_attr_value;
+
+    return nodeDef;
+  }
+
+  NodeDef *initNodeDef_dims() {
+    NodeDef *nodeDef = new NodeDef();
+    ::google::protobuf::Map<std::string, tensorflow::AttrValue > *node_attr_map = nodeDef->mutable_attr();
+
+    //设置T属性
+    domi::tensorflow::AttrValue dtype_attr_value ;
+    dtype_attr_value.set_type(domi::tensorflow::DT_FLOAT);
+    (*node_attr_map)[TENSORFLOW_ATTR_T] = dtype_attr_value;
+
+    //设置strides属性
+    domi::tensorflow::AttrValue axis_attr_value;
+    ::tensorflow::AttrValue_ListValue* list = axis_attr_value.mutable_list();
+    list->add_i(1);
+    list->add_i(2);
+    (*node_attr_map)[ge::SQUEEZE_ATTR_DIMS] = axis_attr_value;
+    return nodeDef;
+  }
+
+  void CreateOpDef(const string& _name, const string& _type, ge::OpDescPtr opDef) {
+    tensorflow::OpDef tsOpDef;
+    tsOpDef.set_name(_name);
+    tensorflow::OpDef_ArgDef* outArgDef = tsOpDef.add_output_arg();
+    outArgDef->set_name(_name);
+    outArgDef->set_description("outArgDef");
+    outArgDef->set_type((tensorflow::DataType)3);
+
+    if ((_name == "A") || (_name == "B")) {
+      tensorflow::OpDef_ArgDef* argDef1 = tsOpDef.add_output_arg();
+      string name = _name+"t";
+      argDef1->set_name(name);
+      argDef1->set_description("this is a test 2");
+      argDef1->set_type((tensorflow::DataType)3);
+    }
+    if ((_name == "C") ) {
+      outArgDef->set_number_attr("num");
+    }
+    if ((_name == "D") ) {
+      outArgDef->set_type_list_attr("type_list");
+    }
+
+    string strTsOpDef;
+    tsOpDef.SerializeToString(&strTsOpDef);
+    ge::AttrUtils::SetStr(opDef, "op_def", strTsOpDef);
+
+    tensorflow::NodeDef nodedef;
+    nodedef.set_name(_name);
+    nodedef.set_op(_name);
+
+    string name("op_def");
+    tensorflow::AttrValue value;
+    value.set_s(strTsOpDef);
+    TensorFlowUtil::AddNodeAttr(name, value, &nodedef);
+    value.set_i(1);
+    TensorFlowUtil::AddNodeAttr("num", value, &nodedef);
+    value.mutable_list();
+    TensorFlowUtil::AddNodeAttr("type_list", value, &nodedef);
+
+    string strNodeDef;
+    nodedef.SerializeToString(&strNodeDef);
+    ge::GeAttrValue::BYTES nodedefBytes;
+    nodedefBytes = ge::GeAttrValue::BYTES::CopyFrom((uint8_t*)strNodeDef.data(), strNodeDef.length());
+    ge::AttrUtils::SetBytes(opDef, "node_def", nodedefBytes);
+
+    if ((_name== "S") || (_name == "K")) {
+      int index = 0;
+      ge::AttrUtils::SetInt(opDef, "T", 1);
+      ge::AttrUtils::SetInt(opDef, "arg_index", index);
+      ge::AttrUtils::SetInt(opDef, "ret_index", index);
+    }
+  }
+
+  ge::NodePtr AddNode(ge::ComputeGraphPtr graph, const string& _name, const string& _type,int32_t i_n, int32_t o_n) {
+    ge::OpDescPtr opDef = std::make_shared<ge::OpDesc>();
+    opDef->SetName(_name);
+    opDef->SetType(_type);
+    for(int32_t i = 0; i < i_n; i++) {
+      ge::GeTensorDesc input;
+      input.SetDataType((ge::DataType)1);
+      opDef->AddInputDesc(input);
+    }
+
+    for(int32_t i = 0;i < o_n; i++) {
+      ge::GeTensorDesc output;
+      output.SetDataType((ge::DataType)1);
+      opDef->AddOutputDesc(output);
+    }
+    CreateOpDef(_name, _type, opDef);
+    return graph->AddNode(opDef);
+  }
+
+  void MakeDagGraph(ge::ComputeGraphPtr graph, const string& input_node_type) {
+    ge::NodePtr node_s = AddNode(graph, "S", parser::DATA,1,1);
+    ge::NodePtr node_a = AddNode(graph, "A", "testa",1,2);
+    ge::NodePtr node_b = AddNode(graph, "B", "testb",1,2);
+    ge::NodePtr node_c = AddNode(graph, "C", "testc",1,1);
+    ge::NodePtr node_d = AddNode(graph, "D", "testd",1,1);
+    ge::NodePtr node_e = AddNode(graph, "E", "teste",1,1);
+    ge::NodePtr node_f = AddNode(graph, "F", "testf",1,1);
+    ge::NodePtr node_g = AddNode(graph, "G", "testg",2,1);
+    ge::NodePtr node_h = AddNode(graph, "H", "testh",1,1);
+    ge::NodePtr node_i = AddNode(graph, "I", "testi",1,1);
+    ge::NodePtr node_j = AddNode(graph, "J", "testj",2,1);
+    ge::NodePtr node_k = AddNode(graph, "K", parser::NETOUTPUT,1,1);
+
+    ge::GraphUtils::AddEdge(node_s->GetOutDataAnchor(0), node_a->GetInDataAnchor(0));
+    ge::GraphUtils::AddEdge(node_a->GetOutDataAnchor(0), node_b->GetInDataAnchor(0));
+    ge::GraphUtils::AddEdge(node_a->GetOutDataAnchor(1), node_c->GetInDataAnchor(0));
+    ge::GraphUtils::AddEdge(node_b->GetOutDataAnchor(0), node_d->GetInDataAnchor(0));
+    ge::GraphUtils::AddEdge(node_b->GetOutDataAnchor(1), node_e->GetInDataAnchor(0));
+    ge::GraphUtils::AddEdge(node_c->GetOutDataAnchor(0), node_g->GetInDataAnchor(0));
+    ge::GraphUtils::AddEdge(node_d->GetOutDataAnchor(0), node_f->GetInDataAnchor(0));
+    ge::GraphUtils::AddEdge(node_e->GetOutDataAnchor(0), node_g->GetInDataAnchor(1));
+    ge::GraphUtils::AddEdge(node_f->GetOutDataAnchor(0), node_h->GetInDataAnchor(0));
+    ge::GraphUtils::AddEdge(node_g->GetOutDataAnchor(0), node_j->GetInDataAnchor(0));
+    ge::GraphUtils::AddEdge(node_h->GetOutDataAnchor(0), node_i->GetInDataAnchor(0));
+    ge::GraphUtils::AddEdge(node_i->GetOutDataAnchor(0), node_j->GetInDataAnchor(1));
+    ge::GraphUtils::AddEdge(node_j->GetOutDataAnchor(0), node_k->GetInDataAnchor(0));
+    ge::GraphUtils::AddEdge(node_h->GetOutControlAnchor(), node_j->GetInControlAnchor());
+  }
+
+  void ChangeDataType(tensorflow::NodeDef* node_tf, int32_t data_type)
   {
-      std::vector<OpRegistrationData> registrationDatas = OpRegistry::Instance()->registrationDatas;
-      for(OpRegistrationData reg_data : registrationDatas)
-      {
-          OpRegistrationTbe::Instance()->Finalize(reg_data);
-          OpRegistry::Instance()->Register(reg_data);
-      }
-      OpRegistry::Instance()->registrationDatas.clear();
+    domi::tensorflow::AttrValue input_attr_value;
+    google::protobuf::Map<std::string, tensorflow::AttrValue>* attr = node_tf->mutable_attr();
+    google::protobuf::Map<std::string, tensorflow::AttrValue>::const_iterator it = attr->find(ge::ATTR_NAME_INPUT_TENSOR_DESC);
+    if (it != attr->end()) {
+        input_attr_value = it->second;
+    }
+    (*attr)[ge::ATTR_NAME_INPUT_TENSOR_DESC] = input_attr_value;
   }
 }
 
@@ -310,6 +703,10 @@ REG_OP(Add)
                            DT_INT8, DT_UINT8, DT_DOUBLE, DT_COMPLEX128,
                            DT_COMPLEX64, DT_STRING}))
     .OP_END_FACTORY_REG(Add)
+}
+
+static Status FusionParserParams(const std::vector<const google::protobuf::Message *> inside_nodes, ge::Operator &op) {
+  return domi::SUCCESS;
 }
 
 static MemBuffer* MemBufferFromFile(const char *path)
@@ -667,6 +1064,10 @@ TEST_F(STestTensorflowParser, tensorflow_ParserProto_failed)
   ASSERT_EQ(protoRet, false);
   ret = tensorflow_parser.ParseProto(reinterpret_cast<google::protobuf::Message *>(&graphDef), root_graph);
   ASSERT_EQ(ret, PARAM_INVALID);
+
+  std::string serialized_proto = "";
+  ret = tensorflow_parser.ParseProto(serialized_proto, root_graph);
+  ASSERT_EQ(ret, FAILED);
 }
 
 TEST_F(STestTensorflowParser, tensorflow_parserAllGraph_failed)
@@ -987,6 +1388,7 @@ TEST_F(STestTensorflowParser, tensorflow_merge_test) {
   caseDir = caseDir.substr(0, idx);
   std::string modelFile = caseDir + "/origin_models/merge.pb";
   auto status = aclgrphParseTensorFlow(modelFile.c_str(), graph);
+  EXPECT_EQ(status, FAILED);
 }
 
 TEST_F(STestTensorflowParser, tensorflow_no_op_test) {
@@ -1045,6 +1447,21 @@ TEST_F(STestTensorflowParser, tensorflow_reshpae_test) {
   std::string modelFile = caseDir + "/origin_models/test_reshape.pb";
   auto status = aclgrphParseTensorFlow(modelFile.c_str(), graph);
   EXPECT_EQ(status, SUCCESS);
+
+  TensorFlowReshapeParser parser;
+  NodeDef * nodeDef = new NodeDef();
+  ge::OpDescPtr opdef_ = make_shared<::ge::OpDesc>("","");
+  google::protobuf::Map<std::string, tensorflow::AttrValue >* attr_map = nodeDef->mutable_attr();
+  domi::tensorflow::AttrValue tshape_attr_value;
+  tshape_attr_value.set_type(domi::tensorflow::DT_INT32);
+  (*attr_map)[TENSORFLOW_ATTR_TSHAPE] = tshape_attr_value;
+  domi::tensorflow::AttrValue t_attr_value;
+  t_attr_value.set_type(domi::tensorflow::DT_FLOAT);
+  (*attr_map)[TENSORFLOW_ATTR_T] = t_attr_value;
+
+  Status ret = parser.ParseParams(nodeDef, opdef_);
+  EXPECT_EQ(domi::SUCCESS, ret);
+  delete nodeDef;
 }
 
 TEST_F(STestTensorflowParser, tensorflow_squeeze_test) {
@@ -1056,6 +1473,72 @@ TEST_F(STestTensorflowParser, tensorflow_squeeze_test) {
   std::string modelFile = caseDir + "/origin_models/test_sequeeze.pb";
   auto status = aclgrphParseTensorFlow(modelFile.c_str(), graph);
   EXPECT_EQ(status, SUCCESS);
+
+  TensorFlowSqueezeParser parser;
+  NodeDef *nodeDef = initNodeDef();
+  ge::OpDescPtr opDef = make_shared<::ge::OpDesc>("Squeeze","Squeeze");
+  Status ret = parser.ParseParams(nodeDef, opDef);
+  EXPECT_EQ(ret, SUCCESS);
+
+  NodeDef *nodeDef_dim = initNodeDef_dims();
+  ret = parser.ParseParams(nodeDef_dim, opDef);
+  EXPECT_EQ(SUCCESS, ret);
+
+  NodeDef *nodeDef_axis_dims = initNodeDef_axis_dims();
+  ret = parser.ParseParams(nodeDef_axis_dims, opDef);
+  EXPECT_EQ(GRAPH_PARAM_INVALID, ret);
+
+  static const string KEY_SHAPE_LIST = "key_shape_list";
+  static const string KEY_TENSOR_LIST = "key_tensor_list";
+  static const string KEY_DEFAULT = "key_default";
+
+  NodeDef *nodeDef2 = new NodeDef();
+  google::protobuf::Map<std::string, tensorflow::AttrValue> *node_attr_map = nodeDef2->mutable_attr();
+  domi::tensorflow::AttrValue dtype_attr_value ;
+  dtype_attr_value.set_type(domi::tensorflow::DT_FLOAT);
+  (*node_attr_map)[TENSORFLOW_ATTR_T] = dtype_attr_value;
+  //设置strides属性
+  tensorflow::AttrValue axis_attr_value;
+  tensorflow::AttrValue_ListValue *list = axis_attr_value.mutable_list();
+  list->add_i(1);
+  list->add_i(2);
+  (*node_attr_map)[ge::SQUEEZE_ATTR_AXIS] = axis_attr_value;
+  domi::tensorflow::AttrValue value;
+  domi::tensorflow::AttrValue df_attr_value;
+  // df_attr_value.set_i((int64_t)ccTensorFormat_t::CC_TENSOR_NHWC);
+
+  domi::tensorflow::AttrValue pad_attr_value;
+  pad_attr_value.set_i((int64_t)tensorflow::DT_FLOAT);
+
+  domi::tensorflow::AttrValue shape;
+  shape.mutable_list()->add_i((int64)32);
+  shape.mutable_list()->add_i((int64)32);
+  shape.mutable_list()->add_i((int64)14);
+  
+  static const string KEY_TYPE_LIST = "key_type_list";
+  const std::string ATTR_NAME_INPUT_TENSOR_DESC  = "input_tensor_desc";
+  const std::string ATTR_NAME_OUTPUT_TENSOR_DESC = "output_tensor_desc";
+  static const  domi::tensorflow::DataType VALUE_TYPE = domi::tensorflow::DataType::DT_FLOAT;
+  value.clear_value();
+  value.mutable_list()->add_type(VALUE_TYPE);
+  TensorFlowUtil::AddNodeAttr(KEY_TYPE_LIST, value, nodeDef2);
+
+  value.clear_value();
+  domi::tensorflow::NameAttrList name_attr_list;
+  name_attr_list.mutable_attr()->insert({"serialize_datatype", pad_attr_value});
+  name_attr_list.mutable_attr()->insert({"serialize_format", df_attr_value});
+  name_attr_list.mutable_attr()->insert({"serialize_shape", shape});
+  *(value.mutable_list()->add_func()) = name_attr_list;
+
+  nodeDef2->mutable_attr()->insert({ge::ATTR_NAME_INPUT_TENSOR_DESC, value});
+  nodeDef2->mutable_attr()->insert({ge::ATTR_NAME_OUTPUT_TENSOR_DESC, value});
+  ret = parser.ParseParams(nodeDef2, opDef);
+  EXPECT_EQ(domi::SUCCESS, ret);
+
+  delete nodeDef2;
+  delete nodeDef_axis_dims;
+  delete nodeDef_dim;
+  delete nodeDef;
 }
 
 TEST_F(STestTensorflowParser, tensorflow_fill_test) {
@@ -1121,6 +1604,788 @@ TEST_F(STestTensorflowParser, tensorflow_VariableV2_test) {
   std::string modelFile = caseDir + "/origin_models/test_VariableV2.pb";
   auto status = aclgrphParseTensorFlow(modelFile.c_str(), graph);
   EXPECT_EQ(status, SUCCESS);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_fusion_op_parser_test)
+{
+  TensorFlowFusionOpParser fusionOpParser;
+  ge::OpDescPtr op_dest = make_shared<ge::OpDesc>("FusionOp", ge::parser::CONSTANT);
+  int index = 0;
+  NodeDef* node_def = fusioninitNodeDef(index);
+  node_def->set_name("FusionOp");
+  auto ret = fusionOpParser.ParseParams(node_def, op_dest);
+  EXPECT_EQ(ret, SUCCESS);
+
+  int32_t param = 1;
+  ret = fusionOpParser.ParseParamFromConst(node_def, param);
+  EXPECT_EQ(ret, SUCCESS);
+
+  ret = fusionOpParser.ParseParamFromConst(node_def, param, index);
+  EXPECT_EQ(ret, SUCCESS);
+
+  float params = 0.0;
+  ret = fusionOpParser.ParseParamFromConst(node_def, params);
+  EXPECT_EQ(ret, SUCCESS);
+
+  index = 2;
+  node_def = fusioninitNodeDef(index);
+  ret = fusionOpParser.ParseParamFromConst(node_def, params, index);
+  EXPECT_EQ(ret, domi::PARAM_INVALID);
+
+  ret = fusionOpParser.ParseHalfFromConst(node_def, params, 0);
+  EXPECT_EQ(ret, SUCCESS);
+
+  ret = fusionOpParser.ParseHalfFromConst(node_def, params, 3);
+  EXPECT_EQ(ret, domi::PARAM_INVALID);
+
+  node_def = fusioninitNodeDef(0);
+  ret = fusionOpParser.ParseHalfFromConst(node_def, params, 3);
+  EXPECT_EQ(ret, domi::PARAM_INVALID);
+
+  static const float VALUE_FLOAT = 1.0;
+  ge::GeTensorPtr weight = nullptr;
+  ret = fusionOpParser.ParseWeightFromConst(node_def, weight);
+  EXPECT_EQ(ret, domi::SUCCESS);
+  EXPECT_NE(weight, nullptr);
+
+  ge::DataType ge_data_type = weight->GetTensorDesc().GetDataType();
+  EXPECT_EQ(ge_data_type, ge::DataType::DT_FLOAT);
+
+  const uint8_t* data_buff = weight->GetData().GetData();
+  size_t data_size = weight->GetData().size();
+  EXPECT_NE(data_buff, nullptr);
+  EXPECT_EQ(data_size, sizeof(float));
+
+  float value_float = *((float*)data_buff);
+  EXPECT_EQ(value_float, VALUE_FLOAT);
+  delete node_def;
+}
+
+TEST_F(STestTensorflowParser, tensorflow_auto_mapping_parser_adapter_test)
+{
+  ge::OpDescPtr op_dest = nullptr;
+  Message *op_src = nullptr;
+  TensorFlowAutoMappingParserAdapter autoMappingParser;
+  NodeDef* node_def = initNodeDef();
+  Status ret = autoMappingParser.ParseParams(op_src, op_dest);
+  EXPECT_EQ(ret, PARAM_INVALID);
+
+  ret = autoMappingParser.ParseParams(node_def, op_dest);
+  EXPECT_EQ(ret, PARAM_INVALID);
+
+  op_dest = make_shared<ge::OpDesc>("AutoMapping", ge::parser::CONSTANT);
+  op_dest->SetType(ge::parser::EMPTY);
+  ret = autoMappingParser.ParseParams(node_def, op_dest);
+  EXPECT_EQ(ret, SUCCESS);
+
+  op_dest->SetType(ge::parser::IDENTITYN);
+  ret = autoMappingParser.ParseParams(node_def, op_dest);
+  EXPECT_EQ(ret, SUCCESS);
+
+  op_dest->SetType(ge::parser::SIZE);
+  ret = autoMappingParser.ParseParams(node_def, op_dest);
+  EXPECT_EQ(ret, SUCCESS);
+
+  op_dest->SetType(ge::parser::SHAPE);
+  ret = autoMappingParser.ParseParams(node_def, op_dest);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_fusion_custom_parser_adapter_test)
+{
+  REGISTER_CUSTOM_OP("FusionCustom")
+    .FrameworkType(domi::TENSORFLOW)
+    .OriginOpType("FusionCustom")
+    .FusionParseParamsFn(FusionParserParams)
+    .ImplyType(ImplyType::TVM);
+  register_tbe_op();
+
+  auto graph = std::make_shared<ge::ComputeGraph>("FusionCustom");
+  auto op_desc = std::make_shared<ge::OpDesc>("FusionCustom", "FusionCustom");
+  auto node = graph->AddNode(op_desc);
+
+  NodeDef *node_def = new NodeDef();
+  std::vector<const NodeDef *> v_input_const1;
+  v_input_const1.push_back(node_def);
+
+  TensorFlowFusionCustomParserAdapter parser;
+  domi::Status status = parser.ParseParams(v_input_const1, node);
+  EXPECT_EQ(SUCCESS, status);
+
+  ge::Operator op_src("pool", "pooling");
+  std::vector<ge::Operator> v_input_const2;
+  v_input_const2.push_back(op_src);
+  Status ret = parser.ParseParams(v_input_const2, node);
+  EXPECT_EQ(FAILED, ret);
+  delete node_def;
+}
+
+TEST_F(STestTensorflowParser, tensorflow_custom_parser_adapter_test)
+{
+  ge::Operator op_src("pool", "pooling");
+  ge::OpDescPtr op_dest = std::make_shared<ge::OpDesc>();
+  TensorFlowCustomParserAdapter parser;
+  Status ret = parser.ParseParams(op_src, op_dest);
+  EXPECT_EQ(ret, FAILED);
+
+  REGISTER_CUSTOM_OP("Variable")
+    .FrameworkType(domi::TENSORFLOW)
+    .OriginOpType("VariableV2")
+    .ParseParamsFn(ParseParams)
+    .ParseParamsByOperatorFn(ParseParamByOpFunc)
+    .ImplyType(ImplyType::CUSTOM);
+  register_tbe_op();
+
+  Operator opSrc(ge::parser::VARIABLE, "VariableV2");
+  ret = parser.ParseParams(opSrc, op_dest);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_graph_functiondef_FindAttrValue_test)
+{
+  GraphToFunctionDef functionDef;
+  NodeDef *node_def = nullptr;
+  std::string attr_name = "Const";
+  tensorflow::AttrValue attr_value;
+  bool ret = functionDef.FindAttrValue(node_def, attr_name, attr_value);
+  EXPECT_EQ(ret, false);
+
+  node_def = initNodeDef();
+  attr_name = ge::ATTR_NAME_INPUT_TENSOR_DESC;
+  node_def->set_name("Const");
+  ret = functionDef.FindAttrValue(node_def, attr_name, attr_value);
+  EXPECT_EQ(ret, false);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_graph_functiondef_BuildFunctionDef_test)
+{
+  ge::ComputeGraphPtr subGraph = std::make_shared<ge::ComputeGraph>("default");
+  string inputNodeType = "DATA";
+  MakeDagGraph(subGraph, inputNodeType);
+
+  FunctionDefLibrary library;
+  tensorflow::NodeDef call_node_def;
+  call_node_def.set_op("fusionop");
+  call_node_def.set_name("fusionop");
+
+  vector<ge::InDataAnchorPtr> in_anchor;
+  vector<ge::OutDataAnchorPtr> out_anchor;
+  for (ge::NodePtr node : subGraph->GetAllNodes()) {
+    for (auto in : node->GetAllInDataAnchors()) {
+      if (in->GetPeerOutAnchor() != nullptr && in->GetPeerOutAnchor()->GetOwnerNode()->GetOpDesc()->GetType() == parser::DATA) {
+          in_anchor.push_back(in);
+      }
+    }
+    for (auto out : node->GetAllOutDataAnchors()) {
+      for (auto i : out->GetPeerInDataAnchors()) {
+          if (i->GetOwnerNode()->GetOpDesc()->GetType() == parser::NETOUTPUT) {
+              out_anchor.push_back(out);
+          }
+        }
+    }
+  }
+  Status ret = GraphToFunctionDef::BuildFunctionDef(subGraph,
+                          "fusionop",
+                          &library,
+                          &call_node_def,
+                          in_anchor,
+                          out_anchor);
+  EXPECT_EQ(domi::INTERNAL_ERROR, ret);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_CheckOpShapeDim_test)
+{
+  NodeDef *node_def = initNodeDef();
+  std::set<int> dims;
+  dims.insert(1);
+  dims.insert(2);
+  bool valid = true;
+  TensorFlowModelParser parser;
+  Status ret = parser.CheckOpShapeDim(node_def, dims, valid);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_Scope_pass_test)
+{
+  ScopePassManager passmanager;
+  auto scope_graph = ge::parser::MakeShared<ge::ScopeGraph>();
+  if (scope_graph == nullptr) {
+    GELOGE(FAILED, "Scope graph make shared failed.");
+    return;
+  }
+  if (scope_graph->Init() != SUCCESS) {
+    GELOGE(FAILED, "Scope graph init failed.");
+    return;
+  }
+
+  ge::TensorFlowModelParser tf_model_parser;
+  std::vector<string> scope_passes_list = {"pass_1", "pass_2"};
+  tf_model_parser.RunScopeFusionPass(scope_passes_list, passmanager, scope_graph);
+  Status ret = tf_model_parser.RunScopeFusionPass(scope_passes_list, passmanager, scope_graph);
+  EXPECT_NE(ge::SUCCESS, ret);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_variable_v2_parser_test)
+{
+  TensorFlowCustomParserAdapter parser;
+  ge::OpDescPtr op_dest = std::make_shared<ge::OpDesc>();
+  NodeDef *node_def = initNodeDef();
+  TensorFlowModelParser modelParser;
+  std::shared_ptr<OpParserFactory> factory = OpParserFactory::Instance(domi::TENSORFLOW);
+  std::shared_ptr<OpParser> op_parser = factory->CreateOpParser("Variable");
+  shared_ptr<TensorFlowOpParser> tensorflow_op_parser = std::dynamic_pointer_cast<TensorFlowOpParser>(op_parser);
+  Status ret = tensorflow_op_parser->ParseParams(node_def, op_dest);
+  EXPECT_EQ(ret, PARAM_INVALID);
+
+  node_def->set_name("TemporaryVariable");
+  node_def->set_op("TemporaryVariable");
+  op_parser = factory->CreateOpParser("TemporaryVariable");
+  tensorflow_op_parser = std::dynamic_pointer_cast<TensorFlowOpParser>(op_parser);
+  ret = tensorflow_op_parser->ParseParams(node_def, op_dest);
+  EXPECT_EQ(ret, PARAM_INVALID);
+
+  NodeDef *nodeDef_temporaryVariable = initOpNodeDef_TemporaryVariable();
+  op_parser = factory->CreateOpParser("TemporaryVariable");
+  tensorflow_op_parser = std::dynamic_pointer_cast<TensorFlowOpParser>(op_parser);
+  ret = tensorflow_op_parser->ParseParams(nodeDef_temporaryVariable, op_dest);
+  EXPECT_EQ(ret, SUCCESS);
+
+  NodeDef *nodeDef_VariableV2 = initOpNodeDef_VariableV2();
+  op_parser = factory->CreateOpParser("Variable");
+  tensorflow_op_parser = std::dynamic_pointer_cast<TensorFlowOpParser>(op_parser);
+  ret = tensorflow_op_parser->ParseParams(nodeDef_VariableV2, op_dest);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_var_is_initialized_op_test)
+{
+  TensorFlowCustomParserAdapter parser;
+  ge::OpDescPtr op_dest = std::make_shared<ge::OpDesc>();
+  NodeDef *node_def = initNodeDef();
+  TensorFlowModelParser modelParser;
+  std::shared_ptr<OpParserFactory> factory = OpParserFactory::Instance(domi::TENSORFLOW);
+  std::shared_ptr<OpParser> op_parser = factory->CreateOpParser("VarIsInitializedOp");
+  shared_ptr<TensorFlowOpParser> tensorflow_op_parser = std::dynamic_pointer_cast<TensorFlowOpParser>(op_parser);
+  Status ret = tensorflow_op_parser->ParseParams(node_def, op_dest);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_arg_parser_test)
+{
+  TensorFlowCustomParserAdapter parser;
+  ge::OpDescPtr op_dest = std::make_shared<ge::OpDesc>();
+  NodeDef *node_def = initNodeDef();
+  TensorFlowModelParser modelParser;
+  std::shared_ptr<OpParserFactory> factory = OpParserFactory::Instance(domi::TENSORFLOW);
+  std::shared_ptr<OpParser> op_parser = factory->CreateOpParser("_Arg");
+  shared_ptr<TensorFlowOpParser> tensorflow_op_parser = std::dynamic_pointer_cast<TensorFlowOpParser>(op_parser);
+  Status ret = tensorflow_op_parser->ParseParams(node_def, op_dest);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_frameworkop_parser_test)
+{
+  TensorFlowCustomParserAdapter parser;
+  ge::OpDescPtr op_dest = std::make_shared<ge::OpDesc>();
+  NodeDef *node_def = initNodeDef();
+  TensorFlowModelParser modelParser;
+  std::shared_ptr<OpParserFactory> factory = OpParserFactory::Instance(domi::TENSORFLOW);
+  std::shared_ptr<OpParser> op_parser = factory->CreateOpParser("FrameworkOp");
+  shared_ptr<TensorFlowOpParser> tensorflow_op_parser = std::dynamic_pointer_cast<TensorFlowOpParser>(op_parser);
+  Status ret = tensorflow_op_parser->ParseParams(node_def, op_dest);
+  EXPECT_EQ(ret, PARAM_INVALID);
+
+  ChangeDataType(node_def, tensorflow::DT_UINT16);
+  ret = tensorflow_op_parser->ParseParams(node_def, op_dest);
+  EXPECT_EQ(ret, PARAM_INVALID);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_reshape_parser_test)
+{
+  TensorFlowCustomParserAdapter parser;
+  ge::OpDescPtr op_dest = std::make_shared<ge::OpDesc>();
+  NodeDef *node_def = initNodeDef();
+  TensorFlowModelParser modelParser;
+  std::shared_ptr<OpParserFactory> factory = OpParserFactory::Instance(domi::TENSORFLOW);
+  std::shared_ptr<OpParser> op_parser = factory->CreateOpParser("Reshape");
+  shared_ptr<TensorFlowOpParser> tensorflow_op_parser = std::dynamic_pointer_cast<TensorFlowOpParser>(op_parser);
+  Status ret = tensorflow_op_parser->ParseParams(node_def, op_dest);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_DefunToPartitionedCall_parser_test)
+{
+  TensorFlowModelParser parser;
+  NodeDef *node_def = initNodeDef();
+  node_def->set_name("ShapeN");
+  ge::OpDescPtr op = make_shared<ge::OpDesc>("constant", ge::parser::CONSTANT);
+  Status ret = parser.DefunToPartitionedCall(node_def, op);
+  EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_TransNodeToOpDesc_parser_test)
+{
+  TensorFlowModelParser parser;
+  NodeDef *node_def = initNodeDef();
+  node_def->set_name("ge::parser::DATA");
+  std::string op_type = "ge::parser::DATA";
+  ge::OpDescPtr op = make_shared<ge::OpDesc>("constant", ge::parser::CONSTANT);
+  Status ret = parser.TransNodeToOpDesc(node_def, op, op_type);
+  EXPECT_EQ(ret, FAILED);
+}
+
+domi::Status fusion_parse_param_by_op(const std::vector<ge::Operator> &op_src, ge::Operator &op) {
+  return domi::SUCCESS;
+}
+
+TEST_F(STestTensorflowParser, Fusion_node_parse_params_success) {
+  ge::ComputeGraphPtr compute_graph = std::make_shared<ge::ComputeGraph>(GRAPH_DEFAULT_NAME);
+
+  ModelParserFactory* factory = ModelParserFactory::Instance();
+  shared_ptr<ModelParser> model_parser= factory->CreateModelParser(domi::TENSORFLOW);
+  ASSERT_TRUE(NULL != model_parser);
+  TensorFlowModelParser tensorflow_parser;
+  domi::tensorflow::NodeDef node_def;
+  node_def.set_name("data");
+  node_def.set_op("FusionCustom");
+
+  FusionParseParamByOpFunc function = fusion_parse_param_by_op;
+  shared_ptr<ge::OpParserFactory> op_parser = ge::OpParserFactory::Instance(domi::TENSORFLOW);
+  shared_ptr<OpParser> fusion_op_parser = op_parser->CreateFusionOpParser("FusionCustom");
+
+  ge::ComputeGraphPtr graph = std::make_shared<ge::ComputeGraph>(GRAPH_DEFAULT_NAME);
+  ge::OpDescPtr op = std::make_shared<ge::OpDesc>("data", "FusionCustom");
+  ge::NodePtr node = std::make_shared<ge::Node>(op, graph);
+
+  vector<const NodeDef *> node_defs;
+  node_defs.push_back(&node_def);
+
+  tensorflow_parser.fusion_op_nodedef_map_["data"] = node_defs;
+  Status ret = tensorflow_parser.FusionNodeParseParams(fusion_op_parser, &node_def, node);
+  EXPECT_EQ(domi::SUCCESS, ret);
+}
+
+TEST_F(STestTensorflowParser, Tensorflow_recordFusionResult_parser_test)
+{
+  auto scope_graph = ge::parser::MakeShared<ge::ScopeGraph>();
+  if (scope_graph == nullptr) {
+    GELOGE(FAILED, "Scope graph make shared failed.");
+    return;
+  }
+
+  if (scope_graph->Init() != SUCCESS) {
+    GELOGE(FAILED, "Scope graph init failed.");
+    return;
+  }
+
+  domi::tensorflow::NodeDef node_def;
+  node_def.set_name("OP");
+  FusionScopesResult *fusion_scope_rlt = new (std::nothrow) FusionScopesResult();
+  if (fusion_scope_rlt == nullptr) {
+    GELOGE(FAILED, "FusionScopesResult make shared failed.");
+    return;
+  }
+  fusion_scope_rlt->Init();
+  fusion_scope_rlt->SetName("OP");
+  auto &impl_scope_graph = scope_graph->impl_;
+  std::string scope_name = fusion_scope_rlt->Name();
+  impl_scope_graph->fusion_results_.insert(std::make_pair(scope_name, fusion_scope_rlt));
+  std::vector<ge::OperatorPtr> nodes;
+  ge::OperatorPtr op = ge::parser::MakeShared<ge::Operator>("op_name", "op_type");
+  if (op == nullptr) {
+    GELOGE(FAILED, "Operator make shared failed.");
+    return;
+  }
+  nodes.push_back(op);
+  fusion_scope_rlt->impl_->AddNodes(nodes);
+
+  ge::OpDescPtr opDesc = std::make_shared<ge::OpDesc>();
+  ge::TensorFlowModelParser tf_model_parser;
+  Status ret = tf_model_parser.RecordFusionResult(scope_graph, &node_def, opDesc);
+  EXPECT_EQ(SUCCESS, ret);
+}
+
+TEST_F(STestTensorflowParser, Tensorflow_UpdateFusionOpContext_test)
+{
+  ModelParserFactory* factory = ModelParserFactory::Instance();
+  shared_ptr<domi::ModelParser> model_parser = factory->CreateModelParser(domi::TENSORFLOW);
+  TensorFlowModelParser tensorflow_parser;
+  ScopeFusionOpInfo info;
+  ge::OpNodeContext normal_op_node_context;
+  ge::OpNodeContext fusion_op_node_context;
+
+  /* 1.预置条件 */
+  tensorflow::GraphDef *graph = new tensorflow::GraphDef();
+  ScopePassManager passmanager;
+  shared_ptr<ScopeGraph> scope_graph = passmanager.BuildScopeGraph(graph);
+  NodeDef * node1 = graph->add_node();
+  node1->set_name("conv_conv5/BatchNorm/batchnorm/add");
+  node1->set_op("Add");
+  node1->add_input("conv_conv5/BatchNorm/moving_variance");
+  node1->add_input("conv_conv5/BatchNorm/batchnorm/add/y");
+
+  NodeDef * node2 = graph->add_node();
+  node2->set_name("conv_conv5/BatchNorm/moving_variance");
+  node2->set_op("Const");
+
+  NodeDef * node3 = graph->add_node();
+  node3->set_name("conv_conv5/BatchNorm/batchnorm/add/y");
+  node3->set_op("Const");
+
+  info.fusion_node_name = "conv_conv5/BatchNorm/batchnorm";
+  info.fusion_op_type = ge::parser::FUSIONBATCHNORM;
+  info.node_name = "conv_conv5/BatchNorm/batchnorm/add";
+  info.description = "";
+  info.scope_pass = false;
+
+  EXPECT_EQ(scope_graph->impl_->GetFusionScopesResults(nullptr), nullptr);
+  EXPECT_EQ(scope_graph->impl_->GetFusionScopesResults(node1), nullptr);
+
+  Status ret = tensorflow_parser.UpdateFusionOpContext(scope_graph, info, fusion_op_node_context, normal_op_node_context);
+  EXPECT_EQ(ret, domi::SUCCESS);
+  delete graph;
+}
+
+TEST_F(STestTensorflowParser, Tensorflow_GetInOutPutIndex_scope_pass)
+{
+  ModelParserFactory* factory = ModelParserFactory::Instance();
+  shared_ptr<domi::ModelParser> model_parser = factory->CreateModelParser(domi::TENSORFLOW);
+  TensorFlowModelParser tensorflow_parser;
+
+  tensorflow::GraphDef *graph = new tensorflow::GraphDef();
+  ScopePassManager passmanager;
+  shared_ptr<ScopeGraph> scope_graph = passmanager.BuildScopeGraph(graph);
+  FusionScopesResult* fusion_rlt = new FusionScopesResult();
+  fusion_rlt->Init();
+  fusion_rlt->impl_->inputs_.insert(std::make_pair<string, vector<int32_t>>("fw/fw/ToInt32" ,{0}));
+  fusion_rlt->impl_->inputs_.insert(std::make_pair<string, vector<int32_t>>("bw/bw/ToInt32" ,{0}));
+  fusion_rlt->impl_->inputs_.insert(std::make_pair<string, vector<int32_t>>("bw/ReverseSequence" ,{0, 1}));
+  fusion_rlt->impl_->inputs_.insert(std::make_pair<string, vector<int32_t>>("bw/ReverseSequence" ,{1}));
+
+  fusion_rlt->impl_->outputs_.insert(std::make_pair<string, vector<int32_t>>("concat" ,{0}));
+  fusion_rlt->impl_->outputs_.insert(std::make_pair<string, vector<int32_t>>("fw/fw/while/Exit_3" ,{1}));
+  fusion_rlt->impl_->outputs_.insert(std::make_pair<string, vector<int32_t>>("fw/fw/while/Exit_4" ,{2}));
+  fusion_rlt->impl_->outputs_.insert(std::make_pair<string, vector<int32_t>>("bw/bw/while/Exit_3" ,{3}));
+  fusion_rlt->impl_->outputs_.insert(std::make_pair<string, vector<int32_t>>("bw/bw/while/Exit_4" ,{4}));
+  fusion_rlt->SetType("dynamic_rnn");
+  fusion_rlt->SetName("dynamic_rnn_node1");
+  scope_graph->impl_->AddFusionScopesResult(fusion_rlt);
+
+  ScopeFusionOpInfo info1;
+  info1.node_name = "fw/fw/ToInt32";
+  info1.fusion_node_name = "dynamic_rnn_node1";
+  info1.fusion_op_type = "dynamic_rnn";
+  info1.description = "";
+  info1.scope_pass = true;
+
+  bool ignore = false;
+  ignore = tensorflow_parser.FusionOpChildIgnore(scope_graph, info1);
+  EXPECT_EQ(true, !ignore);
+
+  ScopeFusionOpInfo info2;
+  info2.node_name = "fw/fw/others";
+  info2.fusion_node_name = "dynamic_rnn_node1";
+  info2.fusion_op_type = "dynamic_rnn";
+  info2.description = "";
+  info2.scope_pass = true;
+
+  ignore = tensorflow_parser.FusionOpChildIgnore(scope_graph, info2);
+  EXPECT_EQ(true, ignore);
+
+  ScopeFusionOpInfo input_node_info;
+  input_node_info.node_name = "fw/fw/ToInt32";
+  input_node_info.fusion_node_name = "dynamic_rnn_node1";
+  input_node_info.fusion_op_type = "dynamic_rnn";
+  input_node_info.description = "";
+  input_node_info.scope_pass = true;
+
+  ScopeFusionOpInfo output_node_info;
+  output_node_info.node_name = "fw/fw/while/Exit_3";
+  output_node_info.fusion_node_name = "dynamic_rnn_node1";
+  output_node_info.fusion_op_type = "dynamic_rnn";
+  output_node_info.description = "";
+  output_node_info.scope_pass = true;
+
+  int32_t old_index = 0, new_index = -1;
+  Status ret = tensorflow_parser.GetInPutIndex(scope_graph, input_node_info, old_index, new_index);
+  EXPECT_EQ(domi::SUCCESS, ret);
+  EXPECT_EQ(true, (new_index == 0));
+
+  ret = tensorflow_parser.GetOutPutIndex(scope_graph, output_node_info, old_index, new_index);
+  EXPECT_EQ(domi::SUCCESS, ret);
+  EXPECT_EQ(true, (new_index == 1));
+  delete graph;
+}
+
+TEST_F(STestTensorflowParser, Tensorflow_AddFusionNodeDef_add_fusion_op_succ)
+{
+  ModelParserFactory* factory = ModelParserFactory::Instance();
+  shared_ptr<domi::ModelParser> model_parser = factory->CreateModelParser(domi::TENSORFLOW);
+  TensorFlowModelParser tensorflow_parser;
+  string fusion_op_name = "dropout";
+  string fusion_op_type = "Dropout";
+  string description = "test/dropout";
+  tensorflow_parser.fusion_op_type_map_[fusion_op_name].push_back(fusion_op_type);
+  tensorflow_parser.fusion_op_type_map_[fusion_op_name].push_back(description);
+
+  // op_node_context for fusion op
+  ge::OpNodeContext op_node_context;
+  op_node_context.input_map["pre_node_a"].push_back({0, 0});
+  op_node_context.input_map["pre_node_b"].push_back({0, 1});
+  tensorflow_parser.op_node_context_map_[fusion_op_name] = op_node_context;
+
+  // origin inner node def
+  NodeDef* node_def = new (std::nothrow) NodeDef();
+  node_def->set_name("scope_node_1");
+  node_def->set_op("Add");
+  tensorflow_parser.fusion_op_nodedef_map_[fusion_op_name].push_back(node_def);
+
+  ScopePassManager pass_manager;
+  tensorflow::GraphDef *graph = new (std::nothrow) tensorflow::GraphDef();
+  shared_ptr<ScopeGraph> scope_graph = pass_manager.BuildScopeGraph(graph);
+  vector<string> node_name_list = {fusion_op_name};
+  Status ret = tensorflow_parser.AddFusionNodeDef(scope_graph, node_name_list);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(tensorflow_parser.nodedef_map_.size(), 1);
+  auto fusion_node_def = tensorflow_parser.nodedef_map_[fusion_op_name];
+  EXPECT_NE(fusion_node_def, nullptr);
+  EXPECT_EQ(fusion_node_def->op(), fusion_op_type);
+
+  delete node_def;
+  delete graph;
+  tensorflow_parser.DeleteFuisonNodeDef();
+}
+
+TEST_F(STestTensorflowParser, remain_dpop_node)
+{
+  ge::ComputeGraphPtr graph = std::make_shared<ge::ComputeGraph>(GRAPH_DEFAULT_NAME);
+  ge::OpDescPtr op = std::make_shared<ge::OpDesc>("dpop_123", "FrameworkOp");
+  ge::NodePtr node = std::make_shared<ge::Node>(op, graph);
+  graph->AddNode(node);
+  ModelParserFactory* factory = ModelParserFactory::Instance();
+  shared_ptr<domi::ModelParser> model_parser= factory->CreateModelParser(domi::TENSORFLOW);
+  ASSERT_TRUE(NULL != model_parser);
+
+  TensorFlowModelParser tensorflow_parser;
+  Status ret = tensorflow_parser.RemoveIsolateNode(graph);
+  EXPECT_EQ(domi::SUCCESS, ret);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_UpdateEdgesControlInfo_test)
+{
+  TensorFlowModelParser model_parser;
+  ge::ScopeFusionOpInfo info;
+  info.fusion_node_name = "conv_conv5/BatchNorm/batchnorm";
+  info.fusion_op_type = ge::parser::FUSIONBATCHNORM;
+  info.node_name = "conv_conv5/BatchNorm/batchnorm/add";
+  info.description = "";
+  info.scope_pass = false;
+  model_parser.UpdateEdgesControlInfo(info);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_OptimizeIdentityByOutput_test)
+{
+  TensorFlowModelParser model_parser;
+  NodeDef *node_def = new NodeDef();
+  node_def->set_name("Placeholder");
+  node_def->set_op("Placeholder_0");
+  std::map<string, NodeDef *> nodedef_map;
+  nodedef_map.emplace("Placeholder", node_def);
+  std::string curr_node_name = "Placeholder";
+  bool clear_input_flag = true;
+  Status ret = model_parser.OptimizeIdentityByOutput(nodedef_map, curr_node_name, clear_input_flag);
+  EXPECT_EQ(ret, INTERNAL_ERROR);
+
+  GraphDef graph;
+  curr_node_name = "pre_node_a";
+  nodedef_map.emplace("pre_node_a", node_def);
+  node_def->set_op("pre_node_a");
+  GenOriginContext(&model_parser, curr_node_name);
+  ret = model_parser.OptimizeIdentityByOutput(nodedef_map, curr_node_name, clear_input_flag);
+  EXPECT_EQ(ret, SUCCESS);
+  delete node_def;
+}
+
+TEST_F(STestTensorflowParser, tensorflow_OptimizeSnapShot_test)
+{
+  TensorFlowModelParser model_parser;
+  tensorflow::NodeDef *curr_mode_def = initNodeDef();
+  std::map<string, NodeDef *> nodedef_map;
+  nodedef_map.emplace("pre_node_a", curr_mode_def);
+  std::pair<string, int> input_data;
+  std::vector<string> control_list;
+  std::string curr_node_name = "pre_node_a";
+  GenOriginContext(&model_parser, curr_node_name);
+  Status ret = model_parser.OptimizeSnapShot(curr_mode_def, nodedef_map, input_data, control_list);
+  EXPECT_EQ(ret, INTERNAL_ERROR);
+
+  curr_mode_def->set_name("pre_node_a");
+  GenOriginContext(&model_parser, curr_node_name);
+  ret = model_parser.OptimizeSnapShot(curr_mode_def, nodedef_map, input_data, control_list);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_GraphDefOptimizeSnapShot_test)
+{
+  TensorFlowModelParser model_parser;
+  tensorflow::GraphDef graph_def;
+  tensorflow::NodeDef *curr_mode_def = initNodeDef();
+  std::map<string, NodeDef *> nodedef_map;
+  nodedef_map.emplace("pre_node_a", curr_mode_def);
+  std::vector<NodeDef *> nodedef_to_optimize;
+  nodedef_to_optimize.emplace_back(curr_mode_def);
+  Status ret = model_parser.GraphDefOptimizeSnapShot(&graph_def, nodedef_map, nodedef_to_optimize);
+  EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_SetDestNodeName_test)
+{
+  TensorFlowModelParser model_parser;
+  GraphDef graph;
+  auto arg0 = AddNode(graph, "_Arg", "arg0");
+  auto identity0 = AddNode(graph, "Identity", "identity0");
+  auto add0 = AddNode(graph, "Add", "add0");
+
+  int32_t input_idx = 0;
+  bool is_control = true;
+  bool clear_input_flag = true;
+  AddInput(arg0, identity0, 0);
+  AddInput(identity0, add0, 0);
+  Status ret = model_parser.SetDestNodeName(identity0, add0, input_idx, is_control, clear_input_flag);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_OptimizeDestroyTemporaryVariable_test)
+{
+  ModelParserFactory* factory = ModelParserFactory::Instance();
+  shared_ptr<domi::ModelParser> model_parser= factory->CreateModelParser(domi::TENSORFLOW);
+  TensorFlowModelParser tensorflow_parser;
+
+  GraphDef graph;
+  auto const0 = AddNode(graph, "Const", "Const0");
+  auto tmpVar0 = AddNode(graph, "TemporaryVariable", "TemporaryVariable0");
+  auto assign0 = AddNode(graph, "Assign", "Assign0");
+  auto destroy0 = AddNode(graph, "DestroyTemporaryVariable", "DestroyTemporaryVariable0");
+  auto add0 = AddNode(graph, "Add", "Add0");
+
+  google::protobuf::Map< std::string, tensorflow::AttrValue> *node_attr_map = tmpVar0->mutable_attr();
+  tensorflow::AttrValue var_name_attr_value;
+  var_name_attr_value.set_s("temporary_variable_name");
+  (*node_attr_map)[ge::VAR_ATTR_NAME] = var_name_attr_value;
+
+  google::protobuf::Map<std::string, tensorflow::AttrValue>* node_attr_map_destroy = destroy0->mutable_attr();
+  tensorflow::AttrValue var_name_attr_value_destroy;
+  var_name_attr_value_destroy.set_s("destroy_temporary_variable_name");
+  (*node_attr_map_destroy)[ge::VAR_ATTR_NAME] = var_name_attr_value_destroy;
+
+  AddInput(tmpVar0, assign0, 0);
+  AddInput(assign0, destroy0, 0);
+  AddInput(const0, add0, 0);
+  AddInput(destroy0, add0, 1);
+
+  GraphDef* graphDef = &graph;
+  int32_t no_input_node_size_original = 0;
+  for (int w = 0; w < graphDef->node_size(); w++) {
+      tensorflow::NodeDef* nodeTmp = graphDef->mutable_node(w);
+      if (nodeTmp->input_size() == 0) {
+        no_input_node_size_original++;
+      }
+  }
+
+  Status ret = tensorflow_parser.GraphDefOptimize(graphDef);
+  int32_t no_input_node_size_result = 0;
+  for (int w = 0; w < graphDef->node_size(); w++) {
+      tensorflow::NodeDef* nodeTmp = graphDef->mutable_node(w);
+      if (nodeTmp->input_size() == 0) {
+        no_input_node_size_result ++;
+      }
+  }
+  ASSERT_EQ(ret, domi::FAILED);
+  ASSERT_EQ(no_input_node_size_original, no_input_node_size_result);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_OptimizeDestroyTemporaryVariable_test2)
+{
+  ModelParserFactory* factory = ModelParserFactory::Instance();
+  shared_ptr<domi::ModelParser> model_parser= factory->CreateModelParser(domi::TENSORFLOW);
+  TensorFlowModelParser tensorflow_parser;
+
+  GraphDef graph;
+  auto const0 = AddNode(graph, "Const", "Const0");
+  auto tmpVar0 = AddNode(graph, "TemporaryVariable", "TemporaryVariable0");
+  auto assign0 = AddNode(graph, "Assign", "Assign0");
+  auto destroy0 = AddNode(graph, "DestroyTemporaryVariable", "DestroyTemporaryVariable0");
+  auto add0 = AddNode(graph, "Add", "Add0");
+
+  google::protobuf::Map<std::string, tensorflow::AttrValue> *node_attr_map = tmpVar0->mutable_attr();
+  tensorflow::AttrValue var_name_attr_value;
+  var_name_attr_value.set_s("temporary_variable_name");
+  (*node_attr_map)[ge::VAR_ATTR_NAME] = var_name_attr_value;
+
+  google::protobuf::Map<std::string, tensorflow::AttrValue> *node_attr_map_destroy = destroy0->mutable_attr();
+  tensorflow::AttrValue var_name_attr_value_destroy;
+  var_name_attr_value_destroy.set_s("temporary_variable_name");
+  (*node_attr_map_destroy)[ge::VAR_ATTR_NAME] = var_name_attr_value_destroy;
+
+  AddInput(tmpVar0, assign0, 0);
+  AddInput(assign0, destroy0, 0);
+  AddInput(const0, add0, 0);
+  AddInput(destroy0, add0, 1);
+
+  GraphDef* graphDef = &graph;
+  int32_t no_input_node_size_original = 0;
+  for (int w = 0; w < graphDef->node_size(); w++) {
+    tensorflow::NodeDef* nodeTmp = graphDef->mutable_node(w);
+    if (nodeTmp->input_size() == 0) {
+      no_input_node_size_original ++;
+    }
+  }
+
+  Status ret = tensorflow_parser.GraphDefOptimize(graphDef);
+  int32_t no_input_node_size_result = 0;
+  for (int w = 0; w < graphDef->node_size(); w++) {
+    tensorflow::NodeDef* nodeTmp = graphDef->mutable_node(w);
+    if (nodeTmp->input_size() == 0) {
+      no_input_node_size_result ++;
+    }
+  }
+  ASSERT_EQ(ret, domi::SUCCESS);
+  ASSERT_EQ(no_input_node_size_original, (no_input_node_size_result - 1));
+}
+
+TEST_F(STestTensorflowParser, tensorflow_AddControlEdgeAfterRemoveInputs_test)
+{
+  tensorflow::GraphDef graph_def;
+  TensorFlowModelParser tensorflow_parser;
+  tensorflow::NodeDef *node_def = initNodeDef();
+  node_def->set_name("Add0");
+  node_def->set_op("add");
+  std::map<std::string, NodeDef *> all_node_map;
+  all_node_map.emplace("Add0", node_def);
+  std::vector<std::string> removed_inputs_vec;
+  removed_inputs_vec.emplace_back("Add0");
+  Status ret = tensorflow_parser.AddControlEdgeAfterRemoveInputs(&graph_def, node_def, all_node_map, removed_inputs_vec);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_GraphDefOptimizeIdentity_test)
+{
+  tensorflow::GraphDef graph_def;
+  TensorFlowModelParser tensorflow_parser;
+  tensorflow::NodeDef *node_def = initNodeDef();
+  node_def->set_name("post_node_d");
+
+  std::map<string, NodeDef *> nodedef_map;
+  nodedef_map.emplace("post_node_d", node_def);
+  nodedef_map.emplace("post_node_a", node_def);
+  nodedef_map.emplace("post_node_b", node_def);
+  std::vector<NodeDef *> nodedef_to_optimize;
+  nodedef_to_optimize.emplace_back(node_def);
+
+  std::string curr_node_name = "post_node_b";
+  GenOriginContext(&tensorflow_parser, curr_node_name);
+  Status ret = tensorflow_parser.GraphDefOptimizeIdentity(&graph_def, nodedef_map, nodedef_to_optimize);
+  EXPECT_EQ(ret, ge::PARAM_INVALID);
 }
 
 } // namespace ge
