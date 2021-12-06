@@ -94,8 +94,7 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, ge::Graph &graph) {
 
   // load custom plugin so and proto
   AclGrphParseUtil acl_graph_parse_util;
-  domi::Status status = acl_graph_parse_util.AclParserInitialize(options);
-  if (status != domi::SUCCESS) {
+  if (acl_graph_parse_util.AclParserInitialize(options) != domi::SUCCESS) {
     GELOGE(GRAPH_FAILED, "Parser Initialize failed.");
     return GRAPH_FAILED;
   }
@@ -241,8 +240,7 @@ Status GenSubgraphParseTasks(const ge::ComputeGraphPtr &parent_graph, std::deque
       if (ret != SUCCESS) {
         REPORT_CALL_ERROR("E19999", "Set subgraph:%s to node:%s(%s) failed, index:%u", subgraph_iname.c_str(),
                           node->GetName().c_str(), node->GetType().c_str(), i);
-        GELOGE(ret, "Failed to set subgraph %s to node %s index %u", subgraph_iname.c_str(), node->GetName().c_str(),
-               i);
+        GELOGE(ret, "Set subgraph %s to node %s failed, index %u", subgraph_iname.c_str(), node->GetName().c_str(), i);
         return ret;
       }
 
@@ -356,7 +354,8 @@ Status MappingAndAddSubGraph(const NodePtr &node, const Graph &graph, const Comp
  * @param [out] op: result of PartitionedCall OpDesc.
  * @return 0: SUCCESS / Others: FAILED
  */
-Status TensorFlowModelParser::DefunToPartitionedCall(const domi::tensorflow::NodeDef *node_def, ge::OpDescPtr &op) {
+Status TensorFlowModelParser::DefunToPartitionedCall(const domi::tensorflow::NodeDef *node_def,
+                                                     ge::OpDescPtr &op) const {
   const string op_name = node_def->name();
   domi::tensorflow::AttrValue attr_call_inference;
   if (!ge::TensorFlowUtil::FindAttrValue(node_def, "_disable_call_shape_inference", attr_call_inference)) {
@@ -617,7 +616,7 @@ void TensorFlowModelParser::GetInputOutputTensorNum(const ge::OpDescPtr &op_desc
   output_tensor_num = max_anchor_index + 1;
 }
 
-Status TensorFlowModelParser::CheckoutInputNum(ge::OpDescPtr &op_desc, const domi::tensorflow::NodeDef *node) {
+Status TensorFlowModelParser::CheckoutInputNum(ge::OpDescPtr &op_desc, const domi::tensorflow::NodeDef *node) const {
   GE_CHECK_NOTNULL(node);
   GE_CHECK_NOTNULL(op_desc);
 
@@ -695,7 +694,8 @@ void TensorFlowModelParser::UpdateOutputTensor(ge::OpDescPtr &op_desc, const std
   }
 }
 
-Status TensorFlowModelParser::AddTensorDescToOpDesc(ge::OpDescPtr &op_desc, const domi::tensorflow::NodeDef *node) {
+Status TensorFlowModelParser::AddTensorDescToOpDesc(ge::OpDescPtr &op_desc,
+                                                    const domi::tensorflow::NodeDef *node) const {
   GE_CHECK_NOTNULL(node);
   GE_CHECK_NOTNULL(op_desc);
   // get input and output attr from tensorflow
@@ -2654,10 +2654,9 @@ Status TensorFlowModelParser::GraphDefOptimizeSnapShot(domi::tensorflow::GraphDe
   return SUCCESS;
 }
 
-Status TensorFlowModelParser::SetDestNodeName(domi::tensorflow::NodeDef *const node_current,
-                                              domi::tensorflow::NodeDef *const node_dest,
-                                              const int32_t input_idx, const bool is_control,
-                                              bool &clear_input_flag) {
+Status TensorFlowModelParser::SetDestNodeName(const domi::tensorflow::NodeDef *const node_current,
+                                              domi::tensorflow::NodeDef *const node_dest, const int32_t input_idx,
+                                              const bool is_control, bool &clear_input_flag) {
   GELOGI("current node name is %s ", node_current->name().c_str());
   clear_input_flag = true;
   if (is_control) {
@@ -2703,7 +2702,7 @@ void TensorFlowModelParser::OptimizeDestroyTemporaryVariable(domi::tensorflow::G
       if (nodeDstInputNameTmp != nodeCurrent->name()) {
         continue;
       }
-      if (SetDestNodeName(nodeCurrent, nodeDst, k, isControl, clearInputFlag) !=SUCCESS) {
+      if (SetDestNodeName(nodeCurrent, nodeDst, k, isControl, clearInputFlag) != SUCCESS) {
         GELOGE(FAILED, "CheckInputNodeName failed, node is: %s", nodeCurrent->name().c_str());
         return;
       }
@@ -3599,7 +3598,7 @@ Status TensorFlowModelParser::RemoveIsolateNode(domi::tensorflow::GraphDef *grap
 }
 
 Status TensorFlowModelParser::RecordFusionResult(const std::shared_ptr<ge::ScopeGraph> &scope_graph,
-                                                 const domi::tensorflow::NodeDef *node, ge::OpDescPtr &op_desc) {
+                                                 const domi::tensorflow::NodeDef *node, const ge::OpDescPtr &op_desc) {
   // The caller guarantees that the pointer is not null
   GELOGI("RecordFusionResult for %s start.", op_desc->GetName().c_str());
   auto &impl_scope_graph = scope_graph->impl_;
@@ -3994,7 +3993,7 @@ void TensorFlowModelParser::DumpAllNodeContext(const string &phase) const {
   }
 }
 
-Status TensorFlowModelParser::CheckAndUpdateInputDesc(ge::ComputeGraphPtr &compute_graph) {
+Status TensorFlowModelParser::CheckAndUpdateInputDesc(const ge::ComputeGraphPtr &compute_graph) {
   GE_CHECK_NOTNULL(compute_graph);
   for (auto &node : compute_graph->GetDirectNode()) {
     auto op_desc = node->GetOpDesc();

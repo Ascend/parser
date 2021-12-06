@@ -42,7 +42,7 @@ class PARSER_FUNC_VISIBILITY CaffeCustomParserAdapter : public CaffeOpParser {
    * @return FAILED parse failed
    * @author
    */
-   static Status ParseParams(const Operator &op_src, ge::OpDescPtr &op_dest);
+   static Status ParseParams(const Operator &op_src, const ge::OpDescPtr &op_dest);
 
   /**
    * @ingroup domi_omg

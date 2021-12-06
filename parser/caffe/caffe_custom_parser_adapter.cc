@@ -59,7 +59,7 @@ Status CaffeCustomParserAdapter::ParseParams(const Message *op_src, ge::OpDescPt
   return SUCCESS;
 }
 
-Status CaffeCustomParserAdapter::ParseParams(const Operator &op_src, ge::OpDescPtr &op_dest) {
+Status CaffeCustomParserAdapter::ParseParams(const Operator &op_src, const ge::OpDescPtr &op_dest) {
   GELOGI("Caffe custom op begin to params: layer name = %s, layer type= %s ", op_src.GetName().c_str(),
          op_src.GetOpType().c_str());
   GE_CHECK_NOTNULL(op_dest);

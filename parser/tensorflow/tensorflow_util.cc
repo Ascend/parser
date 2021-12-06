@@ -121,7 +121,8 @@ const uint32_t TENSORFLOW_NORMAL_OUTPUT_TENSOR_FLAG = 2;
 
 using AttrValueMap = ::google::protobuf::Map<std::string, domi::tensorflow::AttrValue>;
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool TensorFlowUtil::FindAttrValue(
-    const domi::tensorflow::NodeDef *node_def, const std::string &attr_name, domi::tensorflow::AttrValue &attr_value) {
+    const domi::tensorflow::NodeDef *const node_def, const std::string &attr_name,
+    domi::tensorflow::AttrValue &attr_value) {
   GE_CHECK_NOTNULL(node_def);
   const google::protobuf::Map<std::string, domi::tensorflow::AttrValue> &attr = node_def->attr();
   const google::protobuf::Map<std::string, domi::tensorflow::AttrValue>::const_iterator it = attr.find(attr_name);
@@ -250,12 +251,12 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool TensorFlowUtil::ParseFromA
 }
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY domi::Status TensorFlowUtil::TransTensorDescriptor(
-    const domi::tensorflow::AttrValue &attr_value, ParserOperator *op, const uint32_t io, const std::string &type) {
+    const domi::tensorflow::AttrValue &attr_value, ParserOperator *const op,
+    const uint32_t io, const std::string &type) {
   GE_CHECK_NOTNULL(op);
   if (!attr_value.has_list()) {
     return PARAM_INVALID;
   }
-
   std::vector<int32_t> tf_in_type;
   std::vector<int32_t> tf_out_type;
   // list contain many TensorDescriptors
@@ -265,10 +266,8 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY domi::Status TensorFlowUtil::Tr
     int32_t tf_datatype = 0;
     GE_CHK_BOOL_RET_STATUS(ParseFromAttrValueList(ge_desc, a_list, i, tf_datatype), PARAM_INVALID,
                            "parse ge_desc failed.");
-
     uint32_t size_type = 1;
     int64_t tmp_dim = 0;
-
     auto data_type = ge_desc.GetDataType();
     GE_CHK_BOOL_RET_STATUS(ge::TypeUtils::GetDataTypeLength(data_type, size_type), PARAM_INVALID,
                            "dataType no define size , parse ge_desc failed.");
@@ -285,7 +284,6 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY domi::Status TensorFlowUtil::Tr
                       ge_desc.SetShape(ge::GeShape(data_dim)); break;);
     }
     ge::TensorUtils::SetRealDimCnt(ge_desc, ge_desc.GetShape().GetDimNum());
-
     GELOGD("IO:%d: after translate tf_desc, datatype: %s, format: %s, size_type: %u", io,
            ge::TypeUtils::DataTypeToSerialString(ge_desc.GetDataType()).c_str(),
            ge::TypeUtils::FormatToSerialString(ge_desc.GetFormat()).c_str(), size_type);
@@ -303,7 +301,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY domi::Status TensorFlowUtil::Tr
   return SUCCESS;
 }
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY void TensorFlowUtil::AddNodeAttr(
-    const std::string &attr_name, const domi::tensorflow::AttrValue &value, domi::tensorflow::NodeDef *node_def) {
+    const std::string &attr_name, const domi::tensorflow::AttrValue &value, domi::tensorflow::NodeDef *const node_def) {
   GE_CHK_BOOL_TRUE_EXEC_INFO(node_def == nullptr, return, "input parameter is null.");
   node_def->mutable_attr()->insert(AttrValueMap::value_type(attr_name, value));
 }

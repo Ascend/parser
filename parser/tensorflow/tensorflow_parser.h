@@ -77,7 +77,7 @@ struct DelTransposeInfo;
 class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
  public:
   TensorFlowModelParser() {}
-  ~TensorFlowModelParser() {}
+  ~TensorFlowModelParser() override {}
 
   /**
    * @ingroup domi_omg
@@ -459,7 +459,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
   Status OptimizeSnapShot(domi::tensorflow::NodeDef *curr_mode_def, map<string, NodeDef *> &nodedef_map,
                           const std::pair<string, int> &input_data, const std::vector<string> &control_list);
 
-  static Status SetDestNodeName(domi::tensorflow::NodeDef *const node_current,
+  static Status SetDestNodeName(const domi::tensorflow::NodeDef *const node_current,
                                 domi::tensorflow::NodeDef *const node_dest, const int32_t input_idx,
                                 const bool is_control, bool &clear_input_flag);
 
@@ -503,8 +503,8 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
                            domi::tensorflow::GraphDef *const output_graph_def);
   static string NodeNameFromInput(const string &input_name);
 
-  Status AddTensorDescToOpDesc(ge::OpDescPtr &op_desc, const domi::tensorflow::NodeDef *node);
-  Status CheckoutInputNum(ge::OpDescPtr &op_desc, const domi::tensorflow::NodeDef *node);
+  Status AddTensorDescToOpDesc(ge::OpDescPtr &op_desc, const domi::tensorflow::NodeDef *node) const;
+  Status CheckoutInputNum(ge::OpDescPtr &op_desc, const domi::tensorflow::NodeDef *node) const;
   static void UpdateInputTensor(ge::OpDescPtr &op_desc, const std::vector<ge::GeTensorDesc> &input_desc,
                          const size_t input_tensor_num);
   static void UpdateOutputTensor(ge::OpDescPtr &op_desc, const std::vector<ge::GeTensorDesc> &output_desc,
@@ -527,7 +527,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
    * @param [out] op: result of PartitionedCall OpDesc.
    * @return 0: SUCCESS / Others: FAILED
    */
-  Status DefunToPartitionedCall(const domi::tensorflow::NodeDef *node_def, ge::OpDescPtr &op);
+  Status DefunToPartitionedCall(const domi::tensorflow::NodeDef *node_def, ge::OpDescPtr &op) const;
 
   /**
    * @ingroup domi_omg
@@ -604,7 +604,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
   Status RemoveIsolateNode(domi::tensorflow::GraphDef *graph_def);
   static Status RecordFusionResult(const std::shared_ptr<ge::ScopeGraph> &scope_graph,
                                    const domi::tensorflow::NodeDef *node,
-                                   ge::OpDescPtr &op_desc);
+                                   const ge::OpDescPtr &op_desc);
 
   static Status GetFunctionProto(const string &file, domi::tensorflow::GraphDefLibrary &graph_def_library);
 
@@ -646,7 +646,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
 
   static Status ParseOpParams(const domi::tensorflow::NodeDef *node_def, ge::OpDescPtr &op,
                               const shared_ptr<OpParser> &op_parser);
-  static Status CheckAndUpdateInputDesc(ge::ComputeGraphPtr &compute_graph);
+  static Status CheckAndUpdateInputDesc(const ge::ComputeGraphPtr &compute_graph);
   static Status UpdateOutputsInfo(const ParserUtils::OutputMapping &final_output_nodes);
   static Status AddExternalGraph(const ComputeGraphPtr &root_graph);
 

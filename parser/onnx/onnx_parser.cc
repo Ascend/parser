@@ -956,7 +956,7 @@ Status OnnxModelParser::ModelParseToGraphImpl(bool is_subgraph, ge::onnx::GraphP
     return ret;
   }
   // root graph needn't set outputs.
-  if(is_subgraph) {
+  if (is_subgraph) {
     graph.SetOutputs(output_ops);
   }
 
