@@ -67,11 +67,11 @@ class PARSER_FUNC_VISIBILITY TensorFlowFusionOpParser : public TensorFlowOpParse
    *
    */
   // template <class T>
-  static Status ParseParamFromConst(const NodeDef *input_const, int32_t &param);
+  static Status ParseParamFromConst(const NodeDef *node_def, int32_t &param);
 
   static Status ParseParamFromConst(const NodeDef *node_def, int32_t &param, int index);
 
-  static Status ParseParamFromConst(const NodeDef *input_const, float &param);
+  static Status ParseParamFromConst(const NodeDef *node_def, float &param);
 
   static Status ParseParamFromConst(const NodeDef *node_def, float &param, int index);
 

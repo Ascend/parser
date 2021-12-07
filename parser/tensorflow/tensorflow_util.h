@@ -143,7 +143,7 @@ class TensorFlowUtil {
   * @return false            attribute does not exist
   *
   */
-  static bool FindAttrValue(const domi::tensorflow::NodeDef *node_def, const std::string &attr_name,
+  static bool FindAttrValue(const domi::tensorflow::NodeDef *const node_def, const std::string &attr_name,
                             domi::tensorflow::AttrValue &attr_value);
 
   /**
@@ -181,7 +181,7 @@ class TensorFlowUtil {
    *
    */
   static domi::Status TransTensorDescriptor(const domi::tensorflow::AttrValue &attr_value,
-                                            ParserOperator *op,
+                                            ParserOperator *const op,
                                             const uint32_t io,
                                             const std::string &type = "");
   /*
@@ -194,7 +194,7 @@ class TensorFlowUtil {
    */
   static void AddNodeAttr(const std::string &attr_name,
                           const domi::tensorflow::AttrValue &value,
-                          domi::tensorflow::NodeDef *node_def);
+                          domi::tensorflow::NodeDef *const node_def);
 
   static domi::Status ClearUnusedParam(ge::ComputeGraphPtr &graph);
 

@@ -78,7 +78,7 @@ class PARSER_FUNC_VISIBILITY TensorflowParserBuilder : public TensorflowWeightPa
     }
     // register to OpParserFactory
     OpParserRegisterar registerar __attribute__((unused)) = OpParserRegisterar(
-      domi::TENSORFLOW, davinci_optype_, [=] { return std::shared_ptr<OpParser>(op_parser_adapter); });
+      domi::TENSORFLOW, davinci_optype_, [op_parser_adapter] { return std::shared_ptr<OpParser>(op_parser_adapter); });
     return true;
   }
 

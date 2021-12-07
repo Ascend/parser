@@ -34,7 +34,6 @@
 #include "graph/ascend_string.h"
 #include "graph/ge_error_codes.h"
 #include "graph/graph.h"
-#include "graph/types.h"
 
 namespace ge {
 PARSER_FUNC_VISIBILITY graphStatus aclgrphParseONNX(const char *model_file,
