@@ -3,6 +3,12 @@
     {
       "attr": [
         {
+          "key": "dtype",
+          "value": {
+            "type": "DT_HALF"
+          }
+        },
+        {
           "key": "shape",
           "value": {
             "shape": {
@@ -12,12 +18,6 @@
                 }
               ]
             }
-          }
-        },
-        {
-          "key": "dtype",
-          "value": {
-            "type": "DT_HALF"
           }
         }
       ],
@@ -27,6 +27,12 @@
     {
       "attr": [
         {
+          "key": "dtype",
+          "value": {
+            "type": "DT_HALF"
+          }
+        },
+        {
           "key": "shape",
           "value": {
             "shape": {
@@ -36,12 +42,6 @@
                 }
               ]
             }
-          }
-        },
-        {
-          "key": "dtype",
-          "value": {
-            "type": "DT_HALF"
           }
         }
       ],

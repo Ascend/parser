@@ -286,6 +286,19 @@ REG_OP(Mul)
                            DT_COMPLEX64, DT_COMPLEX128}))
     .OP_END_FACTORY_REG(Mul)
 
+REG_OP(Pooling)
+    .INPUT(x, TensorType({DT_FLOAT16, DT_FLOAT32, DT_INT8}))
+    .OUTPUT(y, TensorType({DT_FLOAT16, DT_FLOAT32, DT_INT32}))
+    .ATTR(mode, Int, 0)                 // 0:max pooling or 1:avg pooling
+    .ATTR(global_pooling, Bool, false)
+    .ATTR(window, ListInt, {1,1})       // kernel size
+    .ATTR(stride, ListInt, {1,1})       // stride size
+    .ATTR(pad, ListInt, {0,0,0,0})      // pad size
+    .ATTR(dilation, ListInt, {1,1,1,1})
+    .ATTR(ceil_mode, Int, 0)
+    .ATTR(data_format, String, "NCHW")
+    .OP_END_FACTORY_REG(Pooling)
+
 // for plugin
 static Status ParseParamsStub(const google::protobuf::Message* op_src, ge::Operator& op_dest) {
   return SUCCESS;
@@ -380,20 +393,22 @@ REGISTER_CUSTOM_OP("Add")
       .OriginOpType("Add")
       .ParseParamsFn(ParseParamsStub);
 
-
 REGISTER_CUSTOM_OP("PartitionedCall")
     .FrameworkType(domi::ONNX)
     .OriginOpType({"ai.onnx::9::Clip"})
     .ParseParamsFn(ParseParamsClipV9Stub)
     .ParseOpToGraphFn(ParseOpToGraphClipV9Stub);
+
 REGISTER_CUSTOM_OP("TensorArray")
     .FrameworkType(domi::TENSORFLOW)
     .OriginOpType("TensorArrayV3")
+    .ParseParamsByOperatorFn(ParseParamByOpFuncStub)
     .ParseParamsFn(ParseParamsStub);
 
 REGISTER_CUSTOM_OP("TensorArrayWrite")
     .FrameworkType(domi::TENSORFLOW)
     .OriginOpType("TensorArrayWriteV3")
+    .ParseParamsByOperatorFn(ParseParamByOpFuncStub)
     .ParseParamsFn(ParseParamsStub);
 
 REGISTER_CUSTOM_OP("DynamicRNN")
