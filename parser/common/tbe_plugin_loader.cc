@@ -30,6 +30,7 @@
 #include <memory>
 #include <string>
 
+#include "external/ge/ge_api_types.h"
 #include "common/util/error_manager/error_manager.h"
 #include "framework/common/debug/ge_log.h"
 #include "framework/common/string_util.h"
@@ -39,10 +40,6 @@
 
 namespace ge {
 std::map<string, string> TBEPluginLoader::options_ = {};
-
-namespace {
-const std::string FRAMEWORK_TYPE = "ge.frameworkType";
-}
 
 // Get Singleton Instance
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY TBEPluginLoader &TBEPluginLoader::Instance() {
