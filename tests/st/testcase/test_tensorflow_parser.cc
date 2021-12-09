@@ -50,6 +50,14 @@
 #include "parser/tensorflow/tensorflow_util.h"
 #include "compute_graph_impl.h"
 #include "parser/tensorflow/tensorflow_enter_parser.h"
+#include "parser/common/op_def/ir_pb_converter.h"
+#include "parser/common/tuple.h"
+#include "common/op_def/frameworkop_op.h"
+#include "common/op_def/shape_n_op.h"
+#include "common/op_def/var_is_initialized_op_op.h"
+#include "common/op_def/fill_op.h"
+#include "common/convert/pb2json.h"
+#include "common/convert/message2operator.h"
 #undef protected
 #undef private
 
@@ -74,6 +82,19 @@ class STestTensorflowParser : public testing::Test {
 
  public:
   void RegisterCustomOp();
+};
+
+class TestOperator : public ParserOperator
+{
+public:
+    TestOperator()
+      : ParserOperator("test")
+    {
+    }
+
+    ~TestOperator()
+    {
+    }
 };
 
 class ScopeTestPass : public ScopeBasePass {
@@ -3093,7 +3114,260 @@ TEST_F(STestTensorflowParser, tensorflow_AddFusionInnerNodeDef_test)
   GenOriginNodeDef(&model_parser, op_node_name_list);
   GenFusionScopesResult(scope_graph, fusion_scope_rlt, fusion_op_name);
   Status ret = model_parser.AddFusionInnerNodeDef(scope_graph, fusion_op_name, op_node_name_list);
+  EXPECT_EQ(ret, INTERNAL_ERROR);
   delete graphDef;
+}
+
+TEST_F(STestTensorflowParser, Scope_pass_test)
+{
+  ScopePassManager passmanager;
+  tensorflow::GraphDef *graph = new tensorflow::GraphDef();
+  shared_ptr<ScopeGraph> scope_graph = passmanager.BuildScopeGraph(graph);
+  EXPECT_NE(nullptr, scope_graph);
+
+  unique_ptr<ScopeBasePass> pass;
+  pass.reset(new ScopeTestPass());
+  EXPECT_EQ(domi::SUCCESS, passmanager.AddPass(pass));
+  scope_graph = passmanager.BuildScopeGraph(graph);
+  EXPECT_NE(nullptr, scope_graph);
+  delete graph;
+}
+
+TEST_F(STestTensorflowParser, operator_attr_set_and_get)
+{
+  TestOperator test_operator;
+  test_operator.Name("test_op");
+  EXPECT_EQ("test_op" , test_operator.GetName());
+
+  test_operator.Input(test_operator, 0);
+  test_operator.Input(test_operator, 1);
+  test_operator.GetOpAttrs();
+
+  int64_t pad = 1;
+  test_operator.Attr("pad", pad);
+  EXPECT_EQ(pad , test_operator.GetIntAttr("pad"));
+
+  bool bool_value = true;
+  test_operator.Attr("bool_value", bool_value);
+  EXPECT_EQ(bool_value , test_operator.GetBoolAttr("bool_value"));
+
+  float float_value = true;
+  test_operator.Attr("float_value", float_value);
+  EXPECT_EQ(float_value , test_operator.GetFloatAttr("float_value"));
+
+  std::string str_value = "test_string";
+  test_operator.Attr("str_value", str_value);
+  EXPECT_EQ(str_value , test_operator.GetStringAttr("str_value"));
+
+  BoolTuple boollist_value{true, false};
+  test_operator.Attr("boollist_value", boollist_value);
+  BoolTuple get_boollist_value = test_operator.GetBoolTupleAttr("boollist_value");
+  EXPECT_EQ(boollist_value[0] , get_boollist_value[0]);
+
+  StringTuple strlist_value{"a", "b"};
+  test_operator.Attr("strlist_value", strlist_value);
+  StringTuple get_strlist_value = test_operator.GetStringTupleAttr("strlist_value");
+  EXPECT_EQ(strlist_value[0] , get_strlist_value[0]);
+
+  int64_t num = 1;
+  IntTuple intlist{num, num};
+  test_operator.Attr("intlist", intlist);
+  IntTuple get_intlist = test_operator.GetIntTupleAttr("intlist");
+  EXPECT_EQ(intlist[0] , get_intlist[0]);
+
+  FloatTuple floatlist{1.1, 1.1};
+  test_operator.Attr("floatlist", floatlist);
+  FloatTuple get_floatlist = test_operator.GetFloatTupleAttr("floatlist");
+  EXPECT_EQ(floatlist[0] , get_floatlist[0]);
+
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>();
+  ParserOperator *op = &test_operator;
+  Status ret = ConvertToOpDesc(*op, op_desc);
+  EXPECT_EQ(domi::SUCCESS , ret);
+
+  TestOperator test_operator_1;
+  ParserOperator *op_convert = &test_operator_1;
+  ret = ConvertFromOpDesc(op_desc, *op_convert);
+  EXPECT_EQ(domi::SUCCESS , ret);
+
+  op_desc = nullptr;
+  ret = ConvertFromOpDesc(op_desc, *op_convert);
+  EXPECT_EQ(FAILED , ret);
+
+  ret = ConvertToOpDesc(*op, op_desc);
+  EXPECT_EQ(FAILED, ret);
+}
+
+TEST_F(STestTensorflowParser, success_frameworkop_get)
+{
+  FrameworkOpOperator *frameworkOp=new FrameworkOpOperator();
+  int64_t index = 1;
+  std::string opdef_string = "tensorflow_parser";
+  frameworkOp->GetFrameworkType();
+  frameworkOp->GetNodeDefPkg();
+  frameworkOp->FuncDefPkg("func");
+  frameworkOp->Index(index);
+  frameworkOp->TfOpDef(opdef_string);
+  EXPECT_EQ(SUCCESS, SUCCESS);
+  delete frameworkOp;
+}
+
+TEST_F(STestTensorflowParser, op_set_get_success)
+{
+  ConstantOperator op;
+  vector<int64_t> v;
+  op.VectorAttr("key", v);
+  op.GetDType();
+}
+
+TEST_F(STestTensorflowParser, success_argop_get)
+{
+  ArgOpOperator *argOp=new ArgOpOperator();
+  int64_t index = 1;
+  argOp->Index(index);
+  argOp->GetIndex();
+  EXPECT_EQ(domi::SUCCESS, SUCCESS);
+  delete argOp;
+}
+
+TEST_F(STestTensorflowParser, success_operator)
+{
+  ParserOperator tfOperator;
+  ParserOperator in_op;
+  uint32_t index = 0;
+  std::string type = "add";
+  std::string key = "Add";
+  std::vector<int64_t> value;
+  int64_t tmp = 0;
+  value.emplace_back(tmp);
+  tfOperator.Input(in_op, index);
+  tfOperator.Type(type);
+  tfOperator.AttrVector(key, value);
+}
+
+TEST_F(STestTensorflowParser, success_shapen_get)
+{
+  ShapeNOperator *shapen =new ShapeNOperator();
+  shapen->GetInType();
+  shapen->GetInType();
+  shapen->GetOutType();
+  EXPECT_EQ(domi::SUCCESS, domi::SUCCESS);
+  delete shapen;
+}
+
+TEST_F(STestTensorflowParser, success_VarIsInitializedOpOperator_get)
+{
+  VarIsInitializedOpOperator op;
+  op.Name("x");
+  std::vector<int64_t> value;
+  op.VectorAttr("key", value);
+}
+
+TEST_F(STestTensorflowParser, success_variable_op_get)
+{
+  VariableOperator op;
+  uint32_t mem_type = 1;
+  op.Name("x");
+  std::vector<int64_t> value;
+  op.Placement("shared_name");
+  op.MemType(mem_type);
+}
+
+TEST_F(STestTensorflowParser, param_success_get)
+{
+  FillOperator* fillOp=new FillOperator();
+  fillOp->GetDataType();
+  fillOp->GetAlpha();
+  fillOp->GetBeta();
+  EXPECT_EQ(domi::SUCCESS, domi::SUCCESS);
+  delete fillOp;
+}
+
+TEST_F(STestTensorflowParser, tensorflow_Message2Operator_ParseOperatorAttrs_test)
+{
+  Message2Operator mess2Op;
+  tensorflow::NodeDef *node_def = initNodeDef();
+  int depth = 6;
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>();
+  ge::Operator ops = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  Status ret = mess2Op.ParseOperatorAttrs(node_def, depth, ops);
+  EXPECT_EQ(ret, FAILED);
+
+  depth = 4;
+  ret = mess2Op.ParseOperatorAttrs(node_def, depth, ops);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_Pb2Json_RepeatedEnum2Json_test)
+{
+  Pb2Json toJson;
+  ProtobufEnumValueDescriptor *enum_value_desc = new google::protobuf::EnumValueDescriptor();
+  bool enum2str = true;
+  Json json;
+  ProtobufFieldDescriptor *field = nullptr;
+  toJson.RepeatedEnum2Json(enum_value_desc, enum2str, json);
+  toJson.Enum2Json(enum_value_desc, field, enum2str, json);
+
+  enum2str = false;
+  toJson.RepeatedEnum2Json(enum_value_desc, enum2str, json);
+  delete enum_value_desc;
+}
+
+TEST_F(STestTensorflowParser, tensorflow_Pb2Json_TypeBytes2String_test)
+{
+  Pb2Json toJson;
+  std::string field_name = "offset";
+  std::string type_bytes = "offset";
+  toJson.TypeBytes2String(field_name, type_bytes);
+
+  field_name = "test";
+  toJson.TypeBytes2String(field_name, type_bytes);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_Pb2Json_RepeatedMessage2Json_test)
+{
+  Pb2Json toJson;
+  tensorflow::NodeDef *node_def = initNodeDef();
+  ProtobufFieldDescriptor *field = new google::protobuf::FieldDescriptor();
+  ProtobufReflection *reflection = nullptr;
+  set<string> black_fields;
+  black_fields.emplace("offset");
+  Json json;
+  bool enum2str = true;
+  toJson.RepeatedMessage2Json((*node_def), field, reflection, black_fields, json, enum2str);
+  delete field;
+}
+
+TEST_F(STestTensorflowParser, tensorflow_Pb2Json_OneField2Json_test)
+{
+  Pb2Json toJson;
+  tensorflow::NodeDef *node_def = initNodeDef();
+  ProtobufFieldDescriptor *field = new google::protobuf::FieldDescriptor();
+  ProtobufReflection *reflection = nullptr;
+  set<string> black_fields;
+  black_fields.emplace("offset");
+  Json json;
+  bool enum2str = true;
+
+  Message2Operator mess2Op;
+  int depth = 4;
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>("FusionCustom", "FusionCustom");
+  ge::Operator ops = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
+  field->CppTypeName(google::protobuf::FieldDescriptor::CPPTYPE_ENUM);
+  mess2Op.ParseField(reflection, node_def, field, depth, ops);
+  toJson.OneField2Json((*node_def), field, reflection, black_fields, json, enum2str);
+  delete field;
+}
+
+TEST_F(STestTensorflowParser, tensorflow_AclGrphParseUtil_AddAttrsForInputNodes_test)
+{
+  AclGrphParseUtil parseUtil;
+  std::vector<std::string> adjust_fp16_format_vec;
+  adjust_fp16_format_vec.emplace_back("");
+  std::string fp16_nodes_name = ;
+  uint32_t index = 0;
+  OpDescPtr op_desc = std::make_shared<ge::OpDesc>("FusionCustom", "FusionCustom");
+  parseUtil.AddAttrsForInputNodes();
 }
 
 } // namespace ge
