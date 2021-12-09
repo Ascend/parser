@@ -3359,15 +3359,4 @@ TEST_F(STestTensorflowParser, tensorflow_Pb2Json_OneField2Json_test)
   delete field;
 }
 
-TEST_F(STestTensorflowParser, tensorflow_AclGrphParseUtil_AddAttrsForInputNodes_test)
-{
-  AclGrphParseUtil parseUtil;
-  std::vector<std::string> adjust_fp16_format_vec;
-  adjust_fp16_format_vec.emplace_back("");
-  std::string fp16_nodes_name = ;
-  uint32_t index = 0;
-  OpDescPtr op_desc = std::make_shared<ge::OpDesc>("FusionCustom", "FusionCustom");
-  parseUtil.AddAttrsForInputNodes();
-}
-
 } // namespace ge
