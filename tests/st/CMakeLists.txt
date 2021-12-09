@@ -368,6 +368,7 @@ target_compile_definitions(st_parser PRIVATE
 target_link_libraries(st_parser
     $<BUILD_INTERFACE:intf_pub>
     st_parser_proto
+    json
     -Wl,--whole-archive st_parser_common -Wl,--no-whole-archive
     st_parser_graph st_parser_register error_manager_stub mmpa_stub attr_util_stub
     gtest gtest_main slog_stub ascend_protobuf c_sec  -lrt -ldl -lgcov
