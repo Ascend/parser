@@ -32,7 +32,7 @@ class Message2Operator {
 
   static Status ParseRepeatedField(const google::protobuf::Reflection *reflection,
                                    const google::protobuf::Message *message,
-                                   const google::protobuf::FieldDescriptor *field, int depth, ge::Operator &ops);
+                                   const google::protobuf::FieldDescriptor *field, ge::Operator &ops);
 };
 }  // namespace ge
 #endif  // PARSER_MESSAGE2OPERATOR_H

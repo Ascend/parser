@@ -89,7 +89,7 @@ Status OnnxConstantParser::ParseConvertData(const ge::onnx::TensorProto &tensor_
     }
 
     if (data_type == OnnxDataType::STRING) {
-      tensor.SetData(tensor_proto.raw_data());
+      tensor.SetData(tensor_proto.raw_data().c_str());
     } else {
       tensor.SetData(reinterpret_cast<const uint8_t *>(tensor_proto.raw_data().c_str()),
                      tensor_proto.raw_data().size());
@@ -122,9 +122,9 @@ void OnnxConstantParser::ParseConvertDataElements(const ge::onnx::TensorProto &t
       break;
     // for string values
     case OnnxDataType::STRING: {
-      std::vector<std::string> data;
+      std::vector<AscendString> data;
       for (auto str_data : tensor_proto.string_data()) {
-        data.emplace_back(str_data);
+        data.emplace_back(AscendString(str_data.c_str()));
       }
       tensor.SetData(data);
       break;

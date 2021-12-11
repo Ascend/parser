@@ -102,6 +102,9 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
   Status ParseFromMemory(const char *data, uint32_t size, ge::ComputeGraphPtr &graph) override;
 
   Status ParseFromMemory(const char *data, uint32_t size, ge::Graph &graph) override {
+    (void)data;
+    (void)size;
+    (void)graph;
     return domi::SUCCESS;
   }
 

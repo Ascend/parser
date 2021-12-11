@@ -31,6 +31,9 @@ class ParserUtils {
   static string GenOutputKey(const OutputNodeInfo &node_info);
   static void UpdateOutputNodeInfo(const OutputMapping &final_output_nodes, OutputNodeInfo &output_node_info);
   static void UpdateOutputCtx(const OutputMapping &final_output_nodes, OutputMapping &tensor_to_nodes);
+  static std::string GetOperatorName(const Operator &op);
+  static std::string GetOperatorType(const Operator &op);
+  static std::string GetGraphName(const Graph &graph);
 
  private:
   static Status ExpandNodeToSubgraph(const Graph &subgraph, const NodePtr &node, const Graph &graph,

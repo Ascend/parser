@@ -21,6 +21,7 @@
 #include "parser/common/op_parser_factory.h"
 #include "framework/omg/parser/parser_inner_ctx.h"
 #include "parser/onnx/onnx_util.h"
+#include "parser/common/parser_utils.h"
 
 using domi::ONNX;
 using namespace ge::parser;
@@ -32,7 +33,7 @@ Status OnnxDataParser::ParseParams(const Message *op_src, ge::Operator &op_def) 
   GE_CHECK_NOTNULL(node_src);
   GELOGD("Onnx op node name = %s, op type= %s, parse params", node_src->name().c_str(), node_src->op_type().c_str());
   if (ParseInputFromModel(op_src, op_def) != SUCCESS) {
-    GELOGE(FAILED, "[Parse][Shape] of data op %s from model failed", op_def.GetName().c_str());
+    GELOGE(FAILED, "[Parse][Shape] of data op %s from model failed", ParserUtils::GetOperatorName(op_def).c_str());
     return FAILED;
   }
   // Subgraph data operator don't need parse input shape
@@ -42,7 +43,7 @@ Status OnnxDataParser::ParseParams(const Message *op_src, ge::Operator &op_def) 
   }
 
   if (ParseInputFromUser(op_def) != SUCCESS) {
-    GELOGE(FAILED, "[Parse][Shape] of data op %s from user failed", op_def.GetName().c_str());
+    GELOGE(FAILED, "[Parse][Shape] of data op %s from user failed", ParserUtils::GetOperatorName(op_def).c_str());
     return FAILED;
   }
 
@@ -50,12 +51,12 @@ Status OnnxDataParser::ParseParams(const Message *op_src, ge::Operator &op_def) 
   tensor_desc.SetShape(ge::Shape(user_input_dims_v_));
   tensor_desc.SetOriginShape(ge::Shape(user_input_dims_v_));
   int64_t type = 1;
-  (void)op_def.GetAttr(ge::DATA_ATTR_NAME_DATA_TYPE, type);
+  (void)op_def.GetAttr(ge::DATA_ATTR_NAME_DATA_TYPE.c_str(), type);
   tensor_desc.SetDataType(static_cast<DataType>(type));
 
   auto op_desc = ge::OpDescUtils::GetOpDescFromOperator(op_def);
-  op_def.UpdateInputDesc(op_desc->GetInputNameByIndex(0), tensor_desc);
-  op_def.UpdateOutputDesc(op_desc->GetOutputNameByIndex(0), tensor_desc);
+  op_def.UpdateInputDesc(op_desc->GetInputNameByIndex(0).c_str(), tensor_desc);
+  op_def.UpdateOutputDesc(op_desc->GetOutputNameByIndex(0).c_str(), tensor_desc);
 
   return SUCCESS;
 }
@@ -90,7 +91,7 @@ Status OnnxDataParser::ParseInputFromModel(const Message *op_src, ge::Operator &
     }
   }
 
-  op_def.SetAttr(ge::ATTR_NAME_INDEX, index);
+  op_def.SetAttr(ge::ATTR_NAME_INDEX.c_str(), index);
   if (IsSubgraphDataOp()) {
     return SUCCESS;
   }
@@ -102,7 +103,7 @@ Status OnnxDataParser::ParseInputFromModel(const Message *op_src, ge::Operator &
     GELOGE(domi::PARAM_INVALID, "[Check][Param]tensor_proto date type %ld is undefined.", data_type);
     return FAILED;
   }
-  op_def.SetAttr(ge::DATA_ATTR_NAME_DATA_TYPE, static_cast<int64_t>(type));
+  op_def.SetAttr(ge::DATA_ATTR_NAME_DATA_TYPE.c_str(), static_cast<int64_t>(type));
 
   return SUCCESS;
 }
@@ -110,7 +111,7 @@ Status OnnxDataParser::ParseInputFromModel(const Message *op_src, ge::Operator &
 Status OnnxDataParser::ParseInputFromUser(const ge::Operator &op_def) {
   std::map<std::string, std::vector<int64_t>> input_dims = GetParserContext().input_dims;
   // User not designate the input_shape
-  std::string name = op_def.GetName();
+  std::string name = ParserUtils::GetOperatorName(op_def);
   if (input_dims.count(name) == 0) {
     GELOGI("input shape of node %s is not designated ,need parse from model", name.c_str());
     for (uint32_t i = 0; i < model_input_dims_v_.size(); i++) {

@@ -25,11 +25,22 @@ using domi::caffe::BlobProto;
 using domi::CAFFE;
 
 namespace ge {
-Status CaffeOpParser::ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) { return SUCCESS; }
+Status CaffeOpParser::ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) {
+  (void)op_src;
+  (void)op_dest;
+  return SUCCESS;
+}
 
-Status CaffeOpParser::ParseWeights(const Message *op_src, ge::NodePtr &node) { return SUCCESS; }
+Status CaffeOpParser::ParseWeights(const Message *op_src, ge::NodePtr &node) {
+  (void)op_src;
+  (void)node;
+  return SUCCESS;
+}
 
-Status CaffeOpParser::AddConstInput(ge::NodePtr &node) { return SUCCESS; }
+Status CaffeOpParser::AddConstInput(ge::NodePtr &node) {
+  (void)node;
+  return SUCCESS;
+}
 
 void CaffeOpParser::ConvertShape(const BlobProto &proto, std::vector<int64_t> &shape) {
   shape.clear();

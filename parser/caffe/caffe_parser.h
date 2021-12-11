@@ -79,6 +79,9 @@ class PARSER_FUNC_VISIBILITY CaffeModelParser : public domi::ModelParser {
   Status ParseFromMemory(const char *data, uint32_t size, ge::ComputeGraphPtr &graph) override;
 
   Status ParseFromMemory(const char *data, uint32_t size, ge::Graph &graph) override {
+    (void)data;
+    (void)size;
+    (void)graph;
     return domi::SUCCESS;
   }
 
@@ -108,9 +111,14 @@ class PARSER_FUNC_VISIBILITY CaffeModelParser : public domi::ModelParser {
    * @param [in] type, datatype types of operators in CAFFE networks
    * @return ge::DataType
    */
-  ge::DataType ConvertToGeDataType(const uint32_t type) override { return ge::DT_FLOAT; }
+  ge::DataType ConvertToGeDataType(const uint32_t type) override {
+    (void)type;
+    return ge::DT_FLOAT;
+  }
 
   Status ParseAllGraph(const google::protobuf::Message *root_proto, ge::ComputeGraphPtr &root_graph) override {
+    (void)root_proto;
+    (void)root_graph;
     return domi::SUCCESS;
   }
 

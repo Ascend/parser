@@ -44,7 +44,7 @@ Status Message2Operator::ParseOperatorAttrs(const google::protobuf::Message *mes
   for (auto &field : field_desc) {
     GE_CHECK_NOTNULL(field);
     if (field->is_repeated()) {
-      if (ParseRepeatedField(reflection, message, field, depth, ops) != SUCCESS) {
+      if (ParseRepeatedField(reflection, message, field, ops) != SUCCESS) {
         GELOGE(FAILED, "[Parse][RepeatedField] %s failed.", field->name().c_str());
         return FAILED;
       }
@@ -67,7 +67,7 @@ Status Message2Operator::ParseField(const google::protobuf::Reflection *reflecti
     case google::protobuf::FieldDescriptor::CPPTYPE_##cpptype: {                \
       valuetype value = reflection->Get##method(*message, field);               \
       GELOGD("Parse result(%s : %" #logtype ")", field->name().c_str(), value); \
-      (void)ops.SetAttr(field->name(), value);                                  \
+      (void)ops.SetAttr(field->name().c_str(), value);                          \
       break;                                                                    \
     }
     CASE_FIELD_TYPE(INT32, Int32, int32_t, d);
@@ -80,13 +80,13 @@ Status Message2Operator::ParseField(const google::protobuf::Reflection *reflecti
       GE_CHECK_NOTNULL(reflection->GetEnum(*message, field));
       int value = reflection->GetEnum(*message, field)->number();
       GELOGD("Parse result(%s : %d)", field->name().c_str(), value);
-      (void)ops.SetAttr(field->name(), value);
+      (void)ops.SetAttr(field->name().c_str(), value);
       break;
     }
     case google::protobuf::FieldDescriptor::CPPTYPE_STRING: {
       string value = reflection->GetString(*message, field);
       GELOGD("Parse result(%s : %s)", field->name().c_str(), value.c_str());
-      (void)ops.SetAttr(field->name(), value);
+      (void)ops.SetAttr(field->name().c_str(), value);
       break;
     }
     case google::protobuf::FieldDescriptor::CPPTYPE_MESSAGE: {
@@ -110,7 +110,7 @@ Status Message2Operator::ParseField(const google::protobuf::Reflection *reflecti
 
 Status Message2Operator::ParseRepeatedField(const google::protobuf::Reflection *reflection,
                                             const google::protobuf::Message *message,
-                                            const google::protobuf::FieldDescriptor *field, int depth,
+                                            const google::protobuf::FieldDescriptor *field,
                                             ge::Operator &ops) {
   GELOGD("Start to parse field: %s.", field->name().c_str());
   int field_size = reflection->FieldSize(*message, field);
@@ -128,7 +128,7 @@ Status Message2Operator::ParseRepeatedField(const google::protobuf::Reflection *
         valuetype value = reflection->GetRepeated##method(*message, field, i); \
         attr_value.push_back(value);                                           \
       }                                                                        \
-      (void)ops.SetAttr(field->name(), attr_value);                            \
+      (void)ops.SetAttr(field->name().c_str(), attr_value);                    \
       break;                                                                   \
     }
     CASE_FIELD_TYPE_REPEATED(INT32, Int32, int32_t);
@@ -154,7 +154,7 @@ Status Message2Operator::ParseRepeatedField(const google::protobuf::Reflection *
         GELOGE(FAILED, "[Parse][JSON]Failed to convert JSON to string.");
         return FAILED;
       }
-      (void)ops.SetAttr(field->name(), repeated_message_str);
+      (void)ops.SetAttr(field->name().c_str(), repeated_message_str);
       break;
     }
     default: {
