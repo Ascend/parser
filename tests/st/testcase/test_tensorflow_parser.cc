@@ -58,6 +58,15 @@
 #include "common/op_def/fill_op.h"
 #include "common/convert/pb2json.h"
 #include "common/convert/message2operator.h"
+#include "parser/common/proto_file_parser.h"
+#include "parser/common/pre_checker.h"
+#include "parser/common/tbe_plugin_loader.h"
+#include "parser/common/data_op_parser.h"
+#include "parser/common/model_saver.h"
+#include "framework/omg/parser/parser_api.h"
+#include "parser/common/parser_fp16_t.h"
+#include "parser/common/op_parser_factory.h"
+#include "parser/common/prototype_pass_manager.h"
 #undef protected
 #undef private
 
@@ -3094,6 +3103,46 @@ TEST_F(STestTensorflowParser, tensorflow_OptimizeConstNodes4CustomOp_test)
   EXPECT_EQ(ret, SUCCESS);
 }
 
+TEST_F(STestTensorflowParser, OptimizeConstNodes4CustomOp_success)
+{
+  GraphDef graph;
+  auto bn = AddNode(graph, "FusedBatchNormV3", "FusedBatchNormV3_0");
+  auto bn_grad = AddNode(graph, "FusedBatchNormGradV3", "FusedBatchNormGradV3_0");
+
+  AddInput(bn, bn_grad, 0);
+  AddInput(bn, bn_grad, 1);
+  AddInput(bn, bn_grad, 2);
+  AddInput(bn, bn_grad, 3);
+  AddInput(bn, bn_grad, 5);
+  AddInput(bn, bn_grad, 5);
+
+  GraphDef* graphDef = &graph;
+  int before_bn_grad_input_size = bn_grad->input_size();
+  ASSERT_EQ(before_bn_grad_input_size, 6);
+
+  ModelParserFactory* factory = ModelParserFactory::Instance();
+  shared_ptr<domi::ModelParser> model_parser= factory->CreateModelParser(domi::TENSORFLOW);
+  ge::TensorFlowModelParser tensorflow_parser;
+
+  Status ret = tensorflow_parser.OptimizeConstNodes4CustomOp(graphDef);
+  int after_bn_grad_input_size = bn_grad->input_size();
+  ASSERT_EQ(after_bn_grad_input_size, 6);
+  ASSERT_EQ(ret, domi::SUCCESS);
+
+  REGISTER_CUSTOM_OP("BatchNormGrad")
+      .FrameworkType(domi::TENSORFLOW)
+      .OriginOpType({"FusedBatchNormGradV3", "FusedBatchNormGradV2", "FusedBatchNormGrad"})
+      .ParseParamsFn(AutoMappingFn)
+      .DelInputWithOriginalType(5, "FusedBatchNormGradV3")
+      .ImplyType(ImplyType::TVM);
+  register_tbe_op();
+
+  ret = tensorflow_parser.OptimizeConstNodes4CustomOp(graphDef);
+  after_bn_grad_input_size = bn_grad->input_size();
+  ASSERT_EQ(after_bn_grad_input_size, 6);
+  ASSERT_EQ(ret, domi::SUCCESS);
+}
+
 TEST_F(STestTensorflowParser, tensorflow_ParseOpParams_test)
 {
   TensorFlowModelParser model_parser;
@@ -3375,6 +3424,349 @@ TEST_F(STestTensorflowParser, tensorflow_Pb2Json_OneField2Json_test)
   mess2Op.ParseField(reflection, node_def, field, depth, ops);
   toJson.OneField2Json((*node_def), field, reflection, black_fields, json, enum2str);
   delete field;
+}
+
+TEST_F(STestTensorflowParser, input_proto_real_path_success) {
+  const char *caffe_proto_path = "./caffe/caffe.proto";
+  const char *custom_proto_path = "./caffe/custom.proto";
+  ProtoFileParser proto_file_parser;
+  string fusion_proto_file;
+  auto ret = proto_file_parser.CombineProtoFile(caffe_proto_path, custom_proto_path, fusion_proto_file);
+  EXPECT_EQ(ret, FAILED);
+
+  ret = proto_file_parser.RecordProtoMessage(caffe_proto_path);
+  EXPECT_EQ(ret, FAILED);
+
+  ret = proto_file_parser.WriteProtoFile(caffe_proto_path, custom_proto_path);
+  EXPECT_EQ(ret, FAILED);
+
+  std::cout << __FILE__ << std::endl;
+  std::string caseDir = __FILE__;
+  std::size_t idx = caseDir.find_last_of("/");
+  caseDir = caseDir.substr(0, idx);
+  std::string proto_file = caseDir + "/origin_models/caffe.proto";
+  caffe_proto_path = proto_file.c_str();
+  ret = proto_file_parser.CombineProtoFile(caffe_proto_path, caffe_proto_path, fusion_proto_file);
+  EXPECT_EQ(ret, SUCCESS);
+
+  ret = proto_file_parser.WriteProtoFile(caffe_proto_path, custom_proto_path);
+  EXPECT_EQ(ret, FAILED);
+
+  std::string dest_line = "test";
+  ret = proto_file_parser.FindConflictLine(custom_proto_path, 0, dest_line);
+  EXPECT_EQ(ret, FAILED);
+
+  std::map<int, std::pair<string, string>> identifier_op_map;
+  std::map<std::string, std::pair<int, string>> op_identifier_map;
+  ret = proto_file_parser.ParseProtoFile(custom_proto_path, identifier_op_map, op_identifier_map);
+  EXPECT_EQ(ret, FAILED);
+
+  proto_file_parser.GetFusionProtoFile();
+
+  std::ofstream write_tmp;
+  ret = proto_file_parser.AddCustomAndConflictMessage(custom_proto_path, write_tmp);
+  EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(STestTensorflowParser, all_success)
+{
+  PreChecker::OpId id1 = (void*)(intptr_t)1;
+  PreChecker::OpId id2 = (void*)(intptr_t)2;
+  PreChecker::OpId id3 = (void*)(intptr_t)3;
+  PreChecker::OpId id4 = (void*)(intptr_t)4;
+  PreChecker &checker = PreChecker::Instance();
+
+  EXPECT_EQ(checker.AddOp(id1, "name1", "type1"), SUCCESS);
+  EXPECT_EQ(checker.AddOp(id2, "name2", "type2"), SUCCESS);
+  EXPECT_EQ(checker.AddOp(id3, "name1", "type3"), SUCCESS);
+  EXPECT_EQ(checker.AddOp(id4, "name4", ge::parser::DETECTIONOUTPUT), SUCCESS);
+
+  EXPECT_EQ(checker.CheckName(id1), SUCCESS);
+  EXPECT_EQ(checker.CheckName(id2), SUCCESS);
+  EXPECT_EQ(checker.CheckName(id3), SUCCESS);
+  EXPECT_EQ(checker.CheckName(id4), SUCCESS);
+
+  EXPECT_EQ(checker.CheckType(id1), SUCCESS);
+  EXPECT_EQ(checker.CheckType(id2), SUCCESS);
+  EXPECT_EQ(checker.CheckType(id3), SUCCESS);
+  EXPECT_EQ(checker.CheckType(id4), SUCCESS);
+
+  EXPECT_EQ(checker.AddCause(id1, PreChecker::ErrorCode::OK, "msg"), SUCCESS);
+  EXPECT_EQ(checker.AddCause(id1, PreChecker::ErrorCode::PARAM_INVALID, "msg"), domi::SUCCESS);
+
+  PreChecker::Cause cause;
+  cause.code = PreChecker::ErrorCode::TYPE_AMBIGUOUS;
+  cause.message = "msg";
+  EXPECT_EQ(checker.AddCause(id1, cause), SUCCESS);
+  EXPECT_EQ(checker.HasError(), true);
+  EXPECT_EQ(checker.Save("check_result.json"), SUCCESS);
+
+  std::string msg = "msg";
+  Status ret = checker.Clear(id1, msg);
+  EXPECT_EQ(ret, SUCCESS);
+
+  checker.Clear();
+  checker.RefreshErrorMessageByName("name1",PreChecker::ErrorCode::PARAM_INVALID,"node repeated in");
+}
+
+TEST_F(STestTensorflowParser, tensorflow_tbe_tfplugin_loader_test)
+{
+  TBEPluginLoader pluginLoad;
+  vector<string> fileList = {};
+  string caffeParserPath = "";
+  string full_name = "dabc";
+  string caffe_parser_so_suff = "abc";
+  pluginLoad.ProcessSoFullName(fileList, caffeParserPath, full_name, caffe_parser_so_suff);
+  ASSERT_EQ(caffeParserPath, full_name);
+
+  pluginLoad.ClearHandles_();
+
+  std::cout << __FILE__ << std::endl;
+  std::string caseDir = __FILE__;
+  std::size_t idx = caseDir.find_last_of("/");
+  caseDir = caseDir.substr(0, idx);
+  std::string proto_file = caseDir + "/origin_models/";
+  std::string path = proto_file;
+  std::string caffe_parser_path = path;
+  pluginLoad.FindParserSo(path, fileList, caffe_parser_path);
+
+  setenv("ASCEND_OPP_PATH", "aaa", 1);
+  std::string customop_path = "";
+  pluginLoad.GetCustomOpPath(customop_path);
+  ASSERT_EQ(customop_path, "aaa/framework/custom/:aaa/framework/built-in/tensorflow");
+
+  Status ret = pluginLoad.Finalize();
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_data_op_parser_test)
+{
+  std::vector<int64_t> shape = {1, 1, 224, 224};
+  ge::GeTensorDesc tensor_desc;
+  DataOpParser opParser;
+  Status ret = opParser.Init5DInputTensor(shape, tensor_desc);
+  EXPECT_EQ(ret, SUCCESS);
+
+  ret = opParser.Init5DOutputTensor(shape, tensor_desc);
+  EXPECT_EQ(ret, SUCCESS);
+
+  ge::OpDescPtr op = std::make_shared<ge::OpDesc>();
+  ret = opParser.ParseShape(shape, op);
+}
+
+TEST_F(STestTensorflowParser, read_proto_from_mem_test)
+{
+  tensorflow::NodeDef *node_def = initNodeDef();
+  const char *data = nullptr;
+  int size = 3;
+  bool ret = parser::ReadProtoFromMem(data, size, node_def);
+  EXPECT_EQ(false, ret);
+
+  data = "not file";
+  ret = parser::ReadProtoFromMem(data, size, node_def);
+  EXPECT_EQ(false, ret);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_GetOriginalType_test)
+{
+  ge::ComputeGraphPtr graph = std::make_shared<ge::ComputeGraph>(GRAPH_DEFAULT_NAME);
+  ge::OpDescPtr op = std::make_shared<ge::OpDesc>("fusionCustom", parser::FRAMEWORKOP);
+  ge::NodePtr node = std::make_shared<ge::Node>(op, graph);
+  string type = parser::FRAMEWORKOP;
+  Status ret = parser::GetOriginalType(node, type);
+  EXPECT_EQ(ret, INTERNAL_ERROR);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_ReadBytesFromBinaryFile_test)
+{
+  const char *file_name = nullptr;
+  char *buffer = nullptr;
+  int length = 1;
+  bool ret = parser::ReadBytesFromBinaryFile(file_name, &buffer, length);
+  EXPECT_EQ(ret, false);
+
+  file_name = "./caffe.proto";
+  ret = parser::ReadBytesFromBinaryFile(file_name, &buffer, length);
+  EXPECT_EQ(ret, false);
+
+  std::cout << __FILE__ << std::endl;
+  std::string caseDir = __FILE__;
+  std::size_t idx = caseDir.find_last_of("/");
+  caseDir = caseDir.substr(0, idx);
+  std::string proto_file = caseDir + "/origin_models/caffe.proto";
+  file_name = proto_file.c_str();
+  ret = parser::ReadBytesFromBinaryFile(file_name, &buffer, length);
+  EXPECT_EQ(ret, true);
+
+  char path[4096 + 1] = { 0 };
+  memset(path, 'a', 4096);
+  std::string realPath = parser::RealPath(path);
+  EXPECT_EQ(realPath, "");
+
+  const char *real_path = nullptr;
+  realPath = parser::RealPath(real_path);
+  EXPECT_EQ(realPath, "");
+}
+
+TEST_F(STestTensorflowParser, tensorflow_AclGrphParseUtil_ParseAclInputFp16Nodes_test)
+{
+  AclGrphParseUtil parserUtil;
+  ge::ComputeGraphPtr graph = std::make_shared<ge::ComputeGraph>(GRAPH_DEFAULT_NAME);
+  std::string input_fp16_nodes = "Add";
+  std::string is_input_adjust_hw_layout = "is_input_adjust_hw_layout";
+  Status ret = parserUtil.ParseAclInputFp16Nodes(graph, input_fp16_nodes, is_input_adjust_hw_layout);
+  EXPECT_EQ(ret, PARAM_INVALID);
+
+  is_input_adjust_hw_layout = "true";
+  ret = parserUtil.ParseAclInputFp16Nodes(graph, input_fp16_nodes, is_input_adjust_hw_layout);
+  EXPECT_EQ(ret, PARAM_INVALID);
+
+  vector<string> adjust_fp16_format_vec = {"true", "false"};
+  uint32_t index = 1;
+  ge::OpDescPtr op_desc = std::make_shared<ge::OpDesc>();
+  parserUtil.AddAttrsForInputNodes(adjust_fp16_format_vec, input_fp16_nodes, index, op_desc);
+
+  std::string is_output_fp16 = "is_output_fp16";
+  ret = parserUtil.ParseAclOutputFp16NodesFormat(is_output_fp16);
+  EXPECT_EQ(ret, PARAM_INVALID);
+
+  is_output_fp16 = "false";
+  ret = parserUtil.ParseAclOutputFp16NodesFormat(is_output_fp16);
+  EXPECT_EQ(ret, SUCCESS);
+
+  is_output_fp16 = "true";
+  ret = parserUtil.ParseAclOutputFp16NodesFormat(is_output_fp16);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_ModelSaver_test)
+{
+  const char *file_path = nullptr;
+  const Json model = {{"a", "b"}};
+  Status ret = ge::parser::ModelSaver::SaveJsonToFile(file_path, model);
+  EXPECT_EQ(ret, FAILED);
+
+  file_path = "./origin_models/";
+  ret = ge::parser::ModelSaver::SaveJsonToFile(file_path, model);
+  EXPECT_EQ(ret, FAILED);
+
+  std::cout << __FILE__ << std::endl;
+  std::string caseDir = __FILE__;
+  std::size_t idx = caseDir.find_last_of("/");
+  caseDir = caseDir.substr(0, idx);
+  std::string proto_file = caseDir + "/origin_models/caffe.proto";
+  file_path = proto_file.c_str();
+  ret = ge::parser::ModelSaver::SaveJsonToFile(file_path, model);
+
+  char path[4096 + 1] = { 0 };
+  memset(path, 'a', 4096);
+  EXPECT_EQ(-1, ge::parser::ModelSaver::CreateDirectory(path));
+  EXPECT_EQ(-1, ge::parser::ModelSaver::CheckPath(path));
+}
+
+TEST_F(STestTensorflowParser, create_weights_parser_failed)
+{
+  WeightsParserFactory* factory = WeightsParserFactory::Instance();
+  shared_ptr<WeightsParser> weight_parser = factory->CreateWeightsParser(FRAMEWORK_RESERVED);
+  ASSERT_TRUE(NULL == weight_parser);
+
+  ModelParserFactory *modelFactory = ModelParserFactory::Instance();
+  shared_ptr<ModelParser> model_parser = modelFactory->CreateModelParser(FRAMEWORK_RESERVED);
+  ASSERT_TRUE(NULL == model_parser);
+
+  std::shared_ptr<OpParserFactory> parserFactory = OpParserFactory::Instance(domi::FrameworkType::CAFFE);
+  std::shared_ptr<OpParser> fusion_op_parser = parserFactory->CreateFusionOpParser(ge::parser::DATA);
+  ASSERT_TRUE(NULL == fusion_op_parser);
+
+  std::shared_ptr<OpParser> op_parser = parserFactory->CreateOpParser("10");
+  ASSERT_TRUE(NULL == op_parser);
+}
+
+TEST_F(STestTensorflowParser, custom_parser_adapter_register)
+{
+  using PARSER_CREATOR_FN = std::function<std::shared_ptr<OpParser>(void)>;
+  PARSER_CREATOR_FN func = CustomParserAdapterRegistry::Instance()->GetCreateFunc(domi::TENSORFLOW);
+  CustomParserAdapterRegistry::Instance()->Register(domi::TENSORFLOW, func);
+  CustomParserAdapterRegistry::Instance()->Register(domi::TENSORFLOW, func);
+
+  func = CustomParserAdapterRegistry::Instance()->GetCreateFunc(domi::FRAMEWORK_RESERVED);
+  ASSERT_EQ(nullptr, func);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_parser_api_test)
+{
+  std::map<std::string, std::string> options = {{"ge.runFlag", "1"}};
+  Status ret = ParserInitialize(options);
+  EXPECT_EQ(ret, SUCCESS);
+
+  ret = ParserInitialize(options);
+  EXPECT_EQ(ret, SUCCESS);
+
+  ret = ParserFinalize();
+  EXPECT_EQ(ret, SUCCESS);
+
+  ret = ParserFinalize();
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_FP16_parser_test)
+{
+  parser::fp16_t fp16;
+  fp16.ToDouble();
+  fp16.ToInt8();
+  fp16.ToUInt8();
+  fp16.ToInt16();
+  fp16.ToUInt16();
+  fp16.ToInt32();
+  fp16.ToUInt32();
+  fp16.IsInf();
+  fp16.operator+(fp16);
+  fp16.operator-(fp16);
+  fp16.operator*(fp16);
+  fp16.operator/(fp16);
+  fp16.operator+=(fp16);
+  fp16.operator-=(fp16);
+  fp16.operator*=(fp16);
+  fp16.operator/=(fp16);
+  fp16.operator==(fp16);
+  fp16.operator!=(fp16);
+  fp16.operator>(fp16);
+  fp16.operator>=(fp16);
+  fp16.operator<(fp16);
+  fp16.operator<=(fp16);
+  fp16.operator=(fp16);
+
+  float f_val = 0.1;
+  fp16.operator=(f_val);
+
+  double d_val = 0.2;
+  fp16.operator=(d_val);
+
+  int8_t i_val = 1;
+  fp16.operator=(i_val);
+
+  uint8_t ui_val = 2;
+  fp16.operator=(ui_val);
+
+  int16_t i_vals = 1;
+  fp16.operator=(i_vals);
+
+  uint16_t ui16_val = 1;
+  fp16.operator=(ui16_val);
+  ui16_val = 0;
+  fp16.operator=(ui16_val);
+  ui16_val = 100000;
+  fp16.operator=(ui16_val);
+
+  int32_t i32_val = 0;
+  fp16.operator=(i32_val);
+  i32_val = 1;
+  fp16.operator=(i32_val);
+
+  uint32_t ui32_val = 0;
+  fp16.operator=(ui32_val);
+  ui32_val = 1;
+  fp16.operator=(ui32_val);
 }
 
 } // namespace ge
