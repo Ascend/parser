@@ -1,0 +1,36 @@
+name: "TestAdd"
+input: "data"
+layer {
+  name: "data"
+  type: "Input"
+  top: "data"
+  input_param { shape: { dim: 3} }
+}
+
+layer {
+  name: "const"
+  type: "Input"
+  top: "const"
+  input_param { shape: { dim: 3} }
+  blobs {
+    data: 1
+    data: 2
+    data: 3
+    shape {
+      dim: 3
+    }
+  }
+}
+
+layer {
+  name: "reshape"
+  type: "Reshape"
+  bottom: "data"
+  bottom: "const"
+  top: "reshpae_out" 
+  reshape_param {
+    shape {
+      dim: 3
+    }
+  }
+}
