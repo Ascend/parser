@@ -17,6 +17,11 @@
 #include "st/parser_st_utils.h"
 #include "framework/common/debug/ge_log.h"
 #include <limits.h>
+#include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <google/protobuf/text_format.h>
+#include <fstream>
+
 
 namespace ge {
 void ParerSTestsUtils::ClearParserInnerCtx() {
@@ -105,4 +110,25 @@ MemBuffer* ParerSTestsUtils::MemBufferFromFile(const char *path) {
     return membuf;
 }
 
+bool ParerSTestsUtils::ReadProtoFromText(const char *file, google::protobuf::Message *message) {
+  std::ifstream fs(file);
+  if (!fs.is_open()) {
+    return false;
+  }
+  google::protobuf::io::IstreamInputStream input(&fs);
+  bool ret = google::protobuf::TextFormat::Parse(&input, message);
+
+  fs.close();
+  return ret;
+}
+
+void ParerSTestsUtils::WriteProtoToBinaryFile(const google::protobuf::Message &proto, const char *filename) {
+  size_t size = proto.ByteSizeLong();
+  char *buf = new char[size];
+  proto.SerializeToArray(buf, size);
+  std::ofstream out(filename);
+  out.write(buf, size);
+  out.close();
+  delete[] buf;
+}
 }  // namespace ge

@@ -25,6 +25,8 @@
 #include "st/parser_st_utils.h"
 #include "external/ge/ge_api_types.h"
 #include "tests/depends/ops_stub/ops_stub.h"
+#include "proto/caffe/caffe.pb.h"
+#include "parser/caffe/caffe_parser.h"
 
 namespace ge {
 class STestCaffeParser : public testing::Test {
@@ -85,6 +87,64 @@ TEST_F(STestCaffeParser, caffe_parser_user_output_with_default) {
   auto &net_out_name = ge::GetParserContext().net_out_nodes;
   ASSERT_EQ(net_out_name.size(), 1);
   EXPECT_EQ(net_out_name.at(0), "abs:0:abs_out");
+}
+
+TEST_F(STestCaffeParser, acal_caffe_parser) {
+  std::string case_dir = __FILE__;
+  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
+  std::string model_file = case_dir + "/origin_models/caffe_add.pbtxt";
+  std::string weight_file_txt = case_dir + "/origin_models/caffe_add.caffemodel.txt";
+  std::string weight_file = case_dir + "/origin_models/caffe_add.caffemodel";
+
+  domi::caffe::NetParameter proto;
+  EXPECT_EQ(ParerSTestsUtils::ReadProtoFromText(weight_file_txt.c_str(), &proto), true);
+  ParerSTestsUtils::WriteProtoToBinaryFile(proto, weight_file.c_str());
+
+  ge::GetParserContext().caffe_proto_path = case_dir + "/../../../../metadef/proto/caffe/caffe.proto";
+
+  std::map<ge::AscendString, ge::AscendString> parser_params;
+  ge::Graph graph;
+  auto ret = ge::aclgrphParseCaffe(model_file.c_str(), weight_file.c_str(), parser_params, graph);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  ret = ge::aclgrphParseCaffe(model_file.c_str(), weight_file.c_str(), graph);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(STestCaffeParser, modelparser_parsefrommemory_success)
+{
+  std::string caseDir = __FILE__;
+  std::size_t idx = caseDir.find_last_of("/");
+  caseDir = caseDir.substr(0, idx);
+  std::string modelFile = caseDir + "/origin_models/caffe_add.pbtxt";
+  const char* tmp_tf_pb_model = modelFile.c_str();
+  ge::Graph graph;
+
+  ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
+  CaffeModelParser modelParser;
+  MemBuffer* memBuffer = ParerSTestsUtils::MemBufferFromFile(tmp_tf_pb_model);
+  auto ret = modelParser.ParseFromMemory((char*)memBuffer->data, memBuffer->size, compute_graph);
+  free(memBuffer->data);
+  delete memBuffer;
+  EXPECT_EQ(ret, GRAPH_FAILED);
+}
+
+TEST_F(STestCaffeParser, caffe_parser_to_json) {
+  std::string case_dir = __FILE__;
+  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
+  std::string model_file = case_dir + "/origin_models/caffe_add.pbtxt";
+  std::map<ge::AscendString, ge::AscendString> parser_params;
+  CaffeModelParser caffe_parser;
+
+  const char *json_file = "tmp.json";
+  auto ret = caffe_parser.ToJson(model_file.c_str(), json_file);
+  EXPECT_EQ(ret, SUCCESS);
+
+  const char *json_null = nullptr;
+  ret = caffe_parser.ToJson(model_file.c_str(), json_null);
+  EXPECT_EQ(ret, FAILED);
+  const char *model_null = nullptr;
+  ret = caffe_parser.ToJson(model_null, json_null);
+  EXPECT_EQ(ret, FAILED);
 }
 
 } // namespace ge
