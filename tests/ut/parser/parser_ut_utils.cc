@@ -17,6 +17,7 @@
 #include "ut/parser/parser_ut_utils.h"
 #include "framework/common/debug/ge_log.h"
 #include "graph/utils/graph_utils.h"
+#include <limits.h>
 
 namespace ge {
 void ParerUTestsUtils::ClearParserInnerCtx() {
@@ -66,5 +67,68 @@ void GraphBuilder::AddDataEdge(const NodePtr &src_node, int src_idx, const NodeP
 void GraphBuilder::AddControlEdge(const NodePtr &src_node, const NodePtr &dst_node) {
   GraphUtils::AddEdge(src_node->GetOutControlAnchor(), dst_node->GetInControlAnchor());
 }
+
+ge::MemBuffer* MemBufferFromFile(const char *path) {
+    char path_temp[PATH_MAX + 1] = {0x00};
+    if(strlen(path) > PATH_MAX || nullptr == realpath(path, path_temp)) {
+        return nullptr;
+    }
+    FILE *fp = fopen(path_temp, "r+");
+    if (fp == nullptr) {
+        return nullptr;
+    }
+
+    // get model file length
+    if (0 != fseek(fp, 0, SEEK_END)) {
+        fclose(fp);
+        return nullptr;
+    }
+    long file_length = ftell(fp);
+    if (fseek(fp, 0, SEEK_SET)) {
+        fclose(fp);
+        return nullptr;
+    }
+    if (file_length <= 0) {
+        fclose(fp);
+        return nullptr;
+    }
+
+    // alloc model buffer
+    void *data = malloc((unsigned int)file_length);
+    if (!data) {
+        fclose(fp);
+        return nullptr;
+    }
+
+    // read file into memory
+    uint32_t read_size = (uint32_t)fread(data, 1, (unsigned int)file_length, fp);
+
+    // check if read success
+    if ((long)read_size != file_length) {
+        free(data);
+        data = nullptr;
+        fclose(fp);
+        return nullptr;
+    }
+
+    // close model file
+    fclose(fp);
+
+    // create an MemBuffer
+    MemBuffer* membuf = new MemBuffer();
+    if (!membuf) {
+        free(data);
+        data = nullptr;
+        return nullptr;
+    }
+    membuf->data = malloc((unsigned int)read_size);
+
+    // set size && data
+    membuf->size = (uint32_t)read_size;
+    memcpy((char*)membuf->data, (char*)data, read_size);
+    free(data);
+    return membuf;
+}
+
 }  // namespace ut
 }  // namespace ge
