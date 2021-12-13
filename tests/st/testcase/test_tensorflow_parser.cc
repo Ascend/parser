@@ -2387,5 +2387,23 @@ TEST_F(STestTensorflowParser, tensorflow_GraphDefOptimizeIdentity_test)
   Status ret = tensorflow_parser.GraphDefOptimizeIdentity(&graph_def, nodedef_map, nodedef_to_optimize);
   EXPECT_EQ(ret, ge::PARAM_INVALID);
 }
+TEST_F(STestTensorflowParser, tensorflow_optimizer_snapshot_no_retval_test) {
+  std::string caseDir = __FILE__;
+  std::size_t idx = caseDir.find_last_of("/");
+  caseDir = caseDir.substr(0, idx);
+  const std::string root_proto = caseDir + "/origin_models/test_snapshot.pb";
+  domi::tensorflow::GraphDef graphDef;
+
+  bool protoRet =
+      parser::ReadProtoFromBinaryFile(root_proto.c_str(), &graphDef);
+  ASSERT_EQ(protoRet, true);
+
+  TensorFlowModelParser tensorflow_parser;
+  ge::ComputeGraphPtr root_graph =
+      ge::parser::MakeShared<ge::ComputeGraph>("tmp_graph");
+  Status ret = tensorflow_parser.ParseProto(
+      reinterpret_cast<google::protobuf::Message *>(&graphDef), root_graph);
+  EXPECT_EQ(FAILED, ret);
+}
 
 } // namespace ge
