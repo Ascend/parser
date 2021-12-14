@@ -15,6 +15,9 @@
  */
 
 #include <gtest/gtest.h>
+
+#define protected public
+#define private public
 #include "parser/common/op_parser_factory.h"
 #include "graph/operator_reg.h"
 #include "register/op_registry.h"
@@ -27,6 +30,12 @@
 #include "tests/depends/ops_stub/ops_stub.h"
 #include "proto/caffe/caffe.pb.h"
 #include "parser/caffe/caffe_parser.h"
+#include "parser/caffe/caffe_data_parser.h"
+#include "parser/caffe/caffe_op_parser.h"
+#undef protected
+#undef private
+
+using namespace domi::caffe;
 
 namespace ge {
 class STestCaffeParser : public testing::Test {
@@ -45,6 +54,16 @@ class STestCaffeParser : public testing::Test {
 static Status ParseParams(const google::protobuf::Message* op_src, ge::Operator& op_dest) {
   return SUCCESS;
 }
+
+static ge::NodePtr GenNodeFromOpDesc(ge::OpDescPtr opDesc){
+  if (!opDesc) {
+    return nullptr;
+  }
+
+  static auto g = std::make_shared<ge::ComputeGraph>("g");
+  return g->AddNode(std::move(opDesc));
+}
+
 void STestCaffeParser::RegisterCustomOp() {
   REGISTER_CUSTOM_OP("Data")
   .FrameworkType(domi::CAFFE)
@@ -145,6 +164,42 @@ TEST_F(STestCaffeParser, caffe_parser_to_json) {
   const char *model_null = nullptr;
   ret = caffe_parser.ToJson(model_null, json_null);
   EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(STestCaffeParser, caffe_parser_ParseParamsForDummyData_test)
+{
+  CaffeDataParser caffe_parser;
+  domi::caffe::NetParameter net;
+  ge::OpDescPtr op = std::make_shared<ge::OpDesc>("conv", "Convolution");
+  domi::caffe::LayerParameter *lay = net.add_layer();
+  Status ret = caffe_parser.ParseParamsForDummyData(lay, op);
+  EXPECT_EQ(ret, FAILED);
+
+  ret = caffe_parser.ParseParamsForInput(lay, op);
+  EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(STestCaffeParser, convertWeights_success)
+{
+  CaffeOpParser parser;
+  ge::GeTensorDesc ge_tensor_desc =  ge::GeTensorDesc();
+  ge::GeTensorPtr weight = std::make_shared<ge::GeTensor>(ge_tensor_desc);
+  ge::OpDescPtr opDef = std::make_shared<ge::OpDesc>("","");
+  auto node_tmp = GenNodeFromOpDesc(opDef);
+
+  domi::caffe::LayerParameter *layer = new domi::caffe::LayerParameter();
+  domi::caffe::BlobProto *blob = layer->add_blobs();
+  blob->set_int8_data("12");
+  blob->add_data(1);
+  blob->add_data(1);
+
+  domi::caffe::BlobShape *shap = blob->mutable_shape();
+  shap->add_dim(1);
+  shap->add_dim(2);
+
+  Status ret = parser.ConvertWeight(*blob, "", weight);
+  EXPECT_EQ(domi::SUCCESS, ret);
+  delete layer;
 }
 
 } // namespace ge

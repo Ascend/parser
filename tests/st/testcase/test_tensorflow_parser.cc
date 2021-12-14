@@ -67,6 +67,11 @@
 #include "parser/common/parser_fp16_t.h"
 #include "parser/common/op_parser_factory.h"
 #include "parser/common/prototype_pass_manager.h"
+#include "parser/common/register_tbe.h"
+#include "parser/common/pass_manager.h"
+#include "parser/tensorflow/graph_optimizer.h"
+#include "metadef/inc/register/scope/scope_pass_registry_impl.h"
+#include "register/scope/scope_fusion_pass_register.h"
 #undef protected
 #undef private
 
@@ -106,8 +111,16 @@ public:
     }
 };
 
+class ErrorGraphPass: public GraphPass
+{
+    Status Run(ComputeGraphPtr graph)
+    {
+        return domi::FAILED;
+    }
+};
+
 class ScopeTestPass : public ScopeBasePass {
- protected:
+protected:
   vector<ScopeFusionPatterns> DefinePatterns() {
     vector<ScopeFusionPatterns> patterns_list;
     return patterns_list;
@@ -730,11 +743,97 @@ namespace {
 
   NodeDef* AddGraphNode(GraphDef *graph, string name, string optype, string input) 
   {
-    NodeDef * node_def = graph->add_node();
+    NodeDef *node_def = graph->add_node();
     node_def->set_name(name);
     node_def->set_op(optype);
     node_def->add_input(input);
     return node_def;
+  }
+
+  ge::ComputeGraphPtr build_graph(bool with_leaf_node = false)
+  {
+      ge::ComputeGraphPtr graph = std::make_shared<ge::ComputeGraph>("default");
+      ge::OpDescPtr data_op = std::make_shared<ge::OpDesc>();
+      data_op->SetType(parser::DATA);
+      data_op->SetName("Data1");
+      data_op->AddInputDesc(ge::GeTensorDesc());
+      data_op->AddOutputDesc(ge::GeTensorDesc());
+      ge::NodePtr data1 = graph->AddNode(data_op);
+
+      ge::OpDescPtr relu_op1 = std::make_shared<ge::OpDesc>();
+      relu_op1->SetType(parser::ACTIVATION);
+      relu_op1->SetName("Relu1");
+      relu_op1->AddInputDesc(ge::GeTensorDesc());
+      relu_op1->AddOutputDesc(ge::GeTensorDesc());
+      ge::NodePtr relu1 = graph->AddNode(relu_op1);
+
+      ge::OpDescPtr relu_op2 = std::make_shared<ge::OpDesc>();
+      relu_op2->SetType(parser::RELU);
+      relu_op2->SetName("Relu2");
+      relu_op2->AddInputDesc(ge::GeTensorDesc());
+      relu_op2->AddOutputDesc(ge::GeTensorDesc());
+      relu_op2->AddOutputDesc(ge::GeTensorDesc());
+      ge::NodePtr relu2 = graph->AddNode(relu_op2);
+
+      ge::OpDescPtr relu_op3 = std::make_shared<ge::OpDesc>();
+      relu_op3->SetType(parser::ACTIVATION);
+      relu_op3->SetName("Relu3");
+      relu_op3->AddInputDesc(ge::GeTensorDesc());
+      relu_op3->AddOutputDesc(ge::GeTensorDesc());
+      ge::NodePtr relu3;
+      if (with_leaf_node == true) {
+          relu3 = graph->AddNode(relu_op3);
+      }
+
+      ge::OpDescPtr mul_op = std::make_shared<ge::OpDesc>();
+      mul_op->SetType(parser::MUL);
+      mul_op->SetName("Mul");
+      mul_op->AddInputDesc(ge::GeTensorDesc());
+      mul_op->AddInputDesc(ge::GeTensorDesc());
+      mul_op->AddOutputDesc(ge::GeTensorDesc());
+      mul_op->AddOutputDesc(ge::GeTensorDesc());
+      mul_op->AddOutputDesc(ge::GeTensorDesc());
+      mul_op->AddOutputDesc(ge::GeTensorDesc());
+      ge::NodePtr mul = graph->AddNode(mul_op);
+
+      ge::OpDescPtr mul_op1 = std::make_shared<ge::OpDesc>();
+      mul_op1->SetType(parser::MUL);
+      mul_op1->SetName("Mul1");
+      mul_op1->AddInputDesc(ge::GeTensorDesc());
+      mul_op1->AddInputDesc(ge::GeTensorDesc());
+      mul_op1->AddOutputDesc(ge::GeTensorDesc());
+      ge::NodePtr mul1 = graph->AddNode(mul_op1);
+
+      ge::OpDescPtr mul_op2 = std::make_shared<ge::OpDesc>();
+      mul_op2->SetType(parser::MUL);
+      mul_op2->SetName("Mul2");
+      mul_op2->AddInputDesc(ge::GeTensorDesc());
+      mul_op2->AddInputDesc(ge::GeTensorDesc());
+      mul_op2->AddOutputDesc(ge::GeTensorDesc());
+      ge::NodePtr mul2 = graph->AddNode(mul_op2);
+
+      ge::OpDescPtr fc_op = std::make_shared<ge::OpDesc>();
+      fc_op->SetType(parser::FULL_CONNECTION);
+      fc_op->SetName("FullConnection");
+      fc_op->AddInputDesc(ge::GeTensorDesc());
+      fc_op->AddOutputDesc(ge::GeTensorDesc());
+      fc_op->AddOutputDesc(ge::GeTensorDesc());
+      ge::NodePtr fc = graph->AddNode(fc_op);
+
+      ge::GraphUtils::AddEdge(data1->GetOutDataAnchor(0), relu1->GetInDataAnchor(0));
+      ge::GraphUtils::AddEdge(relu1->GetOutDataAnchor(0), fc->GetInDataAnchor(0));
+      ge::GraphUtils::AddEdge(fc->GetOutDataAnchor(0), relu2->GetInDataAnchor(0));
+      if (with_leaf_node == true) {
+          ge::GraphUtils::AddEdge(fc->GetOutDataAnchor(1), relu3->GetInDataAnchor(0));
+      }
+      ge::GraphUtils::AddEdge(relu2->GetOutDataAnchor(0), mul->GetInDataAnchor(0));
+      ge::GraphUtils::AddEdge(relu2->GetOutDataAnchor(1), mul->GetInDataAnchor(1));
+      ge::GraphUtils::AddEdge(mul->GetOutDataAnchor(0), mul1->GetInDataAnchor(0));
+      ge::GraphUtils::AddEdge(mul->GetOutDataAnchor(1), mul1->GetInDataAnchor(1));
+      ge::GraphUtils::AddEdge(mul->GetOutDataAnchor(2), mul2->GetInDataAnchor(0));
+      ge::GraphUtils::AddEdge(mul->GetOutDataAnchor(3), mul2->GetInDataAnchor(1));
+
+      return graph;
   }
 }
 
@@ -1994,8 +2093,7 @@ TEST_F(STestTensorflowParser, tensorflow_Scope_pass_test)
   }
 
   ge::TensorFlowModelParser tf_model_parser;
-  std::vector<string> scope_passes_list = {"pass_1", "pass_2"};
-  tf_model_parser.RunScopeFusionPass(scope_passes_list, passmanager, scope_graph);
+  std::vector<string> scope_passes_list = {"ScopeBasicLSTMCellPass", "ScopeLayerNormPass"};
   Status ret = tf_model_parser.RunScopeFusionPass(scope_passes_list, passmanager, scope_graph);
   EXPECT_NE(ge::SUCCESS, ret);
 }
@@ -2935,6 +3033,8 @@ TEST_F(STestTensorflowParser, tensorflow_GetNodeFormat_test)
   TensorFlowModelParser model_parser;
   Status ret = model_parser.GetNodeFormat(node_def1, pred_transpose, format, visited_node);
   EXPECT_EQ(ret, FAILED);
+
+
   delete node_def1;
   delete node_def2;
 }
@@ -2947,20 +3047,27 @@ TEST_F(STestTensorflowParser, tensorflow_GetFormatTranspose_test)
   TensorFlowModelParser modelParser;
   Status ret = modelParser.GetFormatTranspose(transpose_node, transpose_direc);
   EXPECT_EQ(ret, FAILED);
+  delete transpose_node;
+}
 
-  ge::TensorFlowModelParser parser;
+TEST_F(STestTensorflowParser, tensorflow_GetFormatTranspose_test2)
+{
+  TensorFlowModelParser modelParser;
+  TfTranspose transpose_direc = NO_TRANSPOSE;
+  NodeDef *transpose_node = initNodeDef();
   GraphDef graph;
+
   auto arg0 = AddNode(graph, "_Arg", "arg0");
   auto snapshot0 = AddNode(graph, "Snapshot", "snapshot0");
   auto ret0 = AddNode(graph, "_Retval", "retval0");
 
   auto arg1 = AddNode(graph, "_Arg", "arg1");
   auto snapshot1 = AddNode(graph, "Snapshot", "snapshot1");
-  auto ret1 = AddNode(graph, "_Retval", "retval1");
+  auto ret1 = AddNode(graph, TENSORFLOWF_NODE_OP_TRANSPOSE, "retval1");
 
   auto arg2 = AddNode(graph, "_Arg", "arg2");
   auto snapshot2 = AddNode(graph, "Snapshot", "snapshot2");
-  auto ret2 = AddNode(graph, "_Retval", "retval2");
+  auto ret2 = AddNode(graph, TENSORFLOWF_NODE_OP_TRANSPOSE, TENSORFLOWF_NODE_OP_TRANSPOSE);
 
   AddInput(arg0, snapshot0, 0);
   AddInput(snapshot0, ret0, 0);
@@ -2971,9 +3078,14 @@ TEST_F(STestTensorflowParser, tensorflow_GetFormatTranspose_test)
   AddInput(snapshot0, snapshot1, -1);
   AddInput(snapshot1, snapshot2, -1);
 
-  ASSERT_EQ(parser.GraphDefOptimize(&graph), domi::SUCCESS);
-  ASSERT_EQ(ret1->input_size(), 2);
-  ret = modelParser.GetFormatTranspose(ret1, transpose_direc);
+  bool train_flag = ge::GetParserContext().train_flag;
+  ge::GetParserContext().train_flag = true;
+  ASSERT_EQ(modelParser.GraphDefOptimize(&graph), SUCCESS);
+  ge::GetParserContext().train_flag = train_flag;
+
+  modelParser.nodedef_map_["arg1"] = transpose_node;
+  modelParser.nodedef_map_["^arg0"] = transpose_node;
+  Status ret = modelParser.GetFormatTranspose(ret1, transpose_direc);
   EXPECT_EQ(ret, SUCCESS);
   delete transpose_node;
 }
@@ -3650,7 +3762,6 @@ TEST_F(STestTensorflowParser, tensorflow_ModelSaver_test)
   ret = ge::parser::ModelSaver::SaveJsonToFile(file_path, model);
   EXPECT_EQ(ret, FAILED);
 
-  std::cout << __FILE__ << std::endl;
   std::string caseDir = __FILE__;
   std::size_t idx = caseDir.find_last_of("/");
   caseDir = caseDir.substr(0, idx);
@@ -3755,7 +3866,7 @@ TEST_F(STestTensorflowParser, tensorflow_FP16_parser_test)
   fp16.operator=(ui16_val);
   ui16_val = 0;
   fp16.operator=(ui16_val);
-  ui16_val = 100000;
+  ui16_val = 1;
   fp16.operator=(ui16_val);
 
   int32_t i32_val = 0;
@@ -3767,6 +3878,294 @@ TEST_F(STestTensorflowParser, tensorflow_FP16_parser_test)
   fp16.operator=(ui32_val);
   ui32_val = 1;
   fp16.operator=(ui32_val);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_AclParserInitialize_test)
+{
+  AclGrphParseUtil parseUtil;
+  std::map<std::string, std::string> options;
+  Status ret = parseUtil.AclParserInitialize(options);
+  EXPECT_EQ(ret, FAILED);
+
+  options = {{ge::FRAMEWORK_TYPE, "2"}};
+  ret = parseUtil.AclParserInitialize(options);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_GetOutputLeaf_test)
+{
+  AclGrphParseUtil parseUtil;
+  ge::ComputeGraphPtr compute_graph = build_graph(true);
+  ge::NodePtr output_nodes_info = compute_graph->FindNode("Relu3");
+  std::vector<std::pair<ge::NodePtr, int32_t>> output_nodes = {{output_nodes_info,0}};
+  ge::ComputeGraphPtr graph = std::make_shared<ge::ComputeGraph>("default");
+  ge::NodePtr node = AddNode(compute_graph, "K", parser::NETOUTPUT,1,1);
+  Status ret = parseUtil.GetOutputLeaf(node, output_nodes);
+  EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(STestTensorflowParser, graph_pass_error)
+{
+  ComputeGraphPtr graph = std::make_shared<ComputeGraph>("test");
+  ErrorGraphPass pass;
+  ge::parser::PassManager passManager;
+  std::vector<std::pair<string, GraphPass*>> passes;
+  passes.emplace_back("", &pass);
+  Status status = passManager.Run(graph, passes);
+  EXPECT_EQ(domi::FAILED, status);
+}
+
+TEST_F(STestTensorflowParser, parser_FindFmkNodeCluser_success)
+{
+  ComputeGraphPtr graph = std::make_shared<ComputeGraph>("FrameworkOp");
+  ParserGraphOptimizer graphOptimizer(graph, domi::TENSORFLOW);
+  ge::NodePtr node = AddNode(graph, "K", parser::FRAMEWORK_OP_TYPE, 1, 1);
+  ge::NodePtr output_nodes_info = graph->FindNode("Relu3");
+  std::unordered_map<string, vector<NodePtr>> node_cluser_Map({
+    {"x", {node, output_nodes_info}},
+  });
+  Status ret = graphOptimizer.FindFmkNodeCluser(node_cluser_Map);
+  EXPECT_EQ(ret, SUCCESS);
+
+  // node = AddNode(graph, "K", parser::NETOUTPUT, 1, 1);
+  // NodePtr node_a = AddNode(graph, "A", parser::NETOUTPUT, 1, 1);
+  // NodePtr node_b = AddNode(graph, "B", parser::NETOUTPUT, 1, 1);
+  // std::unordered_map<string, vector<NodePtr>> node_cluser_Map2({
+  //   {"x", {node, node_a, node_b}},
+  // });
+  // ret = graphOptimizer.FindFmkNodeCluser(node_cluser_Map2);
+  // EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(STestTensorflowParser, parser_RebuildOutputAnchors_test)
+{
+  ge::ComputeGraphPtr subGraph = std::make_shared<ge::ComputeGraph>("default");
+  ParserGraphOptimizer graphOptimizer(subGraph, domi::TENSORFLOW);
+  string inputNodeType = "DATA";
+  MakeDagGraph(subGraph, inputNodeType);
+
+  vector<ge::InDataAnchorPtr> in_anchor;
+  vector<ge::OutDataAnchorPtr> out_anchor;
+  for(ge::NodePtr node : subGraph->GetAllNodes()) {
+    for(auto out : node->GetAllOutDataAnchors()) {
+      for(auto in : node->GetAllInDataAnchors()) {
+        if(in->GetPeerOutAnchor() != nullptr && in->GetPeerOutAnchor()->GetOwnerNode()->GetOpDesc()->GetType() == parser::DATA) {
+            in_anchor.push_back(in);
+        }
+      }
+      for(auto i : out->GetPeerInDataAnchors()) {
+        if(i->GetOwnerNode()->GetOpDesc()->GetType() == parser::NETOUTPUT) {
+            out_anchor.push_back(out);
+        }
+      }
+    }
+  }
+  OpDescPtr fusion_op_desc = make_shared<ge::OpDesc>("FusionCustom", ge::parser::CONSTANT);
+  Status ret = graphOptimizer.RebuildOutputAnchors(out_anchor, fusion_op_desc);
+  EXPECT_EQ(domi::SUCCESS, ret);
+
+  ret = graphOptimizer.RebuildInputAnchors(in_anchor, fusion_op_desc);
+  EXPECT_EQ(domi::SUCCESS, ret);
+}
+
+TEST_F(STestTensorflowParser, parser_LinkInnerAnchor_test)
+{
+  ge::ComputeGraphPtr subGraph = std::make_shared<ge::ComputeGraph>("default");
+  NodePtr node_a = AddNode(subGraph, "A", parser::NETOUTPUT, 1, 1);
+  NodePtr node_b = AddNode(subGraph, "B", parser::NETOUTPUT, 1, 1);
+  unordered_map<string, ge::NodePtr> node_map;
+  node_map.insert(pair<string, ge::NodePtr>("A", node_a));
+  node_map.insert(pair<string, ge::NodePtr>("B", node_b));
+
+  ParserGraphOptimizer graphOptimizer(subGraph, domi::TENSORFLOW);
+  graphOptimizer.LinkInnerAnchor(node_map);
+}
+
+TEST_F(STestTensorflowParser, parser_MarkForFusion_test)
+{
+  ge::ComputeGraphPtr subGraph = std::make_shared<ge::ComputeGraph>("default");
+  ParserGraphOptimizer graphOptimizer(subGraph, domi::TENSORFLOW);
+  ge::NodePtr node = AddNode(subGraph, "K", parser::FRAMEWORK_OP_TYPE, 1, 1);
+  ge::NodePtr output_nodes_info = subGraph->FindNode("Relu3");
+  std::unordered_map<string, vector<NodePtr>> node_cluser_Map({
+    {"x", {node, output_nodes_info}},
+  });
+  Status ret = graphOptimizer.MarkForFusion(node_cluser_Map);
+  EXPECT_EQ(ret, INTERNAL_ERROR);
+}
+
+TEST_F(STestTensorflowParser, parser_UpdateGraph_test)
+{
+  std::vector<NodePtr> nodes;
+  ge::ComputeGraphPtr subGraph = std::make_shared<ge::ComputeGraph>("default");
+  ParserGraphOptimizer graphOptimizer(subGraph, domi::TENSORFLOW);
+  NodePtr node_a = AddNode(subGraph, "A", parser::NETOUTPUT, 1, 1);
+  NodePtr node_b = AddNode(subGraph, "B", parser::NETOUTPUT, 1, 1);
+  nodes.emplace_back(node_a);
+  nodes.emplace_back(node_b);
+  Status ret = graphOptimizer.UpdateGraph(nodes);
+  EXPECT_EQ(ret, PARAM_INVALID);
+}
+
+TEST_F(STestTensorflowParser, parser_RebuildFusionNode_test)
+{
+  ge::ComputeGraphPtr graph = std::make_shared<ge::ComputeGraph>(GRAPH_DEFAULT_NAME);
+  ParserGraphOptimizer graphOptimizer(graph, domi::TENSORFLOW);
+  string inputNodeType = "DATA";
+  MakeDagGraph(graph, inputNodeType);
+  vector<ge::InDataAnchorPtr> input_anchors;
+  vector<ge::OutDataAnchorPtr> output_anchors;
+  for(ge::NodePtr node : graph->GetAllNodes()) {
+    for(auto out : node->GetAllOutDataAnchors()) {
+      for(auto in : node->GetAllInDataAnchors()) {
+        if(in->GetPeerOutAnchor() != nullptr && in->GetPeerOutAnchor()->GetOwnerNode()->GetOpDesc()->GetType() == parser::DATA) {
+            input_anchors.push_back(in);
+        }
+      }
+      for(auto i : out->GetPeerInDataAnchors()) {
+        if(i->GetOwnerNode()->GetOpDesc()->GetType() == parser::NETOUTPUT) {
+            output_anchors.push_back(out);
+        }
+      }
+    }
+  }
+  map<ge::OutDataAnchorPtr, vector<ge::InDataAnchorPtr>> output_in_map;
+  vector<ge::InControlAnchorPtr> input_control_anchors;
+  vector<ge::OutControlAnchorPtr> output_control_anchors;
+
+  ge::OpDescPtr op = std::make_shared<ge::OpDesc>("dpop_123", "FrameworkOp");
+  ge::NodePtr fusion_node = std::make_shared<ge::Node>(op, graph);
+  Status ret = graphOptimizer.RebuildFusionNode(input_anchors, output_anchors, output_in_map, input_control_anchors, output_control_anchors, fusion_node);
+  EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(STestTensorflowParser, parser_InsertNode_test)
+{
+  std::vector<NodePtr> nodes;
+  ge::ComputeGraphPtr subGraph = std::make_shared<ge::ComputeGraph>("default");
+  ParserGraphOptimizer graphOptimizer(subGraph, domi::TENSORFLOW);
+  auto merge_node = AddNode(subGraph, "Merge", parser::MERGE, 1, 2);
+  auto node1 = AddNode(subGraph, "Op1", parser::RELU, 1, 1);
+  auto node2 = AddNode(subGraph, "Op2", parser::CONVOLUTION, 1, 1);
+  auto node3 = AddNode(subGraph, "Op3", parser::CONVOLUTION, 1, 1);
+  nodes.emplace_back(merge_node);
+  nodes.emplace_back(node1);
+  nodes.emplace_back(node2);
+  nodes.emplace_back(node3);
+  vector<ge::InDataAnchorPtr> in_anchor;
+  vector<ge::OutDataAnchorPtr> out_anchor;
+  map<ge::OutDataAnchorPtr, vector<ge::InDataAnchorPtr>> output_in_map;
+  vector<ge::InControlAnchorPtr> input_control_anchors;
+  vector<ge::OutControlAnchorPtr> output_control_anchors;
+  unordered_map<string, ge::NodePtr> node_map;
+  node_map.insert(pair<string, ge::NodePtr>("A", merge_node));
+  node_map.insert(pair<string, ge::NodePtr>("B", node1));
+  node_map.insert(pair<string, ge::NodePtr>("C", node2));
+  node_map.insert(pair<string, ge::NodePtr>("D", node3));
+
+  Status ret = graphOptimizer.InsertNode(subGraph, nodes, in_anchor, out_anchor, output_in_map, input_control_anchors, output_control_anchors, node_map);
+  EXPECT_EQ(ret, PARAM_INVALID);
+}
+
+TEST_F(STestTensorflowParser, parser_GeStoi_test)
+{
+  TensorFlowModelParser model_parser;
+  string input_node_name = "dynamic_rnn_node1";
+  string index_str = "dynamic_rnn";
+  int32_t index = 0;
+
+  Status ret = model_parser.GeStoi(input_node_name, index_str, &index);
+  EXPECT_EQ(ret, INTERNAL_ERROR);
+}
+
+TEST_F(STestTensorflowParser, parser_ConstOpNeedUpdate_test)
+{
+  ge::TensorFlowModelParser tensorflow_parser;
+  NodeDef *op_node_def = new NodeDef();
+  op_node_def->set_name("OP");
+  op_node_def->add_input("OP/Input_1");
+  op_node_def->set_op(TENSORFLOWF_NODE_OP_CONST);
+
+  NodeDef *input_node = new NodeDef();
+  input_node->set_op(TENSORFLOWF_NODE_OP_IDENTITY);
+  input_node->add_input("OP/Input_1/Input_2");
+
+  NodeDef *input_2 = new NodeDef();
+  input_2->set_op(TENSORFLOWF_NODE_OP_IDENTITY);
+
+  tensorflow_parser.nodedef_map_["OP"] = op_node_def;
+  tensorflow_parser.nodedef_map_["OP/Input_1"] = input_node;
+  tensorflow_parser.nodedef_map_["OP/Input_1/Input_2"] = input_2;
+
+  std::string op_name = "OP/Input_1/Input_2";
+  Status ret = tensorflow_parser.ConstOpNeedUpdate(op_name);
+  EXPECT_EQ(ret, true);
+
+  op_name = "OP";
+  ret = tensorflow_parser.ConstOpNeedUpdate(op_name);
+  EXPECT_EQ(ret, true);
+
+  delete op_node_def;
+  delete input_node;
+  delete input_2;
+}
+
+TEST_F(STestTensorflowParser, parser_UppdateInputMap_test)
+{
+  ge::TensorFlowModelParser tensorflow_parser;
+  ScopeFusionOpInfo info;
+  ge::OpNodeContext normal_op_node_context;
+  ge::OpNodeContext fusion_op_node_context;
+
+  string fusion_op_name = "dropout";
+  normal_op_node_context.input_map["dropout"].push_back({0, 0});
+  normal_op_node_context.input_map["conv_conv5/BatchNorm/moving_variance"].push_back({0, 1});
+  normal_op_node_context.output_map["dropout"].push_back({1, 0});
+  normal_op_node_context.output_map["conv_conv5/BatchNorm/batchnorm/add/y"].push_back({-1, -1});
+
+  tensorflow::GraphDef *graph = new tensorflow::GraphDef();
+  ScopePassManager passmanager;
+  shared_ptr<ScopeGraph> scope_graph = passmanager.BuildScopeGraph(graph);
+  NodeDef *node1 = graph->add_node();
+  node1->set_name("dropout");
+  node1->set_op(TENSORFLOWF_NODE_OP_IDENTITY);
+  node1->add_input("conv_conv5/BatchNorm/moving_variance");
+  node1->add_input("conv_conv5/BatchNorm/batchnorm/add/y");
+
+  NodeDef *node2 = graph->add_node();
+  node2->set_name("conv_conv5/BatchNorm/moving_variance");
+  node2->set_op(TENSORFLOWF_NODE_OP_IDENTITY);
+
+  NodeDef *node3 = graph->add_node();
+  node3->set_name("conv_conv5/BatchNorm/batchnorm/add/y");
+  node3->set_op(TENSORFLOWF_NODE_OP_IDENTITY);
+
+  info.fusion_node_name = "conv_conv5/BatchNorm/batchnorm";
+  info.fusion_op_type = parser::FUSIONBATCHNORM;
+  info.node_name = "conv_conv5/BatchNorm/batchnorm/add";
+  info.description = "";
+  info.scope_pass = false;
+
+  tensorflow_parser.nodedef_map_["dropout"] = node1;
+  tensorflow_parser.nodedef_map_["conv_conv5/BatchNorm/moving_variance"] = node2;
+  tensorflow_parser.nodedef_map_["conv_conv5/BatchNorm/batchnorm/add/y"] = node3;
+
+  Status ret = tensorflow_parser.UppdateInputMap(scope_graph, info, fusion_op_node_context, normal_op_node_context);
+  EXPECT_EQ(ret, domi::SUCCESS);
+
+  ret = tensorflow_parser.UppdateOutputMap(scope_graph, info, fusion_op_node_context, normal_op_node_context);
+  EXPECT_EQ(ret, 32767);
+
+  TensorFlowWeightsParser weights_parser;
+  std::string caseDir = __FILE__;
+  std::size_t idx = caseDir.find_last_of("/");
+  caseDir = caseDir.substr(0, idx);
+  std::string proto_file = caseDir + "/origin_models/tf_add.pb";
+  const char *file = proto_file.c_str();
+  ge::Graph graphs;
+  Status weightsRet = weights_parser.Parse(file, graphs);
+  EXPECT_EQ(weightsRet, SUCCESS);
+  delete graph;
 }
 
 } // namespace ge
