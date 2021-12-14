@@ -1,0 +1,13 @@
+parser:
+  commiter:
+    "xxx"
+  team: "parser"
+  src:
+    release:
+      - parser
+    unrelease:
+      - parser/stub
+      - parser/fun_to_graph
+  llt:
+    ut_check:true
+    st_check:true
