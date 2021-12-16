@@ -181,6 +181,14 @@ TEST_F(STestCaffeParser, caffe_parser_ParseParamsForDummyData_test)
 
   ret = caffe_parser.ParseParamsForInput(lay, op);
   EXPECT_EQ(ret, FAILED);
+
+  domi::caffe::DummyDataParameter *dummyData = lay->mutable_dummy_data_param();
+  ret = caffe_parser.ParseParamsForDummyData(lay, op);
+  EXPECT_EQ(ret, FAILED);
+
+  domi::caffe::BlobShape* dummpShape = dummyData->add_shape();
+  ret = caffe_parser.ParseParamsForDummyData(lay, op);
+  EXPECT_EQ(ret, SUCCESS);
 }
 
 TEST_F(STestCaffeParser, convertWeights_success)
@@ -361,6 +369,119 @@ TEST_F(STestCaffeParser, CaffeWeightsParser_ParseOutputNodeTopInfo_test)
   acl_graph_parse_util.ParseParamsBeforeGraph(out_nodes_with_tensor_name1, graph_name);
   ret = model_parser.ParseOutputNodeTopInfo(net);
   EXPECT_EQ(ret, PARAM_INVALID);
+}
+
+TEST_F(STestCaffeParser, CaffeOpParser_ParseWeightType_test)
+{
+  CaffeOpParser opParser;
+  ge::GeTensorDesc ge_tensor_desc =  ge::GeTensorDesc();
+  ge::GeTensorPtr weight = std::make_shared<ge::GeTensor>(ge_tensor_desc);
+  ge::OpDescPtr opDef = std::make_shared<ge::OpDesc>("","");
+  auto node_tmp = GenNodeFromOpDesc(opDef);
+
+  domi::caffe::LayerParameter *layer = new domi::caffe::LayerParameter();
+  domi::caffe::BlobProto *blob = layer->add_blobs();
+  blob->set_int8_data("10");
+  std::string lay_name = "DATA";
+  GeShape shape({1,1,3,4});
+  Status ret = opParser.ParseWeightType(*blob, shape, 1, lay_name, weight);
+  EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(STestCaffeParser, CaffeOpParser_ParseWeightType_test2)
+{
+  CaffeOpParser opParser;
+  ge::GeTensorDesc ge_tensor_desc =  ge::GeTensorDesc();
+  ge::GeTensorPtr weight = std::make_shared<ge::GeTensor>(ge_tensor_desc);
+  ge::OpDescPtr opDef = std::make_shared<ge::OpDesc>("","");
+  auto node_tmp = GenNodeFromOpDesc(opDef);
+
+  domi::caffe::LayerParameter *layer = new domi::caffe::LayerParameter();
+  domi::caffe::BlobProto *blob = layer->add_blobs();
+  blob->add_int32_data(10);
+
+  std::string lay_name = "DATA";
+  GeShape shape({1,1,3,4});
+  Status ret = opParser.ParseWeightType(*blob, shape, 1, lay_name, weight);
+  EXPECT_EQ(ret, SUCCESS);
+
+  ret = opParser.ParseWeightType(*blob, shape, 2, lay_name, weight);
+  EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(STestCaffeParser, CaffeOpParser_ParseWeightType_test3)
+{
+  CaffeOpParser opParser;
+  ge::GeTensorDesc ge_tensor_desc =  ge::GeTensorDesc();
+  ge::GeTensorPtr weight = std::make_shared<ge::GeTensor>(ge_tensor_desc);
+  ge::OpDescPtr opDef = std::make_shared<ge::OpDesc>("","");
+  auto node_tmp = GenNodeFromOpDesc(opDef);
+
+  domi::caffe::LayerParameter *layer = new domi::caffe::LayerParameter();
+  domi::caffe::BlobProto *blob = layer->add_blobs();
+  double value = 2.0;
+  blob->add_double_data(value);
+
+  std::string lay_name = "DATA";
+  GeShape shape({1,1,3,4});
+  Status ret = opParser.ParseWeightType(*blob, shape, 1, lay_name, weight);
+  EXPECT_EQ(ret, SUCCESS);
+
+  ret = opParser.ParseWeightType(*blob, shape, 3, lay_name, weight);
+  EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(STestCaffeParser, CaffeOpParser_ParseWeightType_test4)
+{
+  CaffeOpParser opParser;
+  ge::GeTensorDesc ge_tensor_desc =  ge::GeTensorDesc();
+  ge::GeTensorPtr weight = std::make_shared<ge::GeTensor>(ge_tensor_desc);
+  ge::OpDescPtr opDef = std::make_shared<ge::OpDesc>("","");
+  auto node_tmp = GenNodeFromOpDesc(opDef);
+
+  domi::caffe::LayerParameter *layer = new domi::caffe::LayerParameter();
+  domi::caffe::BlobProto *blob = layer->add_blobs();
+  blob->add_uint64_data(10);
+
+  std::string lay_name = "DATA";
+  GeShape shape({1,1,3,4});
+  Status ret = opParser.ParseWeightType(*blob, shape, 1, lay_name, weight);
+  EXPECT_EQ(ret, SUCCESS);
+
+  ret = opParser.ParseWeightType(*blob, shape, 2, lay_name, weight);
+  EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(STestCaffeParser, CaffeOpParser_ParseWeightType_test5)
+{
+  CaffeOpParser opParser;
+  ge::GeTensorDesc ge_tensor_desc =  ge::GeTensorDesc();
+  ge::GeTensorPtr weight = std::make_shared<ge::GeTensor>(ge_tensor_desc);
+  ge::OpDescPtr opDef = std::make_shared<ge::OpDesc>("","");
+  auto node_tmp = GenNodeFromOpDesc(opDef);
+
+  domi::caffe::LayerParameter *layer = new domi::caffe::LayerParameter();
+  domi::caffe::BlobProto *blob = layer->add_blobs();
+  blob->add_data(10);
+
+  std::string lay_name = "DATA";
+  GeShape shape({1,1,3,4});
+  Status ret = opParser.ParseWeightType(*blob, shape, 10, lay_name, weight);
+  EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(STestCaffeParser, CaffeOpParser_ConvertShape_test)
+{
+  CaffeOpParser opParser;
+  domi::caffe::LayerParameter *layer = new domi::caffe::LayerParameter();
+  domi::caffe::BlobProto *blob = layer->add_blobs();
+  blob->set_num(1);
+  blob->set_channels(2);
+  blob->set_height(1);
+  blob->set_width(1);
+  std::vector<int64_t> shape;
+
+  opParser.ConvertShape(*blob, shape);
 }
 
 } // namespace ge
