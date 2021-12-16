@@ -1,0 +1,14 @@
+name: "TestAbs"
+layer {
+  name: "data"
+  type: "Input"
+  top: "data"
+  input_param { shape: { dim: 64 dim: 1 dim: 28 dim: 28 } }
+}
+
+layer {
+  name: "abs"
+  type: "AbsVal"
+  bottom: "data"
+  top: "abs_out" 
+}

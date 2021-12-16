@@ -21,9 +21,15 @@
 #include "graph/compute_graph.h"
 
 namespace ge {
+struct MemBuffer {
+  void *data;
+  uint32_t size;
+};
+
 class ParerUTestsUtils {
  public:
   static void ClearParserInnerCtx();
+  static MemBuffer* MemBufferFromFile(const char *path);
 };
 namespace ut {
 class GraphBuilder {
