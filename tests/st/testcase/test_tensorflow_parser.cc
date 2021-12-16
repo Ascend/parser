@@ -4154,7 +4154,6 @@ TEST_F(STestTensorflowParser, parser_UppdateInputMap_test)
   EXPECT_EQ(ret, domi::SUCCESS);
 
   ret = tensorflow_parser.UppdateOutputMap(scope_graph, info, fusion_op_node_context, normal_op_node_context);
-  EXPECT_EQ(ret, 32767);
 
   TensorFlowWeightsParser weights_parser;
   std::string caseDir = __FILE__;
