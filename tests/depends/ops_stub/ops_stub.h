@@ -299,6 +299,23 @@ REG_OP(Pooling)
     .ATTR(data_format, String, "NCHW")
     .OP_END_FACTORY_REG(Pooling)
 
+REG_OP(Flatten)
+    .INPUT(x, TensorType::ALL())
+    .OUTPUT(y, TensorType::ALL())
+    .OP_END_FACTORY_REG(Flatten)
+
+REG_OP(Softmax)
+    .INPUT(x, TensorType({DT_FLOAT, DT_FLOAT16}))
+        .OUTPUT(y, TensorType({DT_FLOAT, DT_FLOAT16}))
+        .ATTR(axis, Int, 0) // which mean compute which dims
+        .ATTR(algo, Int, 1) // 1 means using "subtract max from every point to avoid overflow",
+        // 0 means using "ubtract max from every point to avoid overflow"
+        // 2 means using "perform the Log softmax operation to avoid overflow"
+        // now is only support 1
+        .ATTR(alpha, Float, 1)
+        .ATTR(beta, Float, 0)
+        .OP_END_FACTORY_REG(Softmax)
+
 // for plugin
 static Status ParseParamsStub(const google::protobuf::Message* op_src, ge::Operator& op_dest) {
   return SUCCESS;
