@@ -3926,15 +3926,6 @@ TEST_F(STestTensorflowParser, parser_FindFmkNodeCluser_success)
   });
   Status ret = graphOptimizer.FindFmkNodeCluser(node_cluser_Map);
   EXPECT_EQ(ret, SUCCESS);
-
-  // node = AddNode(graph, "K", parser::NETOUTPUT, 1, 1);
-  // NodePtr node_a = AddNode(graph, "A", parser::NETOUTPUT, 1, 1);
-  // NodePtr node_b = AddNode(graph, "B", parser::NETOUTPUT, 1, 1);
-  // std::unordered_map<string, vector<NodePtr>> node_cluser_Map2({
-  //   {"x", {node, node_a, node_b}},
-  // });
-  // ret = graphOptimizer.FindFmkNodeCluser(node_cluser_Map2);
-  // EXPECT_EQ(ret, SUCCESS);
 }
 
 TEST_F(STestTensorflowParser, parser_RebuildOutputAnchors_test)

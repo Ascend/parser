@@ -112,7 +112,7 @@ TEST_F(STestCaffeParser, caffe_parser_user_output_with_default) {
   EXPECT_EQ(net_out_name.at(0), "abs:0:abs_out");
 }
 
-TEST_F(STestCaffeParser, acal_caffe_parser) {
+TEST_F(STestCaffeParser, acl_caffe_parser) {
   std::string case_dir = __FILE__;
   case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
   std::string model_file = case_dir + "/origin_models/caffe_add.pbtxt";

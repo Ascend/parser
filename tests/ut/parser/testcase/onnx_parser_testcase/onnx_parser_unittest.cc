@@ -25,6 +25,14 @@
 #include "ut/parser/parser_ut_utils.h"
 #include "external/ge/ge_api_types.h"
 #include "tests/depends/ops_stub/ops_stub.h"
+#include "parser/onnx/onnx_parser.h"
+
+#define protected public
+#define private public
+#include "parser/onnx/onnx_constant_parser.h"
+#include "parser/onnx/onnx_util.h"
+#undef protected
+#undef private
 
 namespace ge {
 class UtestOnnxParser : public testing::Test {
@@ -40,7 +48,59 @@ class UtestOnnxParser : public testing::Test {
   void RegisterCustomOp();
 };
 
+static Status ParseParams(const google::protobuf::Message* op_src, ge::Operator& op_dest) {
+  return SUCCESS;
+}
+
+static Status ParseParamByOpFunc(const ge::Operator &op_src, ge::Operator& op_dest) {
+  return SUCCESS;
+}
+
+Status ParseSubgraphPostFnIf(const std::string& subgraph_name, const ge::Graph& graph) {
+  domi::AutoMappingSubgraphIOIndexFunc auto_mapping_subgraph_index_func =
+      domi::FrameworkRegistry::Instance().GetAutoMappingSubgraphIOIndexFunc(domi::ONNX);
+  if (auto_mapping_subgraph_index_func == nullptr) {
+    std::cout<<"auto mapping if subgraph func is nullptr!"<<std::endl;
+    return FAILED;
+  }
+  return auto_mapping_subgraph_index_func(graph,
+                                          [&](int data_index, int &parent_index) -> Status {
+                                            parent_index = data_index + 1;
+                                            return SUCCESS;
+                                          },
+                                          [&](int output_index, int &parent_index) -> Status {
+                                            parent_index = output_index;
+                                            return SUCCESS;
+                                          });
+}
+
 void UtestOnnxParser::RegisterCustomOp() {
+  REGISTER_CUSTOM_OP("Conv2D")
+  .FrameworkType(domi::ONNX)
+  .OriginOpType("ai.onnx::11::Conv")
+  .ParseParamsFn(ParseParams);
+
+  // register if op info to GE
+  REGISTER_CUSTOM_OP("If")
+  .FrameworkType(domi::ONNX)
+  .OriginOpType({"ai.onnx::9::If",
+                 "ai.onnx::10::If",
+                 "ai.onnx::11::If",
+                 "ai.onnx::12::If",
+                 "ai.onnx::13::If"})
+  .ParseParamsFn(ParseParams)
+  .ParseParamsByOperatorFn(ParseParamByOpFunc)
+  .ParseSubgraphPostFn(ParseSubgraphPostFnIf);
+
+  REGISTER_CUSTOM_OP("Add")
+  .FrameworkType(domi::ONNX)
+      .OriginOpType("ai.onnx::11::Add")
+      .ParseParamsFn(ParseParams);
+
+  REGISTER_CUSTOM_OP("Identity")
+  .FrameworkType(domi::ONNX)
+      .OriginOpType("ai.onnx::11::Identity")
+      .ParseParamsFn(ParseParams);
   std::vector<OpRegistrationData> reg_datas = domi::OpRegistry::Instance()->registrationDatas;
   for (auto reg_data : reg_datas) {
     OpRegistrationTbe::Instance()->Finalize(reg_data);
@@ -124,6 +184,62 @@ TEST_F(UtestOnnxParser, onnx_parser_user_output_with_tensor_failed) {
   ge::Graph graph;
   auto ret = ge::aclgrphParseONNX(model_file.c_str(), parser_params, graph);
   EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(UtestOnnxParser, onnx_parser_expand_one_to_many) {
+  std::string case_dir = __FILE__;
+  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
+  std::string model_file = case_dir + "/onnx_model/onnx_clip_v9.onnx";
+  std::map<ge::AscendString, ge::AscendString> parser_params;
+  ge::Graph graph;
+  auto ret = ge::aclgrphParseONNX(model_file.c_str(), parser_params, graph);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+
+  MemBuffer *buffer = ParerUTestsUtils::MemBufferFromFile(model_file.c_str());
+  ret = ge::aclgrphParseONNXFromMem(reinterpret_cast<char *>(buffer->data), buffer->size, parser_params, graph);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestOnnxParser, onnx_parser_to_json) {
+  std::string case_dir = __FILE__;
+  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
+  std::string model_file = case_dir + "/onnx_model/onnx_clip_v9.onnx";
+  std::map<ge::AscendString, ge::AscendString> parser_params;
+  OnnxModelParser onnx_parser;
+
+  const char *json_file = "tmp.json";
+  auto ret = onnx_parser.ToJson(model_file.c_str(), json_file);
+  EXPECT_EQ(ret, SUCCESS);
+
+  const char *json_null = nullptr;
+  ret = onnx_parser.ToJson(model_file.c_str(), json_null);
+  EXPECT_EQ(ret, FAILED);
+  const char *model_null = nullptr;
+  ret = onnx_parser.ToJson(model_null, json_null);
+  EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(UtestOnnxParser, onnx_parser_const_data_type) {
+  std::string case_dir = __FILE__;
+  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
+  std::string model_file = case_dir + "/onnx_model/onnx_const_type.onnx";
+  std::map<ge::AscendString, ge::AscendString> parser_params;
+  ge::Graph graph;
+  auto ret = ge::aclgrphParseONNX(model_file.c_str(), parser_params, graph);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
+TEST_F(UtestOnnxParser, OnnxModelParser_ConvertToGeDataType_test)
+{
+  OnnxModelParser model_parser;
+  uint32_t type = OnnxDataType::FLOAT;
+
+  Status ret = model_parser.ConvertToGeDataType(type);
+  EXPECT_EQ(ret, SUCCESS);
+
+  type = 20;
+  ret = model_parser.ConvertToGeDataType(type);
+  EXPECT_EQ(ret, ge::DataType::DT_UNDEFINED);
 }
 
 } // namespace ge
