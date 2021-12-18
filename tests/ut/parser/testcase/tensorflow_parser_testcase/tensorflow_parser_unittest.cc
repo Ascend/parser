@@ -1655,6 +1655,14 @@ TEST_F(UtestTensorflowParser, parse_AddScopeInnerNode)
   // can't find in scope_inner_node_map
   ret = modelParser.AddScopeInnerNode(&modelParser, compute_graph, &graph_mutex, node_def);
   EXPECT_EQ(ret, PARAM_INVALID);
+
+  std::string msg = "FastrcnnPredictions";
+  ge::Operator *op = new Operator(); 
+  modelParser.scope_inner_node_map_.insert({msg, op});
+  // can't find in scope_inner_node_map
+  ret = modelParser.AddScopeInnerNode(&modelParser, compute_graph, &graph_mutex, node_def);
+  EXPECT_EQ(ret, PARAM_INVALID);
+  delete op;
   delete node_def;
 }
 
@@ -1905,6 +1913,61 @@ TEST_F(UtestTensorflowParser, tensorflow_enter_test) {
   std::string modelFile = caseDir + "/tensorflow_model/test_enter.pb";
   auto status = aclgrphParseTensorFlow(modelFile.c_str(), graph);
   EXPECT_EQ(status, SUCCESS);
+
+  TensorFlowEnterParser enterParser;
+  ge::OpDescPtr op_dest = make_shared<ge::OpDesc>("Enter", ge::parser::ENTER);
+  NodeDef* node_def = initNodeDef();
+  node_def->set_name("Enter");
+  Status ret = enterParser.ParseParams(node_def, op_dest);
+  EXPECT_EQ(ret, FAILED);
+
+  static const string KEY_SHAPE_LIST = "key_shape_list";
+  static const string KEY_TENSOR_LIST = "key_tensor_list";
+  static const string KEY_DEFAULT = "key_default";
+
+  google::protobuf::Map<std::string, tensorflow::AttrValue> *node_attr_map = node_def->mutable_attr();
+  domi::tensorflow::AttrValue dtype_attr_value;
+  dtype_attr_value.set_type(domi::tensorflow::DT_FLOAT);
+  (*node_attr_map)[TENSORFLOW_ATTR_T] = dtype_attr_value;
+
+  //设置strides属性
+  domi::tensorflow::AttrValue axis_attr_value;
+  ::tensorflow::AttrValue_ListValue* list = axis_attr_value.mutable_list();
+  list->add_i(1);
+  list->add_i(2);
+  (*node_attr_map)[ge::SQUEEZE_ATTR_AXIS] = axis_attr_value;
+
+  domi::tensorflow::AttrValue value;
+  domi::tensorflow::AttrValue df_attr_value;
+  df_attr_value.set_i((int64_t)ccTensorFormat_t::CC_TENSOR_NHWC);
+
+  domi::tensorflow::AttrValue pad_attr_value;
+  pad_attr_value.set_i((int64_t)tensorflow::DT_FLOAT);
+
+  domi::tensorflow::AttrValue shape;
+  shape.mutable_list()->add_i((int64)32);
+  shape.mutable_list()->add_i((int64)32);
+  shape.mutable_list()->add_i((int64)14);
+  
+  static const string KEY_TYPE_LIST = "key_type_list";
+  const std::string ENTER_ATTR_FRAME_NAME = "frame_name";
+  const std::string ATTR_NAME_OUTPUT_TENSOR_DESC = "output_tensor_desc";
+  static const  domi::tensorflow::DataType VALUE_TYPE = domi::tensorflow::DataType::DT_FLOAT;
+  value.clear_value();
+  value.mutable_list()->add_type(VALUE_TYPE);
+  TensorFlowUtil::AddNodeAttr(KEY_TYPE_LIST, value, node_def);
+
+  value.clear_value();
+  domi::tensorflow::NameAttrList name_attr_list;
+  name_attr_list.mutable_attr()->insert({"serialize_datatype", pad_attr_value});
+  name_attr_list.mutable_attr()->insert({"serialize_format", df_attr_value});
+  name_attr_list.mutable_attr()->insert({"serialize_shape", shape});
+  *(value.mutable_list()->add_func()) = name_attr_list;
+
+  node_def->mutable_attr()->insert({ge::ENTER_ATTR_FRAME_NAME, value});
+  node_def->mutable_attr()->insert({ge::ATTR_NAME_OUTPUT_TENSOR_DESC, value});
+  ret = enterParser.ParseParams(node_def, op_dest);
+  EXPECT_EQ(ret, FAILED);
 }
 
 TEST_F(UtestTensorflowParser, tensorflow_VariableV2_test) {
@@ -4229,6 +4292,47 @@ TEST_F(UtestTensorflowParser, parser_UppdateInputMap_test)
   Status weightsRet = weights_parser.Parse(file, graphs);
   EXPECT_EQ(weightsRet, SUCCESS);
   delete graph;
+}
+
+TEST_F(UtestTensorflowParser, tensorflow_ConstOpNeedUpdate)
+{
+  NodeDef *transpose_node = initNodeDef();
+  TensorFlowModelParser modelParser;
+  modelParser.nodedef_map_["arg1"] = transpose_node;
+  bool ret = modelParser.ConstOpNeedUpdate("arg1");
+  ASSERT_EQ(ret, true);
+
+  ge::OpNodeContext op_node_context;
+  op_node_context.input_map["pre_node_a"].push_back({0, 0});
+  op_node_context.input_map["pre_node_ctrl_in"].push_back({-1, -1}); // ctrl edges
+  op_node_context.output_map["post_node_b"].push_back({0, 0});
+  op_node_context.output_map["post_node_c"].push_back({1, 0});
+  op_node_context.output_map["post_node_d"].push_back({-1, -1});
+  op_node_context.output_map["_Retval"].push_back({0, 1});
+  modelParser.op_node_context_map_["arg1"] = op_node_context;
+  ret = modelParser.ConstOpNeedUpdate("arg1");
+  ASSERT_EQ(ret, true);
+
+  transpose_node->set_op("NULL");
+  modelParser.nodedef_map_["arg2"] = transpose_node;
+  ret = modelParser.ConstOpNeedUpdate("arg2");
+  ASSERT_EQ(ret, true);
+  delete transpose_node;
+}
+
+TEST_F(UtestTensorflowParser, tensorflow_IsFusionOpChild)
+{
+  TensorFlowModelParser modelParser;
+  ge::ScopeFusionOpInfo info;
+  info.node_name = "node_name";
+  info.fusion_node_name = "fusion_node_name";
+  info.fusion_op_type = "fusion_op_type";
+  info.description = "description";
+  info.scope_pass = "scope_pass";
+
+  modelParser.fusion_op_children_["argv1"] = info;
+  bool ret = modelParser.IsFusionOpChild("argv1", &info);
+  ASSERT_EQ(ret, true);
 }
 
 } // namespace ge

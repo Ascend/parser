@@ -242,4 +242,77 @@ TEST_F(UtestOnnxParser, OnnxModelParser_ConvertToGeDataType_test)
   EXPECT_EQ(ret, ge::DataType::DT_UNDEFINED);
 }
 
+TEST_F(UtestOnnxParser, OnnxModelParser_ParseConvertData_test)
+{
+  OnnxConstantParser constant_parser;
+  ge::onnx::TensorProto tensor_proto;
+  tensor_proto.set_data_type(ge::DataType::DT_UNDEFINED);
+
+  ge::Tensor tensor;
+  int count = 1;
+
+  Status ret = constant_parser.ParseConvertData(tensor_proto, tensor, count);
+  EXPECT_EQ(ret, FAILED);
+
+  tensor_proto.set_data_type(OnnxDataType::INT32);
+  count = 0;
+  ret = constant_parser.ParseConvertData(tensor_proto, tensor, count);
+  EXPECT_EQ(ret, SUCCESS);
+
+  tensor_proto.set_data_type(OnnxDataType::BFLOAT16);
+  count = 1;
+  ret = constant_parser.ParseConvertData(tensor_proto, tensor, count);
+  EXPECT_EQ(ret, FAILED);
+
+  tensor_proto.set_data_type(OnnxDataType::STRING);
+  ret = constant_parser.ParseConvertData(tensor_proto, tensor, count);
+  EXPECT_EQ(ret, FAILED);
+
+  tensor_proto.set_raw_data("Test");
+  ret = constant_parser.ParseConvertData(tensor_proto, tensor, count);
+  EXPECT_EQ(ret, SUCCESS);
+
+  tensor_proto.set_data_type(OnnxDataType::FLOAT);
+  ret = constant_parser.ParseConvertData(tensor_proto, tensor, count);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(UtestOnnxParser, OnnxConstantParser_ParseConvertTensor_test)
+{
+  OnnxConstantParser constant_parser;
+  ge::onnx::NodeProto input_node;
+  ge::onnx::AttributeProto *attribute = input_node.add_attribute();
+  attribute->set_name("attribute");
+  attribute->set_type(onnx::AttributeProto::AttributeType(1));
+  attribute->set_f(1.0);
+  ge::onnx::TensorProto *attribute_tensor = attribute->mutable_t();
+  attribute_tensor->set_data_type(1);
+  attribute_tensor->add_dims(4);
+
+  ge::Tensor tensor;
+  Status ret = constant_parser.ParseConvertTensor(*attribute_tensor, tensor);
+  EXPECT_EQ(ret, FAILED);
+
+  attribute_tensor->add_dims(-1);
+  ret = constant_parser.ParseConvertTensor(*attribute_tensor, tensor);
+  EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(UtestOnnxParser, OnnxConstantParser_ParseConvertDataType_test)
+{
+  OnnxConstantParser constant_parser;
+  ge::onnx::NodeProto input_node;
+  ge::onnx::AttributeProto *attribute = input_node.add_attribute();
+  attribute->set_name("attribute");
+  attribute->set_type(onnx::AttributeProto::AttributeType(1));
+  attribute->set_f(1.0);
+  ge::onnx::TensorProto *attribute_tensor = attribute->mutable_t();
+  attribute_tensor->set_data_type(OnnxDataType::BFLOAT16);
+  attribute_tensor->add_dims(4);
+
+  ge::Tensor tensor;
+  Status ret = constant_parser.ParseConvertDataType(*attribute_tensor, tensor);
+  EXPECT_EQ(ret, FAILED);
+}
+
 } // namespace ge

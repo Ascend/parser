@@ -38,6 +38,7 @@
 #include "parser/caffe/caffe_op_parser.h"
 #include "graph/operator_reg.h"
 #include "parser/common/acl_graph_parser_util.h"
+#include "parser/caffe/caffe_reshape_parser.h"
 #undef protected
 #undef private
 
@@ -269,7 +270,6 @@ TEST_F(UtestCaffeParser, modelparser_parsefrommemory_success)
   std::string modelFile = caseDir + "/caffe_model/caffe_add.pbtxt";
 
   const char* tmp_tf_pb_model = modelFile.c_str();
-  printf("------------model_file:%s---------------------\n", tmp_tf_pb_model);
   ge::Graph graph;
 
   ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
@@ -648,6 +648,18 @@ TEST_F(UtestCaffeParser, CaffeModelParser_ParseInput_test)
   EXPECT_EQ(ret, FAILED);
 }
 
+TEST_F(UtestCaffeParser, CaffeModelParser_ParseInput_test2)
+{
+  CaffeModelParser modelParser;
+  domi::caffe::NetParameter net;
+  net.add_input("111");
+  bool input_data_flag = true;
+
+  net.add_input_shape();
+  Status ret = modelParser.ParseInput(net, input_data_flag);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
 TEST_F(UtestCaffeParser, CaffeModelParser_CustomProtoParse_test)
 {
   CaffeModelParser modelParser;
@@ -804,6 +816,102 @@ TEST_F(UtestCaffeParser, CaffeWeightsParser_CheckNodes_test)
   ge::ComputeGraphPtr compute_graph = build_graph(true);
   Status ret = weightParser.CheckNodes(compute_graph);
   EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(UtestCaffeParser, CaffeModelParser_RemapTopNameByLayer_test)
+{
+  CaffeModelParser model_parser;
+  domi::caffe::NetParameter net;
+  domi::caffe::LayerParameter *layer = net.add_layer();
+  layer->set_name("Abs");
+  layer->set_type("AbsVal");
+
+  std::string top_name = "Abs";
+  int index = 1;
+
+  model_parser.RemapTopNameByLayer(*layer, top_name, index);
+}
+
+TEST_F(UtestCaffeParser, CaffeModelParser_SaveDataLayerTops_test)
+{
+  CaffeModelParser model_parser;
+  domi::caffe::NetParameter net;
+  domi::caffe::LayerParameter *layer = net.add_layer();
+  layer->set_name("Abs");
+  layer->set_type("AbsVal");
+
+  Status ret = model_parser.SaveDataLayerTops(*layer);
+  EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(UtestCaffeParser, CaffeModelParser_ReadCaffeModelFromText_test)
+{
+  CaffeModelParser modelParser;
+  std::string case_dir = __FILE__;
+  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
+  std::string model_file = case_dir + "/caffe_model/caffe.pbtxt";
+  const char *model_path = model_file.c_str();
+
+  domi::caffe::NetParameter net;
+  domi::caffe::LayerParameter *layer = net.add_layer();
+  layer->set_name("Abs");
+  layer->set_type("AbsVal");
+  Status ret = modelParser.ReadCaffeModelFromText(model_path, &net);
+  EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(UtestCaffeParser, CaffeReshapeParser_ParseParams_test)
+{
+  CaffeReshapeParser reshapeParser;
+  domi::caffe::NetParameter net;
+  domi::caffe::LayerParameter *layer = net.add_layer();
+  domi::caffe::ReshapeParameter* reshape_param = layer->mutable_reshape_param();
+  layer->add_bottom("bottom");
+  layer->add_top("top");
+
+  ge::OpDescPtr op_desc_src = std::make_shared<ge::OpDesc>("Abs", "AbsVal");
+  Status ret = reshapeParser.ParseParams(layer, op_desc_src);
+  EXPECT_EQ(ret, FAILED);
+
+  domi::caffe::BlobShape *blob_shape = reshape_param->mutable_shape();
+  blob_shape->add_dim(2);
+  blob_shape->add_dim(3);
+  reshape_param->set_axis(0);
+  reshape_param->set_num_axes(-1);
+  ret = reshapeParser.ParseParams(layer, op_desc_src);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(UtestCaffeParser, CaffeReshapeParser_ParseWeights_test)
+{
+  CaffeReshapeParser reshapeParser;
+  domi::caffe::NetParameter net;
+  domi::caffe::LayerParameter *layer = net.add_layer();
+  domi::caffe::ReshapeParameter* reshape_param = layer->mutable_reshape_param();
+  layer->add_bottom("bottom");
+  layer->add_top("top");
+
+  ge::OpDescPtr op_desc_src = std::make_shared<ge::OpDesc>("Abs", "AbsVal");
+  Status ret = reshapeParser.ParseWeights(layer, op_desc_src);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(UtestCaffeParser, CaffeModelParser_ParseOpParam_test)
+{
+  CaffeModelParser modelParser;
+
+  domi::caffe::NetParameter net;
+  domi::caffe::LayerParameter *layer = net.add_layer();
+  layer->set_name("AbsVal");
+  layer->set_type("AbsVal");
+
+  ge::OpDescPtr op_desc_src = std::make_shared<ge::OpDesc>("Abs", "AbsVal");
+
+  std::shared_ptr<OpParserFactory> factory = OpParserFactory::Instance(domi::CAFFE);
+  std::shared_ptr<OpParser> op_parser = factory->CreateOpParser("Abs");
+
+  Status ret = modelParser.ParseOpParam(*layer, op_desc_src, op_parser);
+  EXPECT_EQ(ret, PARAM_INVALID);
 }
 
 } // namespace ge
