@@ -2657,6 +2657,8 @@ TEST_F(UtestTensorflowParser, Tensorflow_UpdateFusionOpContext_test)
 
   Status ret = tensorflow_parser.UpdateFusionOpContext(scope_graph, info, fusion_op_node_context, normal_op_node_context);
   EXPECT_EQ(ret, domi::SUCCESS);
+
+
   delete graph;
 }
 
@@ -2728,6 +2730,10 @@ TEST_F(UtestTensorflowParser, Tensorflow_GetInOutPutIndex_scope_pass)
   ret = tensorflow_parser.GetOutPutIndex(scope_graph, output_node_info, old_index, new_index);
   EXPECT_EQ(domi::SUCCESS, ret);
   EXPECT_EQ(true, (new_index == 1));
+
+  input_node_info.scope_pass = false;
+  ret = tensorflow_parser.GetInPutIndex(scope_graph, input_node_info, old_index, new_index);
+  EXPECT_EQ(domi::SUCCESS, ret);
   delete graph;
 }
 
