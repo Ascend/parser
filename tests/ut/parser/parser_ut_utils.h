@@ -30,7 +30,10 @@ class ParerUTestsUtils {
  public:
   static void ClearParserInnerCtx();
   static MemBuffer* MemBufferFromFile(const char *path);
+  static bool ReadProtoFromText(const char *file, google::protobuf::Message *message);
+  static void WriteProtoToBinaryFile(const google::protobuf::Message &proto, const char *filename);
 };
+
 namespace ut {
 class GraphBuilder {
  public:
