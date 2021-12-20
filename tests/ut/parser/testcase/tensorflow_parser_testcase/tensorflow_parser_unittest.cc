@@ -161,6 +161,12 @@ void UtestTensorflowParser::RegisterCustomOp() {
   domi::OpRegistry::Instance()->registrationDatas.clear();
 }
 
+struct DelTransposeInfo {
+  domi::tensorflow::NodeDef *node_def;     // transpose
+  domi::tensorflow::NodeDef *nextNodeDef;  // transpose --> [next]
+  int inputIdx;
+};
+
 namespace {
   NodeDef* AddNode(GraphDef& graph, string type, string name) {
     NodeDef* nodeDef = graph.add_node();
@@ -4339,6 +4345,211 @@ TEST_F(UtestTensorflowParser, tensorflow_IsFusionOpChild)
   modelParser.fusion_op_children_["argv1"] = info;
   bool ret = modelParser.IsFusionOpChild("argv1", &info);
   ASSERT_EQ(ret, true);
+}
+
+TEST_F(UtestTensorflowParser, tensorflow_UpdateAllNodeOpContext)
+{
+  TensorFlowModelParser modelParser;
+  Status ret;
+  auto scope_graph = ge::parser::MakeShared<ge::ScopeGraph>();
+  if (scope_graph == nullptr) {
+    GELOGE(FAILED, "Scope graph make shared failed.");
+    return;
+  }
+  if (scope_graph->Init() != SUCCESS) {
+    GELOGE(FAILED, "Scope graph init failed.");
+    return;
+  }
+
+  ge::ScopeFusionOpInfo info;
+  info.node_name = "node_name";
+  info.fusion_node_name = "fusion_node_name";
+  info.fusion_op_type = "fusion_op_type";
+  info.description = "description";
+  info.scope_pass = "scope_pass";
+  modelParser.fusion_op_children_["Const"] = info;
+  ge::OpNodeContext op_node_context;
+  op_node_context.input_map["pre_node_a"].push_back({0, 0});
+  op_node_context.input_map["pre_node_ctrl_in"].push_back({-1, -1}); // ctrl edges
+  op_node_context.output_map["post_node_b"].push_back({0, 0});
+  op_node_context.output_map["post_node_c"].push_back({1, 0});
+  op_node_context.output_map["post_node_d"].push_back({-1, -1});
+  op_node_context.output_map["_Retval"].push_back({0, 1});
+  modelParser.op_node_context_map_["Const"] = op_node_context;
+  NodeDef *node = initNodeDef();
+  node->set_op("NULL");
+  modelParser.nodedef_map_["Const"] = node;
+  std::vector<std::string> op_node_name_list = {"Const"};
+
+  ret = modelParser.UpdateAllNodeOpContext(scope_graph, op_node_name_list);
+  EXPECT_EQ(ret, SUCCESS);
+
+  delete node;
+}
+
+TEST_F(UtestTensorflowParser, tensorflow_UppdateInputMap)
+{
+  TensorFlowModelParser modelParser;
+  Status ret;
+  auto scope_graph = ge::parser::MakeShared<ge::ScopeGraph>();
+  if (scope_graph == nullptr) {
+    GELOGE(FAILED, "Scope graph make shared failed.");
+    return;
+  }
+  if (scope_graph->Init() != SUCCESS) {
+    GELOGE(FAILED, "Scope graph init failed.");
+    return;
+  }
+
+  ge::ScopeFusionOpInfo info;
+  ge::OpNodeContext fusion_op_node_context, normal_op_node_context;
+  info.node_name = "node_name";
+  info.fusion_node_name = "fusion_node_name";
+  info.fusion_op_type = "fusion_op_type";
+  info.description = "description";
+  info.scope_pass = "scope_pass";
+  modelParser.fusion_op_children_["Const"] = info;
+  normal_op_node_context.input_map["Const"].push_back({0, 1});
+  normal_op_node_context.output_map["Const"].push_back({0, 1});
+  fusion_op_node_context.output_map["Const"].push_back({0, 1});
+
+  NodeDef *node = initNodeDef();
+  node->set_op("NULL");
+  modelParser.nodedef_map_["Const"] = node;
+  ret = modelParser.UppdateInputMap(scope_graph, info, fusion_op_node_context, normal_op_node_context);
+  EXPECT_EQ(ret, SUCCESS);
+
+  ge::ScopeFusionOpInfo info1;
+  info1.fusion_node_name = "no fusion_node_name";
+  ret = modelParser.UppdateInputMap(scope_graph, info1, fusion_op_node_context, normal_op_node_context);
+  EXPECT_EQ(ret, SUCCESS);
+
+  delete node;
+}
+
+TEST_F(UtestTensorflowParser, tensorflow_UppdateOutputMap)
+{
+  TensorFlowModelParser modelParser;
+  Status ret;
+  auto scope_graph = ge::parser::MakeShared<ge::ScopeGraph>();
+  if (scope_graph == nullptr) {
+    GELOGE(FAILED, "Scope graph make shared failed.");
+    return;
+  }
+  if (scope_graph->Init() != SUCCESS) {
+    GELOGE(FAILED, "Scope graph init failed.");
+    return;
+  }
+
+  ge::ScopeFusionOpInfo info;
+  ge::OpNodeContext fusion_op_node_context, normal_op_node_context;
+  info.node_name = "node_name";
+  info.fusion_node_name = "fusion_node_name";
+  info.fusion_op_type = "fusion_op_type";
+  info.description = "description";
+  info.scope_pass = "scope_pass";
+  modelParser.fusion_op_children_["Const"] = info;
+  normal_op_node_context.output_map["Const"].push_back({0, 1});
+  ret = modelParser.UppdateOutputMap(scope_graph, info, fusion_op_node_context, normal_op_node_context);
+  EXPECT_EQ(ret, SUCCESS);
+
+  ge::ScopeFusionOpInfo info1;
+  info1.fusion_node_name = "no fusion_node_name";
+  ret = modelParser.UppdateOutputMap(scope_graph, info1, fusion_op_node_context, normal_op_node_context);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(UtestTensorflowParser, tensorflow_EraseNormalOpOutputIfChild)
+{
+  Status ret;
+  TensorFlowModelParser modelParser;
+  auto scope_graph = ge::parser::MakeShared<ge::ScopeGraph>();
+  if (scope_graph == nullptr) {
+    GELOGE(FAILED, "Scope graph make shared failed.");
+    return;
+  }
+  if (scope_graph->Init() != SUCCESS) {
+    GELOGE(FAILED, "Scope graph init failed.");
+    return;
+  }
+
+  const string op_node_name = "Const";
+  OpNodeContext normal_op_node_context;
+  normal_op_node_context.input_map["pre_node_a"].push_back({0, 0});
+  normal_op_node_context.output_map[op_node_name].push_back({0, 0});
+
+  ge::ScopeFusionOpInfo info;
+  info.node_name = "node_name";
+  info.fusion_node_name = "fusion_node_name";
+  info.fusion_op_type = "fusion_op_type";
+  info.description = "description";
+  info.scope_pass = "scope_pass";
+  modelParser.fusion_op_children_["Const"] = info;
+
+  NodeDef *node = initNodeDef();
+  node->set_op("NULL");
+  modelParser.nodedef_map_["Const"] = node;
+
+  ret = modelParser.EraseNormalOpOutputIfChild(scope_graph, op_node_name, normal_op_node_context);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(UtestTensorflowParser, tensorflow_UpdateNormalOpContext)
+{
+  Status ret;
+  TensorFlowModelParser modelParser;
+  auto scope_graph = ge::parser::MakeShared<ge::ScopeGraph>();
+  if (scope_graph == nullptr) {
+    GELOGE(FAILED, "Scope graph make shared failed.");
+    return;
+  }
+  if (scope_graph->Init() != SUCCESS) {
+    GELOGE(FAILED, "Scope graph init failed.");
+    return;
+  }
+
+  const string op_node_name = "Const";
+  OpNodeContext normal_op_node_context;
+  normal_op_node_context.input_map[op_node_name].push_back({0, 0});
+
+  ge::ScopeFusionOpInfo info;
+  info.node_name = "node_name";
+  info.fusion_node_name = "fusion_node_name";
+  info.fusion_op_type = "fusion_op_type";
+  info.description = "description";
+  info.scope_pass = "scope_pass";
+  modelParser.fusion_op_children_["Const"] = info;
+
+  NodeDef *node = initNodeDef();
+  node->set_op("NULL");
+  modelParser.nodedef_map_["Const"] = node;
+
+  ret = modelParser.UpdateNormalOpContext(scope_graph, op_node_name, normal_op_node_context);
+  EXPECT_EQ(ret, SUCCESS);
+
+  node->set_op("Const");
+  modelParser.nodedef_map_["Const"] = node;
+
+  ret = modelParser.UpdateNormalOpContext(scope_graph, op_node_name, normal_op_node_context);
+  EXPECT_EQ(ret, SUCCESS);
+
+  delete node;
+}
+
+TEST_F(UtestTensorflowParser, tensorflow_OptimizeTranspose)
+{
+  TensorFlowModelParser modelParser;
+  DelTransposeInfo info;
+  info.node_def = new NodeDef();
+  info.nextNodeDef = new NodeDef();
+  info.node_def->add_input("ge");
+  info.nextNodeDef->add_input("ge");
+  info.inputIdx = 0;
+  std::map<std::string, DelTransposeInfo> transposeInfo = {{"ge", info}};
+  modelParser.OptimizeTranspose(transposeInfo);
+
+  delete info.node_def;
+  delete info.nextNodeDef;
 }
 
 } // namespace ge

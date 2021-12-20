@@ -25,12 +25,12 @@
 #include "ut/parser/parser_ut_utils.h"
 #include "external/ge/ge_api_types.h"
 #include "tests/depends/ops_stub/ops_stub.h"
-#include "parser/onnx/onnx_parser.h"
 
 #define protected public
 #define private public
 #include "parser/onnx/onnx_constant_parser.h"
 #include "parser/onnx/onnx_util.h"
+#include "parser/onnx/onnx_parser.h"
 #undef protected
 #undef private
 
@@ -313,6 +313,64 @@ TEST_F(UtestOnnxParser, OnnxConstantParser_ParseConvertDataType_test)
   ge::Tensor tensor;
   Status ret = constant_parser.ParseConvertDataType(*attribute_tensor, tensor);
   EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(UtestOnnxParser, OnnxModelParser_ParseInput_test)
+{
+  OnnxModelParser model_parser;
+  ge::onnx::ModelProto model_proto;
+  ge::onnx::GraphProto graph = model_proto.graph();
+  std::map<std::string, ge::onnx::TensorProto> initializer_name_tensor;
+  bool is_subgraph = false;
+
+  Status ret = model_parser.ParseInput(initializer_name_tensor, is_subgraph, graph);
+  EXPECT_EQ(ret, domi::FAILED);
+
+  ret = model_parser.ParseOutput(graph);
+  EXPECT_EQ(ret, domi::FAILED);
+}
+
+TEST_F(UtestOnnxParser, onnx_test_ConstructOriType)
+{
+  ge::onnx::ModelProto model_proto;
+  ge::onnx::GraphProto* graph = model_proto.mutable_graph();
+  ge::onnx::NodeProto* add_node = graph->add_node();
+  add_node->set_op_type("Add");
+  add_node->set_domain("ai.onnx");
+
+  OnnxModelParser onnx_parser ;
+  onnx_parser.domain_verseion_["ai.onnx"] = 11;
+  string ori_type;
+  Status ret = onnx_parser.ConstructOriType(add_node, ori_type);
+  EXPECT_EQ(ret, domi::SUCCESS);
+
+  ge::onnx::NodeProto* add_node1 = graph->add_node();
+  add_node1->set_op_type("Add1");
+  add_node1->set_domain("add.onnx");
+  string op_type;
+  ret = onnx_parser.AdapterOpType(add_node1, ori_type, op_type);
+  EXPECT_EQ(ret, ge::PARAM_INVALID);
+
+  add_node->set_op_type("Add1");
+  ret = onnx_parser.AdapterOpType(add_node, ori_type, op_type);
+  EXPECT_EQ(ret, PARAM_INVALID);
+}
+
+TEST_F(UtestOnnxParser, onnx_test_TransNodeToOperator)
+{
+  ge::onnx::ModelProto model_proto;
+  ge::onnx::GraphProto* graph = model_proto.mutable_graph();
+  ge::onnx::NodeProto *node_proto = graph->add_node();
+  node_proto->set_op_type("Add1");
+  node_proto->set_domain("add.onnx");
+  node_proto->set_name("Conv2D");
+  ge::OpDescPtr op_desc_src = std::make_shared<ge::OpDesc>("Add", "add.onnx");
+  ge::Operator op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc_src);
+  std::string op_type = "Add";
+
+  OnnxModelParser onnx_parser;
+  Status ret = onnx_parser.TransNodeToOperator(node_proto, op, op_type);
+  EXPECT_EQ(ret, SUCCESS);
 }
 
 } // namespace ge
