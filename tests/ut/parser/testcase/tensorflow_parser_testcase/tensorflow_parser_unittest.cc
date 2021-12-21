@@ -2743,7 +2743,7 @@ TEST_F(UtestTensorflowParser, Tensorflow_GetInOutPutIndex_scope_pass)
 
   input_node_info.scope_pass = false;
   ret = tensorflow_parser.GetInPutIndex(scope_graph, input_node_info, old_index, new_index);
-  EXPECT_EQ(domi::SUCCESS, ret);
+  EXPECT_EQ(INTERNAL_ERROR, ret);
   delete graph;
 }
 
@@ -4287,7 +4287,7 @@ TEST_F(UtestTensorflowParser, parser_UppdateInputMap_test)
   info.fusion_op_type = parser::FUSIONBATCHNORM;
   info.node_name = "conv_conv5/BatchNorm/batchnorm/add";
   info.description = "";
-  info.scope_pass = false;
+  info.scope_pass = true;
 
   tensorflow_parser.nodedef_map_["dropout"] = node1;
   tensorflow_parser.nodedef_map_["conv_conv5/BatchNorm/moving_variance"] = node2;
