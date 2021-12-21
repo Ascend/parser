@@ -57,7 +57,7 @@ class AclGrphParseUtil {
   domi::Status ParseAclOutputFp16NodesFormat(const std::string &is_output_fp16);
   domi::Status ParseAclEnableScope(const std::string &enable_scope_fusion_passes);
   static void AddAttrsForInputNodes(const vector<string> &adjust_fp16_format_vec, const string &fp16_nodes_name,
-                                    uint32_t index, OpDescPtr &op_desc);
+                                    size_t index, OpDescPtr &op_desc);
   domi::Status ParseAclInputFp16Nodes(const ComputeGraphPtr &graph, const string &input_fp16_nodes,
                                       const string &is_input_adjust_hw_layout);
   domi::Status GetDefaultOutInfo(ge::ComputeGraphPtr &compute_graph,

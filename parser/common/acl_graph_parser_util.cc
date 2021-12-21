@@ -374,7 +374,7 @@ domi::Status AclGrphParseUtil::ParseAclEnableScope(const string &enable_scope_fu
 }
 
 void AclGrphParseUtil::AddAttrsForInputNodes(const vector<string> &adjust_fp16_format_vec,
-                                             const string &fp16_nodes_name, uint32_t index, OpDescPtr &op_desc) {
+                                             const string &fp16_nodes_name, size_t index, OpDescPtr &op_desc) {
   if (AttrUtils::SetStr(op_desc, ATTR_ATC_USER_DEFINE_DATATYPE, TypeUtils::DataTypeToSerialString(DT_FLOAT16))) {
     if ((index < adjust_fp16_format_vec.size()) && (adjust_fp16_format_vec[index] == "true")) {
       GELOGI("This node [%s] should be set NC1HWC0", fp16_nodes_name.c_str());
@@ -405,7 +405,7 @@ domi::Status AclGrphParseUtil::ParseAclInputFp16Nodes(const ComputeGraphPtr &gra
   }
   GELOGI("The input_fp16_nodes is set %s", input_fp16_nodes.c_str());
   vector<string> input_fp16_nodes_vec = StringUtils::Split(input_fp16_nodes, ';');
-  for (uint32_t i = 0; i < input_fp16_nodes_vec.size(); ++i) {
+  for (size_t i = 0; i < input_fp16_nodes_vec.size(); ++i) {
     ge::NodePtr node = graph->FindNode(input_fp16_nodes_vec[i]);
     if (node == nullptr) {
       ErrorManager::GetInstance().ATCReportErrMessage("E10016", {"parameter", "opname"},
@@ -494,12 +494,12 @@ domi::Status AclGrphParseUtil::GetDefaultOutInfo(ge::ComputeGraphPtr &compute_gr
                                                  std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info) {
   std::vector<std::pair<std::string, int32_t>> default_out_nodes = ge::GetParserContext().default_out_nodes;
   if (!default_out_nodes.empty()) {
-    for (uint32_t i = 0; i < default_out_nodes.size(); ++i) {
+    for (size_t i = 0; i < default_out_nodes.size(); ++i) {
       ge::NodePtr out_node = compute_graph->FindNode(default_out_nodes[i].first);
       if (out_node == nullptr) {
         ErrorManager::GetInstance().ATCReportErrMessage("E10016", {"parameter", "opname"},
                                                         {"out_nodes", default_out_nodes[i].first});
-        GELOGE(domi::FAILED, "[Check][Param] Can not find out_nodes(%d) (%s) in graph.",
+        GELOGE(domi::FAILED, "[Check][Param] Can not find out_nodes(%zu) (%s) in graph.",
                i, default_out_nodes[i].first.c_str());
         return domi::FAILED;
       }
