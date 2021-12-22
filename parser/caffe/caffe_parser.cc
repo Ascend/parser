@@ -1114,14 +1114,14 @@ Status CaffeModelParser::AddUserOutNodesTop() {
 }
 
 Status CaffeModelParser::AddOutputTop(const domi::caffe::NetParameter &proto_message) {
-  for (int32_t i = 0; i < proto_message.layer_size(); i++) {
-    const domi::caffe::LayerParameter &layer = proto_message.layer(i);
+  for (int32_t layer_index = 0; layer_index < proto_message.layer_size(); ++layer_index) {
+    const domi::caffe::LayerParameter &layer = proto_message.layer(layer_index);
 
     if (!CheckValidLayer(layer)) {
       continue;
     }
 
-    for (int i = 0; i < layer.top_size(); i++) {
+    for (int32_t i = 0; i < layer.top_size(); i++) {
       string top = layer.top(i);
       string top_origin = top;
       // Handling 'inplace' scenarios
@@ -1147,7 +1147,7 @@ Status CaffeModelParser::AddOutputTop(const domi::caffe::NetParameter &proto_mes
       GELOGI("output in top_blob: %s", layer.name().c_str());
       if (top_node_iter != node_map.end()) {
         ge::GetParserContext().out_tensor_names.push_back(top_origin);
-        ge::GetParserContext().default_out_nodes.push_back(std::make_pair(layer.name(), (int32_t)i));
+        ge::GetParserContext().default_out_nodes.push_back(std::make_pair(layer.name(), i));
         GELOGI("The top of out node [%s] is [%s]", layer.name().c_str(), top_origin.c_str());
       }
     }
@@ -1274,8 +1274,8 @@ Status CaffeModelParser::ParseFromMemory(const char *data, uint32_t size, ge::Co
   std::map<std::string, std::vector<std::string>> layer_params_map;
   // same param name set <paramnames,layernames>
   // std::map<std::vector<std::string>, std::vector<std::string>> params_share_map;
-  for (int32_t i = 0; i < layer_count; i++) {
-    domi::caffe::LayerParameter &layer = const_cast<domi::caffe::LayerParameter &>(proto_message.layer(i));
+  for (int32_t layer_index = 0; layer_index < layer_count; ++layer_index) {
+    domi::caffe::LayerParameter &layer = const_cast<domi::caffe::LayerParameter &>(proto_message.layer(layer_index));
 
     GE_CHK_BOOL_EXEC_INFO(CheckValidLayer(layer), continue,
                           "[Check][Layer]layer phase is train, skip this layer, name:%s, type:%s.",
@@ -1297,7 +1297,7 @@ Status CaffeModelParser::ParseFromMemory(const char *data, uint32_t size, ge::Co
                     // Times accumulation of duplicate operators
                     layer_name_map[layer.name()]++;
                     // Set the name in proto and layer
-                    domi::caffe::LayerParameter *duplicate_name_layer = proto_message.mutable_layer(i);
+                    domi::caffe::LayerParameter *duplicate_name_layer = proto_message.mutable_layer(layer_index);
                     duplicate_name_layer->set_name(new_name); layer.set_name(new_name);)
 
     // Insert the new operator name, the number of times of duplicate name is recorded as 1
@@ -1313,7 +1313,7 @@ Status CaffeModelParser::ParseFromMemory(const char *data, uint32_t size, ge::Co
 
     // parse ParamSpec
     std::vector<string> v_param_names;
-    for (int i = 0; i < layer.param_size(); i++) {
+    for (int32_t i = 0; i < layer.param_size(); i++) {
       const domi::caffe::ParamSpec &param = layer.param(i);
       GE_IF_BOOL_EXEC((param.has_name()), v_param_names.emplace_back(param.name()));
     }
@@ -1496,8 +1496,8 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
   // <layername,paramnames>
   std::map<std::string, std::vector<std::string>> layer_params_map;
   // same param name set <paramnames,layernames>
-  for (int32_t i = 0; i < layer_count; i++) {
-    domi::caffe::LayerParameter &layer = const_cast<domi::caffe::LayerParameter &>(proto_message.layer(i));
+  for (int32_t layer_index = 0; layer_index < layer_count; ++layer_index) {
+    domi::caffe::LayerParameter &layer = const_cast<domi::caffe::LayerParameter &>(proto_message.layer(layer_index));
     SaveOrigionLayerTops(layer);
     GE_CHK_BOOL_EXEC_INFO(CheckValidLayer(layer), continue,
                           "[Check][Layer]layer phase is train, skip this layer, name:%s, type:%s.",
@@ -1516,7 +1516,7 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
                     // Times accumulation of duplicate operators
                     layer_name_map[layer.name()]++;
                     // Set the name in proto and layer
-                    domi::caffe::LayerParameter *duplicate_name_layer = proto_message.mutable_layer(i);
+                    domi::caffe::LayerParameter *duplicate_name_layer = proto_message.mutable_layer(layer_index);
                     duplicate_name_layer->set_name(new_name); layer.set_name(new_name);)
 
     // Insert the new operator name, the number of times of duplicate name is recorded as 1
@@ -1532,7 +1532,7 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
 
     // parse ParamSpec
     std::vector<string> v_param_names;
-    for (int i = 0; i < layer.param_size(); i++) {
+    for (int32_t i = 0; i < layer.param_size(); i++) {
       const domi::caffe::ParamSpec &param = layer.param(i);
       GE_IF_BOOL_EXEC((param.has_name()), v_param_names.emplace_back(param.name()));
     }

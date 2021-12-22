@@ -65,16 +65,16 @@ Status CaffeOpParser::ConvertWeight(const BlobProto &proto, const string &lay_na
   ConvertShape(proto, shape_vec);
   ge::GeShape shape(shape_vec);
   // Calculate the number of data in weight
-  int count = 1;
+  int32_t count = 1;
   for (size_t i = 0; i < shape.GetDimNum(); ++i) {
-    int dim = shape.GetDim(i);
+    int32_t dim = static_cast<int32_t>(shape.GetDim(i));
     if (dim <= 0) {
       REPORT_INNER_ERROR("E19999", "Convert weight fail, dim:%d of layer:%s <=0, check invalid", dim, lay_name.c_str());
       GELOGE(FAILED, "[Check][Size]Convert weight fail, dim:%d of layer:%s <=0, check invalid", dim, lay_name.c_str());
       return FAILED;
     }
 
-    if (dim >= INT64_MAX / count) {
+    if (dim >= INT32_MAX / count) {
       REPORT_INNER_ERROR("E19999", "Convert weight fail, shape:%s of layer:%s will overflow after multi",
                          shape.ToString().c_str(), lay_name.c_str());
       GELOGE(FAILED, "[Check][Size]Convert weight fail, Blob size exceeds INT64_MAX, dim:%d, count:%d, layer name:%s",

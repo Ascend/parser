@@ -1819,17 +1819,20 @@ Status TensorFlowModelParser::GetInPutIndex(shared_ptr<ge::ScopeGraph> &scope_gr
     auto &impl = scope_graph->impl_;
     return impl->GetInputOrOutputIndex(info, old_index, true, new_index);
   }
-  return SUCCESS;
+  GELOGE(INTERNAL_ERROR, "Fusion op should come from scope fusion pass, node name:%s, fusion node name:%s",
+         info.node_name.c_str(), info.fusion_node_name.c_str());
+  return INTERNAL_ERROR;
 }
 Status TensorFlowModelParser::GetOutPutIndex(shared_ptr<ge::ScopeGraph> &scope_graph, const ge::ScopeFusionOpInfo &info,
                                              const int32_t old_index, int32_t &new_index) {
   GE_CHECK_NOTNULL(scope_graph);
-  Status ret;
   if (info.scope_pass) {
     auto &impl = scope_graph->impl_;
-    ret = impl->GetInputOrOutputIndex(info, old_index, false, new_index);
+    return impl->GetInputOrOutputIndex(info, old_index, false, new_index);
   }
-  return ret;
+  GELOGE(INTERNAL_ERROR, "Fusion op should come from scope fusion pass, node name:%s, fusion node name:%s",
+         info.node_name.c_str(), info.fusion_node_name.c_str());
+  return INTERNAL_ERROR;
 }
 
 bool TensorFlowModelParser::ConstOpNeedUpdate(const string &op_name) {

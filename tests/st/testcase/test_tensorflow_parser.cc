@@ -4135,7 +4135,7 @@ TEST_F(STestTensorflowParser, parser_UppdateInputMap_test)
   info.fusion_op_type = parser::FUSIONBATCHNORM;
   info.node_name = "conv_conv5/BatchNorm/batchnorm/add";
   info.description = "";
-  info.scope_pass = false;
+  info.scope_pass = true;
 
   tensorflow_parser.nodedef_map_["dropout"] = node1;
   tensorflow_parser.nodedef_map_["conv_conv5/BatchNorm/moving_variance"] = node2;
