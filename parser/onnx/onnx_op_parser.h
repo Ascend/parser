@@ -49,6 +49,8 @@ class PARSER_FUNC_VISIBILITY OnnxOpParser : public OpParser {
   /// @return SUCCESS           parse success
   /// @return FAILED            Parse failed
   Status ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) override {
+    (void)op_src;
+    (void)op_dest;
     return domi::SUCCESS;
   }
 
@@ -58,6 +60,8 @@ class PARSER_FUNC_VISIBILITY OnnxOpParser : public OpParser {
   /// @return SUCCESS           parse success
   /// @return FAILED            Parse failed
   Status ParseParams(const Message *op_src, ge::Operator &op_dest) override {
+    (void)op_src;
+    (void)op_dest;
     return domi::SUCCESS;
   }
 
@@ -67,6 +71,8 @@ class PARSER_FUNC_VISIBILITY OnnxOpParser : public OpParser {
   /// @return SUCCESS           parsing success
   /// @return FAILED            parsing failed
   Status ParseWeights(const Message *op_src, ge::NodePtr &node) override {
+    (void)op_src;
+    (void)node;
     return domi::SUCCESS;
   }
 };

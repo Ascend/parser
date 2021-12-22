@@ -77,10 +77,14 @@ Status TensorFlowRefSwitchParser::ParseParams(const Message *op_src, ge::OpDescP
 
 // AUTO GEN PLEASE DO NOT MODIFY IT
 Status TensorFlowRefSwitchParser::PreParseParams(const domi::tensorflow::NodeDef *node, RefSwitchOperator *op) {
+  (void)node;
+  (void)op;
   return SUCCESS;
 }
 
 Status TensorFlowRefSwitchParser::PostParseParams(const domi::tensorflow::NodeDef *node, RefSwitchOperator *op) {
+  (void)node;
+  (void)op;
   return SUCCESS;
 }
 

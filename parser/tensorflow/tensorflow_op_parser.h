@@ -79,6 +79,8 @@ class PARSER_FUNC_VISIBILITY TensorFlowOpParser : public OpParser {
    *
    */
   Status ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) override {
+    (void)op_src;
+    (void)op_dest;
     return domi::SUCCESS;
   }
 
@@ -92,6 +94,8 @@ class PARSER_FUNC_VISIBILITY TensorFlowOpParser : public OpParser {
    *
    */
   Status ParseParams(const Message *op_src, ge::Operator &op_dest) override {
+    (void)op_src;
+    (void)op_dest;
     return domi::SUCCESS;
   }
 
@@ -105,6 +109,8 @@ class PARSER_FUNC_VISIBILITY TensorFlowOpParser : public OpParser {
    *
    */
   Status ParseWeights(const Message *op_src, ge::NodePtr &node) final {
+    (void)op_src;
+    (void)node;
     return domi::SUCCESS;
   }
 };

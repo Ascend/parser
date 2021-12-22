@@ -37,8 +37,9 @@ add_dependencies(parser_common
 
 target_compile_options(parser_common PRIVATE
     -Werror
-    -Wno-deprecated-declarations
     -fno-common
+    -Wextra
+    -Wfloat-equal
 )
 
 target_compile_definitions(parser_common PRIVATE

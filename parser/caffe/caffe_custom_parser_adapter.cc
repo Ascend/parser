@@ -25,6 +25,7 @@
 #include "graph/utils/graph_utils.h"
 #include "parser/common/op_parser_factory.h"
 #include "register/op_registry.h"
+#include "parser/common/parser_utils.h"
 
 using domi::ParseParamByOpFunc;
 using domi::ParseParamFunc;
@@ -60,19 +61,20 @@ Status CaffeCustomParserAdapter::ParseParams(const Message *op_src, ge::OpDescPt
 }
 
 Status CaffeCustomParserAdapter::ParseParams(const Operator &op_src, const ge::OpDescPtr &op_dest) {
-  GELOGI("Caffe custom op begin to params: layer name = %s, layer type= %s ", op_src.GetName().c_str(),
-         op_src.GetOpType().c_str());
+  GELOGI("Caffe custom op begin to params: layer name = %s, layer type= %s ",
+         ParserUtils::GetOperatorName(op_src).c_str(), ParserUtils::GetOperatorType(op_src).c_str());
   GE_CHECK_NOTNULL(op_dest);
 
-  ParseParamByOpFunc custom_op_parser = domi::OpRegistry::Instance()->GetParseParamByOperatorFunc(op_src.GetOpType());
+  ParseParamByOpFunc custom_op_parser = domi::OpRegistry::Instance()->GetParseParamByOperatorFunc(
+      ParserUtils::GetOperatorType(op_src));
   GE_CHECK_NOTNULL(custom_op_parser);
 
-  op_dest->SetName(op_src.GetName());
+  op_dest->SetName(ParserUtils::GetOperatorName(op_src));
   ge::Operator op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_dest);
 
   GE_CHK_BOOL_RET_STATUS(custom_op_parser(op_src, op) == SUCCESS, FAILED,
                          "[Invoke][CustomOpParser] failed, layer name:%s, type:%s",
-                         op_src.GetName().c_str(), op_src.GetOpType().c_str());
+                         ParserUtils::GetOperatorName(op_src).c_str(), ParserUtils::GetOperatorType(op_src).c_str());
   return SUCCESS;
 }
 

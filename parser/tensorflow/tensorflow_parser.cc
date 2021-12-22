@@ -51,6 +51,7 @@
 #include "parser/tensorflow/tensorflow_op_parser.h"
 #include "parser/tensorflow/tensorflow_util.h"
 #include "register/op_registry.h"
+#include "register/register_utils.h"
 #include "register/scope/scope_pass_registry_impl.h"
 #include "parser/common/auto_mapping_subgraph_io_index_func.h"
 
@@ -118,16 +119,16 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, ge::Graph &graph) {
   // parse tensorflow model_file to GE graph
   ge::graphStatus ret = model_parser->Parse(model_file, graph);
   if (ret != ge::SUCCESS) {
-    GELOGE(ret, "Parser graph %s failed.", graph.GetName().c_str());
+    GELOGE(ret, "Parser graph %s failed.", ParserUtils::GetGraphName(graph).c_str());
     return ge::FAILED;
   }
 
   std::map<AscendString, AscendString> parser_params;
   if (acl_graph_parse_util.SetOutputNodeInfo(graph, parser_params) != ge::SUCCESS) {
-    GELOGE(ret, "Set graph %s default output node failed.", graph.GetName().c_str());
+    GELOGE(ret, "Set graph %s default output node failed.", ParserUtils::GetGraphName(graph).c_str());
     return ge::FAILED;
   }
-  GELOGI("Parser graph %s success.", graph.GetName().c_str());
+  GELOGI("Parser graph %s success.", ParserUtils::GetGraphName(graph).c_str());
   return ge::SUCCESS;
 }
 
@@ -172,7 +173,7 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, const std::map<Ascend
   // parse tensorflow model_file to GE graph
   ge::graphStatus ret = model_parser->Parse(model_file, graph);
   if (ret != ge::SUCCESS) {
-    GELOGE(ret, "Parser graph %s failed.", graph.GetName().c_str());
+    GELOGE(ret, "Parser graph %s failed.", ParserUtils::GetGraphName(graph).c_str());
     return ge::FAILED;
   }
 
@@ -182,10 +183,10 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, const std::map<Ascend
   }
 
   if (acl_graph_parse_util.SetOutputNodeInfo(graph, parser_params) != ge::SUCCESS) {
-    GELOGE(ge::FAILED, "Set graph %s default output node failed.", graph.GetName().c_str());
+    GELOGE(ge::FAILED, "Set graph %s default output node failed.", ParserUtils::GetGraphName(graph).c_str());
     return ge::FAILED;
   }
-  GELOGI("AclgrphParse graph %s success.", graph.GetName().c_str());
+  GELOGI("AclgrphParse graph %s success.", ParserUtils::GetGraphName(graph).c_str());
   return ge::SUCCESS;
 }
 }  // namespace ge
@@ -313,9 +314,9 @@ Status MappingAndAddSubGraph(const NodePtr &node, const Graph &graph, const Comp
       });
   if (status != SUCCESS) {
     GELOGE(INTERNAL_ERROR, "[Mapping][Subgraph]node:%s, sub graph name:%s.", node->GetName().c_str(),
-           graph.GetName().c_str());
+           ParserUtils::GetGraphName(graph).c_str());
     REPORT_CALL_ERROR("E19999", "Failed to map sub graph input and output, node:%s, sub graph name:%s.",
-                      node->GetName().c_str(), graph.GetName().c_str());
+                      node->GetName().c_str(), ParserUtils::GetGraphName(graph).c_str());
     return INTERNAL_ERROR;
   }
 
@@ -407,8 +408,8 @@ Status TensorFlowModelParser::TransNodeToOpDesc(const domi::tensorflow::NodeDef 
                                                 const string &op_type) {
   GE_CHECK_NOTNULL(node_def);
   string node_name = node_def->name();
-  ge::Operator op_factory = ge::OperatorFactory::CreateOperator(node_name, op_type);
-  if (op_factory.GetName() != node_name || op_type == ge::parser::DATA) {
+  ge::Operator op_factory = ge::OperatorFactory::CreateOperator(node_name.c_str(), op_type.c_str());
+  if (ParserUtils::GetOperatorName(op_factory) != node_name || op_type == ge::parser::DATA) {
     if (std::find(kMakeOperatorNotByIr.begin(), kMakeOperatorNotByIr.end(), op_type) != kMakeOperatorNotByIr.end()) {
       op = ge::parser::MakeShared<ge::OpDesc>(node_name, op_type);
       GE_CHECK_NOTNULL(op);
@@ -455,8 +456,8 @@ Status TensorFlowModelParser::ParseOpParams(const domi::tensorflow::NodeDef *nod
       return status;
     }
   } else {
-    ge::Operator op_src(node_def->name(), node_def->op());
-    status = domi::AutoMappingFn(node_def, op_src);
+    ge::Operator op_src(node_def->name().c_str(), node_def->op().c_str());
+    status = domi::OperatorAutoMapping(node_def, op_src);
     if (status != SUCCESS) {
       REPORT_CALL_ERROR("E19999", "Auto mapping node_def:%s(%s) to operator failed", node_def->name().c_str(),
                         node_def->op().c_str());
@@ -468,7 +469,7 @@ Status TensorFlowModelParser::ParseOpParams(const domi::tensorflow::NodeDef *nod
     GE_CHECK_NOTNULL(tf_custom_op_parser);
     status = tf_custom_op_parser->ParseParams(op_src, op);
     if (status != SUCCESS) {
-      GELOGE(status, "Parse params for node[%s] failed", op_src.GetName().c_str());
+      GELOGE(status, "Parse params for node[%s] failed", ParserUtils::GetOperatorName(op_src).c_str());
       return status;
     }
   }
@@ -501,7 +502,7 @@ Status TensorFlowModelParser::AddNode(const domi::tensorflow::NodeDef *node_def,
     GE_RETURN_IF_ERROR(TransNodeToOpDesc(node_def, op_desc, node_op));
 
     ge::Operator op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
-    GE_CHK_STATUS(domi::AutoMappingFn(node_def, op));
+    GE_CHK_STATUS(domi::OperatorAutoMapping(node_def, op));
     op.BreakConnect();
 
     ge::NodePtr node = nullptr;
@@ -938,8 +939,8 @@ Status TensorFlowModelParser::ParseNodeDef(TensorFlowModelParser *parser, ge::Co
 
   // Construct operator by IR
   ge::OpDescPtr op;
-  ge::Operator op_factory = ge::OperatorFactory::CreateOperator(node_name, op_type);
-  if (op_factory.GetName() != node_name) {
+  ge::Operator op_factory = ge::OperatorFactory::CreateOperator(node_name.c_str(), op_type.c_str());
+  if (ParserUtils::GetOperatorName(op_factory) != node_name) {
     if (std::find(kMakeOperatorNotByIr.begin(), kMakeOperatorNotByIr.end(), op_type) != kMakeOperatorNotByIr.end()) {
       op = ge::parser::MakeShared<ge::OpDesc>(node_name, op_type);
       GE_CHECK_NOTNULL(op);
@@ -947,7 +948,7 @@ Status TensorFlowModelParser::ParseNodeDef(TensorFlowModelParser *parser, ge::Co
       GE_RETURN_IF_ERROR(parser->DefunToPartitionedCall(node_def, op));
       GE_CHECK_NOTNULL(op);
       ge::Operator op_tmp = ge::OpDescUtils::CreateOperatorFromOpDesc(op);
-      GE_CHK_STATUS(domi::AutoMappingFn(node_def, op_tmp));
+      GE_CHK_STATUS(domi::OperatorAutoMapping(node_def, op_tmp));
       op_tmp.BreakConnect();
       ge::NodePtr node;
       {
@@ -1321,11 +1322,11 @@ Status TensorFlowModelParser::Parse(const char *file, ge::Graph &graph) {
 
   Status ret = Parse(file, root_graph);
   if (ret != SUCCESS) {
-    GELOGE(ret, "Parser graph %s failed.", graph.GetName().c_str());
+    GELOGE(ret, "Parser graph %s failed.", ParserUtils::GetGraphName(graph).c_str());
     return ret;
   }
 
-  GELOGI("Parser graph %s success.", graph.GetName().c_str());
+  GELOGI("Parser graph %s success.", ParserUtils::GetGraphName(graph).c_str());
   return SUCCESS;
 }
 
@@ -2206,10 +2207,15 @@ Status TensorFlowModelParser::ToJson(const char *model_file, const char *json_fi
 }
 
 Status TensorFlowWeightsParser::ParseFromMemory(const char *data, uint32_t size, ge::ComputeGraphPtr &graph) {
+  (void)data;
+  (void)size;
+  (void)graph;
   return SUCCESS;
 }
 
 Status TensorFlowWeightsParser::Parse(const char *file, ge::Graph &graph) {
+  (void)file;
+  (void)graph;
   return SUCCESS;
 }
 
@@ -2225,7 +2231,6 @@ Status TensorFlowModelParser::ParseProto(const google::protobuf::Message *proto,
   // Make a copy for operation without modifying the original graph def.
   domi::tensorflow::GraphDef graph_def_operation = *graph_def_in;
   domi::tensorflow::GraphDef *graph_def = &graph_def_operation;
-  GELOGI("[TF Parser] graph def version:%d", graph_def->version());
 
   GE_RETURN_WITH_LOG_IF_ERROR(ProtoTypePassManager::Instance().Run(graph_def, domi::TENSORFLOW),
                               "Run ProtoType Pass Failed");
@@ -3278,8 +3283,8 @@ Status TensorFlowModelParser::FusionNodeParseParams(shared_ptr<OpParser> &op_par
   } else {
     vector<ge::Operator> op_src_vec;
     for (const auto &node_def_src : node_def_v) {
-      ge::Operator op_src(node_def_src->name(), node_def_src->op());
-      status = domi::AutoMappingFn(node_def_src, op_src);
+      ge::Operator op_src(node_def_src->name().c_str(), node_def_src->op().c_str());
+      status = domi::OperatorAutoMapping(node_def_src, op_src);
       if (status != SUCCESS) {
         REPORT_CALL_ERROR("E19999", "Auto mapping node_def:%s(%s) to operator failed", node_def_src->name().c_str(),
                           node_def_src->op().c_str());
@@ -3615,7 +3620,7 @@ Status TensorFlowModelParser::RecordFusionResult(const std::shared_ptr<ge::Scope
   std::vector<std::string> original_names;
   auto nodes = fusion_result->Nodes();
   std::transform(nodes.begin(), nodes.end(), std::back_inserter(original_names),
-                 [](ge::OperatorPtr n) -> std::string { return n->GetName(); });
+                 [](ge::OperatorPtr n) -> std::string { return ParserUtils::GetOperatorName(*n); });
 
   GELOGI("Op %s original_names size = %zu.", op_desc->GetName().c_str(), original_names.size());
   bool ret = ge::AttrUtils::SetListStr(op_desc, ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names);
@@ -4062,7 +4067,7 @@ Status TensorFlowModelParser::AddExternalGraph(const ComputeGraphPtr &root_graph
         return INTERNAL_ERROR;
       }
       Graph graph = model.GetGraph();
-      GELOGD("Get subgraph[%s] from model[%s].", graph.GetName().c_str(), node->GetName().c_str());
+      GELOGD("Get subgraph[%s] from model[%s].", ParserUtils::GetGraphName(graph).c_str(), node->GetName().c_str());
       Status ret = MappingAndAddSubGraph(node, graph, root_graph);
       if (ret != SUCCESS) {
         GELOGE(INTERNAL_ERROR, "[Mapping][Subgraph]Node:%s.", node->GetName().c_str());

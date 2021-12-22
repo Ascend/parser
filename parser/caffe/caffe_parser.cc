@@ -54,6 +54,7 @@
 #include "register/op_registry.h"
 #include "register/register_fmk_types.h"
 #include "mmpa/mmpa_api.h"
+#include "parser/common/parser_utils.h"
 
 using domi::caffe::ConvolutionParameter;
 using domi::caffe::InnerProductParameter;
@@ -106,27 +107,31 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file, 
   // parse caffe model_file and weights_file to GE graph
   ge::graphStatus ret = model_parser->Parse(model_file, graph);
   if (ret != ge::SUCCESS) {
-    REPORT_CALL_ERROR("E19999", "parse param:model_file %s failed, graph:%s.", model_file, graph.GetName().c_str());
-    GELOGE(ret, "[Parser][Param]ModelFile %s failed, graph:%s.", model_file, graph.GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "parse param:model_file %s failed, graph:%s.",
+                      model_file, ParserUtils::GetGraphName(graph).c_str());
+    GELOGE(ret, "[Parser][Param]ModelFile %s failed, graph:%s.", model_file,
+           ParserUtils::GetGraphName(graph).c_str());
     return ge::FAILED;
   }
-  GELOGI("Parser graph %s success.", graph.GetName().c_str());
+  GELOGI("Parser graph %s success.", ParserUtils::GetGraphName(graph).c_str());
 
   auto weights_parser = domi::WeightsParserFactory::Instance()->CreateWeightsParser(domi::CAFFE);
   GE_CHECK_NOTNULL(weights_parser);
   ret = weights_parser->Parse(weights_file, graph);
   if (ret != ge::SUCCESS) {
-    REPORT_CALL_ERROR("E19999", "parse param:weights_file %s failed, graph:%s", weights_file, graph.GetName().c_str());
-    GELOGE(ret, "[Parse][Param]WeightsFile %s failed. graph: %s", weights_file, graph.GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "parse param:weights_file %s failed, graph:%s",
+                      weights_file, ParserUtils::GetGraphName(graph).c_str());
+    GELOGE(ret, "[Parse][Param]WeightsFile %s failed. graph: %s", weights_file,
+           ParserUtils::GetGraphName(graph).c_str());
     return ret;
   }
-  GELOGI("Weights parse success. graph: %s", graph.GetName().c_str());
+  GELOGI("Weights parse success. graph: %s", ParserUtils::GetGraphName(graph).c_str());
   std::map<AscendString, AscendString> parser_params;
   if (acl_graph_parse_util.SetOutputNodeInfo(graph, parser_params) != ge::SUCCESS) {
     REPORT_CALL_ERROR("E19999", "SetOutputNodeInfo failed, model file:%s graph:%s",
-                      model_file, graph.GetName().c_str());
+                      model_file, ParserUtils::GetGraphName(graph).c_str());
     GELOGE(ret, "[Invoke][SetOutputNodeInfo]Set graph %s default output node failed, model file:%s.",
-           graph.GetName().c_str(), model_file);
+           ParserUtils::GetGraphName(graph).c_str(), model_file);
     return ge::FAILED;
   }
   return ge::SUCCESS;
@@ -166,15 +171,17 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file,
   // parse caffe model_file and weights_file to GE graph
   ge::graphStatus ret = model_parser->Parse(model_file, graph);
   if (ret != ge::SUCCESS) {
-    REPORT_CALL_ERROR("E19999", "Parse param:model_file %s failed, graph:%s", model_file, graph.GetName().c_str());
-    GELOGE(ret, "[Parser][Param]ModelFile %s failed, graph %s.", model_file, graph.GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "Parse param:model_file %s failed, graph:%s",
+                      model_file, ParserUtils::GetGraphName(graph).c_str());
+    GELOGE(ret, "[Parser][Param]ModelFile %s failed, graph %s.",
+           model_file, ParserUtils::GetGraphName(graph).c_str());
     return ge::FAILED;
   }
-  GELOGI("Parser graph %s success.", graph.GetName().c_str());
+  GELOGI("Parser graph %s success.", ParserUtils::GetGraphName(graph).c_str());
 
   if (acl_graph_parse_util.ParseParamsAfterGraph(graph, parser_params) != ge::SUCCESS) {
-    REPORT_CALL_ERROR("E19999", "ParseParamsAfterGraph failed, graph:%s.", graph.GetName().c_str());
-    GELOGE(ge::FAILED, "[Parser][Params] after graph failed, graph:%s.", graph.GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "ParseParamsAfterGraph failed, graph:%s.", ParserUtils::GetGraphName(graph).c_str());
+    GELOGE(ge::FAILED, "[Parser][Params] after graph failed, graph:%s.", ParserUtils::GetGraphName(graph).c_str());
     return ge::FAILED;
   }
 
@@ -182,19 +189,21 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file,
   GE_CHECK_NOTNULL(weights_parser);
   ret = weights_parser->Parse(weights_file, graph);
   if (ret != ge::SUCCESS) {
-    REPORT_CALL_ERROR("E19999", "parse param:weights_file %s failed, graph: %s", weights_file, graph.GetName().c_str());
-    GELOGE(ret, "[Parse][Param]WeightsFile %s failed. graph: %s", weights_file, graph.GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "parse param:weights_file %s failed, graph: %s",
+                      weights_file, ParserUtils::GetGraphName(graph).c_str());
+    GELOGE(ret, "[Parse][Param]WeightsFile %s failed. graph: %s",
+           weights_file, ParserUtils::GetGraphName(graph).c_str());
     return ret;
   }
-  GELOGI("Weights parse success. graph: %s", graph.GetName().c_str());
+  GELOGI("Weights parse success. graph: %s", ParserUtils::GetGraphName(graph).c_str());
 
   if (acl_graph_parse_util.SetOutputNodeInfo(graph, parser_params) != ge::SUCCESS) {
-    REPORT_CALL_ERROR("E19999", "SetOutputNodeInfo failed, graph:%s", graph.GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "SetOutputNodeInfo failed, graph:%s", ParserUtils::GetGraphName(graph).c_str());
     GELOGE(ge::FAILED, "[Invoke][SetOutputNodeInfo]Set graph %s default output node failed.",
-           graph.GetName().c_str());
+           ParserUtils::GetGraphName(graph).c_str());
     return ge::FAILED;
   }
-  GELOGI("AclgrphParse graph %s success.", graph.GetName().c_str());
+  GELOGI("AclgrphParse graph %s success.", ParserUtils::GetGraphName(graph).c_str());
   return ge::SUCCESS;
 }
 } // namespace ge
@@ -423,6 +432,7 @@ Status CaffeModelParser::ParseNetModelByCustomProto(const char *model_path, cons
 
 Status CaffeModelParser::CustomProtoParse(const char *model_path, const string &custom_proto,
                                           const string &caffe_proto, vector<ge::Operator> &operators) {
+  (void)caffe_proto;
   string custom_proto_path = ge::parser::RealPath(custom_proto.c_str());
   if (custom_proto_path.empty()) {
     GELOGW("Valid custom proto: %s does not exist, skip parsing custom proto", custom_proto.c_str());
@@ -572,8 +582,8 @@ Status CaffeModelParser::CreateCustomOperator(string op_name, string op_type, co
   }
 
   GELOGI("Start to create new operator, name: %s, type: %s, index: %d.", op_name.c_str(), op_type.c_str(), index);
-  ge::Operator ops(op_name, op_type);
-  if (ops.GetName() != op_name) {
+  ge::Operator ops(op_name.c_str(), op_type.c_str());
+  if (ParserUtils::GetOperatorName(ops) != op_name) {
     REPORT_INNER_ERROR("E19999", "Create Operator failed, name: %s, type: %s, index: %d.",
                        op_name.c_str(), op_type.c_str(), index);
     GELOGE(FAILED, "[Create][Operator] failed, name: %s, type: %s, index: %d.",
@@ -682,19 +692,22 @@ Status CaffeModelParser::AddBlobsToMap(const domi::caffe::LayerParameter &layer,
 }
 
 bool CaffeModelParser::IsOpAttrEmpty(const ge::Operator &op, const std::string &type) {
-  const std::map<std::string, std::string> attrs = op.GetAllAttrNamesAndTypes();
+  std::map<AscendString, AscendString> attrs;
+  (void)op.GetAllAttrNamesAndTypes(attrs);
 
   if (type == kCustom) {
     for (const auto &attr : attrs) {
-      if (kCustomProtoLayerCommonField.count(attr.first) == 0) {
-        GELOGI("Custom op[%s] attr name[%s] exists, not empty.", op.GetName().c_str(), attr.first.c_str());
+      if (kCustomProtoLayerCommonField.count(attr.first.GetString()) == 0) {
+        GELOGI("Custom op[%s] attr name[%s] exists, not empty.",
+               ParserUtils::GetOperatorName(op).c_str(), attr.first.GetString());
         return false;
       }
     }
   } else if (type == kBuiltin) {
     for (const auto &attr : attrs) {
-      if (kCaffeProtoLayerCommonField.count(attr.first) == 0) {
-        GELOGI("Built-in op[%s] attr name[%s] exists, not empty.", op.GetName().c_str(), attr.first.c_str());
+      if (kCaffeProtoLayerCommonField.count(attr.first.GetString()) == 0) {
+        GELOGI("Built-in op[%s] attr name[%s] exists, not empty.",
+               ParserUtils::GetOperatorName(op).c_str(), attr.first.GetString());
         return false;
       }
     }
@@ -709,7 +722,7 @@ Status CaffeModelParser::GetCustomOp(const domi::caffe::LayerParameter &layer, v
 
   bool is_search_built_in_layer = false;
   for (ge::Operator &custom_op : custom_operator_) {
-    if (custom_op.GetName() == layer.name() && custom_op.GetOpType() == op_type) {
+    if (ParserUtils::GetOperatorName(custom_op) == layer.name() && ParserUtils::GetOperatorType(custom_op) == op_type) {
       if (IsOpAttrEmpty(custom_op, kCustom)) {
         GELOGW("Custom op attr is empty, should try to get op params from built-in layer.");
         is_search_built_in_layer = true;
@@ -922,8 +935,8 @@ Status CaffeModelParser::AddTensorDescToOpDescByIr(ge::OpDescPtr &op_desc, const
 
   // Get opDesc by ir
   string layer_name = layer.name();
-  ge::Operator op_factory = ge::OperatorFactory::CreateOperator(layer_name, op_type);
-  if (op_factory.GetName() != layer.name()) {
+  ge::Operator op_factory = ge::OperatorFactory::CreateOperator(layer_name.c_str(), op_type.c_str());
+  if (ParserUtils::GetOperatorName(op_factory) != layer.name()) {
     ErrorManager::GetInstance().ATCReportErrMessage("E10501", {"opname", "optype"}, {layer_name, op_type});
     GELOGE(FAILED, "[Invoke][CreateOperator]IR for op[%s] optype[%s] is not registered.",
            layer_name.c_str(), op_type.c_str());
@@ -1352,11 +1365,11 @@ Status CaffeModelParser::Parse(const char *model_path, ge::Graph &graph) {
 
   Status ret = Parse(model_path, compute_graph);
   if (ret != SUCCESS) {
-    GELOGE(ret, "[Parser][Model] %s for graph %s failed.", model_path, graph.GetName().c_str());
+    GELOGE(ret, "[Parser][Model] %s for graph %s failed.", model_path, ParserUtils::GetGraphName(graph).c_str());
     return ret;
   }
 
-  GELOGI("Parser model for graph %s success.", graph.GetName().c_str());
+  GELOGI("Parser model for graph %s success.", ParserUtils::GetGraphName(graph).c_str());
   return SUCCESS;
 }
 
@@ -1675,11 +1688,11 @@ Status CaffeWeightsParser::Parse(const char *file, ge::Graph &graph) {
 
   Status ret = Parse(file, compute_graph);
   if (ret != SUCCESS) {
-    GELOGE(ret, "[Parser][Weight] %s for graph %s failed.", file, graph.GetName().c_str());
+    GELOGE(ret, "[Parser][Weight] %s for graph %s failed.", file, ParserUtils::GetGraphName(graph).c_str());
     return ret;
   }
 
-  GELOGI("Parser weight for graph %s success.", graph.GetName().c_str());
+  GELOGI("Parser weight for graph %s success.", ParserUtils::GetGraphName(graph).c_str());
   return SUCCESS;
 }
 
@@ -2290,11 +2303,16 @@ Status CaffeWeightsParser::ConvertNetParameter(const NetParameter &param, ge::Co
 }
 
 Status CaffeModelParser::ParseProto(const google::protobuf::Message *proto, ge::ComputeGraphPtr &graph) {
+  (void)proto;
+  (void)graph;
   return SUCCESS;
 }
 Status CaffeModelParser::ParseProtoWithSubgraph(const google::protobuf::Message *root_proto,
                                                 domi::GetGraphCallback callback,
                                                 ge::ComputeGraphPtr &graph) {
+  (void)root_proto;
+  (void)callback;
+  (void)graph;
   return SUCCESS;
 }
 }  // namespace ge

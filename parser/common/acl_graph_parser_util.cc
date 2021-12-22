@@ -520,6 +520,7 @@ domi::Status AclGrphParseUtil::GetDefaultOutInfo(ge::ComputeGraphPtr &compute_gr
 
 domi::Status AclGrphParseUtil::SetOutputNodeInfo(ge::Graph &graph,
                                                  const std::map<AscendString, AscendString> &parser_params) {
+  (void)parser_params;
   ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
   GE_CHECK_NOTNULL(compute_graph);
 
@@ -562,15 +563,15 @@ domi::Status AclGrphParseUtil::SetOutputNodeInfo(ge::Graph &graph,
   // default output node (leaf)
   if (user_out_nodes.empty()) {
     if (GetDefaultOutInfo(compute_graph, output_nodes_info) != SUCCESS) {
-      REPORT_CALL_ERROR("E19999", "GetDefaultOutInfo failed for graph:%s", graph.GetName().c_str());
-      GELOGE(domi::FAILED, "[Invoke][GetDefaultOutInfo] failed, graph:%s.", graph.GetName().c_str());
+      REPORT_CALL_ERROR("E19999", "GetDefaultOutInfo failed for graph:%s", compute_graph->GetName().c_str());
+      GELOGE(domi::FAILED, "[Invoke][GetDefaultOutInfo] failed, graph:%s.", compute_graph->GetName().c_str());
       return domi::FAILED;
     }
   }
   CreateOutputNodesInfo(output_nodes_info, output_nodes_name);
   compute_graph->SetGraphOutNodesInfo(output_nodes_info);
   ge::GetParserContext().net_out_nodes = output_nodes_name;
-  GELOGI("Set graph %s output node success.", graph.GetName().c_str());
+  GELOGI("Set graph %s output node success.", compute_graph->GetName().c_str());
   return domi::SUCCESS;
 }
 
@@ -726,7 +727,7 @@ static bool ReadProtoFromCodedInputStream(CodedInputStream &coded_stream, Messag
                                  REPORT_INNER_ERROR("E19999", "param proto is nullptr, check invalid");
                                  return false, "[Check][Param] incorrect parameter. nullptr == proto");
 
-  coded_stream.SetTotalBytesLimit(kProtoReadBytesLimit, kWarningThreshold);
+  coded_stream.SetTotalBytesLimit(kProtoReadBytesLimit);
   return proto->ParseFromCodedStream(&coded_stream);
 }
 

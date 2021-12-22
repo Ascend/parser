@@ -22,7 +22,8 @@
 #include "parser/common/op_parser_factory.h"
 #include "register/op_registry.h"
 #include "register/register.h"
-
+#include "register/register_utils.h"
+#include "parser/common/parser_utils.h"
 
 using domi::TENSORFLOW;
 using namespace ge::parser;
@@ -51,9 +52,9 @@ Status TensorFlowAutoMappingParserAdapter::ParseParams(const Message *op_src, ge
   }
 
   ge::Operator op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_dest);
-  Status ret = domi::AutoMappingFn(op_src, op);
+  Status ret = domi::OperatorAutoMapping(op_src, op);
   if (ret != SUCCESS) {
-    REPORT_CALL_ERROR("E19999", "call auto mapping failed for node:%s", op.GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "call auto mapping failed for node:%s", ParserUtils::GetOperatorName(op).c_str());
     GELOGE(FAILED, "Tensorflow auto mapping parser params failed");
     return FAILED;
   }

@@ -44,9 +44,10 @@ add_library(fmk_parser SHARED
 
 target_compile_options(fmk_parser PRIVATE
     -Werror
-    -Wno-deprecated-declarations
     -fno-common
     -fvisibility=hidden
+    -Wextra
+    -Wfloat-equal
 )
 
 target_compile_definitions(fmk_parser PRIVATE
@@ -136,6 +137,8 @@ add_library(fmk_parser_stub SHARED
 target_compile_options(fmk_parser_stub PRIVATE
     -O2
     -fno-common
+    -Wextra
+    -Wfloat-equal
 )
 
 target_compile_definitions(fmk_parser_stub PRIVATE

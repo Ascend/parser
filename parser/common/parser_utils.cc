@@ -91,13 +91,15 @@ Status ParserUtils::ExpandOneToManyGraph(const Graph &graph, OutputMapping &outp
     Operator op = OpDescUtils::CreateOperatorFromNode(n);
     Status ret = parse_op_to_graph_func(op, subgraph);
     if (ret != SUCCESS) {
-      REPORT_CALL_ERROR("E19999", "Get one to many graph failed for op:%s.", op.GetName().c_str());
-      GELOGE(FAILED, "[Invoke][ParseOpToGraphFunc]Get one to many graph failed for op:%s.", op.GetName().c_str());
+      REPORT_CALL_ERROR("E19999", "Get one to many graph failed for op:%s.", GetOperatorName(op).c_str());
+      GELOGE(FAILED, "[Invoke][ParseOpToGraphFunc]Get one to many graph failed for op:%s.",
+             GetOperatorName(op).c_str());
       return FAILED;
     }
     ret = ExpandNodeToSubgraph(subgraph, n, graph, output_mapping);
     if (ret != SUCCESS) {
-      GELOGE(FAILED, "[Invoke][ExpandNodeToSubgraph]Expand one to many graph failed for op:%s.", op.GetName().c_str());
+      GELOGE(FAILED, "[Invoke][ExpandNodeToSubgraph]Expand one to many graph failed for op:%s.",
+             GetOperatorName(op).c_str());
       return FAILED;
     }
   }
@@ -298,5 +300,23 @@ void ParserUtils::UpdateOutputCtx(const OutputMapping &final_output_nodes, Outpu
     auto &output_node_info = tensor_to_node.second;
     UpdateOutputNodeInfo(final_output_nodes, output_node_info);
   }
+}
+
+std::string ParserUtils::GetOperatorName(const Operator &op) {
+  AscendString name;
+  (void)op.GetName(name);
+  return name.GetString() == nullptr ? "" : std::string(name.GetString());
+}
+
+std::string ParserUtils::GetOperatorType(const Operator &op) {
+  AscendString type;
+  (void)op.GetOpType(type);
+  return type.GetString() == nullptr ? "" : std::string(type.GetString());
+}
+
+std::string ParserUtils::GetGraphName(const Graph &graph) {
+  AscendString name;
+  (void)graph.GetName(name);
+  return name.GetString() == nullptr ? "" : std::string(name.GetString());
 }
 }  // namespace ge

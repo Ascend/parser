@@ -28,6 +28,13 @@
 #include "parser/tensorflow/tensorflow_fusion_custom_parser_adapter.h"
 
 namespace ge {
+namespace {
+std::string GetOmOptype(const OpRegistrationData &reg_data) {
+  AscendString om_op_type;
+  (void)reg_data.GetOmOptype(om_op_type);
+  return om_op_type.GetString() == nullptr ? "" : std::string(om_op_type.GetString());
+}
+}
 using PARSER_CREATOR_FN = std::function<std::shared_ptr<OpParser>(void)>;
 
 FMK_FUNC_HOST_VISIBILITY OpRegistrationTbe *OpRegistrationTbe::Instance() {
@@ -45,16 +52,21 @@ bool OpRegistrationTbe::Finalize(const OpRegistrationData &reg_data, bool is_tra
 
   if (op_map.find(reg_data.GetFrameworkType()) != op_map.end()) {
     std::map<std::string, std::string> *fmk_op_map = op_map[reg_data.GetFrameworkType()];
-    auto ori_optype_set = reg_data.GetOriginOpTypeSet();
+    std::set<AscendString> ori_optype_set;
+    (void)reg_data.GetOriginOpTypeSet(ori_optype_set);
     for (auto &tmp : ori_optype_set) {
-      if ((*fmk_op_map).find(tmp) != (*fmk_op_map).end()) {
-        GELOGW("Op type does not need to be changed, om_optype:%s, orignal type:%s.", (*fmk_op_map)[tmp].c_str(),
-               tmp.c_str());
+      if (tmp.GetString() == nullptr) {
+        continue;
+      }
+      if ((*fmk_op_map).find(tmp.GetString()) != (*fmk_op_map).end()) {
+        GELOGW("Op type does not need to be changed, om_optype:%s, orignal type:%s.",
+               (*fmk_op_map)[tmp.GetString()].c_str(), tmp.GetString());
         continue;
       } else {
-        (*fmk_op_map)[tmp] = reg_data.GetOmOptype();
-        GELOGD("First register in parser initialize, original type: %s, om_optype: %s, imply type: %s.", tmp.c_str(),
-               reg_data.GetOmOptype().c_str(), TypeUtils::ImplyTypeToSerialString(reg_data.GetImplyType()).c_str());
+        (*fmk_op_map)[tmp.GetString()] = GetOmOptype(reg_data);
+        GELOGD("First register in parser initialize, original type: %s, om_optype: %s, imply type: %s.",
+               tmp.GetString(), GetOmOptype(reg_data).c_str(),
+               TypeUtils::ImplyTypeToSerialString(reg_data.GetImplyType()).c_str());
       }
     }
   }
@@ -72,9 +84,9 @@ bool OpRegistrationTbe::RegisterParser(const OpRegistrationData &reg_data) {
       return false;
     }
     if (reg_data.GetParseParamFn() != nullptr || reg_data.GetParseParamByOperatorFn() != nullptr) {
-      bool is_registed = factory->OpParserIsRegistered(reg_data.GetOmOptype());
+      bool is_registed = factory->OpParserIsRegistered(GetOmOptype(reg_data));
       if (is_registed) {
-        GELOGW("Parse param func has already register for op:%s.", reg_data.GetOmOptype().c_str());
+        GELOGW("Parse param func has already register for op:%s.", GetOmOptype(reg_data).c_str());
         return false;
       }
       std::shared_ptr<TensorFlowCustomParserAdapter> tf_parser_adapter =
@@ -85,15 +97,15 @@ bool OpRegistrationTbe::RegisterParser(const OpRegistrationData &reg_data) {
         return false;
       }
       OpParserRegisterar registerar __attribute__((unused)) = OpParserRegisterar(
-          domi::TENSORFLOW, reg_data.GetOmOptype(), [=]() -> std::shared_ptr<OpParser> { return tf_parser_adapter; });
+          domi::TENSORFLOW, GetOmOptype(reg_data), [=]() -> std::shared_ptr<OpParser> { return tf_parser_adapter; });
     }
     if (reg_data.GetFusionParseParamFn() != nullptr || reg_data.GetFusionParseParamByOpFn() != nullptr) {
-      bool is_registed = factory->OpParserIsRegistered(reg_data.GetOmOptype(), true);
+      bool is_registed = factory->OpParserIsRegistered(GetOmOptype(reg_data), true);
       if (is_registed) {
-        GELOGW("Parse param func has already register for fusion op:%s.", reg_data.GetOmOptype().c_str());
+        GELOGW("Parse param func has already register for fusion op:%s.", GetOmOptype(reg_data).c_str());
         return false;
       }
-      GELOGI("Register fusion custom op parser: %s", reg_data.GetOmOptype().c_str());
+      GELOGI("Register fusion custom op parser: %s", GetOmOptype(reg_data).c_str());
       std::shared_ptr<TensorFlowFusionCustomParserAdapter> tf_fusion_parser_adapter =
           ge::parser::MakeShared<TensorFlowFusionCustomParserAdapter>();
       if (tf_fusion_parser_adapter == nullptr) {
@@ -102,7 +114,7 @@ bool OpRegistrationTbe::RegisterParser(const OpRegistrationData &reg_data) {
         return false;
       }
       OpParserRegisterar registerar __attribute__((unused)) = OpParserRegisterar(
-          domi::TENSORFLOW, reg_data.GetOmOptype(),
+          domi::TENSORFLOW, GetOmOptype(reg_data),
           [=]() -> std::shared_ptr<OpParser> { return tf_fusion_parser_adapter; }, true);
     }
   } else {
@@ -114,9 +126,9 @@ bool OpRegistrationTbe::RegisterParser(const OpRegistrationData &reg_data) {
              TypeUtils::FmkTypeToSerialString(reg_data.GetFrameworkType()).c_str());
       return false;
     }
-    bool is_registed = factory->OpParserIsRegistered(reg_data.GetOmOptype());
+    bool is_registed = factory->OpParserIsRegistered(GetOmOptype(reg_data));
     if (is_registed) {
-      GELOGW("Parse param func has already register for op:%s.", reg_data.GetOmOptype().c_str());
+      GELOGW("Parse param func has already register for op:%s.", GetOmOptype(reg_data).c_str());
       return false;
     }
 
@@ -128,8 +140,8 @@ bool OpRegistrationTbe::RegisterParser(const OpRegistrationData &reg_data) {
              TypeUtils::FmkTypeToSerialString(reg_data.GetFrameworkType()).c_str());
       return false;
     }
-    OpParserFactory::Instance(reg_data.GetFrameworkType())->RegisterCreator(reg_data.GetOmOptype(), func);
-    GELOGD("Register custom parser adapter for op %s of fmk type %s success.", reg_data.GetOmOptype().c_str(),
+    OpParserFactory::Instance(reg_data.GetFrameworkType())->RegisterCreator(GetOmOptype(reg_data), func);
+    GELOGD("Register custom parser adapter for op %s of fmk type %s success.", GetOmOptype(reg_data).c_str(),
            TypeUtils::FmkTypeToSerialString(reg_data.GetFrameworkType()).c_str());
   }
   return true;

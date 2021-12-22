@@ -76,7 +76,7 @@ void Pb2Json::OneField2Json(const ProtobufMsg &message, const ProtobufFieldDescr
   switch (field->type()) {
     case ProtobufFieldDescriptor::TYPE_MESSAGE: {
       const ProtobufMsg &tmp_message = reflection->GetMessage(message, field);
-      if (0 != tmp_message.ByteSize()) {
+      if (0UL != tmp_message.ByteSizeLong()) {
         Message2Json(tmp_message, black_fields, json[field->name()], enum2str);
       }
       break;
@@ -174,7 +174,7 @@ void Pb2Json::RepeatedMessage2Json(const ProtobufMsg &message, const ProtobufFie
     switch (field->type()) {
       case ProtobufFieldDescriptor::TYPE_MESSAGE: {
         const ProtobufMsg &tmp_message = reflection->GetRepeatedMessage(message, field, i);
-        if (0 != tmp_message.ByteSize()) {
+        if (0UL != tmp_message.ByteSizeLong()) {
           Message2Json(tmp_message, black_fields, tmp_json, enum2str);
         }
       } break;

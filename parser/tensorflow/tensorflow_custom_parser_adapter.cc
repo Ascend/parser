@@ -19,6 +19,7 @@
 #include "framework/common/debug/ge_log.h"
 #include "parser/common/op_parser_factory.h"
 #include "register/op_registry.h"
+#include "parser/common/parser_utils.h"
 
 using domi::ParseParamFunc;
 using domi::ParseParamByOpFunc;
@@ -49,19 +50,22 @@ Status TensorFlowCustomParserAdapter::ParseParams(const Message *op_src, ge::OpD
 
 Status TensorFlowCustomParserAdapter::ParseParams(const Operator &op_src, ge::OpDescPtr &op_dest) {
   GELOGI("Tensorflow custom op begin to parse params: op node name = %s, op type = %s.",
-         op_src.GetName().c_str(), op_src.GetOpType().c_str());
+         ParserUtils::GetOperatorName(op_src).c_str(), ParserUtils::GetOperatorType(op_src).c_str());
   GE_CHECK_NOTNULL(op_dest);
 
-  ParseParamByOpFunc custom_op_parser = domi::OpRegistry::Instance()->GetParseParamByOperatorFunc(op_src.GetOpType());
+  ParseParamByOpFunc custom_op_parser = domi::OpRegistry::Instance()->GetParseParamByOperatorFunc(
+      ParserUtils::GetOperatorType(op_src));
   if (custom_op_parser == nullptr) {
-    REPORT_CALL_ERROR("E19999", "No ParseParamByOperatorFunc of node:%s exist in OpRegistry", op_src.GetName().c_str());
-    GELOGE(FAILED, "No ParseParamByOperatorFunc of node:%s exist in OpRegistry", op_src.GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "No ParseParamByOperatorFunc of node:%s exist in OpRegistry",
+                      ParserUtils::GetOperatorName(op_src).c_str());
+    GELOGE(FAILED, "No ParseParamByOperatorFunc of node:%s exist in OpRegistry",
+           ParserUtils::GetOperatorName(op_src).c_str());
     return FAILED;
   }
 
   ge::Operator op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_dest);
   GE_CHK_BOOL_RET_STATUS(custom_op_parser(op_src, op) == SUCCESS, FAILED, "Custom parser params failed or node:%s",
-                         op_src.GetName().c_str());
+                         ParserUtils::GetOperatorName(op_src).c_str());
   op_src.BreakConnect();
 
   return SUCCESS;

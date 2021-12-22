@@ -55,6 +55,8 @@ class PARSER_FUNC_VISIBILITY CaffeOpParser : public OpParser {
   Status ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) override;
 
   Status ParseParams(const Message *op_src, ge::Operator &op_dest) override {
+    (void)op_src;
+    (void)op_dest;
     return domi::SUCCESS;
   }
 

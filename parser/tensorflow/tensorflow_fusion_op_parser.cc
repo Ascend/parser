@@ -76,10 +76,16 @@ Status TensorFlowFusionOpParser::GetTensorFromNode(const NodeDef *node_def, Tens
 }
 
 Status TensorFlowFusionOpParser::ParseParams(const std::vector<const NodeDef *> &v_input_const, NodePtr &op_dest) {
+  (void)v_input_const;
+  (void)op_dest;
   return SUCCESS;
 }
 
-Status TensorFlowFusionOpParser::ParseParams(const Message *op_src, OpDescPtr &op_dest) { return SUCCESS; }
+Status TensorFlowFusionOpParser::ParseParams(const Message *op_src, OpDescPtr &op_dest) {
+  (void)op_src;
+  (void)op_dest;
+  return SUCCESS;
+}
 
 Status TensorFlowFusionOpParser::ParseParamFromConst(const NodeDef *node_def, int32_t &param) {
   GE_CHECK_NOTNULL(node_def);

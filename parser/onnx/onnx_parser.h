@@ -52,20 +52,32 @@ class PARSER_FUNC_VISIBILITY OnnxModelParser : public domi::ModelParser {
 
   ge::DataType ConvertToGeDataType(const uint32_t type) override;
 
-  Status ParseFromMemory(const char *data, uint32_t size, ge::ComputeGraphPtr &graph) override { return domi::SUCCESS; }
+  Status ParseFromMemory(const char *data, uint32_t size, ge::ComputeGraphPtr &graph) override {
+    (void)data;
+    (void)size;
+    (void)graph;
+    return domi::SUCCESS;
+  }
 
   Status ParseFromMemory(const char *data, uint32_t size, ge::Graph &graph) override;
 
   Status ParseProto(const google::protobuf::Message *proto, ge::ComputeGraphPtr &graph) override {
+    (void)proto;
+    (void)graph;
     return domi::SUCCESS;
   }
 
   Status ParseProtoWithSubgraph(const google::protobuf::Message *root_proto, domi::GetGraphCallback callback,
                                 ge::ComputeGraphPtr &graph) override {
+    (void)root_proto;
+    (void)callback;
+    (void)graph;
     return domi::SUCCESS;
   }
 
   Status ParseAllGraph(const google::protobuf::Message *root_proto, ge::ComputeGraphPtr &root_graph) override {
+    (void)root_proto;
+    (void)root_graph;
     return domi::SUCCESS;
   }
 
@@ -136,9 +148,18 @@ class PARSER_FUNC_VISIBILITY OnnxModelParser : public domi::ModelParser {
 
 class PARSER_FUNC_VISIBILITY OnnxWeightsParser : public domi::WeightsParser {
  public:
-  Status Parse(const char *file, ge::Graph &graph) override { return domi::SUCCESS; }
+  Status Parse(const char *file, ge::Graph &graph) override {
+    (void)file;
+    (void)graph;
+    return domi::SUCCESS;
+  }
 
-  Status ParseFromMemory(const char *data, uint32_t size, ge::ComputeGraphPtr &graph) override { return domi::SUCCESS; }
+  Status ParseFromMemory(const char *data, uint32_t size, ge::ComputeGraphPtr &graph) override {
+    (void)data;
+    (void)size;
+    (void)graph;
+    return domi::SUCCESS;
+  }
 };
 }  // namespace domi
 #endif  // PARSER_ONNX_ONNX_PARSER_H_

@@ -17,9 +17,10 @@ add_dependencies(fmk_onnx_parser
 
 target_compile_options(fmk_onnx_parser PRIVATE
     -Werror
-    -Wno-deprecated-declarations
     -fno-common
     -fvisibility=hidden
+    -Wextra
+    -Wfloat-equal
 )
 
 target_compile_definitions(fmk_onnx_parser PRIVATE

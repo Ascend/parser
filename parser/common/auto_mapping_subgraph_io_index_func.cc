@@ -130,14 +130,14 @@ Status AutoMappingSubgraphIndexByDataNodeAndOutputNodesInfo(
 
   auto ret = AutoMappingSubgraphIndexByDataNode(compute_graph, input);
   if (ret != SUCCESS) {
-    REPORT_CALL_ERROR("E19999", "Auto mapping graph:%s input index failed,", graph.GetName().c_str());
-    GELOGE(ret, "[Mapping][InputIndex] Auto mapping graph:%s input index failed,", graph.GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "Auto mapping graph:%s input index failed,", compute_graph->GetName().c_str());
+    GELOGE(ret, "[Mapping][InputIndex] Auto mapping graph:%s input index failed,", compute_graph->GetName().c_str());
     return ret;
   }
   ret = AutoMappingSubgraphIndexByOutputNodesInfo(compute_graph, output);
   if (ret != SUCCESS) {
-    REPORT_CALL_ERROR("E19999", "Auto mapping graph:%s output index failed,", graph.GetName().c_str());
-    GELOGE(ret, "[Mapping][OutputIndex] Auto mapping graph:%s output index failed,", graph.GetName().c_str());
+    REPORT_CALL_ERROR("E19999", "Auto mapping graph:%s output index failed,", compute_graph->GetName().c_str());
+    GELOGE(ret, "[Mapping][OutputIndex] Auto mapping graph:%s output index failed,", compute_graph->GetName().c_str());
     return ret;
   }
 
