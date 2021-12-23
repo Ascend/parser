@@ -24,12 +24,6 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY FrameworkOpOperator::FrameworkO
 
 FrameworkOpOperator::~FrameworkOpOperator() {}
 
-FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY FrameworkOpOperator &FrameworkOpOperator::Name(
-    const std::string &name) {
-  ParserOperator::Name(name);
-  return *this;
-}
-
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY FrameworkOpOperator &FrameworkOpOperator::Index(int64_t index) {
   Attr(RETVAL_ATTR_NAME_INDEX, static_cast<int64_t>(index));
   return *this;

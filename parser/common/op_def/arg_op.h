@@ -25,8 +25,6 @@ class ArgOpOperator : public ParserOperator {
 
   ~ArgOpOperator() override;
 
-  ArgOpOperator &Name(const std::string &name);
-
   ArgOpOperator &Index(int64_t index);
 
   int64_t GetIndex() const;

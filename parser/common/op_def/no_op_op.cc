@@ -22,9 +22,4 @@ namespace ge {
 FMK_FUNC_HOST_VISIBILITY NoOpOperator::NoOpOperator() : ParserOperator("NoOp") {}
 
 FMK_FUNC_HOST_VISIBILITY NoOpOperator::~NoOpOperator() {}
-
-FMK_FUNC_HOST_VISIBILITY NoOpOperator &NoOpOperator::Name(const std::string &name) {
-  ParserOperator::Name(name);
-  return *this;
-}
 }  // namespace ge

@@ -50,6 +50,7 @@ using std::set;
 using std::string;
 using std::unordered_map;
 using std::vector;
+using domi::Status;
 static std::map<std::vector<std::string>, std::vector<std::string>> params_share_map;
 
 class PARSER_FUNC_VISIBILITY CaffeModelParser : public domi::ModelParser {

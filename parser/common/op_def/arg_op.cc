@@ -23,11 +23,6 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY ArgOpOperator::ArgOpOperator() 
 
 ArgOpOperator::~ArgOpOperator() {}
 
-FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY ArgOpOperator &ArgOpOperator::Name(const std::string &name) {
-  (void)ParserOperator::Name(name);
-  return *this;
-}
-
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY ArgOpOperator &ArgOpOperator::Index(int64_t index) {
   Attr("index", static_cast<int64_t>(index));
 
