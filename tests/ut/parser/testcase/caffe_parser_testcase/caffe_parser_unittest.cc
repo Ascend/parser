@@ -42,6 +42,12 @@
 #undef protected
 #undef private
 
+#include <google/protobuf/compiler/importer.h>
+#include <google/protobuf/io/coded_stream.h>
+#include <google/protobuf/io/zero_copy_stream_impl.h>
+#include <google/protobuf/text_format.h>
+#include <google/protobuf/dynamic_message.h>
+
 using namespace domi::caffe;
 using namespace ge;
 
@@ -262,23 +268,32 @@ TEST_F(UtestCaffeParser, acl_caffe_parser) {
   EXPECT_EQ(ret, GRAPH_FAILED);
 }
 
-TEST_F(UtestCaffeParser, modelparser_parsefrommemory_success)
+TEST_F(UtestCaffeParser, ParseFromMemory_success)
 {
   std::string caseDir = __FILE__;
   std::size_t idx = caseDir.find_last_of("/");
   caseDir = caseDir.substr(0, idx);
   std::string modelFile = caseDir + "/caffe_model/caffe_add.pbtxt";
+  std::string weight_file = caseDir + "/caffe_model/caffe_add.caffemodel";
 
   const char* tmp_tf_pb_model = modelFile.c_str();
+  const char* tmp_tf_weight_model = weight_file.c_str();
   ge::Graph graph;
 
+  Status ret = ge::aclgrphParseCaffe(modelFile.c_str(), weight_file.c_str(), graph);
   ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
   CaffeModelParser modelParser;
-  MemBuffer* memBuffer = ParerUTestsUtils::MemBufferFromFile(tmp_tf_pb_model);
-  auto ret = modelParser.ParseFromMemory((char*)memBuffer->data, memBuffer->size, compute_graph);
-  free(memBuffer->data);
-  delete memBuffer;
+  MemBuffer* memBuffer1 = ParerUTestsUtils::MemBufferFromFile(tmp_tf_pb_model);
+  ret = modelParser.ParseFromMemory((char*)memBuffer1->data, memBuffer1->size, compute_graph);
   EXPECT_EQ(ret, GRAPH_FAILED);
+
+  CaffeWeightsParser weigthParser;
+  MemBuffer* memBuffer2 = ParerUTestsUtils::MemBufferFromFile(tmp_tf_weight_model);
+  ret = weigthParser.ParseFromMemory((char*)memBuffer2->data, memBuffer2->size, compute_graph);
+  free(memBuffer1->data);
+  free(memBuffer2->data);
+  delete memBuffer1;
+  delete memBuffer2;
 }
 
 TEST_F(UtestCaffeParser, caffe_parser_to_json) {
@@ -324,7 +339,7 @@ TEST_F(UtestCaffeParser, caffe_parser_ParseParamsForDummyData_test)
 TEST_F(UtestCaffeParser, convertWeights_success)
 {
   CaffeOpParser parser;
-  ge::GeTensorDesc ge_tensor_desc =  ge::GeTensorDesc();
+  ge::GeTensorDesc ge_tensor_desc = ge::GeTensorDesc();
   ge::GeTensorPtr weight = std::make_shared<ge::GeTensor>(ge_tensor_desc);
   ge::OpDescPtr opDef = std::make_shared<ge::OpDesc>("","");
   auto node_tmp = GenNodeFromOpDesc(opDef);
@@ -335,12 +350,13 @@ TEST_F(UtestCaffeParser, convertWeights_success)
   blob->add_data(1);
   blob->add_data(1);
 
-  domi::caffe::BlobShape *shap = blob->mutable_shape();
-  shap->add_dim(1);
-  shap->add_dim(2);
+  domi::caffe::BlobShape *shap1 = blob->mutable_shape();
+  shap1->add_dim(1);
+  shap1->add_dim(2);
+  shap1->add_dim(-1);
 
   Status ret = parser.ConvertWeight(*blob, "", weight);
-  EXPECT_EQ(domi::SUCCESS, ret);
+  EXPECT_EQ(FAILED, ret);
   delete layer;
 }
 
@@ -413,6 +429,20 @@ TEST_F(UtestCaffeParser, CaffeWeightsParser_Parse_test)
   graph = std::make_shared<ComputeGraph>("test");
   ret = weightParser.Parse(file, graph);
   EXPECT_EQ(ret, FAILED);
+
+  std::string caffe_proto = case_dir + "/../../../../metadef/proto/caffe/";
+  std::string custom_proto = case_dir + "/caffe_model/";
+  ge::GetParserContext().caffe_proto_path.assign(caffe_proto);
+  ge::GetParserContext().custom_proto_path.assign(custom_proto);
+  ret = weightParser.Parse(file, graph);
+  EXPECT_EQ(ret, FAILED);
+
+  custom_proto = case_dir + "/caffe_models/";
+  caffe_proto = case_dir + "/../../../../../metadef/proto/caffe/";
+  ge::GetParserContext().caffe_proto_path.assign(caffe_proto);
+  ge::GetParserContext().custom_proto_path.assign(custom_proto);
+  ret = weightParser.Parse(file, graph);
+  EXPECT_EQ(ret, SUCCESS);
 }
 
 TEST_F(UtestCaffeParser, CaffeWeightsParser_ParseWeightByFusionProto_test)
@@ -677,6 +707,13 @@ TEST_F(UtestCaffeParser, CaffeModelParser_CustomProtoParse_test)
 
   Status ret = modelParser.CustomProtoParse(model_path, custom_proto, caffe_proto, operators);
   EXPECT_EQ(ret, PARAM_INVALID);
+
+  model_file = case_dir + "/caffe_model/caffe_add.pbtxt";
+  custom_proto = case_dir + "/../../../../../metadef/proto/caffe/caffe.proto";
+  model_path = model_file.c_str();
+  std::string caffe_proto_path = case_dir + "/../../../../../metadef/proto/caffe/caffe.proto";
+  ret = modelParser.CustomProtoParse(model_path, custom_proto, caffe_proto_path, operators);
+  EXPECT_EQ(ret, SUCCESS);
 }
 
 TEST_F(UtestCaffeParser, CaffeWeightsParser_ParseGraph_test)
@@ -738,6 +775,16 @@ TEST_F(UtestCaffeParser, CaffeModelParser_GetCustomOp_test)
 
   Status ret = model_parser.GetCustomOp(*layer, operators);
   EXPECT_EQ(ret, SUCCESS);
+
+  ge::Operator ops2("Conv", "Convolution");
+  model_parser.custom_operator_.push_back(ops2);
+  ret = model_parser.GetCustomOp(*layer, operators);
+  EXPECT_EQ(ret, SUCCESS);
+
+  ge::Operator ops("Data", "Input");
+  model_parser.custom_operator_.push_back(ops);
+  ret = model_parser.GetCustomOp(*layer, operators);
+  EXPECT_EQ(ret, SUCCESS);
 }
 
 TEST_F(UtestCaffeParser, CaffeModelParser_AddTensorDescToOpDesc_test)
@@ -751,6 +798,12 @@ TEST_F(UtestCaffeParser, CaffeModelParser_AddTensorDescToOpDesc_test)
   layer->add_bottom("Abs");
 
   Status ret = model_parser.AddTensorDescToOpDesc(op_desc_src, *layer);
+  EXPECT_EQ(ret, SUCCESS);
+
+  op_desc_src = std::make_shared<ge::OpDesc>("Abs", "YoloDetectionOutput");
+  layer->set_type("YoloDetectionOutput");
+  layer->add_top("top");
+  ret = model_parser.AddTensorDescToOpDesc(op_desc_src, *layer);
   EXPECT_EQ(ret, SUCCESS);
 }
 
@@ -766,6 +819,23 @@ TEST_F(UtestCaffeParser, CaffeWeightsParser_ConvertLayerParameter_test)
 
   Status ret = weightParser.ConvertLayerParameter(layer, compute_graph);
   EXPECT_EQ(ret, SUCCESS);
+
+  std::string case_dir = __FILE__;
+  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
+  std::string caffe_proto = case_dir + "/../../../../../metadef/proto/caffe/";
+  google::protobuf::compiler::DiskSourceTree sourceTree;
+  sourceTree.MapPath("project_root", caffe_proto);
+  google::protobuf::compiler::Importer importer(&sourceTree, nullptr);
+  importer.Import("project_root/caffe.proto");
+
+  auto descriptor = importer.pool()->FindMessageTypeByName("domi.caffe.LayerParameter");
+  google::protobuf::DynamicMessageFactory factory;
+  const google::protobuf::Message *proto = factory.GetPrototype(descriptor);
+  const google::protobuf::Message *message = proto->New();
+
+  ret = weightParser.ConvertLayerParameter(layer, compute_graph);
+  EXPECT_EQ(ret, SUCCESS);
+  delete message;
 }
 
 TEST_F(UtestCaffeParser, CaffeWeightsParser_CheckLayersSize_test)
@@ -912,6 +982,192 @@ TEST_F(UtestCaffeParser, CaffeModelParser_ParseOpParam_test)
 
   Status ret = modelParser.ParseOpParam(*layer, op_desc_src, op_parser);
   EXPECT_EQ(ret, PARAM_INVALID);
+}
+
+TEST_F(UtestCaffeParser, CaffeModelParser_AddNode_test)
+{
+  CaffeModelParser modelParser;
+  domi::caffe::NetParameter net;
+  domi::caffe::LayerParameter *layer = net.add_layer();
+  layer->set_name("AbsVal");
+  layer->set_type("DetectionOutput");
+  ge::ComputeGraphPtr compute_graph = build_graph(true);
+
+  Status ret = modelParser.AddNode(*layer, compute_graph);
+  EXPECT_EQ(ret, FAILED);
+
+  layer->set_type("ProposalLayer");
+  ret = modelParser.AddNode(*layer, compute_graph);
+  EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(UtestCaffeParser, CaffeModelParser_CheckValidLayer_test)
+{
+  CaffeModelParser modelParser;
+  domi::caffe::NetParameter net;
+  domi::caffe::LayerParameter *layer = net.add_layer();
+  layer->set_name("Abs");
+  layer->set_type("AbsVal");
+  layer->add_include();
+  bool ret = modelParser.CheckValidLayer(*layer);
+  EXPECT_EQ(ret, false);
+}
+
+TEST_F(UtestCaffeParser, CaffeModelParser_ParseProto_test)
+{
+  CaffeModelParser modelParser;
+  domi::caffe::NetParameter net;
+  domi::caffe::LayerParameter *layer = net.add_layer();
+  layer->set_name("Abs");
+  layer->set_type("AbsVal");
+  ge::ComputeGraphPtr compute_graph = build_graph(true);
+
+  Status ret = modelParser.ParseProto(&net, compute_graph);
+  EXPECT_EQ(ret, SUCCESS);
+
+  domi::GetGraphCallback callback;
+  ret = modelParser.ParseProtoWithSubgraph(&net, callback, compute_graph);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(UtestCaffeParser, CaffeOpParser_ParseParams_test)
+{
+  CaffeOpParser opParser;
+  domi::caffe::NetParameter net;
+  ge::OpDescPtr op_desc_src = std::make_shared<ge::OpDesc>("Data", "Input");
+  domi::caffe::LayerParameter* lay0 = net.add_layer();
+  lay0->set_name("conv");
+  lay0->set_type(ge::parser::DUMMY_DATA);
+
+  ge::OpDescPtr opDef = std::make_shared<ge::OpDesc>("","");
+
+  Status ret = opParser.ParseParams(lay0, opDef);
+  EXPECT_EQ(ret, SUCCESS);
+
+  ge::NodePtr node;
+  ret = opParser.ParseWeights(lay0, node);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(UtestCaffeParser, CaffeModelParser_FindShareParamLayers_test)
+{
+  CaffeModelParser modelParser;
+  std::map<std::string, std::vector<std::string>> layer_params_map;
+  std::vector<std::string> layer_params;
+  layer_params.emplace_back("Conv");
+  layer_params.emplace_back("Data");
+  layer_params.emplace_back("Abs");
+  layer_params_map.insert(std::make_pair("Abs", layer_params));
+  layer_params_map.insert(std::make_pair("Data", layer_params));
+  layer_params_map.insert(std::make_pair("Conv", layer_params));
+
+  Status ret = modelParser.FindShareParamLayers(layer_params_map);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(UtestCaffeParser, CaffeWeightsParser_ParseLayerParameter_test)
+{
+  CaffeWeightsParser weightParser;
+
+  domi::caffe::NetParameter net;
+  GetParserContext().type = domi::CAFFE;
+  domi::caffe::LayerParameter *layer = net.add_layer();
+  layer->set_name("Abs");
+  layer->set_type("AbsVal");
+
+  ge::ComputeGraphPtr compute_graph = build_graph(true);
+  std::string case_dir = __FILE__;
+  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
+  std::string caffe_proto = case_dir + "/../../../../../metadef/proto/caffe/";
+  google::protobuf::compiler::DiskSourceTree sourceTree;
+  sourceTree.MapPath("project_root", caffe_proto);
+  google::protobuf::compiler::Importer importer(&sourceTree, nullptr);
+  importer.Import("project_root/caffe.proto");
+
+  auto descriptor = importer.pool()->FindMessageTypeByName("domi.caffe.LayerParameter");
+  google::protobuf::DynamicMessageFactory factory;
+  const google::protobuf::Message *proto = factory.GetPrototype(descriptor);
+  const google::protobuf::Message *message = proto->New();
+
+  Status ret = weightParser.ParseLayerParameter(descriptor, message, compute_graph);
+  delete message;
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(UtestCaffeParser, CaffeModelParser_ParseLayerParameter_test)
+{
+  CaffeModelParser modelParser;
+  domi::caffe::NetParameter net;
+  domi::caffe::LayerParameter *layer = net.add_layer();
+  layer->set_name("Abs");
+  layer->set_type("AbsVal");
+
+  vector<ge::Operator> operators;
+  ge::OpDescPtr op_desc_src = std::make_shared<ge::OpDesc>("Data", "Input");
+  ge::Operator op_src = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc_src);
+  operators.emplace_back(op_src);
+
+  std::string case_dir = __FILE__;
+  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
+  std::string caffe_proto = case_dir + "/../../../../../metadef/proto/caffe/";
+  google::protobuf::compiler::DiskSourceTree sourceTree;
+  sourceTree.MapPath("project_root", caffe_proto);
+  google::protobuf::compiler::Importer importer(&sourceTree, nullptr);
+  importer.Import("project_root/caffe.proto");
+
+  auto descriptor = importer.pool()->FindMessageTypeByName("domi.caffe.LayerParameter");
+  google::protobuf::DynamicMessageFactory factory;
+  const google::protobuf::Message *proto = factory.GetPrototype(descriptor);
+  const google::protobuf::Message *message = proto->New();
+  Status ret = modelParser.ParseLayerParameter(descriptor, message, operators);
+  EXPECT_EQ(ret, SUCCESS);
+  delete message;
+}
+
+TEST_F(UtestCaffeParser, CaffeModelParser_ReadModelWithoutWarning_test)
+{
+  CaffeModelParser modelParser;
+  std::string case_dir = __FILE__;
+  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
+  std::string model_file = case_dir + "/caffe_model/caffe.pbtxt";
+  const char *model_path = model_file.c_str();
+
+  domi::caffe::NetParameter net;
+  domi::caffe::LayerParameter *layer = net.add_layer();
+  layer->set_name("Abs");
+  layer->set_type("AbsVal");
+
+  Status ret = modelParser.ReadModelWithoutWarning(model_path, &net);
+  EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(UtestCaffeParser, CaffeModelParser_AddBlobsToMap_test)
+{
+  CaffeModelParser modelParser;
+  domi::caffe::NetParameter net;
+  domi::caffe::LayerParameter *layer = net.add_layer();
+  layer->set_name("Abs");
+  layer->set_type("AbsVal");
+  std::map<std::string, std::string> inplace_blob_name_remapping{{"bottom", "AbsVal"}};
+
+  layer->add_top("top");
+  layer->add_bottom("bottom");
+  modelParser.AddBlobsToMap(*layer, inplace_blob_name_remapping);
+}
+
+TEST_F(UtestCaffeParser, CaffeWeightsParser_ReorderInput_test)
+{
+  CaffeModelParser modelParser;
+
+  domi::caffe::NetParameter net;
+  domi::caffe::LayerParameter *layer1 = net.add_layer();
+  layer1->set_name("Abs");
+  layer1->set_type("AbsVal");
+
+  domi::caffe::LayerParameter *layer2 = net.add_layer();
+  layer2->set_name("Data");
+  layer2->set_type("Input");
+  modelParser.ReorderInput(net);
 }
 
 } // namespace ge
