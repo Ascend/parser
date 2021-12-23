@@ -373,4 +373,53 @@ TEST_F(UtestOnnxParser, onnx_test_TransNodeToOperator)
   EXPECT_EQ(ret, SUCCESS);
 }
 
+TEST_F(UtestOnnxParser, onnx_test_ModelParseToGraph)
+{
+  OnnxModelParser modelParser;
+  ge::onnx::ModelProto model_proto;
+  ge::onnx::OperatorSetIdProto* op_st = model_proto.add_opset_import();
+  op_st->set_domain("ai.onnx");
+  op_st->set_version(11);
+
+  ge::Graph root_graph;
+
+  Status ret = modelParser.ModelParseToGraph(model_proto, root_graph);
+  EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(UtestOnnxParser, onnx_test_ParseFromMemory)
+{
+  OnnxModelParser modelParser;
+  char *data = nullptr;
+  uint32_t size = 1;
+  ge::Graph graph;
+
+  Status ret = modelParser.ParseFromMemory(data, size, graph);
+  EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(UtestOnnxParser, onnx_test_Parse)
+{
+  OnnxModelParser modelParser;
+  const char *file = nullptr;
+  ge::Graph graph;
+
+  Status ret = modelParser.Parse(file, graph);
+  EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(UtestOnnxParser, onnx_test_GetModelFromMemory)
+{
+  OnnxModelParser modelParser;
+  const char *data = "ut/parser/testcase/onnx_parser_testcase";
+  uint32_t size = 1;
+  ge::onnx::ModelProto model_proto;
+
+  Status ret = modelParser.GetModelFromMemory(data, size, model_proto);
+  EXPECT_EQ(ret, FAILED);
+
+  ret = modelParser.GetModelFromFile(data, model_proto);
+  EXPECT_EQ(ret, FAILED);
+}
+
 } // namespace ge

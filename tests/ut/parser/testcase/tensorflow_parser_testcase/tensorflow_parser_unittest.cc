@@ -97,8 +97,19 @@ struct DelTransposeInfo {
   int inputIdx;
 };
 
+/*
+  message=1,LayerParameter=1
+  optional =1 repeated =1 required =1
+  */
+
 Status GetTransposeInfo(GraphDef *graph_def, std::map<std::string, std::string> &softmaxInfo,
                         std::map<std::string, DelTransposeInfo> &transposeInfo);
+
+Status EraseTransposeNode(std::map<std::string, std::string> &softmaxInfo,
+                          std::map<std::string, DelTransposeInfo> &transposeInfo);
+
+Status ComputeArgRange(const domi::tensorflow::NodeDef &node_def, const domi::tensorflow::OpDef::ArgDef &arg_def,
+                       int *num);
 
 class UtestTensorflowParser : public testing::Test {
  protected:
@@ -3729,6 +3740,9 @@ TEST_F(UtestTensorflowParser, input_proto_real_path_success) {
   std::ofstream write_tmp;
   ret = proto_file_parser.AddCustomAndConflictMessage(custom_proto_path, write_tmp);
   EXPECT_EQ(ret, FAILED);
+
+  ret = proto_file_parser.AddCustomAndConflictLayer(custom_proto_path, write_tmp);
+  EXPECT_EQ(ret, FAILED);
 }
 
 TEST_F(UtestTensorflowParser, all_success)
@@ -4001,8 +4015,16 @@ TEST_F(UtestTensorflowParser, tensorflow_FP16_parser_test)
 
   float f_val = 0.1;
   fp16.operator=(f_val);
+  f_val = 1000000.5;
+  fp16.operator=(f_val);
+  f_val = 0.00001;
+  fp16.operator=(f_val);
 
   double d_val = 0.2;
+  fp16.operator=(d_val);
+  d_val = 200000.2;
+  fp16.operator=(d_val);
+  d_val = 0.00002;
   fp16.operator=(d_val);
 
   int8_t i_val = 1;
@@ -4013,6 +4035,10 @@ TEST_F(UtestTensorflowParser, tensorflow_FP16_parser_test)
 
   int16_t i_vals = 1;
   fp16.operator=(i_vals);
+  i_vals = 5000;
+  fp16.operator=(i_vals);
+  i_vals = 0;
+  fp16.operator=(i_vals);
 
   uint16_t ui16_val = 1;
   fp16.operator=(ui16_val);
@@ -4020,15 +4046,21 @@ TEST_F(UtestTensorflowParser, tensorflow_FP16_parser_test)
   fp16.operator=(ui16_val);
   ui16_val = 1;
   fp16.operator=(ui16_val);
+  ui16_val = 5000;
+  fp16.operator=(ui16_val);
 
   int32_t i32_val = 0;
   fp16.operator=(i32_val);
   i32_val = 1;
   fp16.operator=(i32_val);
+  i32_val = 5000;
+  fp16.operator=(i32_val);
 
   uint32_t ui32_val = 0;
   fp16.operator=(ui32_val);
   ui32_val = 1;
+  fp16.operator=(ui32_val);
+  ui32_val = 5000;
   fp16.operator=(ui32_val);
 }
 
@@ -4616,6 +4648,65 @@ TEST_F(UtestTensorflowParser, tensorflow_GetTransposeInfo)
   delete info.node_def;
   delete info.nextNodeDef;
   delete graph;
+}
+
+TEST_F(UtestTensorflowParser, tensorflow_EraseTransposeNode)
+{
+  Status ret;
+  DelTransposeInfo info;
+  std::map<std::string, std::string> softmaxInfo = {{"Softmax", "Softmax"}};
+
+  info.node_def = new NodeDef();
+  info.nextNodeDef = new NodeDef();
+  info.node_def->add_input("ge");
+  info.nextNodeDef->add_input("ge");
+  info.nextNodeDef->set_name("ge");
+  info.inputIdx = 0;
+
+  std::map<std::string, DelTransposeInfo> transposeInfo = {{"Softmax", info}};
+
+  ret = EraseTransposeNode(softmaxInfo, transposeInfo);
+  EXPECT_EQ(ret, FAILED);
+
+  delete info.node_def;
+  delete info.nextNodeDef;
+}
+
+TEST_F(UtestTensorflowParser, tensorflow_GetUniqueName)
+{
+  string name_ge = "ge", name_ge_1 = "ge_0", name_ge_2 = "ge_1";
+  NameMapHelper helper;
+  helper.used_names_.insert(name_ge);
+  helper.used_names_.insert(name_ge_1);
+  string ret = helper.GetUniqueName(name_ge);
+  EXPECT_EQ(ret, name_ge_2);
+}
+
+TEST_F(UtestTensorflowParser, tensorflow_UniqueInputOrOutputName)
+{
+  string name;
+  NameMapHelper helper;
+  string ret = helper.UniqueInputOrOutputName(name);
+  EXPECT_EQ(ret, "unknown");
+}
+
+TEST_F(UtestTensorflowParser, tensorflow_Renormalize)
+{
+  string name = "ge";
+  NameMapHelper helper;
+  helper.name_mapping_.insert(std::make_pair("ge", "ge"));
+  string ret = helper.Renormalize(name);
+  EXPECT_EQ(ret, "ge");
+}
+
+TEST_F(UtestTensorflowParser, tensorflow_ComputeArgRange)
+{
+  domi::Status ret;
+  domi::tensorflow::NodeDef node_def;
+  domi::tensorflow::OpDef::ArgDef arg_def;
+  int num;
+  ret = ComputeArgRange(node_def, arg_def, &num);
+  EXPECT_EQ(ret, domi::INTERNAL_ERROR);
 }
 
 } // namespace ge
