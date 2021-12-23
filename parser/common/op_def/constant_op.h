@@ -26,7 +26,6 @@ class ConstantOperator : public ParserOperator {
   ConstantOperator();
   ~ConstantOperator() override;
 
-  ConstantOperator &Name(const std::string &name);
   ConstantOperator &VectorAttr(std::string key, std::vector<int64_t> &value);
 
   ConstantOperator &DType(ge::DataType t);

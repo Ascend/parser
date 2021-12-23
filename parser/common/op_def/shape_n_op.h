@@ -26,8 +26,6 @@ class ShapeNOperator : public ParserOperator {
   ShapeNOperator();
   ~ShapeNOperator() override;
 
-  ShapeNOperator &Name(const std::string &name);
-
   ShapeNOperator &N(int64_t n);
   int64_t GetN() const;
   ShapeNOperator &InType(ge::DataType t);

@@ -23,11 +23,6 @@ VariableOperator::VariableOperator() : ParserOperator(ge::parser::VARIABLE) {}
 
 VariableOperator::~VariableOperator() {}
 
-VariableOperator &VariableOperator::Name(const std::string &name) {
-  ParserOperator::Name(name);
-  return *this;
-}
-
 VariableOperator &VariableOperator::Container(const std::string &container) {
   Attr(VAR_ATTR_CONTAINER, container);
   return *this;
