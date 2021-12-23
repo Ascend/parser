@@ -41,7 +41,9 @@ class ParserGraphOptimizer {
 
   domi::Status FindFmkNodeCluser(std::unordered_map<std::string, std::vector<ge::NodePtr>> &node_cluser_Map) const;
 
-  domi::Status MarkForFusion(std::unordered_map<std::string, std::vector<ge::NodePtr>> &node_cluser_Map);
+  domi::Status MarkForFusion(std::unordered_map<std::string, std::vector<ge::NodePtr>> &node_cluster_map);
+
+  domi::Status GetFusionCluster(const bool has_get_next, unordered_map<string, vector<NodePtr>> &node_cluster_map);
 
   domi::Status UpdateGraph(std::vector<ge::NodePtr> &nodes);
 
