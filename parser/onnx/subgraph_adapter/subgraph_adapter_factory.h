@@ -32,6 +32,7 @@
 #endif
 
 #include <map>
+#include <memory>
 #include <functional>
 #include "subgraph_adapter.h"
 

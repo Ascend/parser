@@ -24,11 +24,6 @@ VarIsInitializedOpOperator::VarIsInitializedOpOperator() : ParserOperator(ge::pa
 
 VarIsInitializedOpOperator::~VarIsInitializedOpOperator() {}
 
-VarIsInitializedOpOperator &VarIsInitializedOpOperator::Name(const std::string &name) {
-  ParserOperator::Name(name);
-  return *this;
-}
-
 VarIsInitializedOpOperator &VarIsInitializedOpOperator::VectorAttr(const std::string &key,
                                                                    std::vector<int64_t> &value) {
   Attr(key, value);

@@ -25,11 +25,6 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY ConstantOperator::ConstantOpera
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY ConstantOperator::~ConstantOperator() {}
 
-FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY ConstantOperator &ConstantOperator::Name(const std::string &name) {
-  ParserOperator::Name(name);
-  return *this;
-}
-
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY ConstantOperator &ConstantOperator::VectorAttr(
     std::string key, std::vector<int64_t> &value) {
   Attr(key, value);

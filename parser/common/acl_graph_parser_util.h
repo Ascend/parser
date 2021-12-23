@@ -157,7 +157,7 @@ bool ValidateStr(const std::string &filePath, const std::string &mode);
 std::string CurrentTimeInStr();
 
 template <typename T, typename... Args>
-static inline std::shared_ptr<T> MakeShared(Args &&... args) {
+inline std::shared_ptr<T> MakeShared(Args &&... args) {
   using T_nc = typename std::remove_const<T>::type;
   std::shared_ptr<T> ret(new (std::nothrow) T_nc(std::forward<Args>(args)...));
   return ret;

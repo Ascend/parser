@@ -24,11 +24,6 @@ FMK_FUNC_HOST_VISIBILITY ShapeNOperator::ShapeNOperator() : ParserOperator("Shap
 
 FMK_FUNC_HOST_VISIBILITY ShapeNOperator::~ShapeNOperator() {}
 
-FMK_FUNC_HOST_VISIBILITY ShapeNOperator &ShapeNOperator::Name(const std::string &name) {
-  ParserOperator::Name(name);
-  return *this;
-}
-
 FMK_FUNC_HOST_VISIBILITY ShapeNOperator &ShapeNOperator::N(int64_t n) {
   Attr(SHAPEN_ATTR_N, n);
   return *this;

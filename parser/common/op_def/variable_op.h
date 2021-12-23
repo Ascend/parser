@@ -27,8 +27,6 @@ class VariableOperator : public ParserOperator {
   VariableOperator();
   ~VariableOperator() override;
 
-  VariableOperator &Name(const std::string &name);
-
   VariableOperator &Container(const std::string &container);
 
   VariableOperator &SharedName(const std::string &sharedname);
