@@ -1,0 +1,18 @@
+syntax = "proto2";
+package domi::caffe;
+
+message FillerParameter {
+    optional string type = 1 [default = 'constant'];
+    optional float value = 2 [default = 0];
+    optional float min = 3 [default = 0];
+    optional float max = 4 [default = 1];
+    optional float mean = 5 [default = 0];
+    optional float std = 6 [default = 1];
+    optional int32 sparse = 7 [default = 1];
+    enum VarianceNorm {
+        FAN_IN = 0;
+        FAN_OUT = 1;
+        AVERAGE = 2;
+    }
+    optional VarianceNorm variance_norm = 8 [default = FAN_IN];
+}
