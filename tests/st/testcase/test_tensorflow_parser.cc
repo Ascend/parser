@@ -3878,6 +3878,73 @@ TEST_F(STestTensorflowParser, tensorflow_FP16_parser_test)
   fp16.operator=(ui32_val);
   ui32_val = 1;
   fp16.operator=(ui32_val);
+
+ float f_val1= 2139095000.2;
+  ge::parser::fp16_t fp16_1,fp16_2;
+  fp16_1.operator=(fp16_2);
+  fp16_1.operator=(f_val1);
+
+  float f_val2= 0.0000112;
+  fp16_1.operator=(f_val2);
+
+  float f_val3= 0.0000000299;
+  fp16_1.operator=(f_val3);
+
+  float f_val4= 0.00000000299;
+  fp16_1.operator=(f_val4);
+
+  uint32_t  u_val1 = 4095;
+  fp16_1.operator=(u_val1);
+
+  uint16_t u16_val1 = 4095;
+  fp16_1.operator=(u16_val1);
+
+  int16_t int_val1 = 0;
+  fp16_1.operator=(int_val1);
+
+  int16_t int_val2 = -32767;
+  fp16_1.operator=(int_val2);
+
+  i_val = -0x7FFFFFFF;
+  fp16_1.operator=(i_val);
+
+  fp16.operator=(f_val1);
+  float f = fp16; //float();
+  double d = fp16;
+  int8_t int8 = fp16;
+  uint8_t uint8 = fp16;
+  uint16_t uint16 = fp16;
+  int32_t int32 = fp16;
+  uint32_t uint32 = fp16;
+  int64_t int64 = fp16;
+  uint64_t uint64 = fp16;
+
+  (void)f;
+  (void)d;
+  (void)int8;
+  (void)uint8;
+  (void)uint8;
+  (void)uint16;
+  (void)int32;
+  (void)uint32;
+  (void)int64;
+  (void)uint64;
+
+  parser::fp16_t val;
+  val.val = 0x7C00;
+  val.IsInf();
+
+  val.val = 0xFC00;
+  val.IsInf();
+
+  parser::fp16_t fp16_3, fp16_4;
+  fp16_3.val = 1;
+  fp16_4.val = 2;
+  fp16_4.operator/(fp16_3);
+
+  fp16.val = 21504;
+  int16_t int16 = fp16;
+  int8 = fp16;
 }
 
 TEST_F(STestTensorflowParser, tensorflow_AclParserInitialize_test)
