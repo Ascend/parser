@@ -4225,4 +4225,21 @@ TEST_F(STestTensorflowParser, parser_UppdateInputMap_test)
   delete graph;
 }
 
+TEST_F(STestTensorflowParser, tensorflow_optimizer_fmk_fusion_op) {
+  std::string caseDir = __FILE__;
+  std::size_t idx = caseDir.find_last_of("/");
+  caseDir = caseDir.substr(0, idx);
+  const std::string root_proto = caseDir + "/origin_models/test_getnext_dynamic_fusion.pbtxt";
+  domi::tensorflow::GraphDef graphDef;
+
+  bool protoRet = parser::ReadProtoFromText(root_proto.c_str(), &graphDef);
+  ASSERT_EQ(protoRet, true);
+
+  TensorFlowModelParser tensorflow_parser;
+  ge::ComputeGraphPtr root_graph = ge::parser::MakeShared<ge::ComputeGraph>("tmp_graph");
+  Status ret = tensorflow_parser.ParseProto(reinterpret_cast<google::protobuf::Message *>(&graphDef), root_graph);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(root_graph->GetDirectNode().size(), 3);
+}
+
 } // namespace ge

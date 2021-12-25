@@ -35,7 +35,8 @@ REGISTER_OPTYPE_DEFINE(TF_BATCH_MATMUL, "BatchMatmul");
 namespace ge {
 namespace {
 const char RRTVAL_NODE_NAME_SUFFIX[] = "_RetVal";
-const char *const kShapeNodeName = "Shape";
+const char *const kShapeNodeType = "Shape";
+const char *const kShapeNodeNamePrefix = "getnext_shape_";
 }  // namespace
 
 Status ParserGraphOptimizer::FusionFmkop() {
@@ -62,19 +63,25 @@ Status ParserGraphOptimizer::FusionFmkop() {
   return SUCCESS;
 }
 
-Status ParserGraphOptimizer::MarkForFusion(unordered_map<string, vector<NodePtr>> &node_cluser_Map) {
+Status ParserGraphOptimizer::MarkForFusion(unordered_map<string, vector<NodePtr>> &node_cluster_map) {
   GE_CHECK_NOTNULL(graph_);
-  bool hasGetNext = false;
+  bool has_get_next = false;
   for (auto node : graph_->GetDirectNode()) {
     GE_CHECK_NOTNULL(node);
     GE_IF_BOOL_EXEC(node->GetOpDesc()->GetType() != ge::parser::FRAMEWORK_OP_TYPE, continue);
     string type = "";
     GE_CHK_STATUS_RET(ge::parser::GetOriginalType(node, type));
     if (type == "IteratorGetNext") {
-      hasGetNext = true;
+      has_get_next = true;
       break;
     }
   }
+  return GetFusionCluster(has_get_next, node_cluster_map);
+}
+
+Status ParserGraphOptimizer::GetFusionCluster(const bool has_get_next,
+                                              unordered_map<string, vector<NodePtr>> &node_cluster_map) {
+  GE_CHECK_NOTNULL(graph_);
   for (auto node : graph_->GetDirectNode()) {
     GE_CHECK_NOTNULL(node);
     GE_IF_BOOL_EXEC(node->GetOpDesc()->GetType() != ge::parser::FRAMEWORK_OP_TYPE, continue)
@@ -97,7 +104,8 @@ Status ParserGraphOptimizer::MarkForFusion(unordered_map<string, vector<NodePtr>
           NodePtr dst_node = in_anchor->GetOwnerNode();
           GE_CHECK_NOTNULL(dst_node);
           GE_CHECK_NOTNULL(dst_node->GetOpDesc());
-          if (dst_node->GetOpDesc()->GetType() == kShapeNodeName) {
+          if ((dst_node->GetName().find(kShapeNodeNamePrefix) != std::string::npos) &&
+              (dst_node->GetOpDesc()->GetType() == kShapeNodeType)) {
             temp_node_cluser.emplace_back(dst_node);
           }
         }
@@ -105,14 +113,14 @@ Status ParserGraphOptimizer::MarkForFusion(unordered_map<string, vector<NodePtr>
       if (temp_node_cluser.size() > 1) {
         vector<NodePtr> node_cluser;
         node_cluser.assign(temp_node_cluser.begin(), temp_node_cluser.end());
-        node_cluser_Map[temp_node_cluser[0]->GetName()] = node_cluser;
+        node_cluster_map[temp_node_cluser[0]->GetName()] = node_cluser;
       }
       temp_node_cluser.clear();
       GELOGI("MarkForFusion, IteratorGetNext graph mark success.");
     }
 
-    if (!hasGetNext && (type == "Iterator" || type == "IteratorV2")) {
-      GE_CHK_STATUS_RET(FindFmkNodeCluser(node_cluser_Map), "find framework node to be fused fail.");
+    if (!has_get_next && (type == "Iterator" || type == "IteratorV2")) {
+      GE_CHK_STATUS_RET(FindFmkNodeCluser(node_cluster_map), "find framework node to be fused fail.");
       GELOGI("MarkForFusion, Iterator init graph mark success.");
     }
   }
