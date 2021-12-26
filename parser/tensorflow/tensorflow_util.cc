@@ -267,11 +267,11 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY domi::Status TensorFlowUtil::Tr
     GE_CHK_BOOL_RET_STATUS(ParseFromAttrValueList(ge_desc, a_list, i, tf_datatype), PARAM_INVALID,
                            "parse ge_desc failed.");
     uint32_t size_type = 1;
-    int64_t tmp_dim = 0;
     auto data_type = ge_desc.GetDataType();
     GE_CHK_BOOL_RET_STATUS(ge::TypeUtils::GetDataTypeLength(data_type, size_type), PARAM_INVALID,
                            "dataType no define size , parse ge_desc failed.");
     // get size
+    int64_t tmp_dim = 0;
     for (uint32_t j = 0; j < ge_desc.GetShape().GetDimNum(); ++j) {
       tmp_dim = ge_desc.GetShape().GetDim(j);
 
