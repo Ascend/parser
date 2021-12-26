@@ -772,8 +772,8 @@ Status OnnxModelParser::AdaptAndFindAllOnnxGraph(ge::onnx::GraphProto &root_onnx
         return FAILED;
       }
 
-      for (const auto &onnx_graph : onnx_graphs) {
-        onnx_graph_tasks.push(onnx_graph);
+      for (const auto &sub_onnx_graph : onnx_graphs) {
+        onnx_graph_tasks.push(sub_onnx_graph);
       }
       for (const auto &itr : name_to_onnx_subgraph) {
         name_to_onnx_graph.emplace(itr.first, itr.second);
