@@ -874,8 +874,7 @@ Status CaffeModelParser::AddNode(const domi::caffe::LayerParameter &layer, ge::C
   // AddConstInput is a function defined in caffe_op_parser, override in caffe_reshape_parser.
   std::shared_ptr<CaffeOpParser> caffe_op_parser = std::static_pointer_cast<CaffeOpParser>(op_parser);
   GE_CHECK_NOTNULL(caffe_op_parser);
-  Status status;
-  status = caffe_op_parser->AddConstInput(node);
+  Status status = caffe_op_parser->AddConstInput(node);
   if (status != SUCCESS) {
     REPORT_CALL_ERROR("E19999", "AddConstInput failed for node:%s", node->GetOpDesc()->GetName().c_str());
     GELOGE(FAILED, "[Add][ConstInput] to node %s fail.", node->GetOpDesc()->GetName().c_str());
@@ -2112,17 +2111,17 @@ Status CaffeWeightsParser::ConvertLayerParameter(const google::protobuf::Message
                                                  ge::ComputeGraphPtr &graph) {
   vector<string> need_share_layers;
   const domi::caffe::LayerParameter *layer = reinterpret_cast<const domi::caffe::LayerParameter *>(layer_message);
-  const string &layer_name = layer->name();
+  const string &shared_layer_name = layer->name();
   const string &layer_type = layer->type();
   for (auto p_iter = params_share_map.begin(); p_iter != params_share_map.end(); ++p_iter) {
-    if (find(p_iter->second.begin(), p_iter->second.end(), layer_name) != p_iter->second.end()) {
-      GELOGI("layer:%s need share weights !", layer_name.c_str());
+    if (find(p_iter->second.begin(), p_iter->second.end(), shared_layer_name) != p_iter->second.end()) {
+      GELOGI("layer:%s need share weights !", shared_layer_name.c_str());
       need_share_layers = p_iter->second;
     }
   }
 
   if (need_share_layers.size() == 0) {
-    need_share_layers.push_back(layer_name);
+    need_share_layers.push_back(shared_layer_name);
   }
 
   for (auto share_iter = need_share_layers.begin(); share_iter != need_share_layers.end(); ++share_iter) {
@@ -2229,27 +2228,27 @@ Status CaffeWeightsParser::ConvertNetParameter(const NetParameter &param, ge::Co
 
   for (int i = 0; i < num_layer; ++i) {
     const LayerParameter &layer = param.layer(i);
-    const string &layer_name = layer.name();
+    const string &param_layer_name = layer.name();
 
     // Skip some layer types
     if (skiped_layer_type_.find(layer.type()) != skiped_layer_type_.end()) {
-      GELOGI("Skip layer %s", layer_name.c_str());
+      GELOGI("Skip layer %s", param_layer_name.c_str());
       continue;
     }
 
-    GELOGI("Parse layer %s", layer_name.c_str());
+    GELOGI("Parse layer %s", param_layer_name.c_str());
 
     vector<string> need_share_layers;
 
     for (auto p_iter = params_share_map.begin(); p_iter != params_share_map.end(); ++p_iter) {
-      if (find(p_iter->second.begin(), p_iter->second.end(), layer_name) != p_iter->second.end()) {
-        GELOGI("Layer: %s need share weights !", layer_name.c_str());
+      if (find(p_iter->second.begin(), p_iter->second.end(), param_layer_name) != p_iter->second.end()) {
+        GELOGI("Layer: %s need share weights !", param_layer_name.c_str());
         need_share_layers = p_iter->second;
       }
     }
 
     if (need_share_layers.size() == 0) {
-      need_share_layers.push_back(layer_name);
+      need_share_layers.push_back(param_layer_name);
     }
 
     for (auto share_iter = need_share_layers.begin(); share_iter != need_share_layers.end(); ++share_iter) {

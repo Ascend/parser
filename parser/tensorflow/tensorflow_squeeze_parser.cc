@@ -37,9 +37,6 @@ Status TensorFlowSqueezeParser::ParseDesc(const domi::tensorflow::AttrValue &att
   GE_CHK_BOOL_RET_STATUS(TensorFlowUtil::ParseFromAttrValueList(ge_desc, a_list, 0, tf_datatype), domi::PARAM_INVALID,
                          "parse ge_desc failed.");
   uint32_t size_type;
-  int64_t real_size = 1;
-  int64_t tmp_dim = 0;
-
   auto data_type = ge_desc.GetDataType();
   bool type_ret = ge::TypeUtils::GetDataTypeLength(data_type, size_type);
   GE_IF_BOOL_EXEC(!type_ret,
@@ -49,6 +46,8 @@ Status TensorFlowSqueezeParser::ParseDesc(const domi::tensorflow::AttrValue &att
                          ge::TypeUtils::DataTypeToSerialString(data_type).c_str());
                   return domi::PARAM_INVALID);
   // calculate size
+  int64_t real_size = 1;
+  int64_t tmp_dim = 0;
   for (uint32_t j = 0; j < ge_desc.GetShape().GetDimNum(); ++j) {
     tmp_dim = ge_desc.GetShape().GetDim(j);
     GE_IF_BOOL_EXEC(tmp_dim < 0, real_size = tmp_dim * (-1) * real_size; continue;);

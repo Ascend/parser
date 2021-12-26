@@ -214,8 +214,7 @@ Status ParserUtils::HandleInputContext(const NodePtr &node,
       // add control edge
       if (node->GetInControlAnchor() != nullptr) {
         for (const auto &out_anchor : node->GetInControlAnchor()->GetPeerAnchors()) {
-          graphStatus ret = GraphUtils::AddEdge(out_anchor, peer_in_anchor->GetOwnerNode()->GetInControlAnchor());
-          if (ret != GRAPH_SUCCESS) {
+          if (GraphUtils::AddEdge(out_anchor, peer_in_anchor->GetOwnerNode()->GetInControlAnchor()) != GRAPH_SUCCESS) {
             REPORT_CALL_ERROR("E19999", "add control edge from %s to %s failed.",
                               out_anchor->GetOwnerNode()->GetName().c_str(),
                               peer_in_anchor->GetOwnerNode()->GetName().c_str());

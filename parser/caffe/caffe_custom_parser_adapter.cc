@@ -85,7 +85,7 @@ Status CaffeCustomParserAdapter::ParseWeights(const Message *op_src, ge::NodePtr
   GE_CHECK_NOTNULL(op);
   const LayerParameter *layer = reinterpret_cast<const LayerParameter *>(op_src);
 
-  GE_CHK_BOOL_RET_STATUS(nullptr != layer, FAILED, "[Convert][Type]Dynamic cast op_src to LayerParameter failed");
+  GE_CHK_BOOL_RET_STATUS(layer != nullptr, FAILED, "[Convert][Type]Dynamic cast op_src to LayerParameter failed");
   GELOGI("layer: %s blobs_size: %d bottom_size: %d", layer->name().c_str(), layer->blobs_size(), layer->bottom_size());
   if (layer->blobs_size() == 0) {
     return SUCCESS;
