@@ -45,7 +45,7 @@ class FMK_FUNC_HOST_VISIBILITY ParserOperator {
   ParserOperator &AttrVector(std::string key, std::vector<int32_t> &value);
   ParserOperator &AttrVector(std::string key, std::vector<int64_t> &value);
 
-  ParserOperator &Name(const std::string &name);
+  virtual ParserOperator &Name(const std::string &name);
 
   ParserOperator &Type(const std::string &type);
 

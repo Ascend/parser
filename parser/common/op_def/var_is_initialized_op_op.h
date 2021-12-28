@@ -26,7 +26,6 @@ class VarIsInitializedOpOperator : public ParserOperator {
   VarIsInitializedOpOperator();
   ~VarIsInitializedOpOperator() override;
 
-  VarIsInitializedOpOperator &Name(const std::string &name);
   VarIsInitializedOpOperator &VectorAttr(const std::string &key, std::vector<int64_t> &value);
 };
 }  // namespace ge

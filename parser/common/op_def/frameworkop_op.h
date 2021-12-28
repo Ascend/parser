@@ -26,8 +26,6 @@ class FrameworkOpOperator : public ParserOperator {
 
   ~FrameworkOpOperator() override;
 
-  FrameworkOpOperator &Name(const std::string &name);
-
   FrameworkOpOperator &OriginalType(const std::string &type);
 
   FrameworkOpOperator &NodeDefPkg(const std::string &nodedef_pkg);
