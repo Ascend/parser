@@ -46,6 +46,7 @@ using google::protobuf::io::ZeroCopyInputStream;
 using namespace ge::parser;
 
 namespace {
+const size_t kMaxErrStrLen = 128U;
 const std::string kGraphDefaultName = "domi_default";
 /// The maximum length of the file.
 /// Based on the security coding specification and the current actual (protobuf) model size, it is determined as 2G-1
@@ -693,16 +694,17 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY long GetFileLength(const std::s
                                  return -1, "[Check][Param] input_file path is null.");
 
   std::string real_path = RealPath(input_file.c_str());
-
+  char_t err_buf[kMaxErrStrLen + 1U] = {};
+  const auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], kMaxErrStrLen);
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(real_path.empty(),
                                  REPORT_INPUT_ERROR("E19000", std::vector<std::string>({"path", "errmsg"}),
-                                                    std::vector<std::string>({real_path, strerror(errno)}));
+                                                    std::vector<std::string>({real_path, err_msg}));
                                  return -1, "[Get][Path] input_file path '%s' not valid", input_file.c_str());
   unsigned long long file_length = 0;
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(mmGetFileSize(input_file.c_str(), &file_length) != EN_OK,
                                  ErrorManager::GetInstance().ATCReportErrMessage("E19001", {"file", "errmsg"},
-                                                                                 {input_file, strerror(errno)});
-                                 return -1, "[Open][File] [%s] failed. %s", input_file.c_str(), strerror(errno));
+                                                                                 {input_file, err_msg});
+                                 return -1, "[Open][File] [%s] failed. %s", input_file.c_str(), err_msg);
 
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((file_length == 0 || file_length > kMaxFileSizeLimit),
                                  REPORT_INPUT_ERROR(
@@ -830,11 +832,13 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadProtoFromText(const ch
                                  "[Check][Param]incorrect parameter. nullptr == file || nullptr == message");
 
   std::string real_path = RealPath(file);
+  char_t err_buf[kMaxErrStrLen + 1U] = {};
+  const auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], kMaxErrStrLen);
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(real_path.empty(),
                                  ErrorManager::GetInstance().ATCReportErrMessage("E19000", {"path", "errmsg"},
-                                                                                 {file, strerror(errno)});
+                                                                                 {file, err_msg});
                                  return false, "[Check][Param]Path[%s]'s realpath is empty, errmsg[%s]", file,
-                                 strerror(errno));
+                                 err_msg);
 
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(GetFileLength(real_path) == -1, return false, "[Check][Param] file size not valid.");
 

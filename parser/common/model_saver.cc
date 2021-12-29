@@ -25,6 +25,7 @@
 #include "mmpa/mmpa_api.h"
 
 namespace {
+const size_t kMaxErrStrLen = 128U;
 const int kFileOpSuccess = 0;
 }  //  namespace
 
@@ -65,8 +66,10 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status ModelSaver::SaveJsonToFi
   mode_t mode = S_IRUSR | S_IWUSR;
   int32_t fd = mmOpen2(real_path, O_RDWR | O_CREAT | O_TRUNC, mode);
   if (fd == EN_ERROR || fd == EN_INVALID_PARAM) {
-    ErrorManager::GetInstance().ATCReportErrMessage("E19001", {"file", "errmsg"}, {file_path, strerror(errno)});
-    GELOGE(FAILED, "[Open][File] [%s] failed. %s", file_path, strerror(errno));
+    char_t err_buf[kMaxErrStrLen + 1U] = {};
+    const auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], kMaxErrStrLen);
+    ErrorManager::GetInstance().ATCReportErrMessage("E19001", {"file", "errmsg"}, {file_path, err_msg});
+    GELOGE(FAILED, "[Open][File] [%s] failed. %s", file_path, err_msg);
     return FAILED;
   }
   const char *model_char = model_str.c_str();
@@ -74,16 +77,20 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status ModelSaver::SaveJsonToFi
   // Write data to file
   mmSsize_t mmpa_ret = mmWrite(fd, const_cast<void *>((const void *)model_char), len);
   if (mmpa_ret == EN_ERROR || mmpa_ret == EN_INVALID_PARAM) {
+    char_t err_buf[kMaxErrStrLen + 1U] = {};
+    const auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], kMaxErrStrLen);
     ErrorManager::GetInstance().ATCReportErrMessage(
-        "E19004", {"file", "errmsg"}, {file_path, strerror(errno)});
+        "E19004", {"file", "errmsg"}, {file_path, err_msg});
     // Need to both print the error info of mmWrite and mmClose, so return ret after mmClose
-    GELOGE(FAILED, "[WriteTo][File] %s failed. errno = %ld, %s", file_path, mmpa_ret, strerror(errno));
+    GELOGE(FAILED, "[WriteTo][File] %s failed. errno = %ld, %s", file_path, mmpa_ret, err_msg);
     ret = FAILED;
   }
   // Close file
   if (mmClose(fd) != EN_OK) {
-    REPORT_INNER_ERROR("E19999", "close file:%s failed. errmsg:%s", file_path, strerror(errno));
-    GELOGE(FAILED, "[Close][File] %s failed. errmsg:%s", file_path, strerror(errno));
+    char_t err_buf[kMaxErrStrLen + 1U] = {};
+    const auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], kMaxErrStrLen);
+    REPORT_INNER_ERROR("E19999", "close file:%s failed. errmsg:%s", file_path, err_msg);
+    GELOGE(FAILED, "[Close][File] %s failed. errmsg:%s", file_path, err_msg);
     ret = FAILED;
   }
   return ret;
@@ -137,11 +144,13 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY int ModelSaver::CreateDirectory
         int32_t ret = mmMkdir(tmp_dir_path, S_IRUSR | S_IWUSR | S_IXUSR);  // 700
         if (ret != 0) {
           if (errno != EEXIST) {
+            char_t err_buf[kMaxErrStrLen + 1U] = {};
+            const auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], kMaxErrStrLen);
             REPORT_CALL_ERROR("E19999",
                               "Can not create directory %s. Make sure the directory exists and writable. errmsg:%s",
-                              directory_path.c_str(), strerror(errno));
+                              directory_path.c_str(), err_msg);
             GELOGW("Can not create directory %s. Make sure the directory exists and writable. errmsg:%s",
-                   directory_path.c_str(), strerror(errno));
+                   directory_path.c_str(), err_msg);
             return ret;
           }
         }
@@ -151,11 +160,13 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY int ModelSaver::CreateDirectory
   int32_t ret = mmMkdir(const_cast<char *>(directory_path.c_str()), S_IRUSR | S_IWUSR | S_IXUSR);  // 700
   if (ret != 0) {
     if (errno != EEXIST) {
+      char_t err_buf[kMaxErrStrLen + 1U] = {};
+      const auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], kMaxErrStrLen);
       REPORT_CALL_ERROR("E19999",
                         "Can not create directory %s. Make sure the directory exists and writable. errmsg:%s",
-                        directory_path.c_str(), strerror(errno));
+                        directory_path.c_str(), err_msg);
       GELOGW("Can not create directory %s. Make sure the directory exists and writable. errmsg:%s",
-             directory_path.c_str(), strerror(errno));
+             directory_path.c_str(), err_msg);
       return ret;
     }
   }
