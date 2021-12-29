@@ -50,6 +50,9 @@ class PARSER_FUNC_VISIBILITY SubgraphAdapter {
   virtual domi::Status AdaptAndFindAllSubgraphs(ge::onnx::NodeProto *parent_op,
                                           std::vector<ge::onnx::GraphProto *> &onnx_graphs,
                                           std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph) {
+    (void)parent_op;
+    (void)onnx_graphs;
+    (void)name_to_onnx_graph;
     return domi::SUCCESS;
   }
 };
