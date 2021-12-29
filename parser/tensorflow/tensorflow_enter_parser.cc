@@ -31,7 +31,7 @@ Status TensorFlowEnterParser::ParseParams(const Message *op_src, ge::OpDescPtr &
   GE_CHECK_NOTNULL(op_desc);
   const std::string name = op_desc->GetName();
 
-  const NodeDef *node = PtrToPtr<Message, NodeDef>(op_src);
+  const NodeDef *node = PtrToPtr<const Message, const NodeDef>(op_src);
   domi::tensorflow::AttrValue str_attr;
   if (!TensorFlowUtil::FindAttrValue(node, ENTER_ATTR_FRAME_NAME, str_attr)) {
     REPORT_CALL_ERROR("E19999", "In NodeDef:%s attr:%s not exist, check invalid",

@@ -31,7 +31,7 @@ Status TensorFlowMergeParser::ParseParams(const Message *op_src, ge::OpDescPtr &
   GE_CHECK_NOTNULL(op_src);
   GE_CHECK_NOTNULL(op_desc);
 
-  const NodeDef *node = PtrToPtr<Message, NodeDef>(op_src);
+  const NodeDef *node = PtrToPtr<const Message, const NodeDef>(op_src);
   domi::tensorflow::AttrValue attr_num;
   if (!(TensorFlowUtil::FindAttrValue(node, ATTR_NAME_N, attr_num))) {
     GELOGW("In NodeDef %s dynamic attr [%s] is not exist.", op_desc->GetName().c_str(), ATTR_NAME_N.c_str());

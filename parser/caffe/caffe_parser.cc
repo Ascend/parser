@@ -78,6 +78,10 @@ using std::ifstream;
     }                                                                                           \
   } while (0)
 
+namespace {
+const size_t kMaxErrStrLen = 128U;
+}  //  namespace
+
 namespace ge {
 graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file, ge::Graph &graph) {
   ErrorManager::GetInstance().SetStage(error_message::kModelCompile, error_message::kParser);
@@ -247,7 +251,9 @@ Status CheckPathValid(const char *model_path, const string &custom_proto, string
                       string &custom_proto_name) {
   string path_model = ge::parser::RealPath(model_path);
   if (path_model.empty()) {
-    ErrorManager::GetInstance().ATCReportErrMessage("E19000", {"path", "errmsg"}, {model_path, strerror(errno)});
+    char_t err_buf[kMaxErrStrLen + 1U] = {};
+    const auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], kMaxErrStrLen);
+    ErrorManager::GetInstance().ATCReportErrMessage("E19000", {"path", "errmsg"}, {model_path, err_msg});
     GELOGE(FAILED, "[Check][Param]ModelPath %s is Invalid path of model", model_path);
     return FAILED;
   }
@@ -447,24 +453,30 @@ Status CaffeModelParser::CustomProtoParse(const char *model_path, const string &
 Status CaffeModelParser::ReadModelWithoutWarning(const char *model_path, google::protobuf::Message *message) {
   int32_t copy_fd = mmDup(STDERR_FILENO);
   if (copy_fd < 0) {
-    REPORT_CALL_ERROR("E19999", "Duplicate to file STDERR_FILENO failed, errmsg:%s", strerror(errno));
-    GELOGE(FAILED, "[Invoke][Dup] failed:%d, reason:%s", copy_fd, strerror(errno));
+    char_t err_buf[kMaxErrStrLen + 1U] = {};
+    const auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], kMaxErrStrLen);
+    REPORT_CALL_ERROR("E19999", "Duplicate to file STDERR_FILENO failed, errmsg:%s", err_msg);
+    GELOGE(FAILED, "[Invoke][Dup] failed:%d, reason:%s", copy_fd, err_msg);
     return FAILED;
   }
 
   int32_t fd = mmOpen(kDevNull, M_RDWR);
   if (fd < 0) {
     (void)mmClose(copy_fd);
-    ErrorManager::GetInstance().ATCReportErrMessage("E19001", {"file", "errmsg"}, {kDevNull, strerror(errno)});
-    GELOGE(FAILED, "[Open][File] %s failed. reason:%s", kDevNull, strerror(errno));
+    char_t err_buf[kMaxErrStrLen + 1U] = {};
+    const auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], kMaxErrStrLen);
+    ErrorManager::GetInstance().ATCReportErrMessage("E19001", {"file", "errmsg"}, {kDevNull, err_msg});
+    GELOGE(FAILED, "[Open][File] %s failed. reason:%s", kDevNull, err_msg);
     return FAILED;
   }
 
   if (mmDup2(fd, STDERR_FILENO) < 0) {
     (void)mmClose(fd);
     (void)mmClose(copy_fd);
-    REPORT_CALL_ERROR("E19999", "Duplicate to file STDERR_FILENO failed, errmsg:%s", strerror(errno));
-    GELOGE(FAILED, "[Invoke][Dup2] Re-orient failed. reason:%s", strerror(errno));
+    char_t err_buf[kMaxErrStrLen + 1U] = {};
+    const auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], kMaxErrStrLen);
+    REPORT_CALL_ERROR("E19999", "Duplicate to file STDERR_FILENO failed, errmsg:%s", err_msg);
+    GELOGE(FAILED, "[Invoke][Dup2] Re-orient failed. reason:%s", err_msg);
     return FAILED;
   }
 
@@ -478,8 +490,10 @@ Status CaffeModelParser::ReadModelWithoutWarning(const char *model_path, google:
   if (mmDup2(copy_fd, STDERR_FILENO) < 0) {
     (void)mmClose(fd);
     (void)mmClose(copy_fd);
-    REPORT_CALL_ERROR("E19999", "Duplicate to file STDERR_FILENO failed, errmsg:%s", strerror(errno));
-    GELOGE(FAILED, "[Invoke][Dup2] Re-orient failed. reason:%s", strerror(errno));
+    char_t err_buf[kMaxErrStrLen + 1U] = {};
+    const auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], kMaxErrStrLen);
+    REPORT_CALL_ERROR("E19999", "Duplicate to file STDERR_FILENO failed, errmsg:%s", err_msg);
+    GELOGE(FAILED, "[Invoke][Dup2] Re-orient failed. reason:%s", err_msg);
     return FAILED;
   }
   (void)mmClose(fd);
