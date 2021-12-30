@@ -18,6 +18,7 @@
 #include <unordered_map>
 #include "common/util.h"
 #include "graph/debug/ge_attr_define.h"
+#include "graph/def_types.h"
 #include "parser/common/op_parser_factory.h"
 #include "framework/omg/parser/parser_inner_ctx.h"
 #include "parser/onnx/onnx_util.h"
@@ -29,7 +30,7 @@ using namespace ge::parser;
 namespace ge {
 Status OnnxDataParser::ParseParams(const Message *op_src, ge::Operator &op_def) {
   GE_CHECK_NOTNULL(op_src);
-  const ge::onnx::NodeProto *node_src = reinterpret_cast<const ge::onnx::NodeProto *>(op_src);
+  const ge::onnx::NodeProto *node_src = PtrToPtr<const Message, const ge::onnx::NodeProto>(op_src);
   GE_CHECK_NOTNULL(node_src);
   GELOGD("Onnx op node name = %s, op type= %s, parse params", node_src->name().c_str(), node_src->op_type().c_str());
   if (ParseInputFromModel(op_src, op_def) != SUCCESS) {
@@ -73,7 +74,7 @@ int64_t OnnxDataParser::ParseInputTensor(const ge::onnx::AttributeProto &attribu
 
 Status OnnxDataParser::ParseInputFromModel(const Message *op_src, ge::Operator &op_def) {
   GE_CHECK_NOTNULL(op_src);
-  const ge::onnx::NodeProto *node = reinterpret_cast<const ge::onnx::NodeProto *>(op_src);
+  const ge::onnx::NodeProto *node = PtrToPtr<const Message, const ge::onnx::NodeProto>(op_src);
   GE_CHECK_NOTNULL(node);
 
   // Get attr t:'input_tensor' form NodeProto

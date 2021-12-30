@@ -21,6 +21,7 @@
 #include "parser/common/op_parser_factory.h"
 #include "register/op_registry.h"
 #include "parser/common/parser_utils.h"
+#include "graph/def_types.h"
 
 using domi::ONNX;
 using domi::ParseParamByOpFunc;
@@ -29,7 +30,7 @@ using domi::ParseParamFunc;
 namespace ge {
 Status OnnxCustomParserAdapter::ParseParams(const Message *op_src, ge::Operator &op_dest) {
   GE_CHECK_NOTNULL(op_src);
-  const ge::onnx::NodeProto *node_src = reinterpret_cast<const ge::onnx::NodeProto *>(op_src);
+  const ge::onnx::NodeProto *node_src = PtrToPtr<const Message, const ge::onnx::NodeProto>(op_src);
   GE_CHECK_NOTNULL(node_src);
   GELOGI("Onnx op node name = %s, op type= %s, parse params.", node_src->name().c_str(), node_src->op_type().c_str());
 
