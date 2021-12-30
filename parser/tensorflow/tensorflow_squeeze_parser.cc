@@ -47,9 +47,8 @@ Status TensorFlowSqueezeParser::ParseDesc(const domi::tensorflow::AttrValue &att
                   return domi::PARAM_INVALID);
   // calculate size
   int64_t real_size = 1;
-  int64_t tmp_dim = 0;
   for (uint32_t j = 0; j < ge_desc.GetShape().GetDimNum(); ++j) {
-    tmp_dim = ge_desc.GetShape().GetDim(j);
+    int64_t tmp_dim = ge_desc.GetShape().GetDim(j);
     GE_IF_BOOL_EXEC(tmp_dim < 0, real_size = tmp_dim * (-1) * real_size; continue;);
     PARSER_INT64_MULCHECK(real_size, tmp_dim);
     real_size *= tmp_dim;
