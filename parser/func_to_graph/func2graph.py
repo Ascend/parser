@@ -11,7 +11,7 @@ import os
 import sys
 import getopt
 
-import graph_library_pb2
+from google.protobuf import text_format
 import tensorflow as tf
 from tensorflow.python.framework.errors_impl import NotFoundError
 from tensorflow.python.platform import gfile
@@ -25,6 +25,9 @@ from tensorflow.python.framework import ops
 from tensorflow.python.framework import versions
 
 sys.path.append(os.path.join(os.path.split(os.path.realpath(__file__))[0], "util"))
+
+import graph_library_pb2
+
 
 def _get_num_args(arg_def, node_def):
     if arg_def.number_attr:
