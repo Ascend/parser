@@ -181,7 +181,7 @@ def convert_function_def_to_graph_def(fdef, input_shapes=None, copy_functions=Tr
     # Update inputs of all nodes in graph.
     for node_def in graph_def.node:
         for i in range(len(node_def.input)):
-            node_def.input[i] = nested_to_flat_tensor_name[node_def.input.get(i)]
+            node_def.input[i] = nested_to_flat_tensor_name.get(node_def.input[i])
 
     # Create _Retval for output nodes.
     create_retval_for_output_nodes(fdef, graph_def, nested_to_flat_tensor_name)
