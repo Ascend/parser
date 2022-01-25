@@ -189,7 +189,6 @@ set(REGISTER_SRC_FILES
     "${PARSER_DIR}/metadef/register/op_tiling/op_tiling.cc"
     "${PARSER_DIR}/metadef/register/op_tiling/op_tiling_registry.cc"
     "${PARSER_DIR}/metadef/register/register.cpp"
-    "${PARSER_DIR}/metadef/register/register_format_transfer.cc"
     "${PARSER_DIR}/metadef/register/register_pass.cpp"
     "${PARSER_DIR}/metadef/register/scope/scope_graph.cc"
     "${PARSER_DIR}/metadef/register/scope/scope_pass.cc"
