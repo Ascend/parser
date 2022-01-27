@@ -500,8 +500,8 @@ static uint16_t Fp16AddCalVal(uint16_t s_ret, int16_t e_ret, uint16_t m_ret, uin
   bool b_last_bit = ((m_ret & 1) > 0);
   bool b_trunc_high = 0;
   bool b_trunc_left = 0;
-  b_trunc_high = (TagFp16RoundMode::kRoundToNearest == g_round_mode) && ((m_trunc & kFp32SignMask) > 0);
-  b_trunc_left = (TagFp16RoundMode::kRoundToNearest == g_round_mode) && ((m_trunc & kFp32AbsMax) > 0);
+  b_trunc_high = (g_round_mode == TagFp16RoundMode::kRoundToNearest) && ((m_trunc & kFp32SignMask) > 0);
+  b_trunc_left = (g_round_mode == TagFp16RoundMode::kRoundToNearest) && ((m_trunc & kFp32AbsMax) > 0);
   m_ret = ManRoundToNearest(b_last_bit, b_trunc_high, b_trunc_left, m_ret, shift_out);
   while (m_ret >= m_max) {
     m_ret = m_ret >> 1;
@@ -623,8 +623,8 @@ static uint16_t Fp16Mul(uint16_t v_1, uint16_t v_2) {
   bool b_last_bit = ((mul_m & 1) > 0);
   bool b_trunc_high = 0;
   bool b_trunc_left = 0;
-  b_trunc_high = (TagFp16RoundMode::kRoundToNearest == g_round_mode) && ((m_trunc & kFp32SignMask) > 0);
-  b_trunc_left = (TagFp16RoundMode::kRoundToNearest == g_round_mode) && ((m_trunc & kFp32AbsMax) > 0);
+  b_trunc_high = (g_round_mode == TagFp16RoundMode::kRoundToNearest) && ((m_trunc & kFp32SignMask) > 0);
+  b_trunc_left = (g_round_mode == TagFp16RoundMode::kRoundToNearest) && ((m_trunc & kFp32AbsMax) > 0);
   mul_m = ManRoundToNearest(b_last_bit, b_trunc_high, b_trunc_left, mul_m);
 
   while (mul_m >= m_max || e_ret < 0) {
@@ -966,7 +966,7 @@ static void SetValByUint16Val(const uint16_t &input_val, const uint16_t &sign, u
       bool b_last_bit = ((m_tmp & 1) > 0);
       bool b_trunc_high = 0;
       bool b_trunc_left = 0;
-      if (TagFp16RoundMode::kRoundToNearest == g_round_mode) {  // trunc
+      if (g_round_mode == TagFp16RoundMode::kRoundToNearest) {  // trunc
         b_trunc_high = ((m_trunc & kFp32SignMask) > 0);
         b_trunc_left = ((m_trunc & kFp32AbsMax) > 0);
       }
@@ -1025,7 +1025,7 @@ fp16_t &fp16_t::operator=(const uint16_t &ui_val) {
       bool b_last_bit = ((m_ret & 1) > 0);
       bool b_trunc_high = 0;
       bool b_trunc_left = 0;
-      if (TagFp16RoundMode::kRoundToNearest == g_round_mode) {  // trunc
+      if (g_round_mode == TagFp16RoundMode::kRoundToNearest) {  // trunc
         b_trunc_high = ((m_trunc & kFp32SignMask) > 0);
         b_trunc_left = ((m_trunc & kFp32AbsMax) > 0);
       }
@@ -1069,7 +1069,7 @@ static void SetValByUint32Val(const uint32_t &input_val, const uint16_t &sign, u
     bool b_last_bit = ((m_tmp & 1) > 0);
     bool b_trunc_high = 0;
     bool b_trunc_left = 0;
-    if (TagFp16RoundMode::kRoundToNearest == g_round_mode) {  // trunc
+    if (g_round_mode == TagFp16RoundMode::kRoundToNearest) {  // trunc
       b_trunc_high = ((m_trunc & kFp32SignMask) > 0);
       b_trunc_left = ((m_trunc & kFp32AbsMax) > 0);
     }

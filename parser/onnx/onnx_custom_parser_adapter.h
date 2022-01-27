@@ -29,7 +29,7 @@ class PARSER_FUNC_VISIBILITY OnnxCustomParserAdapter : public OnnxOpParser {
   /// @return FAILED parse failed
   Status ParseParams(const Message *op_src, ge::Operator &op_dest) override;
 
-  Status ParseParams(const Operator &op_src, Operator &op_dest);
+  Status ParseParams(const Operator &op_src, Operator &op_dest) const;
 };
 }  // namespace ge
 

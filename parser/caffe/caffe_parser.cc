@@ -512,7 +512,7 @@ Status CaffeModelParser::ReadModelWithoutWarning(const char *model_path, google:
   return SUCCESS;
 }
 
-Status CaffeModelParser::ReadCaffeModelFromText(const char *model_path, google::protobuf::Message *message) {
+Status CaffeModelParser::ReadCaffeModelFromText(const char *model_path, google::protobuf::Message *message) const {
   GE_CHECK_NOTNULL(model_path);
   GE_CHECK_NOTNULL(message);
   GELOGI("Start to read model file: %s.", model_path);
@@ -586,7 +586,7 @@ Status CaffeModelParser::ParseLayerParameter(const google::protobuf::Descriptor 
 }
 
 Status CaffeModelParser::CreateCustomOperator(string op_name, string op_type, const google::protobuf::Message *message,
-                                              int index, vector<ge::Operator> &operators) {
+                                              int index, vector<ge::Operator> &operators) const {
   if (op_name.empty() || op_type.empty()) {
     REPORT_INNER_ERROR("E19999", "[Check][Param]Name or type of layer is empty, name: %s, type: %s.",
                        op_name.c_str(), op_type.c_str());
@@ -616,7 +616,7 @@ Status CaffeModelParser::CreateCustomOperator(string op_name, string op_type, co
   return SUCCESS;
 }
 
-void CaffeModelParser::AddOutputInfoToContext(string layer_name, int32_t top_index) {
+void CaffeModelParser::AddOutputInfoToContext(string layer_name, int32_t top_index) const {
   auto iter_node_name = ge::GetParserContext().out_nodes_map.find(layer_name);
   if (iter_node_name != ge::GetParserContext().out_nodes_map.end()) {
     iter_node_name->second.emplace_back(top_index);
@@ -705,7 +705,7 @@ Status CaffeModelParser::AddBlobsToMap(const domi::caffe::LayerParameter &layer,
   return SUCCESS;
 }
 
-bool CaffeModelParser::IsOpAttrEmpty(const ge::Operator &op, const std::string &type) {
+bool CaffeModelParser::IsOpAttrEmpty(const ge::Operator &op, const std::string &type) const {
   std::map<AscendString, AscendString> attrs;
   (void)op.GetAllAttrNamesAndTypes(attrs);
 
@@ -899,7 +899,7 @@ Status CaffeModelParser::AddNode(const domi::caffe::LayerParameter &layer, ge::C
   return SUCCESS;
 }
 
-Status CaffeModelParser::AddTensorDescToOpDesc(ge::OpDescPtr &op_desc, const domi::caffe::LayerParameter &layer) {
+Status CaffeModelParser::AddTensorDescToOpDesc(ge::OpDescPtr &op_desc, const domi::caffe::LayerParameter &layer) const {
   GE_CHECK_NOTNULL(op_desc);
   // Data node input and output tensordesc added in parserparam
   if (op_desc->GetType() == ge::parser::DATA) {
@@ -1069,7 +1069,7 @@ Status CaffeModelParser::AddEdges(ge::ComputeGraphPtr &graph) {
   return SUCCESS;
 }
 
-bool CaffeModelParser::IsOutputTop(const string &op_name, const int32_t index) {
+bool CaffeModelParser::IsOutputTop(const string &op_name, const int32_t index) const {
   bool ret = false;
   auto iter = ge::GetParserContext().out_nodes_map.find(op_name);
   if (iter != ge::GetParserContext().out_nodes_map.end()) {
@@ -1169,7 +1169,7 @@ Status CaffeModelParser::AddOutputTop(const domi::caffe::NetParameter &proto_mes
   return SUCCESS;
 }
 
-bool CaffeModelParser::CheckValidLayer(const domi::caffe::LayerParameter &layer) {
+bool CaffeModelParser::CheckValidLayer(const domi::caffe::LayerParameter &layer) const {
   if (layer.include_size() != 0) {
     bool filter_flag = false;
     for (int32_t j = 0; j < layer.include_size(); j++) {
@@ -1189,7 +1189,7 @@ bool CaffeModelParser::CheckValidLayer(const domi::caffe::LayerParameter &layer)
   return true;
 }
 
-bool CaffeModelParser::IsInplaceTopBlob(const domi::caffe::LayerParameter &layer, const std::string &top_name) {
+bool CaffeModelParser::IsInplaceTopBlob(const domi::caffe::LayerParameter &layer, const std::string &top_name) const {
   for (auto &bottom_name : layer.bottom()) {
     if (top_name == bottom_name) {
       return true;
@@ -1199,7 +1199,7 @@ bool CaffeModelParser::IsInplaceTopBlob(const domi::caffe::LayerParameter &layer
 }
 
 std::string CaffeModelParser::RemapTopNameByLayer(const domi::caffe::LayerParameter &layer, const std::string &top_name,
-                                                  int index) {
+                                                  int index) const {
   return (top_name + "_" + layer.name() + "_" + std::to_string(index));
 }
 
@@ -1294,7 +1294,7 @@ Status CaffeModelParser::ParseFromMemory(const char *data, uint32_t size, ge::Co
                           "[Check][Layer]layer phase is train, skip this layer, name:%s, type:%s.",
                           layer.name().c_str(), layer.type().c_str());
 
-    CHECK_FALSE_EXEC(!((layer.type() == ge::parser::DATA_TYPE) && (input_data_flag == true)), has_error = true;
+    CHECK_FALSE_EXEC(!((layer.type() == ge::parser::DATA_TYPE) && input_data_flag), has_error = true;
                      REPORT_INNER_ERROR("E19999", "net %s has input and data layer simultaneously, check invalid."
                                         "layer name:%s, layer type:%s", proto_message.name().c_str(),
                                         layer.name().c_str(), layer.type().c_str());
@@ -1516,7 +1516,7 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
                           "[Check][Layer]layer phase is train, skip this layer, name:%s, type:%s.",
                           layer.name().c_str(), layer.type().c_str());
 
-    CHECK_FALSE_EXEC(!((layer.type() == ge::parser::DATA_TYPE) && (input_data_flag == true)), has_error = true;
+    CHECK_FALSE_EXEC(!((layer.type() == ge::parser::DATA_TYPE) && input_data_flag), has_error = true;
                      GELOGE(FAILED, "[Check][Layer]net %s has input and data layer simultaneously, check invalid."
                             "layer name:%s, layer type:%s", proto_message.name().c_str(),
                             layer.name().c_str(), layer.type().c_str()));
@@ -1591,7 +1591,7 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
   return SUCCESS;
 }
 
-Status CaffeModelParser::FindShareParamLayers(const std::map<std::string, std::vector<std::string>> &layer_params_map) {
+Status CaffeModelParser::FindShareParamLayers(const std::map<std::string, std::vector<std::string>> &layer_params_map) const {
   for (auto p_iter = layer_params_map.begin(); p_iter != layer_params_map.end(); ++p_iter) {
     for (auto p2_iter = p_iter; p2_iter != layer_params_map.end(); ++p2_iter) {
       if (p_iter->first != p2_iter->first && p_iter->second == p2_iter->second) {
@@ -1625,7 +1625,7 @@ Status CaffeModelParser::ToJson(const char *model_file, const char *json_file) {
   return ModelSaver::SaveJsonToFile(json_file, j);
 }
 
-Status CaffeModelParser::ReorderInput(domi::caffe::NetParameter &net) {
+Status CaffeModelParser::ReorderInput(domi::caffe::NetParameter &net) const {
   int layer_size = net.layer_size();
   for (int i = 0; i < layer_size; ++i) {
     domi::caffe::LayerParameter *layer = net.mutable_layer(i);
@@ -2018,7 +2018,7 @@ Status CaffeWeightsParser::ConvertBlobsProto(const google::protobuf::Message *me
 }
 
 Status CaffeWeightsParser::ConvertBlobShapeProto(const google::protobuf::Message *message,
-                                                 google::protobuf::Message *dest_message) {
+                                                 google::protobuf::Message *dest_message) const {
   const google::protobuf::Reflection *reflection = message->GetReflection();
   CAFFE_CHECK_NULL_AND_REPROT_ERRORMSG(reflection, "Get Reflection failed in google::protobuf::Message");
   vector<const google::protobuf::FieldDescriptor *> field_desc;
@@ -2040,7 +2040,7 @@ Status CaffeWeightsParser::ConvertBlobShapeProto(const google::protobuf::Message
 }
 
 Status CaffeWeightsParser::ConvertConvParamProto(const google::protobuf::Message *message,
-                                                 google::protobuf::Message *dest_message) {
+                                                 google::protobuf::Message *dest_message) const {
   const google::protobuf::Reflection *reflection = message->GetReflection();
   CAFFE_CHECK_NULL_AND_REPROT_ERRORMSG(reflection, "Get Reflection failed in google::protobuf::Message");
   vector<const google::protobuf::FieldDescriptor *> field_desc;
@@ -2060,7 +2060,7 @@ Status CaffeWeightsParser::ConvertConvParamProto(const google::protobuf::Message
 }
 
 Status CaffeWeightsParser::ConvertInnerProdcutProto(const google::protobuf::Message *message,
-                                                    google::protobuf::Message *dest_message) {
+                                                    google::protobuf::Message *dest_message) const {
   const google::protobuf::Reflection *reflection = message->GetReflection();
   CAFFE_CHECK_NULL_AND_REPROT_ERRORMSG(reflection, "Get Reflection failed in google::protobuf::Message");
   vector<const google::protobuf::FieldDescriptor *> field_desc;
@@ -2079,7 +2079,7 @@ Status CaffeWeightsParser::ConvertInnerProdcutProto(const google::protobuf::Mess
   return SUCCESS;
 }
 
-Status CaffeWeightsParser::CheckLayersSize(const google::protobuf::Message *message) {
+Status CaffeWeightsParser::CheckLayersSize(const google::protobuf::Message *message) const {
   const google::protobuf::Reflection *reflection = message->GetReflection();
   CAFFE_CHECK_NULL_AND_REPROT_ERRORMSG(reflection, "Get Reflection failed in google::protobuf::Message");
   vector<const google::protobuf::FieldDescriptor *> field_desc;

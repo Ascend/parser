@@ -44,7 +44,7 @@ Status OnnxCustomParserAdapter::ParseParams(const Message *op_src, ge::Operator 
   return SUCCESS;
 }
 
-Status OnnxCustomParserAdapter::ParseParams(const Operator &op_src, Operator &op_dest) {
+Status OnnxCustomParserAdapter::ParseParams(const Operator &op_src, Operator &op_dest) const {
   ParseParamByOpFunc custom_op_parser = domi::OpRegistry::Instance()->GetParseParamByOperatorFunc(
       ParserUtils::GetOperatorType(op_src));
   GE_CHECK_NOTNULL(custom_op_parser);

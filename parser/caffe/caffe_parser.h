@@ -56,17 +56,17 @@ static std::map<std::vector<std::string>, std::vector<std::string>> params_share
 class PARSER_FUNC_VISIBILITY CaffeModelParser : public domi::ModelParser {
  public:
   CaffeModelParser() {}
-  virtual ~CaffeModelParser() {}
+  virtual ~CaffeModelParser() override {}
 
   /**
    * @ingroup domi_omg
    * @brief Parse the relevant data from the model file and save it to graph
-   * @param [in] file Path of model file
+   * @param [in] model_path Path of model file
    * @param [in|out] graph graph for saving model information
    * @return SUCCESS parse successfully
    * @return FAILED parse failed
    */
-  Status Parse(const char *file, ge::Graph &graph) override;
+  Status Parse(const char *model_path, ge::Graph &graph) override;
 
   /**
    * @ingroup domi_omg
@@ -124,7 +124,7 @@ class PARSER_FUNC_VISIBILITY CaffeModelParser : public domi::ModelParser {
   }
 
  private:
-  Status Parse(const char *file, ge::ComputeGraphPtr &graph);
+  Status Parse(const char *model_path, ge::ComputeGraphPtr &graph);
 
   /**
    * @ingroup domi_omg
@@ -190,7 +190,7 @@ class PARSER_FUNC_VISIBILITY CaffeModelParser : public domi::ModelParser {
    * @return SUCCESS read file successfully
    * @return FAILED read file failed
    */
-  Status ReadCaffeModelFromText(const char *model_path, google::protobuf::Message *message);
+  Status ReadCaffeModelFromText(const char *model_path, google::protobuf::Message *message) const;
 
   /*
    * @ingroup domi_omg
@@ -216,7 +216,7 @@ class PARSER_FUNC_VISIBILITY CaffeModelParser : public domi::ModelParser {
    * @return FAILED create operator failed
    */
   Status CreateCustomOperator(std::string op_name, std::string op_type, const google::protobuf::Message *message,
-                              int index, std::vector<ge::Operator> &operators);
+                              int index, std::vector<ge::Operator> &operators) const;
   /**
    * @ingroup domi_omg
    * @brief Add blob information to the bottom_blobs_map and top_blobs_map_
@@ -259,7 +259,7 @@ class PARSER_FUNC_VISIBILITY CaffeModelParser : public domi::ModelParser {
    * @return true valid
    * @return false invalid
    */
-  bool CheckValidLayer(const domi::caffe::LayerParameter &layer);
+  bool CheckValidLayer(const domi::caffe::LayerParameter &layer) const;
 
   /**
    * @ingroup domi_omg
@@ -267,7 +267,7 @@ class PARSER_FUNC_VISIBILITY CaffeModelParser : public domi::ModelParser {
    * @return true is 'Inplace'
    * @return false not is 'Inplace'
    */
-  bool IsInplaceTopBlob(const domi::caffe::LayerParameter &layer, const std::string &top_name);
+  bool IsInplaceTopBlob(const domi::caffe::LayerParameter &layer, const std::string &top_name) const;
 
   /**
    * @ingroup domi_omg
@@ -275,7 +275,7 @@ class PARSER_FUNC_VISIBILITY CaffeModelParser : public domi::ModelParser {
    * @return true yes
    * @return false no
    */
-  bool IsOutputTop(const string &op_name, int32_t index);
+  bool IsOutputTop(const string &op_name, const int32_t index) const;
 
   /**
    * @ingroup domi_omg
@@ -284,29 +284,30 @@ class PARSER_FUNC_VISIBILITY CaffeModelParser : public domi::ModelParser {
    * @param [in|out] Layer set of the same param
    * @return Status
    */
-  Status FindShareParamLayers(const std::map<std::string, std::vector<std::string>> &);
+  Status FindShareParamLayers(const std::map<std::string, std::vector<std::string>> &layer_params_map) const;
 
-  Status AddTensorDescToOpDesc(ge::OpDescPtr &op_desc, const domi::caffe::LayerParameter &layer);
+  Status AddTensorDescToOpDesc(ge::OpDescPtr &op_desc, const domi::caffe::LayerParameter &layer) const;
 
   Status AddTensorDescToOpDescByIr(ge::OpDescPtr &op_desc, const domi::caffe::LayerParameter &layer,
                                    const string &op_type);
 
   Status AddUserOutNodesTop();
 
-  std::string RemapTopNameByLayer(const domi::caffe::LayerParameter &layer, const std::string &top_name, int index);
+  std::string RemapTopNameByLayer(const domi::caffe::LayerParameter &layer, const std::string &top_name,
+                                  int index) const;
 
   Status GetCustomOp(const domi::caffe::LayerParameter &layer, vector<ge::Operator> &operators);
 
-  bool IsOpAttrEmpty(const ge::Operator &op, const std::string &type);
+  bool IsOpAttrEmpty(const ge::Operator &op, const std::string &type) const;
 
   Status ParseOpParam(const domi::caffe::LayerParameter &layer, ge::OpDescPtr &op,
                       std::shared_ptr<ge::OpParser> &op_parser);
 
   void SaveOrigionLayerTops(domi::caffe::LayerParameter &layer);
 
-  Status ReorderInput(domi::caffe::NetParameter &net);
+  Status ReorderInput(domi::caffe::NetParameter &net) const;
 
-  void AddOutputInfoToContext(string layer_name, int32_t top_index);
+  void AddOutputInfoToContext(string layer_name, int32_t top_index) const;
 
   Status ParseOutputNodeTopInfo(const domi::caffe::NetParameter &proto_message);
 
@@ -357,8 +358,8 @@ class PARSER_FUNC_VISIBILITY CaffeWeightsParser : public domi::WeightsParser {
 
   Status Parse(const char *file, ge::ComputeGraphPtr &graph);
 
-  Status ParseWeightByFusionProto(const char *model_path, const string &custom_proto_path,
-                                  const string &custom_proto_name, ge::ComputeGraphPtr &graph);
+  Status ParseWeightByFusionProto(const char *weight_path, const string &fusion_proto_path,
+                                  const string &fusion_proto_name, ge::ComputeGraphPtr &graph);
 
   Status ParseLayerParameter(const google::protobuf::Descriptor *layer_descriptor,
                              const google::protobuf::Message *message,
@@ -367,7 +368,7 @@ class PARSER_FUNC_VISIBILITY CaffeWeightsParser : public domi::WeightsParser {
   Status ConvertLayerParameter(const google::protobuf::Message *layer_message,
                                ge::ComputeGraphPtr &graph);
 
-  Status CheckLayersSize(const google::protobuf::Message *message);
+  Status CheckLayersSize(const google::protobuf::Message *message) const;
 
   Status ConvertLayerProto(const google::protobuf::Message *message,
                            google::protobuf::Message *layer);
@@ -381,13 +382,13 @@ class PARSER_FUNC_VISIBILITY CaffeWeightsParser : public domi::WeightsParser {
                            google::protobuf::Message *blobs);
 
   Status ConvertBlobShapeProto(const google::protobuf::Message *message,
-                               google::protobuf::Message *dest_message);
+                               google::protobuf::Message *dest_message) const;
 
   Status ConvertInnerProdcutProto(const google::protobuf::Message *message,
-                                  google::protobuf::Message *dest_message);
+                                  google::protobuf::Message *dest_message) const;
 
   Status ConvertConvParamProto(const google::protobuf::Message *message,
-                               google::protobuf::Message *dest_message);
+                               google::protobuf::Message *dest_message) const;
   /**
    * @ingroup domi_omg
    * @brief Layer types to be ignored in weight resolution

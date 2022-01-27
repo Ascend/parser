@@ -301,7 +301,7 @@ Status ParserGraphOptimizer::InsertNode(ge::ComputeGraphPtr sub_graph, vector<ge
         vector<ge::NodePtr>::iterator iter = find(nodes.begin(), nodes.end(), peer_in_anchor->GetOwnerNode());
         GE_IF_BOOL_EXEC(iter == nodes.end(), output_in_map[out_anchor].emplace_back(peer_in_anchor); hasOutNode = true);
       }
-      GE_IF_BOOL_EXEC(hasOutNode == true, output_anchors.emplace_back(out_anchor));
+      GE_IF_BOOL_EXEC(hasOutNode, output_anchors.emplace_back(out_anchor));
     }
 
     InControlAnchorPtr node_in_control = node->GetInControlAnchor();
@@ -381,7 +381,7 @@ Status ParserGraphOptimizer::RebuildOutputAnchors(vector<ge::OutDataAnchorPtr> &
     GE_CHK_BOOL_EXEC(fusion_op_desc->AddOutputDesc(src_out_desc) == ge::GRAPH_SUCCESS, return FAILED);
 
     ge::DataType data_type = src_out_desc.GetDataType();
-    auto iter = GE_TENSORFLOW_DATA_TYPE_MAP.find((int32_t)data_type);
+    std::map<int32_t, int32_t>::const_iterator iter = GE_TENSORFLOW_DATA_TYPE_MAP.find((int32_t)data_type);
     GE_IF_BOOL_EXEC(
         iter == GE_TENSORFLOW_DATA_TYPE_MAP.end(),
         REPORT_INNER_ERROR("E19999", "datatype:%d of output:%d in node:%s:%s is not supported",
@@ -417,7 +417,7 @@ Status ParserGraphOptimizer::RebuildInputAnchors(vector<ge::InDataAnchorPtr> &in
                                    return FAILED,
                                    "Add fusion_op_desc AddInputDesc failed");
     ge::DataType data_type = tensorDescPtr->GetDataType();
-    auto iter = GE_TENSORFLOW_DATA_TYPE_MAP.find((int32_t)data_type);
+    std::map<int32_t, int32_t>::const_iterator iter = GE_TENSORFLOW_DATA_TYPE_MAP.find((int32_t)data_type);
     GE_IF_BOOL_EXEC(
         iter == GE_TENSORFLOW_DATA_TYPE_MAP.end(),
         REPORT_INNER_ERROR("E19999", "datatype:%d of input:%d in node:%s:%s is not supported",

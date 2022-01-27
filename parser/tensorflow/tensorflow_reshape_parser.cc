@@ -74,11 +74,11 @@ Status TensorFlowReshapeParser::ParseParams(const Message *op_src, ge::OpDescPtr
       ge::GeTensorDesc output_desc;
 
       if (TensorFlowUtil::FindAttrValue(node_src, ge::ATTR_NAME_INPUT_TENSOR_DESC, input_attr_value)) {
-        GE_CHK_BOOL_RET_STATUS(SUCCESS == ParseDesc(input_attr_value, input_desc), FAILED, "parse input desc failed");
+        GE_CHK_BOOL_RET_STATUS(ParseDesc(input_attr_value, input_desc) == SUCCESS, FAILED, "parse input desc failed");
       }
 
       if (TensorFlowUtil::FindAttrValue(node_src, ge::ATTR_NAME_OUTPUT_TENSOR_DESC, output_attr_value)) {
-        GE_CHK_BOOL_RET_STATUS(SUCCESS == ParseDesc(output_attr_value, output_desc), FAILED,
+        GE_CHK_BOOL_RET_STATUS(ParseDesc(output_attr_value, output_desc) == SUCCESS, FAILED,
                                "parse output desc failed");
       }
 

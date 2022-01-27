@@ -24,7 +24,7 @@ class ProtoTypePassManager {
  public:
   static ProtoTypePassManager &Instance();
 
-  Status Run(google::protobuf::Message *message, const domi::FrameworkType &fmk_type);
+  Status Run(google::protobuf::Message *message, const domi::FrameworkType &fmk_type) const;
 
   ~ProtoTypePassManager() = default;
 

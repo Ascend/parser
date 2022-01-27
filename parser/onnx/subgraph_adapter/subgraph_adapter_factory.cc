@@ -17,7 +17,7 @@
 #include "subgraph_adapter_factory.h"
 #include "framework/common/debug/ge_log.h"
 
-namespace ge{
+namespace ge {
 SubgraphAdapterFactory* SubgraphAdapterFactory::Instance() {
   static SubgraphAdapterFactory instance;
   return &instance;

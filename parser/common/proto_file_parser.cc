@@ -117,7 +117,7 @@ string GetMessageName(const std::string &line) {
 string CreatTmpName(int len) {
   std::uniform_int_distribution<int> u(kMinRandomNum, kMaxRandomNum);
   std::default_random_engine e;
-  e.seed(time(0));
+  e.seed(time(nullptr));
   string tmp_name = "";
   for (int i = 0; i < len; i++) {
     tmp_name += std::to_string(u(e));
@@ -200,7 +200,7 @@ Status ProtoFileParser::CreatProtoFile() {
 
 Status ProtoFileParser::ParseProtoFile(const string &proto_file,
                                        std::map<int, std::pair<string, string>> &identifier_op_map,
-                                       std::map<std::string, std::pair<int, string>> &op_identifier_map) {
+                                       std::map<std::string, std::pair<int, string>> &op_identifier_map) const {
   ifstream read_file;
   read_file.open(proto_file, std::ios::in);
   if (read_file.fail()) {

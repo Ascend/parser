@@ -25,7 +25,7 @@ ProtoTypePassManager &ProtoTypePassManager::Instance() {
   return instance;
 }
 
-Status ProtoTypePassManager::Run(google::protobuf::Message *message, const domi::FrameworkType &fmk_type) {
+Status ProtoTypePassManager::Run(google::protobuf::Message *message, const domi::FrameworkType &fmk_type) const {
   GE_CHECK_NOTNULL(message);
   const auto &pass_vec = ProtoTypePassRegistry::GetInstance().GetCreateFnByType(fmk_type);
   for (const auto &pass_item : pass_vec) {

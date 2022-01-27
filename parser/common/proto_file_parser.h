@@ -34,7 +34,7 @@ private:
   Status CreatProtoFile();
   Status ParseProtoFile(const std::string &proto_file,
                         std::map<int, std::pair<std::string, std::string> > &identifier_op_map,
-                        std::map<std::string, std::pair<int, std::string> > &op_identifier_map);
+                        std::map<std::string, std::pair<int, std::string> > &op_identifier_map) const;
   Status WriteCaffeProtoFile(const char *custom_proto_file, std::ifstream &read_caffe,
                              std::ofstream &write_tmp) const;
   Status WriteProtoFile(const char *caffe_proto_file, const char *custom_proto_file);

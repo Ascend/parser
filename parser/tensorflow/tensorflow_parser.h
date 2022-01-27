@@ -570,9 +570,9 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
   Status AddControlEdgeAfterRemoveInputs(domi::tensorflow::GraphDef *graph_def,
                                          domi::tensorflow::NodeDef *node_def,
                                          const map<string, NodeDef *> &all_node_map,
-                                         const vector<string> &removed_inputs_vec);
+                                         const vector<string> &removed_inputs_vec) const;
 
-  void RemoveInputAttr(domi::tensorflow::NodeDef *node_def, const map<string, vector<int>> &remove_inputs_map);
+  void RemoveInputAttr(domi::tensorflow::NodeDef *node_def, const map<string, vector<int>> &remove_inputs_map) const;
 
   /**
   * @ingroup domi_omg

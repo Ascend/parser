@@ -25,7 +25,7 @@ using domi::FusionParseParamByOpFunc;
 
 namespace ge {
 Status TensorFlowFusionCustomParserAdapter::ParseParams(const vector<const NodeDef *> &v_input_const,
-                                                        ge::NodePtr &node) {
+                                                        ge::NodePtr &node) const {
   GE_CHECK_NOTNULL(node);
   auto op_dest = node->GetOpDesc();
   GE_CHECK_NOTNULL(op_dest);
