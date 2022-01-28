@@ -37,8 +37,8 @@ Status ParseParams(const Message *op_src, ArgOpOperator *const op) {
   domi::tensorflow::AttrValue output_attr_value;
   if (TensorFlowUtil::FindAttrValue(node, ge::ATTR_NAME_OUTPUT_TENSOR_DESC, output_attr_value)) {
     GE_CHK_STATUS_RET(
-      TensorFlowUtil::TransTensorDescriptor(output_attr_value, op, TENSORFLOW_NORMAL_OUTPUT_TENSOR_FLAG),
-      "trans output_attr_value failed, op: %s", node->name().c_str());
+        TensorFlowUtil::TransTensorDescriptor(output_attr_value, op, TENSORFLOW_NORMAL_OUTPUT_TENSOR_FLAG),
+        "trans output_attr_value failed, op: %s", node->name().c_str());
     // For the needs of the Data operator, copy the output description to the input description
     GE_CHK_STATUS_RET(TensorFlowUtil::TransTensorDescriptor(output_attr_value, op, TENSORFLOW_NORMAL_INPUT_TENSOR_FLAG),
                       "trans output_attr_value failed, op: %s", node->name().c_str());

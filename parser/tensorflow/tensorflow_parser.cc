@@ -494,7 +494,7 @@ Status TensorFlowModelParser::AddNode(const domi::tensorflow::NodeDef *node_def,
   // node is released in destructor
   string node_name = node_def->name();
   string node_op = node_def->op();
-  auto type_it = tensorflow_op_map.find(node_op);
+  std::map<std::string, std::string>::const_iterator type_it = tensorflow_op_map.find(node_op);
   if (type_it == tensorflow_op_map.end()) {
     GELOGI("Can not find,maybe this node has no plugin node_name is %s, node_op is %s ", node_name.c_str(),
            node_op.c_str());
@@ -553,7 +553,7 @@ Status TensorFlowModelParser::AddNode(const domi::tensorflow::NodeDef *node_def,
     shared_ptr<OpParser> fusion_op_parser = factory->CreateFusionOpParser(op_type);
     GE_CHECK_NOTNULL(fusion_op_parser);
     // Find all children of the fusion operator
-    auto iter = fusion_op_nodedef_map_.find(node_def->name());
+    std::map<string, vector<const NodeDef *>>::const_iterator iter = fusion_op_nodedef_map_.find(node_def->name());
     if (iter == fusion_op_nodedef_map_.end()) {
       REPORT_INNER_ERROR("E19999", "FusionOp node %s has no children node, check invalid", node_name.c_str());
       GELOGE(FAILED, "FusionOp node %s has no children node!", node_name.c_str());
@@ -756,7 +756,7 @@ Status TensorFlowModelParser::AddEdges(ge::ComputeGraphPtr &graph) {
       }
       // Find that the output of the source node is equal to the destination node
       std::map<std::string, std::vector<std::pair<int32_t, int32_t>>> &dest_input_map = dest_iter->second.input_map;
-      auto input_iter = dest_input_map.find(src_op_name);
+      std::map<std::string, std::vector<std::pair<int32_t, int32_t>>>::const_iterator input_iter = dest_input_map.find(src_op_name);
       // Find output and input
       if (input_iter == dest_input_map.end()) {
         continue;
@@ -919,7 +919,7 @@ Status TensorFlowModelParser::ParseNodeDef(TensorFlowModelParser *parser, ge::Co
     return AddScopeInnerNode(parser, graph, graphMutex, node_def);
   }
 
-  auto iterator = parser->adaptedOpTypeMap_.find(node_name);
+  std::map<std::string, std::string>::const_iterator iterator = parser->adaptedOpTypeMap_.find(node_name);
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
       iterator == parser->adaptedOpTypeMap_.end(),
       REPORT_INNER_ERROR("E19999", "get adapted op type failed, node name = %s", node_name.c_str());
@@ -1374,7 +1374,7 @@ Status TensorFlowModelParser::Parse(const char *model_path, ge::ComputeGraphPtr 
         }
       }
 
-      auto iter = function_name_to_graphdef.find(arg.function_name);
+      std::map<std::string, domi::tensorflow::GraphDef>::const_iterator iter = function_name_to_graphdef.find(arg.function_name);
       if (iter == function_name_to_graphdef.end()) {
         ErrorManager::GetInstance().ATCReportErrMessage("E12013", {"functionname"}, {arg.function_name});
         GELOGE(FAILED, "Failed to get subgraph by function name %s", arg.function_name.c_str());
@@ -1866,7 +1866,7 @@ Status TensorFlowModelParser::UpdateAllNodeOpContext(shared_ptr<ge::ScopeGraph> 
       ge::ScopeFusionOpInfo info;
       if (IsFusionOpChild(op_node_name, &info) && nodedef_map_[op_node_name]->op() != TENSORFLOWF_NODE_OP_CONST) {
         // This node is a fusion operator
-        auto fusion_iter = tmp_fusion_op_node_context_map.find(info.fusion_node_name);
+        std::map<std::string, OpNodeContext>::const_iterator fusion_iter = tmp_fusion_op_node_context_map.find(info.fusion_node_name);
         if (fusion_iter == tmp_fusion_op_node_context_map.end()) {
           OpNodeContext op_node_context;
           tmp_fusion_op_node_context_map[info.fusion_node_name] = op_node_context;
@@ -2116,7 +2116,7 @@ Status TensorFlowModelParser::NormalizeInputOrOutputMap(
       }
 
       string name = to_string(pair.first) + ":" + to_string(pair.second);
-      auto compare_iter = compare_set.find(name);
+      std::set<std::string>::const_iterator compare_iter = compare_set.find(name);
       if (compare_iter != compare_set.end()) {
         // pair<from,to> repeat, ignore
         continue;
@@ -2155,7 +2155,7 @@ void TensorFlowModelParser::SaveEdgesControlInfo(const string &node_name, const 
 }
 
 void TensorFlowModelParser::UpdateEdgesControlInfo(const ge::ScopeFusionOpInfo &info) {
-  auto iter = edges_control_map.find(info.node_name);
+  std::map<std::string, std::vector<int32_t>>::const_iterator iter = edges_control_map.find(info.node_name);
   if (iter != edges_control_map.end()) {
     // Delete the original fusion operator node information and add the fusion operator control edge information
     edges_control_map.erase(iter);
@@ -2479,7 +2479,7 @@ Status TensorFlowModelParser::OptimizeIdentityByOutput(map<string, NodeDef *> &n
       return INTERNAL_ERROR, "Can't find op node context.");
   OpNodeContext op_node_context = context_iter->second;
 
-  auto node_def_iter = nodedef_map.find(curr_node_name);
+  std::map<std::string, NodeDef *>::const_iterator node_def_iter = nodedef_map.find(curr_node_name);
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
       (node_def_iter == nodedef_map.end()),
       REPORT_INNER_ERROR("E19999", "Node:%s can't find in nodedef_map, check invalid", curr_node_name.c_str());
@@ -2809,7 +2809,7 @@ Status GetTransposeInfo(GraphDef *graph_def, std::map<std::string, std::string> 
 
 Status EraseTransposeNode(std::map<std::string, std::string> &softmaxInfo,
                           std::map<std::string, DelTransposeInfo> &transposeInfo) {
-  auto itTranspose = transposeInfo.begin();
+  std::map<std::string, DelTransposeInfo>::const_iterator itTranspose = transposeInfo.begin();
   for (; itTranspose != transposeInfo.end();) {
     // transpose --> softmax
     bool bErase = true;
@@ -3144,7 +3144,7 @@ Status TensorFlowModelParser::TrimGraphByInput(const domi::tensorflow::GraphDef 
       const ge::ParserContext &ctx = ge::GetParserContext();
       std::map<std::string, std::vector<int64_t>> input_dims = ctx.input_dims;
       std::vector<int64_t> designated_dims = input_dims.at(node.name());
-      for (int32_t i = 0; i < (int32_t)designated_dims.size(); i++) {
+      for (int32_t i = 0; i < static_cast<int32_t>(designated_dims.size()); i++) {
         data_shape->add_dim()->set_size(designated_dims[i]);
       }
       google::protobuf::Map<std::string, domi::tensorflow::AttrValue> *attr = placeholder_node.mutable_attr();
@@ -3217,7 +3217,7 @@ Status TensorFlowModelParser::TrimGraphByOutput(const domi::tensorflow::GraphDef
       const ge::ParserContext &ctx = ge::GetParserContext();
       std::map<std::string, std::vector<int64_t>> input_dims = ctx.input_dims;
       std::vector<int64_t> designated_dims = input_dims.at(node.name());
-      for (int32_t i = 0; i < (int32_t)designated_dims.size(); i++) {
+      for (int32_t i = 0; i < static_cast<int32_t>(designated_dims.size()); i++) {
         data_shape->add_dim()->set_size(designated_dims[i]);
       }
       google::protobuf::Map<std::string, domi::tensorflow::AttrValue> *attr = placeholder_node.mutable_attr();
@@ -3425,7 +3425,7 @@ Status TensorFlowModelParser::OptimizeConstNodes4CustomOp(domi::tensorflow::Grap
 Status TensorFlowModelParser::AddControlEdgeAfterRemoveInputs(domi::tensorflow::GraphDef *graph_def,
                                                               domi::tensorflow::NodeDef *node_def,
                                                               const map<string, NodeDef *> &all_node_map,
-                                                              const vector<string> &removed_inputs_vec) {
+                                                              const vector<string> &removed_inputs_vec) const {
   GE_CHECK_NOTNULL(graph_def);
   GE_CHECK_NOTNULL(node_def);
   for (const auto &remove_input : removed_inputs_vec) {
@@ -3513,7 +3513,7 @@ Status TensorFlowModelParser::RemoveInputs(domi::tensorflow::GraphDef *graph_def
 }
 
 void TensorFlowModelParser::RemoveInputAttr(domi::tensorflow::NodeDef *node_def,
-                                            const map<string, vector<int>> &remove_inputs_map) {
+                                            const map<string, vector<int>> &remove_inputs_map) const {
   // The caller guarantees that the pointer is not null
   auto *inputs = node_def->mutable_input();
   google::protobuf::Map<std::string, domi::tensorflow::AttrValue> *attr_map = node_def->mutable_attr();

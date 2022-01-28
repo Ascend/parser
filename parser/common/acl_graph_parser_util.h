@@ -48,18 +48,18 @@ class AclGrphParseUtil {
 
  private:
   bool parser_initialized = false;
-  domi::Status CheckOptions(const std::map<AscendString, AscendString> &parser_params);
-  domi::Status GetOutputLeaf(NodePtr node, std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info);
+  domi::Status CheckOptions(const std::map<AscendString, AscendString> &parser_params) const;
+  domi::Status GetOutputLeaf(NodePtr node, std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info) const;
   void CreateOutputNodesInfo(std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info,
-                             std::vector<std::string> &output_nodes_name);
+                             std::vector<std::string> &output_nodes_name) const;
   static void SetDefaultFormat();
   domi::Status ParseAclOutputNodes(const std::string &out_nodes);
-  domi::Status ParseAclOutputFp16NodesFormat(const std::string &is_output_fp16);
-  domi::Status ParseAclEnableScope(const std::string &enable_scope_fusion_passes);
+  domi::Status ParseAclOutputFp16NodesFormat(const std::string &is_output_fp16) const;
+  domi::Status ParseAclEnableScope(const std::string &enable_scope_fusion_passes) const;
   static void AddAttrsForInputNodes(const vector<string> &adjust_fp16_format_vec, const string &fp16_nodes_name,
                                     size_t index, OpDescPtr &op_desc);
   domi::Status ParseAclInputFp16Nodes(const ComputeGraphPtr &graph, const string &input_fp16_nodes,
-                                      const string &is_input_adjust_hw_layout);
+                                      const string &is_input_adjust_hw_layout) const;
   domi::Status GetDefaultOutInfo(ge::ComputeGraphPtr &compute_graph,
                                  std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info);
 };

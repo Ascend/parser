@@ -29,7 +29,7 @@ using domi::CAFFE;
 
 namespace ge {
 Status CaffeDataParser::GetOutputDesc(const string &name, const std::vector<int64_t> &input_dims,
-                                      const ge::OpDescPtr &op) {
+                                      const ge::OpDescPtr &op) const {
   GE_CHECK_NOTNULL(op);
   GELOGI("The input dim size is %zu in layer %s.", input_dims.size(), name.c_str());
 

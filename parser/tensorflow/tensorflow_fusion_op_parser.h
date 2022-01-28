@@ -44,7 +44,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowFusionOpParser : public TensorFlowOpParse
    * @return SUCCESS Parsing success
    * @return FAILED Parsing failed
    */
-  virtual Status ParseParams(const std::vector<const NodeDef *> &v_input_const, ge::NodePtr &node);
+  virtual Status ParseParams(const std::vector<const NodeDef *> &v_input_const, ge::NodePtr &node) const;
 
   /**
    * @ingroup domi_omg

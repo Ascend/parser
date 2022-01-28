@@ -90,7 +90,7 @@ domi::Status IfSubgraphAdapter::ParseIfNodeSubgraphs(
 }
 
 domi::Status IfSubgraphAdapter::GetSubgraphsAllInputs(ge::onnx::GraphProto &onnx_graph,
-                                                      std::set<std::string> &all_inputs) {
+                                                      std::set<std::string> &all_inputs) const {
   std::set<std::string> graph_inputs;
   std::set<std::string> graph_outputs;
   for (int i = 0; i < onnx_graph.node_size(); i++) {
@@ -115,7 +115,7 @@ domi::Status IfSubgraphAdapter::GetSubgraphsAllInputs(ge::onnx::GraphProto &onnx
 }
 
 void IfSubgraphAdapter::AddInputNodeForGraph(const std::set<std::string> &all_inputs,
-                                             ge::onnx::GraphProto &onnx_graph) {
+                                             ge::onnx::GraphProto &onnx_graph) const {
   for (const auto &input_name : all_inputs) {
     ge::onnx::ValueInfoProto *value_info = onnx_graph.add_input();
     value_info->set_name(input_name);
@@ -123,7 +123,7 @@ void IfSubgraphAdapter::AddInputNodeForGraph(const std::set<std::string> &all_in
 }
 
 void IfSubgraphAdapter::AddInputForParentNode(const std::set<std::string> &all_inputs,
-                                              ge::onnx::NodeProto &parent_node) {
+                                              ge::onnx::NodeProto &parent_node) const {
   for (const auto &input_name : all_inputs) {
     parent_node.add_input(input_name);
   }

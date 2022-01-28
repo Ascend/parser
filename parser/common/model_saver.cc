@@ -36,7 +36,7 @@ const uint32_t kInteval = 2;
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status ModelSaver::SaveJsonToFile(const char *file_path,
                                                                                    const Json &model) {
   Status ret = SUCCESS;
-  if (file_path == nullptr || SUCCESS != CheckPath(file_path)) {
+  if ((file_path == nullptr) || (CheckPath(file_path) != SUCCESS)) {
     REPORT_INNER_ERROR("E19999", "param file_path is nullptr or checkpath not return success");
     GELOGE(FAILED, "[Check][Param]Check output file failed.");
     return FAILED;

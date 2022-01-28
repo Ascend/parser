@@ -16,7 +16,7 @@
 #include "framework/omg/parser/parser_types.h"
 
 
-namespace ge{
+namespace ge {
 namespace parser {
 const char *DATA = "Data";
 const char *AIPPDATA = "AippData";

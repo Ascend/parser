@@ -40,8 +40,8 @@ Status ParseParams(const Message *op_src, FrameworkOpOperator *op) {
   domi::tensorflow::AttrValue output_attr_value;
   if (TensorFlowUtil::FindAttrValue(node, ge::ATTR_NAME_INPUT_TENSOR_DESC, input_attr_value)) {
     GE_CHK_STATUS_RET(
-      TensorFlowUtil::TransTensorDescriptor(input_attr_value, op, TENSORFLOW_NORMAL_INPUT_TENSOR_FLAG, type),
-      "trans input_attr_value failed, op: %s", node->name().c_str());
+        TensorFlowUtil::TransTensorDescriptor(input_attr_value, op, TENSORFLOW_NORMAL_INPUT_TENSOR_FLAG, type),
+        "trans input_attr_value failed, op: %s", node->name().c_str());
   } else {
     GELOGD("Frameworkop has no input tensor desc, name:%s, type:%s.", node->name().c_str(), type.c_str());
     /// _Retval constructed from inference function do not has input_tensor_dec
@@ -53,8 +53,8 @@ Status ParseParams(const Message *op_src, FrameworkOpOperator *op) {
   }
   if (TensorFlowUtil::FindAttrValue(node, ge::ATTR_NAME_OUTPUT_TENSOR_DESC, output_attr_value)) {
     GE_CHK_STATUS_RET(
-      TensorFlowUtil::TransTensorDescriptor(output_attr_value, op, TENSORFLOW_NORMAL_OUTPUT_TENSOR_FLAG, type),
-      "trans output_attr_value failed, op: %s", node->name().c_str());
+        TensorFlowUtil::TransTensorDescriptor(output_attr_value, op, TENSORFLOW_NORMAL_OUTPUT_TENSOR_FLAG, type),
+        "trans output_attr_value failed, op: %s", node->name().c_str());
   } else {
     GELOGD("Frameworkop has no output tensor desc, name:%s, type:%s.", node->name().c_str(), type.c_str());
   }

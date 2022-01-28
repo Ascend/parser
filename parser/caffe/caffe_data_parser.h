@@ -45,7 +45,7 @@ class PARSER_FUNC_VISIBILITY CaffeDataParser : public CaffeOpParser, public Data
    * @return SUCCESS parse successfully
    * @return FAILED parse failed
    */
-  Status GetOutputDesc(const std::string &name, const std::vector<int64_t> &input_dims, const ge::OpDescPtr &op);
+  Status GetOutputDesc(const std::string &name, const std::vector<int64_t> &input_dims, const ge::OpDescPtr &op) const;
 
   // caffe data layer type could be type of `Input` or `DummyData`
   Status ParseParamsForInput(const domi::caffe::LayerParameter *layer, ge::OpDescPtr &op);

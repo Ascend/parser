@@ -140,7 +140,7 @@ graphStatus aclgrphParseONNXFromMem(const char *buffer, size_t size,
   }
 
   // parse caffe model_file to GE graph
-  ge::graphStatus ret = model_parser->ParseFromMemory(buffer, (uint32_t)size, graph);
+  ge::graphStatus ret = model_parser->ParseFromMemory(buffer, static_cast<uint32_t>(size), graph);
   if (ret != ge::SUCCESS) {
     REPORT_CALL_ERROR("E19999", "ParseFromMemory failed");
     GELOGE(ret, "[Parser][Graph] %s failed.", ParserUtils::GetGraphName(graph).c_str());
@@ -344,7 +344,7 @@ Status OnnxModelParser::ParseInput(const std::map<std::string, ge::onnx::TensorP
 }
 
 Status OnnxModelParser::ParseInitializer(ge::onnx::GraphProto &onnx_graph,
-                                         std::map<std::string, ge::onnx::TensorProto> &initializer_name_tensor) {
+                                         std::map<std::string, ge::onnx::TensorProto> &initializer_name_tensor) const {
   // Construct const node for weight
   int index = 0;
   for (auto it : initializer_name_tensor) {
@@ -362,7 +362,7 @@ Status OnnxModelParser::ParseInitializer(ge::onnx::GraphProto &onnx_graph,
   return SUCCESS;
 }
 
-void OnnxModelParser::UpdateAllNodeName(ge::onnx::GraphProto &onnx_graph) {
+void OnnxModelParser::UpdateAllNodeName(ge::onnx::GraphProto &onnx_graph) const {
   int index = 0;
   for (int i = 0; i < onnx_graph.node_size(); i++) {
     ge::onnx::NodeProto *node = onnx_graph.mutable_node(i);
@@ -443,7 +443,7 @@ Status OnnxModelParser::AdapterOpType(const ge::onnx::NodeProto *node_proto, std
 }
 
 Status OnnxModelParser::TransNodeToOperator(const ge::onnx::NodeProto *node_proto, ge::Operator &op,
-                                            const string &op_type) {
+                                            const string &op_type) const {
   GE_CHECK_NOTNULL(node_proto);
   string node_name = node_proto->name();
   op = ge::OperatorFactory::CreateOperator(node_name.c_str(), op_type.c_str());
@@ -560,7 +560,7 @@ Status OnnxModelParser::Prechecker(ge::onnx::GraphProto &onnx_graph) {
 }
 
 Status OnnxModelParser::ParseOpParam(const ge::onnx::NodeProto *node_proto, ge::Operator &op,
-                                     std::shared_ptr<OpParser> &op_parser) {
+                                     std::shared_ptr<OpParser> &op_parser) const {
   GE_CHECK_NOTNULL(node_proto);
   GE_CHECK_NOTNULL(op_parser);
   std::string op_type = node_proto->op_type();
@@ -707,7 +707,7 @@ Status OnnxModelParser::GetGraphOutputs(std::vector<std::pair<Operator, std::vec
   return SUCCESS;
 }
 
-Status OnnxModelParser::GetModelFromFile(const char *file, ge::onnx::ModelProto &onnx_model) {
+Status OnnxModelParser::GetModelFromFile(const char *file, ge::onnx::ModelProto &onnx_model) const {
   GE_CHECK_NOTNULL(file);
   GELOGI("File path is %s.", file);
 
@@ -720,7 +720,7 @@ Status OnnxModelParser::GetModelFromFile(const char *file, ge::onnx::ModelProto 
   return SUCCESS;
 }
 
-Status OnnxModelParser::GetModelFromMemory(const char *data, uint32_t size, ge::onnx::ModelProto &onnx_model) {
+Status OnnxModelParser::GetModelFromMemory(const char *data, uint32_t size, ge::onnx::ModelProto &onnx_model) const {
   GE_CHECK_NOTNULL(data);
 
   // 1. Get graph from onnx model file.
@@ -741,7 +741,7 @@ void OnnxModelParser::ClearMembers() {
 }
 
 Status OnnxModelParser::AdaptAndFindAllOnnxGraph(ge::onnx::GraphProto &root_onnx_graph,
-                                                 std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph) {
+                                                 std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph) const {
   std::queue<ge::onnx::GraphProto *> onnx_graph_tasks;
   int index = 0;
   onnx_graph_tasks.push(&root_onnx_graph);
@@ -1040,7 +1040,7 @@ ge::DataType OnnxModelParser::ConvertToGeDataType(const uint32_t type) {
   return ge::OnnxUtil::ConvertOnnxDataType(type);
 }
 
-void OnnxModelParser::UpdateDataFormat(ge::Graph &graph) {
+void OnnxModelParser::UpdateDataFormat(ge::Graph &graph) const {
   for (GNode &gn : graph.GetDirectNode()) {
     AscendString type;
     (void)gn.GetType(type);

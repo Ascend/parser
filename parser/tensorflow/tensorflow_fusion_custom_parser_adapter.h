@@ -31,7 +31,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowFusionCustomParserAdapter : public Tensor
   * @return FAILED parse failed
   * @author
   */
-  Status ParseParams(const vector<const NodeDef *> &v_input_const, ge::NodePtr &node) override;
+  Status ParseParams(const vector<const NodeDef *> &v_input_const, ge::NodePtr &node) const override;
 
   /**
   * @ingroup domi_parser

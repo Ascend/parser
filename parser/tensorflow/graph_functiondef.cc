@@ -78,7 +78,7 @@ string NameMapHelper::UniqueNodeName(const string &name) {
 
 string NameMapHelper::Renormalize(const string &name) const {
   const auto iter = name_mapping_.find(name);
-  if (iter == name_mapping_.end()) return string();
+  if (iter == name_mapping_.end()) {return string();}
   return iter->second;
 }
 

@@ -90,15 +90,15 @@ class PARSER_FUNC_VISIBILITY OnnxModelParser : public domi::ModelParser {
   Status ParseOutput(ge::onnx::GraphProto &onnx_graph);
 
   Status ParseInitializer(ge::onnx::GraphProto &onnx_graph,
-                          std::map<std::string, ge::onnx::TensorProto> &initializer_name_tensor);
+                          std::map<std::string, ge::onnx::TensorProto> &initializer_name_tensor) const;
 
-  void UpdateAllNodeName(ge::onnx::GraphProto &onnx_graph);
+  void UpdateAllNodeName(ge::onnx::GraphProto &onnx_graph) const;
 
   Status ConstructOriType(const ge::onnx::NodeProto *node_proto, std::string &ori_type);
 
   Status AdapterOpType(const ge::onnx::NodeProto *node_proto, std::string &ori_type, std::string &om_type);
 
-  Status TransNodeToOperator(const ge::onnx::NodeProto *node_proto, ge::Operator &op, const string &op_type);
+  Status TransNodeToOperator(const ge::onnx::NodeProto *node_proto, ge::Operator &op, const string &op_type) const;
 
   Status ConstructInputOutputContext(const ge::onnx::NodeProto *node_proto);
 
@@ -111,22 +111,23 @@ class PARSER_FUNC_VISIBILITY OnnxModelParser : public domi::ModelParser {
 
   Status Prechecker(ge::onnx::GraphProto &onnx_graph);
   
-  Status GetModelFromFile(const char *file, ge::onnx::ModelProto &onnx_model);
+  Status GetModelFromFile(const char *file, ge::onnx::ModelProto &onnx_model) const;
 
-  Status GetModelFromMemory(const char *data, uint32_t size, ge::onnx::ModelProto &onnx_model);
+  Status GetModelFromMemory(const char *data, uint32_t size, ge::onnx::ModelProto &onnx_model) const;
 
   Status ModelParseToGraph(const ge::onnx::ModelProto &onnx_model, ge::Graph &graph);
 
   Status ModelParseToGraphImpl(bool is_subgraph, ge::onnx::GraphProto &onnx_graph, ge::Graph &graph);
 
-  void UpdateDataFormat(ge::Graph &graph);
+  void UpdateDataFormat(ge::Graph &graph) const;
 
   void ClearMembers();
 
-  Status ParseOpParam(const ge::onnx::NodeProto *node_proto, ge::Operator &op, std::shared_ptr<OpParser> &op_parser);
+  Status ParseOpParam(const ge::onnx::NodeProto *node_proto, ge::Operator &op,
+                      std::shared_ptr<OpParser> &op_parser) const;
 
   Status AdaptAndFindAllOnnxGraph(ge::onnx::GraphProto &root_onnx_graph,
-                                  std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph);
+                                  std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph) const;
 
   Status SetOutputsInfo(const ParserUtils::OutputMapping &final_output_nodes,
                         const ParserUtils::OutputMapping &tensor_to_nodes);
