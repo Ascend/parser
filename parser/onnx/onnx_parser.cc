@@ -740,8 +740,8 @@ void OnnxModelParser::ClearMembers() {
   outputs_map_.clear();
 }
 
-Status OnnxModelParser::AdaptAndFindAllOnnxGraph(ge::onnx::GraphProto &root_onnx_graph,
-                                                 std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph) const {
+Status OnnxModelParser::AdaptAndFindAllOnnxGraph(
+    ge::onnx::GraphProto &root_onnx_graph, std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph) const {
   std::queue<ge::onnx::GraphProto *> onnx_graph_tasks;
   int index = 0;
   onnx_graph_tasks.push(&root_onnx_graph);

@@ -1591,7 +1591,8 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
   return SUCCESS;
 }
 
-Status CaffeModelParser::FindShareParamLayers(const std::map<std::string, std::vector<std::string>> &layer_params_map) const {
+Status CaffeModelParser::FindShareParamLayers(
+    const std::map<std::string, std::vector<std::string>> &layer_params_map) const {
   for (auto p_iter = layer_params_map.begin(); p_iter != layer_params_map.end(); ++p_iter) {
     for (auto p2_iter = p_iter; p2_iter != layer_params_map.end(); ++p2_iter) {
       if (p_iter->first != p2_iter->first && p_iter->second == p2_iter->second) {

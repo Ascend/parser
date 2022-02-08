@@ -75,7 +75,8 @@ Status TensorFlowFusionOpParser::GetTensorFromNode(const NodeDef *node_def, Tens
   return SUCCESS;
 }
 
-Status TensorFlowFusionOpParser::ParseParams(const std::vector<const NodeDef *> &v_input_const, NodePtr &op_dest) const {
+Status TensorFlowFusionOpParser::ParseParams(const std::vector<const NodeDef *> &v_input_const,
+                                             NodePtr &op_dest) const {
   (void)v_input_const;
   (void)op_dest;
   return SUCCESS;

@@ -756,7 +756,8 @@ Status TensorFlowModelParser::AddEdges(ge::ComputeGraphPtr &graph) {
       }
       // Find that the output of the source node is equal to the destination node
       std::map<std::string, std::vector<std::pair<int32_t, int32_t>>> &dest_input_map = dest_iter->second.input_map;
-      std::map<std::string, std::vector<std::pair<int32_t, int32_t>>>::const_iterator input_iter = dest_input_map.find(src_op_name);
+      std::map<std::string, std::vector<std::pair<int32_t, int32_t>>>::const_iterator
+          input_iter = dest_input_map.find(src_op_name);
       // Find output and input
       if (input_iter == dest_input_map.end()) {
         continue;
@@ -1374,7 +1375,8 @@ Status TensorFlowModelParser::Parse(const char *model_path, ge::ComputeGraphPtr 
         }
       }
 
-      std::map<std::string, domi::tensorflow::GraphDef>::const_iterator iter = function_name_to_graphdef.find(arg.function_name);
+      std::map<std::string, domi::tensorflow::GraphDef>::const_iterator
+          iter = function_name_to_graphdef.find(arg.function_name);
       if (iter == function_name_to_graphdef.end()) {
         ErrorManager::GetInstance().ATCReportErrMessage("E12013", {"functionname"}, {arg.function_name});
         GELOGE(FAILED, "Failed to get subgraph by function name %s", arg.function_name.c_str());
@@ -1866,7 +1868,8 @@ Status TensorFlowModelParser::UpdateAllNodeOpContext(shared_ptr<ge::ScopeGraph> 
       ge::ScopeFusionOpInfo info;
       if (IsFusionOpChild(op_node_name, &info) && nodedef_map_[op_node_name]->op() != TENSORFLOWF_NODE_OP_CONST) {
         // This node is a fusion operator
-        std::map<std::string, OpNodeContext>::const_iterator fusion_iter = tmp_fusion_op_node_context_map.find(info.fusion_node_name);
+        std::map<std::string, OpNodeContext>::const_iterator
+            fusion_iter = tmp_fusion_op_node_context_map.find(info.fusion_node_name);
         if (fusion_iter == tmp_fusion_op_node_context_map.end()) {
           OpNodeContext op_node_context;
           tmp_fusion_op_node_context_map[info.fusion_node_name] = op_node_context;
