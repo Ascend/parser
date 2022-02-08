@@ -215,50 +215,8 @@ if [[ "X$ENABLE_PARSER_ST" = "Xon" ]]; then
     genhtml coverage.info
 fi
 
-# generate output package in tar form, including ut/st libraries/executables
-generate_package()
-{
-  cd "${BASEPATH}"
-
-  PARSER_LIB_PATH="lib"
-  ACL_PATH="acllib/lib64"
-  FWK_PATH="fwkacllib/lib64"
-  ATC_PATH="atc/lib64"
-
-  COMMON_LIB=("libgraph.so" "libregister.so" "liberror_manager.so")
-  PARSER_LIB=("lib_caffe_parser.so" "libfmk_onnx_parser.so" "libfmk_parser.so" "libparser_common.so")
-
-  rm -rf ${OUTPUT_PATH:?}/${FWK_PATH}/
-  rm -rf ${OUTPUT_PATH:?}/${ACL_PATH}/
-  rm -rf ${OUTPUT_PATH:?}/${ATC_PATH}/
-
-  mk_dir "${OUTPUT_PATH}/${FWK_PATH}"
-  mk_dir "${OUTPUT_PATH}/${ATC_PATH}"
-  mk_dir "${OUTPUT_PATH}/${ACL_PATH}"
-
-  find output/ -name parser_lib.tar -exec rm {} \;
-
-  cd "${OUTPUT_PATH}"
-
-  for lib in "${PARSER_LIB[@]}";
-  do
-    find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "$lib" -exec cp -f {} ${OUTPUT_PATH}/${FWK_PATH} \;
-    find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "$lib" -exec cp -f {} ${OUTPUT_PATH}/${ATC_PATH} \;
-  done
-
-  for lib in "${COMMON_LIB[@]}";
-  do
-    find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "$lib" -exec cp -f {} ${OUTPUT_PATH}/${FWK_PATH} \;
-    find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "$lib" -exec cp -f {} ${OUTPUT_PATH}/${ATC_PATH} \;
-  done
-
-  find ${OUTPUT_PATH}/${PARSER_LIB_PATH} -maxdepth 1 -name "libc_sec.so" -exec cp -f {} ${OUTPUT_PATH}/${ATC_PATH} \;
-
-  tar -cf parser_lib.tar fwkacllib acllib atc
-}
-
 # generate output package in tar form, including ut/st libraries/executables for cann
-generate_package_for_cann()
+generate_package()
 {
   cd "${BASEPATH}"
 
@@ -292,10 +250,6 @@ generate_package_for_cann()
 }
 
 if [[ "X$ENABLE_PARSER_UT" = "Xoff" && "X$ENABLE_PARSER_ST" = "Xoff" ]]; then
-  if [[ "X$ALL_IN_ONE_ENABLE" = "X1" ]]; then
-    generate_package_for_cann
-  else
-    generate_package
-  fi
+  generate_package
 fi
 echo "---------------- Parser package archive generated ----------------"
