@@ -178,7 +178,7 @@ Status CollectNodeFuncs(vector<ge::NodePtr> &nodes, FunctionDefLibrary *library)
     GE_IF_BOOL_EXEC(
         AttrUtils::GetBytes(opDef, ge::ATTR_NAME_FRAMEWORK_FUNC_DEF, funcDefBytes), FunctionDefLibrary funcLib;
         GE_CHECK_NOTNULL(funcDefBytes.GetData());
-        string str(reinterpret_cast<char *>(funcDefBytes.GetData()), funcDefBytes.GetSize());
+        string str(PtrToPtr<uint8_t, char_t>(funcDefBytes.GetData()), funcDefBytes.GetSize());
         GELOGI("FUNCDEF: Get function -> %s.", str.c_str()); GE_IF_BOOL_EXEC(
             funcLib.ParseFromArray(funcDefBytes.GetData(), funcDefBytes.GetSize()), library->MergeFrom(funcLib)));
   }
@@ -250,10 +250,10 @@ Status ParserGraphOptimizer::UpdateGraph(vector<NodePtr> &nodes) {
 
   (void)AttrUtils::SetZeroCopyBytes(
       fusion_node_opdef, ge::ATTR_NAME_FRAMEWORK_FUNC_DEF,
-      Buffer::CopyFrom(reinterpret_cast<const uint8_t *>(funcdefStr.data()), funcdefStr.length()));
+      Buffer::CopyFrom(PtrToPtr<const char_t, const uint8_t>(funcdefStr.data()), funcdefStr.length()));
   (void)AttrUtils::SetZeroCopyBytes(
       fusion_node_opdef, ge::ATTR_NAME_FRAMEWORK_NODE_DEF,
-      Buffer::CopyFrom(reinterpret_cast<const uint8_t *>(nodefStr.data()), nodefStr.length()));
+      Buffer::CopyFrom(PtrToPtr<const char_t, const uint8_t>(nodefStr.data()), nodefStr.length()));
 
   (void)AttrUtils::SetInt(fusion_node_opdef, ge::ATTR_NAME_FRAMEWORK_FWK_TYPE, ge::GetParserContext().type);
 
@@ -381,7 +381,7 @@ Status ParserGraphOptimizer::RebuildOutputAnchors(vector<ge::OutDataAnchorPtr> &
     GE_CHK_BOOL_EXEC(fusion_op_desc->AddOutputDesc(src_out_desc) == ge::GRAPH_SUCCESS, return FAILED);
 
     ge::DataType data_type = src_out_desc.GetDataType();
-    std::map<int32_t, int32_t>::const_iterator iter = GE_TENSORFLOW_DATA_TYPE_MAP.find((int32_t)data_type);
+    const std::map<int32_t, int32_t>::const_iterator iter = GE_TENSORFLOW_DATA_TYPE_MAP.find((int32_t)data_type);
     GE_IF_BOOL_EXEC(
         iter == GE_TENSORFLOW_DATA_TYPE_MAP.end(),
         REPORT_INNER_ERROR("E19999", "datatype:%d of output:%d in node:%s:%s is not supported",
@@ -417,7 +417,7 @@ Status ParserGraphOptimizer::RebuildInputAnchors(vector<ge::InDataAnchorPtr> &in
                                    return FAILED,
                                    "Add fusion_op_desc AddInputDesc failed");
     ge::DataType data_type = tensorDescPtr->GetDataType();
-    std::map<int32_t, int32_t>::const_iterator iter = GE_TENSORFLOW_DATA_TYPE_MAP.find((int32_t)data_type);
+    const std::map<int32_t, int32_t>::const_iterator iter = GE_TENSORFLOW_DATA_TYPE_MAP.find((int32_t)data_type);
     GE_IF_BOOL_EXEC(
         iter == GE_TENSORFLOW_DATA_TYPE_MAP.end(),
         REPORT_INNER_ERROR("E19999", "datatype:%d of input:%d in node:%s:%s is not supported",

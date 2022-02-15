@@ -54,6 +54,7 @@
 #include "register/register_utils.h"
 #include "register/scope/scope_pass_registry_impl.h"
 #include "parser/common/auto_mapping_subgraph_io_index_func.h"
+#include "graph/def_types.h"
 
 using ge::OpParserFactory;
 using ge::Pb2Json;
@@ -1375,7 +1376,7 @@ Status TensorFlowModelParser::Parse(const char *model_path, ge::ComputeGraphPtr 
         }
       }
 
-      std::map<std::string, domi::tensorflow::GraphDef>::const_iterator
+      const std::map<std::string, domi::tensorflow::GraphDef>::const_iterator
           iter = function_name_to_graphdef.find(arg.function_name);
       if (iter == function_name_to_graphdef.end()) {
         ErrorManager::GetInstance().ATCReportErrMessage("E12013", {"functionname"}, {arg.function_name});
@@ -1868,7 +1869,7 @@ Status TensorFlowModelParser::UpdateAllNodeOpContext(shared_ptr<ge::ScopeGraph> 
       ge::ScopeFusionOpInfo info;
       if (IsFusionOpChild(op_node_name, &info) && nodedef_map_[op_node_name]->op() != TENSORFLOWF_NODE_OP_CONST) {
         // This node is a fusion operator
-        std::map<std::string, OpNodeContext>::const_iterator
+        const std::map<std::string, OpNodeContext>::const_iterator
             fusion_iter = tmp_fusion_op_node_context_map.find(info.fusion_node_name);
         if (fusion_iter == tmp_fusion_op_node_context_map.end()) {
           OpNodeContext op_node_context;
@@ -2119,7 +2120,7 @@ Status TensorFlowModelParser::NormalizeInputOrOutputMap(
       }
 
       string name = to_string(pair.first) + ":" + to_string(pair.second);
-      std::set<std::string>::const_iterator compare_iter = compare_set.find(name);
+      const std::set<std::string>::const_iterator compare_iter = compare_set.find(name);
       if (compare_iter != compare_set.end()) {
         // pair<from,to> repeat, ignore
         continue;
@@ -2158,7 +2159,7 @@ void TensorFlowModelParser::SaveEdgesControlInfo(const string &node_name, const 
 }
 
 void TensorFlowModelParser::UpdateEdgesControlInfo(const ge::ScopeFusionOpInfo &info) {
-  std::map<std::string, std::vector<int32_t>>::const_iterator iter = edges_control_map.find(info.node_name);
+  const std::map<std::string, std::vector<int32_t>>::const_iterator iter = edges_control_map.find(info.node_name);
   if (iter != edges_control_map.end()) {
     // Delete the original fusion operator node information and add the fusion operator control edge information
     edges_control_map.erase(iter);
@@ -2415,7 +2416,7 @@ Status TensorFlowModelParser::ParseProto(const std::string &serialized_proto, ge
     GELOGE(FAILED, "Proto object GraphDef parse serialized proto failed");
     return FAILED;
   }
-  return ParseProto(reinterpret_cast<const google::protobuf::Message *>(&graph_def), graph);
+  return ParseProto(ge::PtrToPtr<domi::tensorflow::GraphDef, const google::protobuf::Message>(&graph_def), graph);
 }
 
 Status TensorFlowModelParser::ParseProtoWithSubgraph(const std::string &root_proto, domi::GetGraphCallbackV2 callback,
@@ -2482,7 +2483,7 @@ Status TensorFlowModelParser::OptimizeIdentityByOutput(map<string, NodeDef *> &n
       return INTERNAL_ERROR, "Can't find op node context.");
   OpNodeContext op_node_context = context_iter->second;
 
-  std::map<std::string, NodeDef *>::const_iterator node_def_iter = nodedef_map.find(curr_node_name);
+  const std::map<std::string, NodeDef *>::const_iterator node_def_iter = nodedef_map.find(curr_node_name);
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
       (node_def_iter == nodedef_map.end()),
       REPORT_INNER_ERROR("E19999", "Node:%s can't find in nodedef_map, check invalid", curr_node_name.c_str());
@@ -2506,7 +2507,8 @@ Status TensorFlowModelParser::OptimizeIdentityByOutput(map<string, NodeDef *> &n
 
   // Deal with non _Retval output operator of Identity.
   if (has_out_retval) {
-    for (auto output_iter = output_map.begin(); output_iter != output_map.end(); ++output_iter) {
+    std::map<std::string, std::vector<std::pair<int32_t, int32_t>>>::const_iterator output_iter = output_map.begin();
+    for (; output_iter != output_map.end(); ++output_iter) {
       const string &output_node_name = output_iter->first;
       domi::tensorflow::NodeDef *output_node_def = nodedef_map[output_node_name];
       GE_CHECK_NOTNULL(output_node_def);
@@ -3902,7 +3904,7 @@ Status TensorFlowModelParser::AddFusionNodeDef(shared_ptr<ge::ScopeGraph> &scope
   DumpAllNodeContext("BeforeAddFusionNodeDef");
   for (size_t i = 0; i < op_node_list_size; ++i) {
     const string op_node_name = node_name_list[i];
-    auto iter = fusion_op_nodedef_map_.find(op_node_name);
+    std::map<string, vector<const NodeDef *>>::const_iterator iter = fusion_op_nodedef_map_.find(op_node_name);
     if (iter != fusion_op_nodedef_map_.end()) {
       vector<string> fusion_op_info = fusion_op_type_map_[op_node_name];
       if (fusion_op_info[0] != ge::kScopeToMultiNodes) {
@@ -4059,7 +4061,7 @@ Status TensorFlowModelParser::AddExternalGraph(const ComputeGraphPtr &root_graph
     std::string model_data;
     if (AttrUtils::GetStr(node->GetOpDesc(), kExternalModel, model_data) && !model_data.empty()) {
       ge::Model model;
-      auto load_ret = ge::Model::Load(reinterpret_cast<const uint8_t *>(model_data.data()), model_data.size(), model);
+      auto load_ret = ge::Model::Load(ge::PtrToPtr<char_t, const uint8_t>(model_data.data()), model_data.size(), model);
       if (load_ret != GRAPH_SUCCESS) {
         GELOGE(INTERNAL_ERROR, "[Parse][ExternalModel]Node:%s.", node->GetName().c_str());
         REPORT_CALL_ERROR("E19999", "Failed to parse external model, node:%s.", node->GetName().c_str());

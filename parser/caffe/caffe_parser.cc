@@ -755,7 +755,8 @@ Status CaffeModelParser::GetCustomOp(const domi::caffe::LayerParameter &layer, v
   }
 
   if (is_search_built_in_layer) {
-    const google::protobuf::Message *layer_message = reinterpret_cast<const google::protobuf::Message *>(&layer);
+    const google::protobuf::Message *layer_message = PtrToPtr<const domi::caffe::LayerParameter,
+      const google::protobuf::Message>(&layer);
     Status status = CreateCustomOperator(op_name, op_type, layer_message, 0, operators);
     if (status != SUCCESS || operators.empty()) {
       GELOGE(status, "[Create][CustomOperator] failed, name: %s, type: %s.", op_name.c_str(), op_type.c_str());
@@ -1025,7 +1026,8 @@ Status CaffeModelParser::AddEdges(ge::ComputeGraphPtr &graph) {
         // Find the layer for this output
         auto top_node_iter = node_map.find(top_blob_layer_pair.first);
         // Find the layer for this input
-        auto bottom_node_iter = node_map.find(bottom_blob_layer_pair.first);
+        std::map<std::string, ge::NodePtr>::const_iterator bottom_node_iter =
+          node_map.find(bottom_blob_layer_pair.first);
         if (top_node_iter != node_map.end() && bottom_node_iter != node_map.end()) {
           // Output node top_node_iter->second,
           // Output index top_blob_layer_pair.second
@@ -1095,7 +1097,7 @@ Status CaffeModelParser::AddUserOutNodesTop() {
   const std::vector<std::pair<std::string, int32_t>> &user_out_nodes = ge::GetParserContext().user_out_nodes;
   int net_output_num = user_out_nodes.size();
   for (const auto &out_pair : user_out_nodes) {
-    auto layer_iter = layer_tops_map_.find(out_pair.first);
+    std::map<std::string, std::vector<std::string>>::const_iterator layer_iter = layer_tops_map_.find(out_pair.first);
     GELOGI("Add to output, node name: %s", out_pair.first.c_str());
     if (layer_iter != layer_tops_map_.end()) {
       if (static_cast<uint32_t>(out_pair.second) >= (layer_iter->second).size()) {
@@ -1110,7 +1112,7 @@ Status CaffeModelParser::AddUserOutNodesTop() {
       }
 
       string top_name = layer_iter->second[out_pair.second];
-      auto top_node_iter = node_map.find(out_pair.first);
+      std::map<std::string, ge::NodePtr>::const_iterator top_node_iter = node_map.find(out_pair.first);
       if (top_node_iter != node_map.end()) {
         ge::GetParserContext().out_tensor_names.push_back(top_name);
         GELOGI("The top of out node [%s] is [%s]", out_pair.first.c_str(), top_name.c_str());
@@ -1142,7 +1144,8 @@ Status CaffeModelParser::AddOutputTop(const domi::caffe::NetParameter &proto_mes
         top = RemapTopNameByLayer(layer, top, i);
       }
 
-      auto t_iter = top_blobs_map_.find(top);
+      std::map<std::string, std::vector<std::pair<std::string, int32_t>>>::const_iterator t_iter =
+        top_blobs_map_.find(top);
 
       GE_RETURN_WITH_LOG_IF_FALSE(t_iter != top_blobs_map_.end(),
                                   "[Check][Param]Failed to find top: %s, layer name:%s", top.c_str(),
@@ -1156,7 +1159,7 @@ Status CaffeModelParser::AddOutputTop(const domi::caffe::NetParameter &proto_mes
 
       // If not found, add to the output side of the output
       // Find the layer for this output
-      auto top_node_iter = node_map.find(layer.name());
+      std::map<std::string, ge::NodePtr>::const_iterator top_node_iter = node_map.find(layer.name());
       GELOGI("output in top_blob: %s", layer.name().c_str());
       if (top_node_iter != node_map.end()) {
         ge::GetParserContext().out_tensor_names.push_back(top_origin);
@@ -1392,7 +1395,7 @@ void CaffeModelParser::SaveOrigionLayerTops(domi::caffe::LayerParameter &layer) 
   for (auto top : layer.top()) {
     tops.push_back(top);
   }
-  auto it = layer_tops_map_.find(name);
+  std::map<std::string, std::vector<std::string>>::const_iterator it = layer_tops_map_.find(name);
   if (it == layer_tops_map_.end()) {
     layer_tops_map_[name] = tops;
   }
@@ -1679,7 +1682,7 @@ Status CaffeWeightsParser::ParseFromMemory(const char *data, uint32_t size, ge::
 
   // Resolve proto file to netparameter
   NetParameter proto;
-  bool success = ge::parser::ReadProtoFromArray(reinterpret_cast<const char *>(data), static_cast<int>(size), &proto);
+  bool success = ge::parser::ReadProtoFromArray(data, static_cast<int>(size), &proto);
   if (!success) {
     REPORT_CALL_ERROR("E19999", "ReadProtoFromArray failed.");
     GELOGE(domi::PARSE_WEIGHTS_FAILED, "[Read][Proto] from Memory fail");
@@ -1920,7 +1923,7 @@ Status CaffeWeightsParser::ParseLayerField(const google::protobuf::Reflection *r
                                            const google::protobuf::FieldDescriptor *field,
                                            google::protobuf::Message *layer) {
   GELOGD("Start to parse field: %s.", field->name().c_str());
-  domi::caffe::LayerParameter *layer_proto = reinterpret_cast<domi::caffe::LayerParameter *>(layer);
+  domi::caffe::LayerParameter *layer_proto = PtrToPtr<google::protobuf::Message, domi::caffe::LayerParameter>(layer);
   string filed_name = field->name();
 #define CASE_FIELD_NAME(kName, method)                                 \
   if (filed_name == kField##kName) {                                   \
@@ -1975,8 +1978,7 @@ Status CaffeWeightsParser::ConvertBlobsProto(const google::protobuf::Message *me
   CAFFE_CHECK_NULL_AND_REPROT_ERRORMSG(blobs_reflection, "Get Reflection failed in google::protobuf::Message");
   vector<const google::protobuf::FieldDescriptor *> field_desc;
   blobs_reflection->ListFields(*message, &field_desc);
-
-  domi::caffe::BlobProto *blobs_proto = reinterpret_cast<domi::caffe::BlobProto *>(blobs);
+  domi::caffe::BlobProto *blobs_proto = PtrToPtr<google::protobuf::Message, domi::caffe::BlobProto>(blobs);
 
   for (auto &field : field_desc) {
     GE_CHECK_NOTNULL(field);
@@ -2025,7 +2027,7 @@ Status CaffeWeightsParser::ConvertBlobShapeProto(const google::protobuf::Message
   vector<const google::protobuf::FieldDescriptor *> field_desc;
   reflection->ListFields(*message, &field_desc);
 
-  domi::caffe::BlobShape *shape_proto = reinterpret_cast<domi::caffe::BlobShape *>(dest_message);
+  domi::caffe::BlobShape *shape_proto = PtrToPtr<google::protobuf::Message, domi::caffe::BlobShape>(dest_message);
 
   for (auto &field : field_desc) {
     if (field->name() != kFieldDim) {
@@ -2048,7 +2050,7 @@ Status CaffeWeightsParser::ConvertConvParamProto(const google::protobuf::Message
   reflection->ListFields(*message, &field_desc);
 
   domi::caffe::ConvolutionParameter *conv_param_proto =
-      reinterpret_cast<domi::caffe::ConvolutionParameter *>(dest_message);
+      PtrToPtr<google::protobuf::Message, domi::caffe::ConvolutionParameter>(dest_message);
 
   for (auto &field : field_desc) {
     if (field->name() != kFieldBiasTerm) {
@@ -2068,7 +2070,7 @@ Status CaffeWeightsParser::ConvertInnerProdcutProto(const google::protobuf::Mess
   reflection->ListFields(*message, &field_desc);
 
   domi::caffe::InnerProductParameter *inner_product_proto =
-      reinterpret_cast<domi::caffe::InnerProductParameter *>(dest_message);
+      PtrToPtr<google::protobuf::Message, domi::caffe::InnerProductParameter>(dest_message);
 
   for (auto &field : field_desc) {
     if (field->name() != kFieldBiasTerm) {
@@ -2125,7 +2127,8 @@ Status CaffeWeightsParser::CheckLayersSize(const google::protobuf::Message *mess
 Status CaffeWeightsParser::ConvertLayerParameter(const google::protobuf::Message *layer_message,
                                                  ge::ComputeGraphPtr &graph) {
   vector<string> need_share_layers;
-  const domi::caffe::LayerParameter *layer = reinterpret_cast<const domi::caffe::LayerParameter *>(layer_message);
+  const domi::caffe::LayerParameter *layer =
+    PtrToPtr<google::protobuf::Message, domi::caffe::LayerParameter>(layer_message);
   const string &shared_layer_name = layer->name();
   const string &layer_type = layer->type();
   for (auto p_iter = params_share_map.begin(); p_iter != params_share_map.end(); ++p_iter) {
@@ -2159,7 +2162,7 @@ Status CaffeWeightsParser::ConvertLayerParameter(const google::protobuf::Message
     }
 
     // The weight processing also needs to judge the duplicate operator, which is reserved here and processed later.
-    auto iter = caffe_op_map.find(layer_type);
+    std::map<std::string, std::string>::const_iterator iter = caffe_op_map.find(layer_type);
     if (iter == caffe_op_map.end()) {
       GELOGW("Unrecognized layer type %s , layer name: %s, layer ignored.", layer_type.c_str(), layer_name.c_str());
       continue;
@@ -2285,7 +2288,7 @@ Status CaffeWeightsParser::ConvertNetParameter(const NetParameter &param, ge::Co
       }
 
       // The weight processing also needs to judge the duplicate operator, which is reserved here and processed later.
-      auto iter = caffe_op_map.find(layer.type());
+      std::map<std::string, std::string>::const_iterator iter = caffe_op_map.find(layer.type());
       if (iter == caffe_op_map.end()) {
         GELOGW("Unrecognized layer type %s , layer name: %s, layer ignored.", layer.type().c_str(), layer_name.c_str());
         continue;

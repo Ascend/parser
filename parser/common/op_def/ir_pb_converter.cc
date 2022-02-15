@@ -114,7 +114,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY domi::Status ConvertToOpDesc(co
       if (op_attr_pair.second.value_.value_case() == domi::AttrDef::kBt) {
         auto &buffer = op_attr_pair.second.value_.bt();
         (void)ge::AttrUtils::SetZeroCopyBytes(op_def, op_attr_pair.first,
-            ge::Buffer::CopyFrom(reinterpret_cast<uint8_t *>(const_cast<char *>(buffer.data())), buffer.size()));
+            ge::Buffer::CopyFrom(PtrToPtr<void, uint8_t>(const_cast<char *>(buffer.data())), buffer.size()));
       }
 
       if (op_attr_pair.second.value_.value_case() == domi::AttrDef::kS) {

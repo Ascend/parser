@@ -52,7 +52,7 @@ class GraphToFunctionDef {
                                       const string &name, FunctionDef *fdef);
 
   static domi::Status BuildFunctionDef(ge::ComputeGraphPtr &graph,
-                                 const string &nme_in,
+                                 const string &name_in,
                                  FunctionDefLibrary *library,
                                  NodeDef *call_node_def,
                                  vector<ge::InDataAnchorPtr> &in_anchor,

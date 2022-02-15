@@ -60,7 +60,7 @@ class DataOpParser {
    * @param [in] 4D shape information (dimensions)
    * @param [out] Save converted shap information
    */
-  static Status Init5DInputTensor(const std::vector<int64_t> &shape, ge::GeTensorDesc &tensorDesc);
+  static Status Init5DInputTensor(const std::vector<int64_t> &shape, ge::GeTensorDesc &tensor_desc);
 
   /**
    * @ingroup domi_omg
@@ -98,7 +98,7 @@ class DataOpParser {
    * @return SUCCESS Convert success
    * @return FAILED Convert failed
    */
-  static Status InitNDTensor(const std::vector<int64_t> &shape, ge::DataType data_type, ge::GeTensorDesc &desc);
+  static Status InitNDTensor(const std::vector<int64_t> &shape, ge::DataType data_type, ge::GeTensorDesc &tensor_desc);
 };
 }  // namespace ge
 

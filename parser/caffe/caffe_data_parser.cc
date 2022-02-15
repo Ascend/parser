@@ -94,7 +94,7 @@ Status CaffeDataParser::ParseParamsForInput(const domi::caffe::LayerParameter *l
     const ge::ParserContext &ctx = GetParserContext();
     std::map<std::string, std::vector<int64_t>> input_dims = ctx.input_dims;
     string name = layer->name();
-    auto search = input_dims.find(name);
+    std::map<std::string, std::vector<int64_t>>::const_iterator search = input_dims.find(name);
     if (search == input_dims.end()) {
       REPORT_INPUT_ERROR("E11005", std::vector<std::string>({"input"}), std::vector<std::string>({layer->name()}));
       GELOGE(PARAM_INVALID, "[Check][Param] Caffe prototxt has no input_param or user "
@@ -139,7 +139,7 @@ Status CaffeDataParser::ParseParamsForDummyData(const domi::caffe::LayerParamete
     const ge::ParserContext &ctx = GetParserContext();
     std::map<std::string, std::vector<int64_t>> input_dims = ctx.input_dims;
     string name = layer->name();
-    auto search = input_dims.find(name);
+    std::map<std::string, std::vector<int64_t>>::const_iterator search = input_dims.find(name);
     if (search == input_dims.end()) {
       REPORT_INPUT_ERROR("E11005", std::vector<std::string>({"input"}), std::vector<std::string>({layer->name()}));
       GELOGE(PARAM_INVALID, "[Check][Param] Caffe prototxt has no input_param or user "
