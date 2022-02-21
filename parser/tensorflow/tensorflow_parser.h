@@ -130,7 +130,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
 
   Status ParseProtoWithSubgraph(const google::protobuf::Message *root_proto,
                                 domi::GetGraphCallback callback,
-                                ge::ComputeGraphPtr &graph) override;
+                                ge::ComputeGraphPtr &root_graph) override;
 
   /*
   * @ingroup domi_omg

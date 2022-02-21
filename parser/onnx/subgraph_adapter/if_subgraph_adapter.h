@@ -24,7 +24,7 @@
 namespace ge {
 class PARSER_FUNC_VISIBILITY IfSubgraphAdapter : public SubgraphAdapter {
  public:
-  domi::Status AdaptAndFindAllSubgraphs(ge::onnx::NodeProto *parent_op,
+  domi::Status AdaptAndFindAllSubgraphs(ge::onnx::NodeProto *parent_node,
                                         std::vector<ge::onnx::GraphProto *> &onnx_graphs,
                                         std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph) override;
 

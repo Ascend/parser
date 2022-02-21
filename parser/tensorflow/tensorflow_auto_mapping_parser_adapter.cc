@@ -130,7 +130,7 @@ Status TensorFlowAutoMappingParserAdapter::ParseParams(const Message *op_src, ge
 
     (void)AttrUtils::SetZeroCopyBytes(
         op_dest, ge::ATTR_NAME_FRAMEWORK_NODE_DEF,
-        Buffer::CopyFrom(reinterpret_cast<const uint8_t *>(serialized_node.data()), serialized_node.length()));
+        Buffer::CopyFrom(PtrToPtr<const char_t, const uint8_t>(serialized_node.data()), serialized_node.length()));
     GELOGI("node_def of %s is %s.", op_dest->GetName().c_str(), serialized_node.c_str());
   }
 

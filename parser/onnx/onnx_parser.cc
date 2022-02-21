@@ -384,7 +384,7 @@ Status OnnxModelParser::ConstructOriType(const ge::onnx::NodeProto *node_proto, 
   std::string domain = node_proto->domain();
   int64_t version = 0;
   if (!domain.empty()) {
-    auto it = domain_verseion_.find(domain);
+    std::map<std::string, int64_t>::const_iterator it = domain_verseion_.find(domain);
     if (it != domain_verseion_.end()) {
       version = it->second;
     } else {
@@ -493,14 +493,14 @@ Status OnnxModelParser::SetOperatorInputs() {
     std::vector<std::pair<std::string, int>> &output_node_indexs = out_iter->second;
     for (auto input_node_index : input_node_indexs) {
       for (auto out_node_index : output_node_indexs) {
-        auto input_op_iter = name_operator_.find(input_node_index.first);
+        std::map<std::string, ge::Operator>::const_iterator input_op_iter = name_operator_.find(input_node_index.first);
         if (input_op_iter == name_operator_.end()) {
           REPORT_INNER_ERROR("E19999", "Node: %s can not find in name_operator map.", input_node_index.first.c_str());
           GELOGE(INTERNAL_ERROR, "[Check][Param] Node: %s can not find in name_operator map.",
                  input_node_index.first.c_str());
           return INTERNAL_ERROR;
         }
-        auto output_op_iter = name_operator_.find(out_node_index.first);
+        std::map<std::string, ge::Operator>::const_iterator output_op_iter = name_operator_.find(out_node_index.first);
         if (output_op_iter == name_operator_.end()) {
           REPORT_INNER_ERROR("E19999", "Node: %s can not find in name_operator map.", out_node_index.first.c_str());
           GELOGE(INTERNAL_ERROR, "[Check][Param] Node: %s can not find in name_operator map.",
@@ -665,7 +665,7 @@ Status OnnxModelParser::GetGraphInputs(ge::onnx::GraphProto &onnx_graph, std::ve
     }
   }
   for (auto in_name : input_node_names_) {
-    auto in_op = name_operator_.find(in_name);
+    std::map<std::string, ge::Operator>::const_iterator in_op = name_operator_.find(in_name);
     if (in_op == name_operator_.end()) {
       GELOGE(PARAM_INVALID, "[Get][Inputs] Model assigned input node name: %s can not find in graph.",
              in_name.c_str());
@@ -682,7 +682,8 @@ Status OnnxModelParser::GetGraphInputs(ge::onnx::GraphProto &onnx_graph, std::ve
 Status OnnxModelParser::GetGraphOutputs(std::vector<std::pair<Operator, std::vector<size_t>>> &output_ops,
                                         ParserUtils::OutputMapping &out_tensor_to_nodes) {
   for (auto output_name : output_node_names_) {
-    auto itr = outputs_map_.find(output_name);
+    std::map<std::string, std::vector<std::pair<std::string, int>>>::const_iterator itr =
+      outputs_map_.find(output_name);
     if (itr == outputs_map_.end()) {
       GELOGE(PARAM_INVALID, "[Get][Outputs] Can not find output:%s in graph.", output_name.c_str());
       REPORT_INNER_ERROR("E19999", "[Get][Outputs] Can not find output:%s in graph.", output_name.c_str());
@@ -692,7 +693,7 @@ Status OnnxModelParser::GetGraphOutputs(std::vector<std::pair<Operator, std::vec
     std::vector<std::pair<std::string, int>> node_names_indexes = itr->second;
     for (const auto &node_name_index : node_names_indexes) {
       auto node_name = node_name_index.first;
-      auto out_op_itr = name_operator_.find(node_name);
+      std::map<std::string, ge::Operator>::const_iterator out_op_itr = name_operator_.find(node_name);
       if (out_op_itr == name_operator_.end()) {
         GELOGE(PARAM_INVALID, "[Get][Operator] Can not find operator: %s in graph.", node_name.c_str());
         REPORT_INNER_ERROR("E19999", "Can not find operator: %s in graph.", node_name.c_str());
@@ -815,7 +816,7 @@ Status OnnxModelParser::ModelParseToGraph(const ge::onnx::ModelProto &onnx_model
     bool is_subgraph = (arg.parent_node != nullptr) ? true : false;
 
     if (arg.onnx_graph == nullptr) {
-      auto itr = name_to_onnx_graph.find(arg.graph_name);
+      std::map<std::string, ge::onnx::GraphProto *>::const_iterator itr = name_to_onnx_graph.find(arg.graph_name);
       if (itr == name_to_onnx_graph.end()) {
         GELOGE(FAILED, "[Find][OnnxGraph] Can not find onnx graph, graph:%s.", arg.graph_name.c_str());
         REPORT_INNER_ERROR("E19999", "Can not find onnx graph, graph:%s.", arg.graph_name.c_str());

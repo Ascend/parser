@@ -50,7 +50,7 @@ FMK_FUNC_HOST_VISIBILITY std::shared_ptr<OpParserFactory> OpParserFactory::Insta
   // Instances cannot be a member of a class because they may be used before initialization, resulting in a run error.
   static std::map<domi::FrameworkType, std::shared_ptr<OpParserFactory>> instances;
 
-  auto iter = instances.find(framework);
+  std::map<domi::FrameworkType, std::shared_ptr<OpParserFactory>>::const_iterator iter = instances.find(framework);
   if (iter == instances.end()) {
     std::shared_ptr<OpParserFactory> instance(new (std::nothrow) OpParserFactory());
     if (instance == nullptr) {
@@ -67,7 +67,7 @@ FMK_FUNC_HOST_VISIBILITY std::shared_ptr<OpParserFactory> OpParserFactory::Insta
 
 FMK_FUNC_HOST_VISIBILITY std::shared_ptr<OpParser> OpParserFactory::CreateOpParser(const std::string &op_type) {
   // First look for CREATOR_FUN based on OpType, then call CREATOR_FUN to create OpParser.
-  auto iter = op_parser_creator_map_.find(op_type);
+  std::map<std::string, CREATOR_FUN>::const_iterator iter = op_parser_creator_map_.find(op_type);
   if (iter != op_parser_creator_map_.end()) {
     return iter->second();
   }
@@ -78,7 +78,7 @@ FMK_FUNC_HOST_VISIBILITY std::shared_ptr<OpParser> OpParserFactory::CreateOpPars
 
 FMK_FUNC_HOST_VISIBILITY std::shared_ptr<OpParser> OpParserFactory::CreateFusionOpParser(const std::string &op_type) {
   // First look for CREATOR_FUN based on OpType, then call CREATOR_FUN to create OpParser.
-  auto iter = fusion_op_parser_creator_map_.find(op_type);
+  std::map<std::string, CREATOR_FUN>::const_iterator iter = fusion_op_parser_creator_map_.find(op_type);
   if (iter != fusion_op_parser_creator_map_.end()) {
     return iter->second();
   }
@@ -102,12 +102,12 @@ FMK_FUNC_HOST_VISIBILITY void OpParserFactory::RegisterCreator(const std::string
 
 FMK_FUNC_HOST_VISIBILITY bool OpParserFactory::OpParserIsRegistered(const std::string &op_type, bool is_fusion_op) {
   if (is_fusion_op) {
-    auto iter = fusion_op_parser_creator_map_.find(op_type);
+    std::map<std::string, CREATOR_FUN>::const_iterator iter = fusion_op_parser_creator_map_.find(op_type);
     if (iter != fusion_op_parser_creator_map_.end()) {
       return true;
     }
   } else {
-    auto iter = op_parser_creator_map_.find(op_type);
+    std::map<std::string, CREATOR_FUN>::const_iterator iter = op_parser_creator_map_.find(op_type);
     if (iter != op_parser_creator_map_.end()) {
       return true;
     }

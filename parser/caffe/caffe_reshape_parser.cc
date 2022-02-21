@@ -128,7 +128,7 @@ Status CaffeReshapeParser::AddConstInput(ge::NodePtr &node) {
     data[i] = attr_shape[i];
   }
   GE_IF_BOOL_EXEC(
-      constTensor->SetData(reinterpret_cast<uint8_t *>(data.get()), dims_size * sizeof(int64_t)) != ge::GRAPH_SUCCESS,
+      constTensor->SetData(PtrToPtr<int64_t, uint8_t>(data.get()), dims_size * sizeof(int64_t)) != ge::GRAPH_SUCCESS,
       GELOGW("SetData failed for GeTensor."););  // no need to return
 
   // construct const node and add edge

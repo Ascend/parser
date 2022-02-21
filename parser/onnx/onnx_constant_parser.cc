@@ -71,7 +71,7 @@ Status OnnxConstantParser::ParseConvertData(const ge::onnx::TensorProto &tensor_
   };
 
   int32_t datatype_val_size = 0;
-  auto iter = datatype_val_size_map.find(data_type);
+  std::map<uint32_t, int32_t>::const_iterator iter = datatype_val_size_map.find(data_type);
   if (iter != datatype_val_size_map.end()) {
     datatype_val_size = iter->second;
   } else {
@@ -91,7 +91,7 @@ Status OnnxConstantParser::ParseConvertData(const ge::onnx::TensorProto &tensor_
     if (data_type == OnnxDataType::STRING) {
       tensor.SetData(tensor_proto.raw_data().c_str());
     } else {
-      tensor.SetData(reinterpret_cast<const uint8_t *>(tensor_proto.raw_data().c_str()),
+      tensor.SetData(PtrToPtr<const char_t, const uint8_t>(tensor_proto.raw_data().c_str()),
                      tensor_proto.raw_data().size());
     }
     GELOGD("Raw data size is : %zu", tensor_proto.raw_data().size());

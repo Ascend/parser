@@ -105,7 +105,7 @@ void TBEPluginLoader::GetCustomOpPath(std::string &customop_path) {
   GELOGI("Enter get custom op path schedule");
   std::string fmk_type;
   domi::FrameworkType type = domi::TENSORFLOW;
-  auto it = options_.find(FRAMEWORK_TYPE);
+  std::map<string, string>::const_iterator it = options_.find(FRAMEWORK_TYPE);
   if (it != options_.end()) {
     type = static_cast<domi::FrameworkType>(std::strtol(it->second.c_str(), nullptr, 10));
   }

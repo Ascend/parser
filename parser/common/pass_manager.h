@@ -62,7 +62,7 @@ public:
   /// @return others optimized failed
   /// @author
   ///
-  static Status Run(const ge::ComputeGraphPtr &graph, std::vector<std::pair<std::string, GraphPass *>> &passes);
+  static Status Run(const ge::ComputeGraphPtr &graph, std::vector<std::pair<std::string, GraphPass *>> &names_to_passes);
 
   ~PassManager();
 

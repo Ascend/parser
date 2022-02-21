@@ -26,7 +26,7 @@ SubgraphAdapterFactory* SubgraphAdapterFactory::Instance() {
 std::shared_ptr<SubgraphAdapter> SubgraphAdapterFactory::CreateSubgraphAdapter(
     const std::string &op_type) {
   // First look for CREATOR_FUN based on OpType, then call CREATOR_FUN to create SubgraphAdapter.
-  auto iter = subgraph_adapter_creator_map_.find(op_type);
+  std::map<std::string, CREATOR_FUN>::const_iterator iter = subgraph_adapter_creator_map_.find(op_type);
   if (iter != subgraph_adapter_creator_map_.end()) {
     return iter->second();
   }
