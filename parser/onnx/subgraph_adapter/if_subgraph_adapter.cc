@@ -104,7 +104,7 @@ domi::Status IfSubgraphAdapter::GetSubgraphsAllInputs(ge::onnx::GraphProto &onnx
   }
 
   for (const auto &input : graph_inputs) {
-    auto out_iter = graph_outputs.find(input);
+    std::set<std::string>::const_iterator out_iter = graph_outputs.find(input);
     if (out_iter == graph_outputs.end()) {
       // Record input node need to be constructed
       all_inputs.emplace(input);

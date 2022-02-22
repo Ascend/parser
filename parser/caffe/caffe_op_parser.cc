@@ -19,6 +19,7 @@
 #include "parser/common/op_parser_factory.h"
 #include "common/util/error_manager/error_manager.h"
 #include "framework/omg/parser/parser_types.h"
+#include "graph/def_types.h"
 
 using namespace ge::parser;
 using domi::caffe::BlobProto;
@@ -107,7 +108,7 @@ Status CaffeOpParser::ParseWeightType(const BlobProto &proto, const ge::GeShape 
     for (int i = 0; i < size; ++i) {
       buf[i] = proto.double_data(i);
     }
-    GE_IF_BOOL_EXEC(weight->SetData(reinterpret_cast<uint8_t *>(buf.get()), size * sizeof(float)) != ge::GRAPH_SUCCESS,
+    GE_IF_BOOL_EXEC(weight->SetData(PtrToPtr<float, uint8_t>(buf.get()), size * sizeof(float)) != ge::GRAPH_SUCCESS,
                     GELOGW("SetData failed for GeTensor."););  // no need to return
   } else if (proto.int8_data().length() > 0) {
     if (size != static_cast<int>(proto.int8_data().length())) {
@@ -121,7 +122,7 @@ Status CaffeOpParser::ParseWeightType(const BlobProto &proto, const ge::GeShape 
     const char *data_ptr = proto.int8_data().data();
     GE_CHECK_NOTNULL(data_ptr);
     GE_IF_BOOL_EXEC(
-      weight->SetData(reinterpret_cast<const uint8_t *>(data_ptr), size * sizeof(int8_t)) != ge::GRAPH_SUCCESS,
+      weight->SetData(PtrToPtr<const char, const uint8_t>(data_ptr), size * sizeof(int8_t)) != ge::GRAPH_SUCCESS,
       GELOGW("SetData failed for GeTensor."););  // no need to return
     dtype = ge::DT_INT8;
   } else if (proto.int32_data_size() > 0) {
@@ -139,7 +140,7 @@ Status CaffeOpParser::ParseWeightType(const BlobProto &proto, const ge::GeShape 
       int32_weight_buf[i] = proto.int32_data(i);
     }
     GE_IF_BOOL_EXEC(
-      weight->SetData(reinterpret_cast<uint8_t *>(int32_weight_buf.get()), size * sizeof(int32_t)) != ge::GRAPH_SUCCESS,
+      weight->SetData(PtrToPtr<int32_t, uint8_t>(int32_weight_buf.get()), size * sizeof(int32_t)) != ge::GRAPH_SUCCESS,
       GELOGW("SetData failed for GeTensor."););  // no need to return
     dtype = ge::DT_INT32;
   } else if (proto.uint64_data_size() > 0) {
@@ -156,7 +157,7 @@ Status CaffeOpParser::ParseWeightType(const BlobProto &proto, const ge::GeShape 
     for (int i = 0; i < size; ++i) {
       uint64_weight_buf[i] = proto.uint64_data(i);
     }
-    GE_IF_BOOL_EXEC(weight->SetData(reinterpret_cast<uint8_t *>(uint64_weight_buf.get()), size * sizeof(uint64_t)) !=
+    GE_IF_BOOL_EXEC(weight->SetData(PtrToPtr<uint64_t, uint8_t>(uint64_weight_buf.get()), size * sizeof(uint64_t)) !=
                       ge::GRAPH_SUCCESS,
                     GELOGW("SetData failed for GeTensor."););  // no need to return
     dtype = ge::DT_UINT64;
@@ -173,7 +174,7 @@ Status CaffeOpParser::ParseWeightType(const BlobProto &proto, const ge::GeShape 
     const float *data_ptr = proto.data().data();
     GE_CHECK_NOTNULL(data_ptr);
     GE_IF_BOOL_EXEC(
-      weight->SetData(reinterpret_cast<const uint8_t *>(data_ptr), size * sizeof(float)) != ge::GRAPH_SUCCESS,
+      weight->SetData(PtrToPtr<const float, const uint8_t>(data_ptr), size * sizeof(float)) != ge::GRAPH_SUCCESS,
       GELOGW("SetData failed for GeTensor."););  // no need to return
   }
   ge::GeTensorDesc weight_desc = ge::GeTensorDesc();

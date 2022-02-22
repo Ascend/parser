@@ -425,7 +425,8 @@ Status ProtoFileParser::FindConflictLine(const char *proto_file, int identifier,
 void ProtoFileParser::CheckConflictOp(const char *caffe_proto_file, const char *custom_proto_file,
                                       std::map<std::string, std::pair<int, string>> &caffe_op_identifier_map,
                                       std::map<std::string, std::pair<int, string>> &custom_op_identifier_map) {
-  for (auto iter = custom_op_identifier_map.begin(); iter != custom_op_identifier_map.end(); ++iter) {
+  std::map<std::string, std::pair<int, string>>::const_iterator iter = custom_op_identifier_map.begin();
+  for (; iter != custom_op_identifier_map.end(); ++iter) {
     if (caffe_op_identifier_map.count(iter->first) > 0) {
       string message_name = iter->first;
       auto caffe_pair = caffe_op_identifier_map[iter->first];
@@ -452,7 +453,8 @@ void ProtoFileParser::CheckConflictOp(const char *caffe_proto_file, const char *
 void ProtoFileParser::CheckConflictIdentifier(const char *caffe_proto_file, const char *custom_proto_file,
                                               std::map<int, std::pair<string, string>> caffe_identifier_op_map,
                                               std::map<int, std::pair<string, string>> custom_identifier_op_map) {
-  for (auto iter = custom_identifier_op_map.begin(); iter != custom_identifier_op_map.end(); ++iter) {
+  std::map<int, std::pair<string, string>>::const_iterator iter = custom_identifier_op_map.begin();
+  for (; iter != custom_identifier_op_map.end(); ++iter) {
     if (caffe_identifier_op_map.count(iter->first) > 0) {
       int identifier = iter->first;
       auto caffe_pair = caffe_identifier_op_map[iter->first];

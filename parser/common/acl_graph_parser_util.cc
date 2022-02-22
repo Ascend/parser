@@ -492,7 +492,7 @@ domi::Status AclGrphParseUtil::GetOutputLeaf(NodePtr node,
 }
 
 domi::Status AclGrphParseUtil::GetDefaultOutInfo(ge::ComputeGraphPtr &compute_graph,
-                                                 std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info) {
+    std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info) {
   std::vector<std::pair<std::string, int32_t>> default_out_nodes = ge::GetParserContext().default_out_nodes;
   if (!default_out_nodes.empty()) {
     for (size_t i = 0; i < default_out_nodes.size(); ++i) {
@@ -820,7 +820,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadProtoFromArray(const v
                                                     "or size is 0, check invalid"); return false,
                                  "[Check][Param]incorrect parameter. proto is nullptr || data is nullptr || size is 0");
 
-  google::protobuf::io::CodedInputStream coded_stream(reinterpret_cast<uint8_t *>(const_cast<void *>(data)), size);
+  google::protobuf::io::CodedInputStream coded_stream(PtrToPtr<void, uint8_t>(const_cast<void *>(data)), size);
   return ReadProtoFromCodedInputStream(coded_stream, proto);
 }
 
@@ -901,7 +901,7 @@ Status GetOriginalType(const ge::NodePtr &node, string &type) {
   return SUCCESS;
 }
 
-FMK_FUNC_HOST_VISIBILITY bool ValidateStr(const std::string &str, const std::string &mode) {
+FMK_FUNC_HOST_VISIBILITY bool ValidateStr(const std::string &filePath, const std::string &mode) {
   char ebuff[kMaxBuffSize];
   regex_t reg;
   int cflags = REG_EXTENDED | REG_NOSUB;
@@ -913,7 +913,7 @@ FMK_FUNC_HOST_VISIBILITY bool ValidateStr(const std::string &str, const std::str
     return true;
   }
 
-  ret = regexec(&reg, str.c_str(), 0, nullptr, 0);
+  ret = regexec(&reg, filePath.c_str(), 0, nullptr, 0);
   if (ret) {
     regerror(ret, &reg, ebuff, kMaxBuffSize);
     GELOGE(ge::PARAM_INVALID, "[Invoke][RegExec] failed, reason: %s", ebuff);
