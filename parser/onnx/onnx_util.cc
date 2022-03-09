@@ -45,4 +45,8 @@ void OnnxUtil::GenUniqueSubgraphName(int subgraph_index, const std::string &orig
                                      const std::string &parent_node_name, std::string &unique_subgraph_name) {
   unique_subgraph_name = parent_node_name + "_" + std::to_string(subgraph_index) + "_" + original_subgraph_name;
 }
+
+std::string OnnxUtil::GenUniqueNodeName(const std::string &graph_name, const std::string &node_name) {
+  return graph_name + "/" + node_name;
+}
 }  // namespace ge

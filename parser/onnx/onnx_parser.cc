@@ -240,7 +240,7 @@ Status PostOpProcessForSubgraph(const ParseArg &arg, ge::ComputeGraphPtr sub_gra
     if (node->GetOpDesc() == nullptr) {
       continue;
     }
-    node->GetOpDesc()->SetName(sub_graph->GetName() + "/" + node->GetName());
+    node->GetOpDesc()->SetName(OnnxUtil::GenUniqueNodeName(sub_graph->GetName(), node->GetName()));
   }
 
   auto graph = ge::GraphUtils::CreateGraphFromComputeGraph(sub_graph);
@@ -750,6 +750,14 @@ Status OnnxModelParser::AdaptAndFindAllOnnxGraph(
   while (!onnx_graph_tasks.empty()) {
     ge::onnx::GraphProto *onnx_graph = onnx_graph_tasks.front();
     onnx_graph_tasks.pop();
+    std::string graph_name;
+    for (const auto &graph_iter : name_to_onnx_graph) {
+      if (graph_iter.second == onnx_graph) {
+        graph_name = graph_iter.first;
+        break;
+      }
+    }
+
     for (int i = 0; i < onnx_graph->node_size(); i++) {
       ge::onnx::NodeProto *node_proto = onnx_graph->mutable_node(i);
       if (node_proto->name().empty()) {
@@ -767,7 +775,8 @@ Status OnnxModelParser::AdaptAndFindAllOnnxGraph(
       }
       std::vector<ge::onnx::GraphProto *> onnx_graphs;
       std::map<std::string, ge::onnx::GraphProto *> name_to_onnx_subgraph;
-      if (subgraph_adapter->AdaptAndFindAllSubgraphs(node_proto, onnx_graphs, name_to_onnx_subgraph) != SUCCESS) {
+      if (subgraph_adapter->AdaptAndFindAllSubgraphs(
+          node_proto, onnx_graphs, name_to_onnx_subgraph, graph_name) != SUCCESS) {
         GELOGE(FAILED, "[Adapt][Subgraph] adapt subgraph of node:%s failed.", node_proto->name().c_str());
         REPORT_INNER_ERROR("E19999", "adapt subgraph of node:%s failed.", node_proto->name().c_str());
         return FAILED;
