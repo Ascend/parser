@@ -54,6 +54,7 @@ class OnnxUtil {
   static ge::DataType ConvertOnnxDataType(int64_t onnx_data_type);
   static void GenUniqueSubgraphName(int subgraph_index, const std::string &original_subgraph_name,
                                     const std::string &parent_node_name, std::string &unique_subgraph_name);
+  static std::string GenUniqueNodeName(const std::string &graph_name, const std::string &node_name);
 };
 }  // namespace ge
 
