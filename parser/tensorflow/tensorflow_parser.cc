@@ -2828,7 +2828,7 @@ Status EraseTransposeNode(std::map<std::string, std::string> &softmaxInfo,
              itTranspose->second.node_def->input(0).c_str());
       itTranspose = transposeInfo.erase(itTranspose);
     } else {
-      itTranspose++;
+      ++itTranspose;
     }
   }
 

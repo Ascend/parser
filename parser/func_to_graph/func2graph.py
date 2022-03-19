@@ -227,9 +227,9 @@ def convert_subgraphs(graph_def, filename):
         print(graph_def_library.graph_def[i])
 
     # Write to prototxt
+    graph_def_file = '{}/graph_def_library.pbtxt'.format(os.path.dirname(os.path.abspath(filename)))
+    print("graph_def_file: ", graph_def_file)
     try:
-        graph_def_file = '{}/graph_def_library.pbtxt'.format(os.path.dirname(os.path.abspath(filename)))
-        print("graph_def_file: ", graph_def_file)
         with open(graph_def_file, "w") as f:
             print(graph_def_library, file=f)
     except IOError:
@@ -261,18 +261,18 @@ if __name__ == '__main__':
     model = ''
     try:
         opts, args = getopt.getopt(sys.argv[1:], '-v-h-m:', ['version', 'help', 'model='])
-        for opt_name, opt_value in opts:
-            if opt_name in ('-m', '--model'):
-                model = opt_value
-                print("INFO: Input model file is", model)
-                convert_graphs(model)
-            elif opt_name in ('-h', '--help'):
-                usage()
-                break
-            elif opt_name in ('-v', '--version'):
-                print("version 1.0.0")
-                break
     except getopt.GetoptError:
         print("ERROR: Input parameters is invalid, use '--help' to view the help.")
+    for opt_name, opt_value in opts:
+        if opt_name in ('-m', '--model'):
+            model = opt_value
+            print("INFO: Input model file is", model)
+            convert_graphs(model)
+        elif opt_name in ('-h', '--help'):
+            usage()
+            break
+        elif opt_name in ('-v', '--version'):
+            print("version 1.0.0")
+            break
     if len(sys.argv) == 1:
         print("INFO: Please specify the input parameters, and use '--help' to view the help.")
