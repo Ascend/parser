@@ -3696,7 +3696,8 @@ TEST_F(UtestTensorflowParser, tensorflow_Pb2Json_OneField2Json_test)
   ge::Operator ops = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
   field->CppTypeName(google::protobuf::FieldDescriptor::CPPTYPE_ENUM);
   mess2Op.ParseField(reflection, node_def, field, depth, ops);
-  toJson.OneField2Json((*node_def), field, reflection, black_fields, json, enum2str);
+  toJson.OneField2Json((*node_def), field, reflection, black_fields, json, enum2str, 1);
+  toJson.OneField2Json((*node_def), field, reflection, black_fields, json, enum2str, 5);
   delete field;
 }
 
