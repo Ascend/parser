@@ -206,9 +206,11 @@ Status ParserGraphOptimizer::UpdateGraph(vector<NodePtr> &nodes) {
   std::unique_ptr<FunctionDefLibrary> func_def_lib(new (std::nothrow) FunctionDefLibrary());
   GE_CHECK_NOTNULL(func_def_lib);
   // convert graph to FunctionDef
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(nodes.size() == 0,
-                                 REPORT_INNER_ERROR("E19999", "Param nodes size must greater than 0");
-                                 return PARAM_INVALID, "node size must greater than 0 .");
+  if (nodes.size() == 0) {
+    REPORT_INNER_ERROR("E19999", "Param nodes size must greater than 0");
+    GELOGE(FAILED, "node size must greater than 0 .");
+    return PARAM_INVALID;
+  }
   GE_CHK_STATUS_RET(CollectNodeFuncs(nodes, func_def_lib.get()), "Collect functionDef in nodes failed.");
   GE_CHK_STATUS_RET(GraphToFunctionDef::BuildFunctionDef(sub_graph, nodes[0]->GetName(), func_def_lib.get(),
                                                          node_def.get(), input_anchors, output_anchors),
@@ -226,7 +228,10 @@ Status ParserGraphOptimizer::UpdateGraph(vector<NodePtr> &nodes) {
                   GELOGE(PARAM_INVALID, "Serialize func_def to string failed.");
                   return PARAM_INVALID);
 
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(nodes.size() == 0, return PARAM_INVALID, "nodes is empty.");
+  if (nodes.size() == 0) {
+    GELOGE(FAILED, "nodes is empty.");
+    return PARAM_INVALID;
+  }
 
   std::string fusion_op_name;
   for (auto node : nodes) {
@@ -410,12 +415,12 @@ Status ParserGraphOptimizer::RebuildInputAnchors(vector<ge::InDataAnchorPtr> &in
     auto tensorDescPtr = dst_node->GetOpDesc()->GetInputDescPtr(in_anchor->GetIdx());
     GE_CHECK_NOTNULL_EXEC(tensorDescPtr, return domi::FAILED);
 
-    GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((fusion_op_desc->AddInputDesc(*tensorDescPtr)) != GRAPH_SUCCESS,
-                                   REPORT_CALL_ERROR("E19999", "Add input desc to op:%s(%s) failed",
-                                                     fusion_op_desc->GetName().c_str(),
-                                                     fusion_op_desc->GetType().c_str());
-                                   return FAILED,
-                                   "Add fusion_op_desc AddInputDesc failed");
+    if (fusion_op_desc->AddInputDesc(*tensorDescPtr) != GRAPH_SUCCESS) {
+      REPORT_CALL_ERROR("E19999", "Add input desc to op:%s(%s) failed",
+                        fusion_op_desc->GetName().c_str(), fusion_op_desc->GetType().c_str());
+      GELOGE(FAILED, "Add fusion_op_desc AddInputDesc failed");
+      return FAILED;
+    }
     ge::DataType data_type = tensorDescPtr->GetDataType();
     const std::map<int32_t, int32_t>::const_iterator iter = GE_TENSORFLOW_DATA_TYPE_MAP.find((int32_t)data_type);
     GE_IF_BOOL_EXEC(
