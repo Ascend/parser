@@ -565,7 +565,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
   Status RemoveInputs(domi::tensorflow::GraphDef *graph_def,
                       domi::tensorflow::NodeDef *node_def,
                       const set<uint32_t> &remove_index_set,
-                      const map<string, NodeDef *> &all_node_map);
+                      const map<string, NodeDef *> &all_node_map) const;
 
   Status AddControlEdgeAfterRemoveInputs(domi::tensorflow::GraphDef *graph_def,
                                          domi::tensorflow::NodeDef *node_def,

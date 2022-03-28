@@ -19,7 +19,6 @@
 #include "graph/ge_attr_value.h"
 #include "graph/ge_tensor.h"
 #include "graph/op_desc.h"
-#include "graph/operator.h"
 #include "graph/utils/attr_utils.h"
 #include "graph/utils/tensor_utils.h"
 #include "parser/common/op_def/variable_op.h"
@@ -253,7 +252,7 @@ static void ParseMemType(const domi::tensorflow::NodeDef *node, VariableOperator
 
 Status ParseParams(const Message *op_src, VariableOperator *op) {
   GE_CHECK_NOTNULL(op_src);
-  const NodeDef *node = reinterpret_cast<const NodeDef *>(op_src);
+  const NodeDef *node = ge::PtrToPtr<Message, NodeDef>(op_src);
   GE_CHECK_NOTNULL(node);
   GELOGD("TF op node name = %s, op type= %s, parse params", node->name().c_str(), node->op().c_str());
   string node_op = node->op();

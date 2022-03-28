@@ -923,7 +923,7 @@ Status TensorFlowModelParser::ParseNodeDef(TensorFlowModelParser *parser, ge::Co
 
   std::map<std::string, std::string>::const_iterator iterator = parser->adaptedOpTypeMap_.find(node_name);
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
-      iterator == parser->adaptedOpTypeMap_.end(),
+      iterator == parser->adaptedOpTypeMap_.cend(),
       REPORT_INNER_ERROR("E19999", "get adapted op type failed, node name = %s", node_name.c_str());
       return FAILED, "get adapted op type failed, node name = %s", node_name.c_str());
 
@@ -1270,7 +1270,7 @@ Status TensorFlowModelParser::ParseFromMemory(const char *data, uint32_t size, g
       return INTERNAL_ERROR;
     }
     const string &node_op = node_def->op();
-    GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((tensorflow_op_map.find(node_op) == tensorflow_op_map.end()), DeleteFuisonNodeDef();
+    GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((tensorflow_op_map.find(node_op) == tensorflow_op_map.cend()), DeleteFuisonNodeDef();
                                    REPORT_INNER_ERROR("E19999", "Op type %s unsupport", node_op.c_str());
                                    return INTERNAL_ERROR, "Unsupport op type %s", node_op.c_str());
 
@@ -1416,7 +1416,8 @@ Status TensorFlowModelParser::ParseAllGraph(const google::protobuf::Message *pro
   GE_CHECK_NOTNULL(proto);
   GE_CHECK_NOTNULL(graph);
 
-  const domi::tensorflow::GraphDef *ori_graph = reinterpret_cast<const domi::tensorflow::GraphDef *>(proto);
+  const domi::tensorflow::GraphDef *ori_graph =
+      ge::PtrToPtr<google::protobuf::Message, domi::tensorflow::GraphDef>(proto);
   // Make a copy for operation without modifying the original graph def.
   domi::tensorflow::GraphDef graph_def = *ori_graph;
 
@@ -2109,10 +2110,10 @@ Status TensorFlowModelParser::NormalizeInputOrOutputMap(
     std::set<std::string> compare_set;
 
     for (auto &pair : pairs) {
-      bool is_fusion_child = (fusion_op_children_.find(node_name) != fusion_op_children_.end()) ||
-                             (fusion_op_children_.find(iter->first) != fusion_op_children_.end());
-      bool is_fusion_op = (fusion_op_type_map_.find(node_name) != fusion_op_type_map_.end()) ||
-                          (fusion_op_type_map_.find(iter->first) != fusion_op_type_map_.end());
+      bool is_fusion_child = (fusion_op_children_.find(node_name) != fusion_op_children_.cend()) ||
+                             (fusion_op_children_.find(iter->first) != fusion_op_children_.cend());
+      bool is_fusion_op = (fusion_op_type_map_.find(node_name) != fusion_op_type_map_.cend()) ||
+                          (fusion_op_type_map_.find(iter->first) != fusion_op_type_map_.cend());
       if (((pair.first == ge::kFusionDisableIndex) || (pair.second == ge::kFusionDisableIndex)) &&
           (is_fusion_child || is_fusion_op)) {
         // The edge will be cut off at the back, ignoring
@@ -2229,7 +2230,8 @@ Status TensorFlowModelParser::ParseProto(const google::protobuf::Message *proto,
   GE_CHECK_NOTNULL(graph);
   ge::GetParserContext().train_flag = true;
 
-  const domi::tensorflow::GraphDef *graph_def_in = reinterpret_cast<const domi::tensorflow::GraphDef *>(proto);
+  const domi::tensorflow::GraphDef *graph_def_in =
+      ge::PtrToPtr<google::protobuf::Message, domi::tensorflow::GraphDef>(proto);
   // Make a copy for operation without modifying the original graph def.
   domi::tensorflow::GraphDef graph_def_operation = *graph_def_in;
   domi::tensorflow::GraphDef *graph_def = &graph_def_operation;
@@ -2485,7 +2487,7 @@ Status TensorFlowModelParser::OptimizeIdentityByOutput(map<string, NodeDef *> &n
 
   const std::map<std::string, NodeDef *>::const_iterator node_def_iter = nodedef_map.find(curr_node_name);
   GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
-      (node_def_iter == nodedef_map.end()),
+      (node_def_iter == nodedef_map.cend()),
       REPORT_INNER_ERROR("E19999", "Node:%s can't find in nodedef_map, check invalid", curr_node_name.c_str());
       return INTERNAL_ERROR, "Can't find nodedef");
   domi::tensorflow::NodeDef *curr_node_def = node_def_iter->second;
@@ -2493,7 +2495,7 @@ Status TensorFlowModelParser::OptimizeIdentityByOutput(map<string, NodeDef *> &n
   bool has_out_retval = false;
   // For the identity operator whose output is "_retval", optimize it
   std::map<std::string, std::vector<std::pair<int32_t, int32_t>>> output_map = op_node_context.output_map;
-  for (auto output_iter = output_map.begin(); output_iter != output_map.end(); ++output_iter) {
+  for (auto output_iter = output_map.cbegin(); output_iter != output_map.cend(); ++output_iter) {
     const string &output_node_name = output_iter->first;
     domi::tensorflow::NodeDef *output_node_def = nodedef_map[output_node_name];
     GE_CHECK_NOTNULL(output_node_def);
@@ -3467,7 +3469,7 @@ Status TensorFlowModelParser::AddControlEdgeAfterRemoveInputs(domi::tensorflow::
  */
 Status TensorFlowModelParser::RemoveInputs(domi::tensorflow::GraphDef *graph_def, domi::tensorflow::NodeDef *node_def,
                                            const set<uint32_t> &remove_index_set,
-                                           const map<string, NodeDef *> &all_node_map) {
+                                           const map<string, NodeDef *> &all_node_map) const {
   GE_CHECK_NOTNULL(node_def);
   if (remove_index_set.empty()) {
     GELOGI("The size of remove_index_set is zero.");
@@ -3754,7 +3756,7 @@ void TensorFlowModelParser::UpdateInnerInputMap(const string &fusion_op_name, Op
           ++iter;
         }
       }
-      op_node_context.input_map.insert(tmp_input_map.begin(), tmp_input_map.end());
+      op_node_context.input_map.insert(tmp_input_map.cbegin(), tmp_input_map.cend());
       // update output map of pre node
       for (const auto &in_iter : op_node_context.input_map) {
         auto src_iter = op_node_context_map_.find(in_iter.first);
@@ -3803,7 +3805,7 @@ void TensorFlowModelParser::UpdateInnerOutputMap(const string &fusion_op_name, O
           ++iter;
         }
       }
-      op_node_context.output_map.insert(tmp_output_map.begin(), tmp_output_map.end());
+      op_node_context.output_map.insert(tmp_output_map.cbegin(), tmp_output_map.cend());
       // update input map of pre node
       for (const auto &out_iter : op_node_context.output_map) {
         auto dst_iter = op_node_context_map_.find(out_iter.first);
