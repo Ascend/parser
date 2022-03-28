@@ -45,11 +45,11 @@ class Pb2Json {
   * @author
   */
   static void Message2Json(const ProtobufMsg &message, const std::set<std::string> &black_fields, Json &json,
-                           bool enum2str = false);
+                           bool enum2str = false, int depth = 0);
 
   static void RepeatedMessage2Json(const ProtobufMsg &message, const ProtobufFieldDescriptor *field,
                                    const ProtobufReflection *reflection, const std::set<std::string> &black_fields,
-                                   Json &json, bool enum2str);
+                                   Json &json, bool enum2str, int depth = 0);
 
  protected:
   static void Enum2Json(const ProtobufEnumValueDescriptor *enum_value_desc, const ProtobufFieldDescriptor *field,
@@ -59,7 +59,7 @@ class Pb2Json {
 
   static void OneField2Json(const ProtobufMsg &message, const ProtobufFieldDescriptor *field,
                             const ProtobufReflection *reflection, const std::set<std::string> &black_fields, Json &json,
-                            bool enum2str);
+                            bool enum2str, int depth);
 
   static std::string TypeBytes2String(std::string &field_name, std::string &type_bytes);
 };
