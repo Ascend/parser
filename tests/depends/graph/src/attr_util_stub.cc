@@ -121,7 +121,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CloneOpDesc(
   GE_CHK_BOOL_EXEC(imp.UnserializeOpDesc(op_desc, *op_def),
                    REPORT_CALL_ERROR("E19999", "UnserializeOpDesc failed");
                    return op_desc, "[Call][UnserializeOpDesc] op_desc unserialize failed");
-  op_desc->extAttrs_ = org_op_desc->extAttrs_;
+  op_desc->ext_attrs_ = org_op_desc->ext_attrs_;
 
   // This function may be called by some passes of fusion engine, in this condition, do not need these attribute
   if (op_desc->impl_ == nullptr) {
@@ -164,7 +164,7 @@ GE_FUNC_DEV_VISIBILITY GE_FUNC_HOST_VISIBILITY OpDescPtr AttrUtils::CopyOpDesc(c
     return nullptr;
   }
 
-  op_desc->extAttrs_ = org_op_desc->extAttrs_;
+  op_desc->ext_attrs_ = org_op_desc->ext_attrs_;
 
   if (op_desc->impl_ == nullptr) {
     REPORT_INNER_ERROR("E19999", "op desc impl is nullptr, check invalid");
