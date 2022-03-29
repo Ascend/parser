@@ -31,7 +31,7 @@ using std::string;
 namespace ge {
 namespace {
 const int kSignificantDigits = 10;
-const int kMaxParseDepth = 5;
+const int kMaxParseDepth = 20;
 }
 // JSON parses non utf8 character throwing exceptions, so some fields need to be shielded through black fields
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY void Pb2Json::Message2Json(const ProtobufMsg &message,
