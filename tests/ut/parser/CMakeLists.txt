@@ -62,7 +62,7 @@ target_link_libraries(ut_parser_proto PRIVATE
 
 ################################################################################
 set(DUPLICATE_PROTO_LIST
-    "${PARSER_DIR}/metadef/proto/proto_inner/ge_onnx.proto"
+    "${PARSER_DIR}/metadef/proto/onnx/ge_onnx.proto"
 )
 
 protobuf_generate(ge DUP_PROTO_SRCS DUP_PROTO_HDRS ${DUPLICATE_PROTO_LIST})
