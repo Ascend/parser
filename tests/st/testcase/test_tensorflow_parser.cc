@@ -1259,7 +1259,7 @@ TEST_F(STestTensorflowParser, tensorflow_parserAllGraph_failed)
   ge::ComputeGraphPtr root_graph = ge::GraphUtils::GetComputeGraph(graph);
   TensorFlowModelParser tensorflow_parser;
   ret = tensorflow_parser.ParseAllGraph(reinterpret_cast<google::protobuf::Message *>(&graphDef), root_graph);
-  EXPECT_EQ(INTERNAL_ERROR, ret);
+  ASSERT_NE(ret, SUCCESS);
 }
 
 TEST_F(STestTensorflowParser, test_parse_acl_output_nodes)

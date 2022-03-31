@@ -241,15 +241,6 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
 
   /**
   * @ingroup domi_omg
-  * @brief Verifying the validity of graphdef object parsed by pb
-  * @param [in] graph_def Parsed tensorflow:: graphdef object
-  * @return SUCCESS check successfully
-  * @return FAILED check failed
-  */
-  Status CheckGraphDefValid(const domi::tensorflow::GraphDef &graph_def) const;
-
-  /**
-  * @ingroup domi_omg
   * @brief whether const OP need to update context
   * @param const op name
   * @return true or false
