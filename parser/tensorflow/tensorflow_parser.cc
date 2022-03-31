@@ -1237,9 +1237,6 @@ Status TensorFlowModelParser::ParseFromMemory(const char *data, uint32_t size, g
   // This function call affects the return value of prechecker::instance().Haserror()
   GE_RETURN_IF_ERROR(ClearFusionOpError(op_node_name_list));
 
-  // Check the input validity of the node, the input attribute must have a corresponding node
-  GE_RETURN_IF_ERROR(CheckGraphDefValid(graph_def));
-
   // Building input and input relationships for all OP nodes
   GE_RETURN_IF_ERROR(GetOpNodesContextFromGraph(graph_def));
   GELOGD("[TF ParseFromMemory] get op nodes context from graph success");
@@ -1472,10 +1469,6 @@ Status TensorFlowModelParser::ParseAllGraph(const google::protobuf::Message *pro
   // This function call affects the return value of prechecker::instance().Haserror()
   GE_RETURN_IF_ERROR(ClearFusionOpError(op_node_name_list));
 
-  // Check the input validity of the node, the input attribute must have a corresponding node
-  GE_RETURN_IF_ERROR(CheckGraphDefValid(graph_def));
-  GELOGD("[TF Parse] check graph success");
-
   // Building input and input relationships for all OP nodes
   GE_RETURN_IF_ERROR(GetOpNodesContextFromGraph(graph_def));
   GELOGD("[TF Parse] get op nodes context from graph success");
@@ -1545,37 +1538,6 @@ Status TensorFlowModelParser::ParseAllGraph(const google::protobuf::Message *pro
     return PARAM_INVALID;
   }
   GELOGI("[TF Parser] Parse proto success.");
-  return SUCCESS;
-}
-
-Status TensorFlowModelParser::CheckGraphDefValid(const domi::tensorflow::GraphDef &graph_def) const {
-  // Number of data nodes
-  uint32_t data_node_count = 0;
-  for (const domi::tensorflow::NodeDef &node_def : graph_def.node()) {
-    // Check that all input is valid
-    for (const string &node_name : node_def.input()) {
-      string tmp_node_name;
-      GE_RETURN_IF_ERROR(CheckInputNodeName(node_name, &tmp_node_name, nullptr, nullptr));
-
-      if (nodedef_map_.find(tmp_node_name) == nodedef_map_.end()) {
-        ErrorManager::GetInstance().ATCReportErrMessage("E12009", {"opname", "inputopname"},
-                                                        {node_def.name(), node_name});
-        GELOGE(INTERNAL_ERROR, "Op[%s]'s input op[%s] is not exist in the graph_def.", node_def.name().c_str(),
-               node_name.c_str());
-        return INTERNAL_ERROR;
-      }
-    }
-
-    if (node_def.op() == TENSORFLOWF_NODE_OP_PLACEHOLDER || node_def.op() == ge::parser::ARG) {
-      data_node_count++;
-    }
-  }
-  if (data_node_count == 0) {
-    ErrorManager::GetInstance().ATCReportErrMessage("E12010");
-    GELOGE(INTERNAL_ERROR, "Model has no Placeholder node.");
-    return INTERNAL_ERROR;
-  }
-
   return SUCCESS;
 }
 
