@@ -1288,7 +1288,7 @@ TEST_F(UtestTensorflowParser, tensorflow_parserfrommemory_failed)
   ret = ge::aclgrphParseTensorFlow(modelFile.c_str(), parser_params, graph);
   ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
   ret = modelParser.ParseFromMemory(data, size, compute_graph);
-  EXPECT_EQ(ret, INTERNAL_ERROR);
+  EXPECT_NE(ret, SUCCESS);
 }
 
 TEST_F(UtestTensorflowParser, modelparser_parsefrommemory_success)

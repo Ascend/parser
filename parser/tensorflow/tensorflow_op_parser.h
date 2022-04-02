@@ -42,7 +42,6 @@
 #include "proto/tensorflow/graph.pb.h"
 #include "proto/tensorflow/node_def.pb.h"
 
-
 using domi::tensorflow::NodeDef;
 using domi::tensorflow::TensorProto;
 using google::protobuf::int32;

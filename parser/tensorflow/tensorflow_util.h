@@ -18,14 +18,11 @@
 #define OMG_PARSER_TENSORFLOW_TENSORFLOW_UTIL_H_
 
 #include <map>
-#include <set>
 #include <string>
 #include <unordered_map>
-#include <vector>
 #include "parser/common/op_def/operator.h"
 #include "external/graph/attr_value.h"
 #include "external/graph/graph.h"
-#include "external/graph/operator.h"
 #include "framework/omg/parser/parser_types.h"
 #include "framework/omg/omg_inner_types.h"
 #include "graph/compute_graph.h"
