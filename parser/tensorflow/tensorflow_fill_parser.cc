@@ -38,7 +38,7 @@ node {
     }
 }
 */
-domi::Status ParseParams(const NodeDef *node, FillOperator *op) {
+domi::Status ParseParams(const domi::tensorflow::NodeDef *node, FillOperator *op) {
   GE_CHECK_NOTNULL(node);
   GE_CHECK_NOTNULL(op);
   op->Name(node->name());

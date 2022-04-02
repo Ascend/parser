@@ -20,8 +20,6 @@
 #include "common/op_def/shape_n_op.h"
 #include "parser/tensorflow/tensorflow_op_parser.h"
 
-using domi::tensorflow::NodeDef;
-
 namespace ge {
 class PARSER_FUNC_VISIBILITY TensorFlowShapeNParser : public TensorFlowOpParser {
   // AUTO GEN PLEASE DO NOT MODIFY IT

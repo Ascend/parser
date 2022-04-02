@@ -66,7 +66,7 @@ Status TensorFlowSqueezeParser::ParseParams(const Message *op_src, ge::OpDescPtr
   GE_CHECK_NOTNULL(op_src);
   GE_CHECK_NOTNULL(op);
 
-  const NodeDef *node = DOMI_DYNAMIC_CAST<const NodeDef *>(op_src);
+  const domi::tensorflow::NodeDef *node = DOMI_DYNAMIC_CAST<const domi::tensorflow::NodeDef *>(op_src);
   GE_CHECK_NOTNULL(node);
   GELOGD("TF op node name = %s, op type= %s, parse params", node->name().c_str(), node->op().c_str());
   bool has_axis = true;
