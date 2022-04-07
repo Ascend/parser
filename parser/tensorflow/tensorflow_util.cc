@@ -207,7 +207,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY domi::Status TensorFlowUtil::Ch
 }
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY domi::Status TensorFlowUtil::ParseDataType(
-    const NodeDef *node_src, const std::string &attr_src, domi::tensorflow::DataType &data_type) {
+    const domi::tensorflow::NodeDef *node_src, const std::string &attr_src, domi::tensorflow::DataType &data_type) {
   GE_CHECK_NOTNULL(node_src);
 
   std::string node_name = node_src->name();

@@ -46,15 +46,6 @@
 #include "scope/scope_pass_manager.h"
 #include "common/parser_utils.h"
 
-using ge::ScopePassManager;
-using domi::tensorflow::GraphDef;
-using domi::tensorflow::DT_HALF;
-using domi::tensorflow::NodeDef;
-using domi::tensorflow::GraphDef;
-using domi::tensorflow::AttrValue;
-using domi::tensorflow::DataType;
-using ge::OpParser;
-
 namespace ge {
 using std::string;
 using std::vector;
@@ -460,7 +451,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
   void OptimizeDestroyTemporaryVariable(domi::tensorflow::GraphDef *const graph_def,
                                         domi::tensorflow::NodeDef *const nodeCurrent, bool &clearInputFlag) const;
   static void OptimizeTranspose(std::map<std::string, DelTransposeInfo> &transposeInfo);
-  static void SoftmaxAddAttr(GraphDef *const graph_def);
+  static void SoftmaxAddAttr(domi::tensorflow::GraphDef *const graph_def);
 
   /**
   * @ingroup domi_omg

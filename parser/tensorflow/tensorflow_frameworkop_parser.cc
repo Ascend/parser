@@ -31,7 +31,7 @@ namespace ge {
 Status ParseParams(const Message *op_src, FrameworkOpOperator *op) {
   GE_CHECK_NOTNULL(op_src);
   GE_CHECK_NOTNULL(op);
-  const NodeDef *node = reinterpret_cast<const NodeDef *>(op_src);
+  const domi::tensorflow::NodeDef *node = reinterpret_cast<const domi::tensorflow::NodeDef *>(op_src);
   GELOGD("TF op node name = %s, op type= %s, parse params", node->name().c_str(), node->op().c_str());
   string type = node->op();
 
@@ -64,7 +64,7 @@ Status ParseParams(const Message *op_src, FrameworkOpOperator *op) {
   GE_IF_BOOL_EXEC(((type == "_Retval") && (TensorFlowUtil::FindAttrValue(node, ATTR_NAME_INDEX, index_attr_value))),
                   op->Index(index_attr_value.i()));
 
-  NodeDef *pkg_node = new (std::nothrow) NodeDef();
+  domi::tensorflow::NodeDef *pkg_node = new (std::nothrow) domi::tensorflow::NodeDef();
   GE_CHECK_NOTNULL(pkg_node);
 
   pkg_node->CopyFrom(*node);

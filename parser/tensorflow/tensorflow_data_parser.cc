@@ -93,7 +93,7 @@ Status TensorFlowDataParser::ParseInputFromModel(const Message *op_src, const ge
   GE_RETURN_WITH_LOG_IF_ERROR(TensorFlowUtil::CheckAttrHasType(attr_value, TENSORFLOW_ATTR_TYPE_SHAPE),
                               "check Attr %s failed", TENSORFLOW_ATTR_SHAPE.c_str());
 
-  const TensorShapeProto &data_shape = attr_value.shape();
+  const domi::tensorflow::TensorShapeProto &data_shape = attr_value.shape();
   for (auto i = 0; i < data_shape.dim_size(); i++) {
     model_input_dims_v.push_back(data_shape.dim(i).size());
   }

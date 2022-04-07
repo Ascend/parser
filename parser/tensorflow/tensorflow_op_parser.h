@@ -42,24 +42,6 @@
 #include "proto/tensorflow/graph.pb.h"
 #include "proto/tensorflow/node_def.pb.h"
 
-using domi::tensorflow::NodeDef;
-using domi::tensorflow::TensorProto;
-using google::protobuf::int32;
-using google::protobuf::int64;
-using google::protobuf::Message;
-using std::string;
-using std::vector;
-using Status = domi::Status;
-using domi::tensorflow::AttrValue;
-using domi::tensorflow::DataType;
-using domi::tensorflow::DT_BOOL;
-using domi::tensorflow::DT_FLOAT;
-using domi::tensorflow::DT_INT32;
-using domi::tensorflow::DT_INT64;
-using domi::tensorflow::DT_INVALID;
-using domi::tensorflow::TensorShapeProto;
-using domi::tensorflow::TensorShapeProto_Dim;
-
 namespace ge {
 /**
  * @ingroup domi_omg

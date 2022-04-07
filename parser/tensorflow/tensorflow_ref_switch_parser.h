@@ -20,8 +20,6 @@
 #include "common/op_def/ref_switch_op.h"
 #include "parser/tensorflow/tensorflow_op_parser.h"
 
-using domi::tensorflow::NodeDef;
-
 namespace ge {
 class PARSER_FUNC_VISIBILITY TensorFlowRefSwitchParser : public TensorFlowOpParser {
   // AUTO GEN PLEASE DO NOT MODIFY IT
