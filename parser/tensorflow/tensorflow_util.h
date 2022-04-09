@@ -34,11 +34,6 @@
 #include "graph/utils/tensor_utils.h"
 #include "proto/tensorflow/graph.pb.h"
 
-using domi::tensorflow::NodeDef;
-using domi::tensorflow::FunctionDef;
-using domi::tensorflow::AttrValue_ListValue;
-using domi::tensorflow::FunctionDefLibrary;
-
 namespace ge {
 /***************************TensorFlow attribute type, constant definition*******************************************/
 extern const std::string TENSORFLOW_ATTR_TYPE_STRING;
@@ -164,7 +159,7 @@ class TensorFlowUtil {
    * @return FAILED            parsing failed
    *
    */
-  static domi::Status ParseDataType(const NodeDef *node_src,
+  static domi::Status ParseDataType(const domi::tensorflow::NodeDef *node_src,
                                     const std::string &attr_src,
                                     domi::tensorflow::DataType &data_type);
 

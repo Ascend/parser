@@ -44,7 +44,7 @@ Status TensorFlowAutoMappingParserAdapter::ParseParams(const Message *op_src, ge
     GELOGE(PARAM_INVALID, "Op src is null");
     return PARAM_INVALID;
   }
-  const NodeDef *node = PtrToPtr<const Message, const NodeDef>(op_src);
+  const domi::tensorflow::NodeDef *node = PtrToPtr<const Message, const domi::tensorflow::NodeDef>(op_src);
   GELOGD("TF op node name = %s, op type= %s, parse params", node->name().c_str(), node->op().c_str());
   if (op_dest == nullptr) {
     REPORT_INNER_ERROR("E19999", "Param op_dest is nullptr, check invalid");
@@ -110,7 +110,7 @@ Status TensorFlowAutoMappingParserAdapter::ParseParams(const Message *op_src, ge
       }
     }
 
-    std::shared_ptr<NodeDef> pkg_node = ge::parser::MakeShared<NodeDef>();
+    std::shared_ptr<domi::tensorflow::NodeDef> pkg_node = ge::parser::MakeShared<domi::tensorflow::NodeDef>();
     GE_CHECK_NOTNULL(pkg_node);
     pkg_node->CopyFrom(*node);
 

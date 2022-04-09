@@ -61,7 +61,7 @@ Status TensorFlowReshapeParser::ParseParams(const Message *op_src, ge::OpDescPtr
   GE_CHECK_NOTNULL(op_src);
   GE_CHECK_NOTNULL(op);
 
-  const NodeDef *node_src = DOMI_DYNAMIC_CAST<const NodeDef *>(op_src);
+  const domi::tensorflow::NodeDef *node_src = DOMI_DYNAMIC_CAST<const domi::tensorflow::NodeDef *>(op_src);
   GE_CHECK_NOTNULL(node_src);
   GELOGD("TF op node name = %s, op type= %s, parse params", node_src->name().c_str(), node_src->op().c_str());
   domi::tensorflow::AttrValue input_attr_value;
