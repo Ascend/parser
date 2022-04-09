@@ -154,13 +154,13 @@ Status TensorFlowShapeNParser::ParseParams(const Message *op_src, ge::OpDescPtr 
 }
 
 // AUTO GEN PLEASE DO NOT MODIFY IT
-Status TensorFlowShapeNParser::PreParseParams(const domi::tensorflow::NodeDef *node, ShapeNOperator *op) {
+Status TensorFlowShapeNParser::PreParseParams(const domi::tensorflow::NodeDef *node, const ShapeNOperator *op) {
   (void)node;
   (void)op;
   return SUCCESS;
 }
 
-Status TensorFlowShapeNParser::PostParseParams(const domi::tensorflow::NodeDef *node, ShapeNOperator *op) {
+Status TensorFlowShapeNParser::PostParseParams(const domi::tensorflow::NodeDef *node, const ShapeNOperator *op) {
   (void)node;
   (void)op;
   return SUCCESS;
