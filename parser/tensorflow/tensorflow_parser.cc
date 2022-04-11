@@ -3291,7 +3291,7 @@ Status TensorFlowModelParser::FusionNodeParseParams(shared_ptr<OpParser> &op_par
  * @return false optimize failed
  *
  */
-Status TensorFlowModelParser::OptimizeConstNodes4CustomOp(domi::tensorflow::GraphDef *graph_def) {
+Status TensorFlowModelParser::OptimizeConstNodes4CustomOp(domi::tensorflow::GraphDef *graph_def) const {
   GE_CHECK_NOTNULL(graph_def);
   // 1. find all the nodes in the graph and save them to all_nodedef_map
   map<string, NodeDef *> all_nodedef_map;
@@ -3628,7 +3628,7 @@ Status TensorFlowModelParser::RecordFusionResult(const std::shared_ptr<ge::Scope
   return SUCCESS;
 }
 
-Status TensorFlowModelParser::SetOriginNodeContext(NodeDef *node_def, OpNodeContext &op_node_context,
+Status TensorFlowModelParser::SetOriginNodeContext(const NodeDef *node_def, OpNodeContext &op_node_context,
                                                    const std::vector<std::pair<std::string, int32_t>> &inputs,
                                                    const std::vector<std::pair<std::string, int32_t>> &outputs) {
   int32_t in_index = 0;
@@ -3909,7 +3909,8 @@ Status TensorFlowModelParser::AddFusionNodeDef(shared_ptr<ge::ScopeGraph> &scope
 }
 
 Status TensorFlowModelParser::AddScopeInnerNode(TensorFlowModelParser *parser, ge::ComputeGraphPtr &graph,
-                                                std::mutex *graph_mutex, const domi::tensorflow::NodeDef *node_def) {
+                                                std::mutex *const graph_mutex,
+                                                const domi::tensorflow::NodeDef *node_def) {
   // This is an internal function. The pointer input parameter is not empty when this function is invoked.
   string node_name = node_def->name();
   string node_op = node_def->op();

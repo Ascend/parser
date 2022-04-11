@@ -533,7 +533,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
    * @return false optimize failed
    *
    */
-  Status OptimizeConstNodes4CustomOp(domi::tensorflow::GraphDef *graph_def);
+  Status OptimizeConstNodes4CustomOp(domi::tensorflow::GraphDef *graph_def) const;
 
   /**
    * @ingroup domi_omg
@@ -593,7 +593,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
 
   static Status GetFunctionProto(const string &file, domi::tensorflow::GraphDefLibrary &graph_def_library);
 
-  Status SetOriginNodeContext(NodeDef *node_def, OpNodeContext &op_node_context,
+  Status SetOriginNodeContext(const NodeDef *node_def, OpNodeContext &op_node_context,
                               const std::vector<std::pair<std::string, int32_t>> &inputs,
                               const std::vector<std::pair<std::string, int32_t>> &outputs);
 
@@ -624,7 +624,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
   Status AddFusionNodeDef(shared_ptr<ge::ScopeGraph> &scope_graph, vector<string> &node_name_list);
 
   static Status AddScopeInnerNode(TensorFlowModelParser *parser, ge::ComputeGraphPtr &graph,
-                                  std::mutex *graph_mutex, const domi::tensorflow::NodeDef *node_def);
+                                  std::mutex *const graph_mutex, const domi::tensorflow::NodeDef *node_def);
 
   static void DumpNodeContext(const string &node_name, const OpNodeContext &ctx, const string &phase);
   void DumpAllNodeContext(const string &phase) const;
