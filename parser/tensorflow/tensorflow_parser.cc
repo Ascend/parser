@@ -508,8 +508,11 @@ Status TensorFlowModelParser::AddNode(const domi::tensorflow::NodeDef *node_def,
 
     ge::NodePtr node = nullptr;
     node = graph->AddNode(op_desc);
-
-    GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((node == nullptr), DeleteFuisonNodeDef(); return INTERNAL_ERROR, "add node failed.");
+    if (node == nullptr) {
+      DeleteFuisonNodeDef();
+      GELOGE(FAILED, "add node failed.");
+      return INTERNAL_ERROR;
+    }
 
     node_map_[node_name] = node;
 
@@ -546,7 +549,11 @@ Status TensorFlowModelParser::AddNode(const domi::tensorflow::NodeDef *node_def,
   // checkout op input number with IR
   GE_RETURN_IF_ERROR(CheckoutInputNum(op, node_def));
   ge::NodePtr node = graph->AddNode(op);
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((node == nullptr), DeleteFuisonNodeDef(); return INTERNAL_ERROR, "add node failed.");
+  if (node == nullptr) {
+    DeleteFuisonNodeDef();
+    GELOGE(FAILED, "add node failed.");
+    return INTERNAL_ERROR;
+  }
 
   node_map_[node_name] = node;
 
@@ -795,22 +802,24 @@ Status TensorFlowModelParser::AddEdges(ge::ComputeGraphPtr &graph) {
           GE_CHECK_NOTNULL(out_archor_ptr);
           ge::InDataAnchorPtr in_archor_ptr = dest->GetInDataAnchor(outputpair.second);
           GE_CHECK_NOTNULL(in_archor_ptr);
-          GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(ge::GraphUtils::AddEdge(out_archor_ptr, in_archor_ptr) != ge::GRAPH_SUCCESS,
-                                         REPORT_INNER_ERROR("E19999", "Add link from op:%s to op:%s failed",
-                                                            src->GetName().c_str(), dest->GetName().c_str());
-                                         return INTERNAL_ERROR, "Add link failed from op[%s] to op[%s].",
-                                                src->GetName().c_str(), dest->GetName().c_str());
+          if (ge::GraphUtils::AddEdge(out_archor_ptr, in_archor_ptr) != ge::GRAPH_SUCCESS) {
+            REPORT_INNER_ERROR("E19999", "Add link from op:%s to op:%s failed",
+                               src->GetName().c_str(), dest->GetName().c_str());
+            GELOGE(FAILED, "Add link failed from op[%s] to op[%s].", src->GetName().c_str(), dest->GetName().c_str());
+            return INTERNAL_ERROR;
+          }
         } else {
           GELOGD("Start add contorl edge: from %s to %s.", src->GetName().c_str(), dest->GetName().c_str());
           ge::InControlAnchorPtr in_archor_ptr = dest->GetInControlAnchor();
           GE_CHECK_NOTNULL(in_archor_ptr);
           ge::OutControlAnchorPtr out_archor_ptr = src->GetOutControlAnchor();
           GE_CHECK_NOTNULL(out_archor_ptr);
-          GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(ge::GraphUtils::AddEdge(out_archor_ptr, in_archor_ptr) != ge::GRAPH_SUCCESS,
-                                         REPORT_INNER_ERROR("E19999", "Add link from op:%s to op:%s failed",
-                                                            src->GetName().c_str(), dest->GetName().c_str());
-                                         return INTERNAL_ERROR, "Add link failed from op[%s] to op[%s].",
-                                                src->GetName().c_str(), dest->GetName().c_str());
+          if (ge::GraphUtils::AddEdge(out_archor_ptr, in_archor_ptr) != ge::GRAPH_SUCCESS) {
+            REPORT_INNER_ERROR("E19999", "Add link from op:%s to op:%s failed",
+                               src->GetName().c_str(), dest->GetName().c_str());
+            GELOGE(FAILED, "Add link failed from op[%s] to op[%s].", src->GetName().c_str(), dest->GetName().c_str());
+            return INTERNAL_ERROR;
+          }
         }
       }
       dest_input_map.erase(input_iter);
@@ -922,10 +931,11 @@ Status TensorFlowModelParser::ParseNodeDef(TensorFlowModelParser *parser, ge::Co
   }
 
   std::map<std::string, std::string>::const_iterator iterator = parser->adaptedOpTypeMap_.find(node_name);
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
-      iterator == parser->adaptedOpTypeMap_.cend(),
-      REPORT_INNER_ERROR("E19999", "get adapted op type failed, node name = %s", node_name.c_str());
-      return FAILED, "get adapted op type failed, node name = %s", node_name.c_str());
+  if (iterator == parser->adaptedOpTypeMap_.cend()) {
+    REPORT_INNER_ERROR("E19999", "get adapted op type failed, node name = %s", node_name.c_str());
+    GELOGE(FAILED, "get adapted op type failed, node name = %s", node_name.c_str());
+    return FAILED;
+  }
 
   string op_type = iterator->second;
   // Log printing for determining operator type
@@ -1018,10 +1028,12 @@ Status TensorFlowModelParser::ParseNodeDef(TensorFlowModelParser *parser, ge::Co
     node = graph->AddNode(op);
   }
 
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
-      (node == nullptr), REPORT_CALL_ERROR("E19999", "Add node:%s(%s) to graph:%s failed", op->GetName().c_str(),
-                                           op->GetType().c_str(), graph->GetName().c_str());
-      return INTERNAL_ERROR, "add node failed.");
+  if (node == nullptr) {
+    REPORT_CALL_ERROR("E19999", "Add node:%s(%s) to graph:%s failed", op->GetName().c_str(),
+                      op->GetType().c_str(), graph->GetName().c_str());
+    GELOGE(FAILED, "add node failed.");
+    return INTERNAL_ERROR;
+  }
 
   if (needFusion) {
     shared_ptr<OpParser> fusion_op_parser = factory->CreateFusionOpParser(op_type);
@@ -1117,10 +1129,11 @@ Status TensorFlowModelParser::AddNodeToGraphAndMarkFormat(ge::ComputeGraphPtr &g
   for (size_t j = 0; j < op_node_list_size; j++) {
     const string op_node_name = op_node_name_list[j];
     auto iterator = node_map_.find(op_node_name);
-    GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
-        (iterator == node_map_.end()),
-        REPORT_INNER_ERROR("E19999", "node:%s can't find in node_map_, check invalid", op_node_name.c_str());
-        return INTERNAL_ERROR, "add node failed.");
+    if (iterator == node_map_.end()) {
+      REPORT_INNER_ERROR("E19999", "node:%s can't find in node_map_, check invalid", op_node_name.c_str());
+      GELOGE(FAILED, "add node failed.");
+      return INTERNAL_ERROR;
+    }
     GE_CHECK_NOTNULL(iterator->second);
     GE_CHK_STATUS_RET(iterator->second->SetOwnerComputeGraph(graph), "set owner compute graph failed");
     graph->AddNode(iterator->second);
@@ -1179,15 +1192,22 @@ Status TensorFlowModelParser::ParseFromMemory(const char *data, uint32_t size, g
   domi::tensorflow::GraphDef OriDef;
 
   bool read = ge::parser::ReadProtoFromArray(data, static_cast<int>(size), &OriDef);
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(!read, REPORT_INNER_ERROR("E19999", "read graph proto from binary failed");
-                                 return INTERNAL_ERROR, "read_proto_from_binary failed.");
+  if (!read) {
+    REPORT_INNER_ERROR("E19999", "read graph proto from binary failed");
+    GELOGE(FAILED, "read_proto_from_binary failed.");
+    return INTERNAL_ERROR;
+  }
 
   domi::tensorflow::GraphDef graph_def;
-  if (ge::GetParserContext().input_dims.empty() && ge::GetParserContext().out_nodes_map.empty()) {
+  const bool is_empty_input = GetParserContext().input_dims.empty() && GetParserContext().out_nodes_map.empty();
+  if (is_empty_input) {
     graph_def = OriDef;
   } else {
     GELOGI("Before Trim, the Graph Node size is:%d", OriDef.node_size());
-    GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(TrimGraph(OriDef, &graph_def), return INTERNAL_ERROR, "Trim Graph fail.");
+    if (TrimGraph(OriDef, &graph_def)) {
+      GELOGE(FAILED, "Trim Graph fail.");
+      return INTERNAL_ERROR;
+    }
     GELOGI("After Trim, The graph_def.node_size():%d", graph_def.node_size());
   }
 
@@ -1267,9 +1287,12 @@ Status TensorFlowModelParser::ParseFromMemory(const char *data, uint32_t size, g
       return INTERNAL_ERROR;
     }
     const string &node_op = node_def->op();
-    GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((tensorflow_op_map.find(node_op) == tensorflow_op_map.cend()), DeleteFuisonNodeDef();
-                                   REPORT_INNER_ERROR("E19999", "Op type %s unsupport", node_op.c_str());
-                                   return INTERNAL_ERROR, "Unsupport op type %s", node_op.c_str());
+    if (tensorflow_op_map.find(node_op) == tensorflow_op_map.cend()) {
+      DeleteFuisonNodeDef();
+      REPORT_INNER_ERROR("E19999", "Op type %s unsupport", node_op.c_str());
+      GELOGE(FAILED, "Unsupport op type %s", node_op.c_str());
+      return INTERNAL_ERROR;
+    }
 
     ret = AddNode(node_def, graph, scope_graph);
     if (ret != SUCCESS) {
@@ -1337,7 +1360,10 @@ Status TensorFlowModelParser::Parse(const char *model_path, ge::ComputeGraphPtr 
   // Store objects parsed from pb files
   domi::tensorflow::GraphDef ori_def;
   bool read = ge::parser::ReadProtoFromBinaryFile(model_path, &ori_def);
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(!read, return INTERNAL_ERROR, "read_proto_from_binary failed.");
+  if (!read) {
+    GELOGE(FAILED, "read_proto_from_binary failed.");
+    return INTERNAL_ERROR;
+  }
 
   // Trim graph by user input and output.
   domi::tensorflow::GraphDef graph_def;
@@ -1345,7 +1371,10 @@ Status TensorFlowModelParser::Parse(const char *model_path, ge::ComputeGraphPtr 
     graph_def = ori_def;
   } else {
     GELOGI("Before Trim, the Graph Node size is:%d", ori_def.node_size());
-    GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(TrimGraph(ori_def, &graph_def), return INTERNAL_ERROR, "Trim Graph fail.");
+    if (TrimGraph(ori_def, &graph_def)) {
+      GELOGE(FAILED, "Trim Graph fail.");
+      return INTERNAL_ERROR;
+    }
     GELOGI("After Trim, The graph_def.node size is:%d", graph_def.node_size());
   }
 
@@ -1440,12 +1469,16 @@ Status TensorFlowModelParser::ParseAllGraph(const google::protobuf::Message *pro
     GE_RETURN_WITH_LOG_IF_ERROR(PreChecker::Instance().AddOp(&node, node.name(), node.op()),
                                 "Add node_def to PreChecker failed, node name: %s.", node.name().c_str());
 
-    GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(PreChecker::Instance().CheckName(&node) != SUCCESS, return FAILED,
-                                   "Check op[%s] failed, name repeat in tensorflow pb file.", node.name().c_str());
-    GE_CHK_BOOL_EXEC_NOLOG(
-        node.op() == TENSORFLOWF_NODE_OP_IDENTITY,
-        GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(PreChecker::Instance().CheckType(&node, true) != SUCCESS, return FAILED,
-                                       "Check op[%s]'s optype failed, type is not supported.", node.name().c_str());)
+    if (PreChecker::Instance().CheckName(&node) != SUCCESS) {
+      GELOGE(FAILED, "Check op[%s] failed, name repeat in tensorflow pb file.", node.name().c_str());
+      return FAILED;
+    }
+    if (node.op() != TENSORFLOWF_NODE_OP_IDENTITY) {
+      if (PreChecker::Instance().CheckType(&node, true) != SUCCESS) {
+        GELOGE(FAILED, "Check op[%s]'s optype failed, type is not supported.", node.name().c_str());
+        return FAILED;
+      }
+    }
   }
 
   bool has_error = false;
@@ -2441,17 +2474,19 @@ Status TensorFlowModelParser::ParseProtoWithSubgraph(const std::string &root_pro
 Status TensorFlowModelParser::OptimizeIdentityByOutput(map<string, NodeDef *> &nodedef_map,
                                                        const string &curr_node_name, bool &clear_input_flag) {
   auto context_iter = op_node_context_map_.find(curr_node_name);
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
-      (context_iter == op_node_context_map_.end()),
-      REPORT_INNER_ERROR("E19999", "Node:%s can't find in op_node_context_map_, check invalid", curr_node_name.c_str());
-      return INTERNAL_ERROR, "Can't find op node context.");
+  if (context_iter == op_node_context_map_.end()) {
+    REPORT_INNER_ERROR("E19999", "Node:%s can't find in op_node_context_map_, check invalid", curr_node_name.c_str());
+    GELOGE(FAILED, "Can't find op node context.");
+    return INTERNAL_ERROR;
+  }
   OpNodeContext op_node_context = context_iter->second;
 
   const std::map<std::string, NodeDef *>::const_iterator node_def_iter = nodedef_map.find(curr_node_name);
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
-      (node_def_iter == nodedef_map.cend()),
-      REPORT_INNER_ERROR("E19999", "Node:%s can't find in nodedef_map, check invalid", curr_node_name.c_str());
-      return INTERNAL_ERROR, "Can't find nodedef");
+  if (node_def_iter == nodedef_map.cend()) {
+    REPORT_INNER_ERROR("E19999", "Node:%s can't find in nodedef_map, check invalid", curr_node_name.c_str());
+    GELOGE(FAILED, "Can't find nodedef");
+    return INTERNAL_ERROR;
+  }
   domi::tensorflow::NodeDef *curr_node_def = node_def_iter->second;
   GE_CHECK_NOTNULL(curr_node_def);
   bool has_out_retval = false;
@@ -2516,17 +2551,13 @@ Status TensorFlowModelParser::OptimizeSnapShot(domi::tensorflow::NodeDef *curr_m
                                                const std::pair<string, int> &input_data,
                                                const std::vector<string> &control_list) {
   GE_CHECK_NOTNULL(curr_mode_def);
-  if (curr_mode_def == nullptr) {
-    REPORT_INNER_ERROR("E19999", "Param curr_mode_def is nullptr, check invalid");
-    GELOGE(FAILED, "input param is nullptr.");
-    return PARAM_INVALID;
-  }
   string curr_node_name = curr_mode_def->name();
   auto context_iter = op_node_context_map_.find(curr_node_name);
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
-      (context_iter == op_node_context_map_.end()),
-      REPORT_INNER_ERROR("E19999", "Node:%s can't find in op_node_context_map_, check invalid", curr_node_name.c_str());
-      return INTERNAL_ERROR, "Can't find op node context.");
+  if (context_iter == op_node_context_map_.end()) {
+    REPORT_INNER_ERROR("E19999", "Node:%s can't find in op_node_context_map_, check invalid", curr_node_name.c_str());
+    GELOGE(FAILED, "Can't find op node context.");
+    return INTERNAL_ERROR;
+  }
   OpNodeContext op_node_context = context_iter->second;
 
   std::map<std::string, std::vector<std::pair<int32_t, int32_t>>> output_map = op_node_context.output_map;
@@ -3076,10 +3107,10 @@ Status TensorFlowModelParser::TrimGraphByInput(const domi::tensorflow::GraphDef 
     std::set<string> next_inputs;
     for (const string &current_input : current_inputs) {
       delete_nodes.insert(current_input);
-      GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(!node_lookup.count(current_input),
-                                     ErrorManager::GetInstance().ATCReportErrMessage("E10016", {"parameter", "opname"},
-                                                                                     {"input_shape", current_input});
-                                     return FAILED, "Input op[%s] not found in graph.", current_input.c_str());
+      GE_CHK_BOOL_EXEC(node_lookup.count(current_input) > 0U,
+                       ErrorManager::GetInstance().ATCReportErrMessage("E10016", {"parameter", "opname"},
+                                                                       {"input_shape", current_input});
+                       return FAILED, "Input op[%s] not found in graph.", current_input.c_str());
       const NodeDef *current_node = node_lookup[current_input];
       GE_CHECK_NOTNULL(current_node);
       for (const string &input_name : current_node->input()) {
@@ -3152,10 +3183,10 @@ Status TensorFlowModelParser::TrimGraphByOutput(const domi::tensorflow::GraphDef
     for (const string &current_input : current_inputs) {
       required_nodes.insert(current_input);
       GE_IF_BOOL_EXEC(input_nodes.count(current_input), continue);
-      GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(!node_lookup.count(current_input),
-                                     ErrorManager::GetInstance().ATCReportErrMessage("E10016", {"parameter", "opname"},
-                                                                                     {"out_nodes", current_input});
-                                     return FAILED, "Input op[%s] not found in graph.", current_input.c_str());
+      GE_CHK_BOOL_EXEC(node_lookup.count(current_input) > 0U,
+                       ErrorManager::GetInstance().ATCReportErrMessage("E10016", {"parameter", "opname"},
+                                                                       {"out_nodes", current_input});
+                       return FAILED, "Input op[%s] not found in graph.", current_input.c_str());
       const NodeDef *current_node = node_lookup[current_input];
       GE_CHECK_NOTNULL(current_node);
       for (const string &input_name : current_node->input()) {
@@ -3231,11 +3262,12 @@ Status TensorFlowModelParser::FusionNodeParseParams(shared_ptr<OpParser> &op_par
 
   // Find all children of the fusion operator
   auto iter = fusion_op_nodedef_map_.find(node_def->name());
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
-      iter == fusion_op_nodedef_map_.end(),
-      REPORT_INNER_ERROR("E19999", "Node:%s can't find in fusion_op_nodedef_map_, check invalid",
-                         node_def->name().c_str());
-      return INTERNAL_ERROR, "FusionOp node %s has no children node!", node_def->name().c_str());
+  if (iter == fusion_op_nodedef_map_.end()) {
+    REPORT_INNER_ERROR("E19999", "Node:%s can't find in fusion_op_nodedef_map_, check invalid",
+                       node_def->name().c_str());
+    GELOGE(FAILED, "FusionOp node %s has no children node!", node_def->name().c_str());
+    return INTERNAL_ERROR;
+  }
 
   (void)ge::AttrUtils::SetStr(node->GetOpDesc(), ge::ATTR_NAME_FUSIONOP_ORIGINAL_TYPE, node_def->op());
   vector<const domi::tensorflow::NodeDef *> node_def_v = iter->second;
@@ -3302,7 +3334,7 @@ Status TensorFlowModelParser::OptimizeConstNodes4CustomOp(domi::tensorflow::Grap
     string node_name = current_node->name();
     all_nodedef_map[node_name] = current_node;
   }
-  GE_CHK_BOOL_EXEC_INFO(!all_nodedef_map.empty(), return SUCCESS, "all_nodedef_map is empty");
+  GELOGD("node size is: %zu", all_nodedef_map.size());
 
   // 2. move input to attr.
   for (auto &it_node_map : all_nodedef_map) {
@@ -3313,14 +3345,14 @@ Status TensorFlowModelParser::OptimizeConstNodes4CustomOp(domi::tensorflow::Grap
     // 2.1. check whether the current op is register for move to attr.
     const std::vector<domi::RemoveInputConfigure> &move_input_vec =
         domi::OpRegistry::Instance()->GetRemoveInputConfigure(current_op_name);
-    GE_CHK_BOOL_EXEC_NOLOG(!move_input_vec.empty(), continue);
-    GELOGD("Current op %s is registered for remove input.", current_op_name.c_str());
-
     // 2.2 check whether the current op is a TVM op.
-    GE_CHK_BOOL_EXEC_INFO(
-        domi::OpRegistry::Instance()->GetImplyTypeByOriOpType(current_op_name) == domi::ImplyType::TVM, continue,
-        "op %s is not TVM op", current_op_name.c_str());
-    GELOGD("handle tvm op %s", current_op_name.c_str());
+    const bool is_unknown_custom_op = move_input_vec.empty() ||
+        (domi::OpRegistry::Instance()->GetImplyTypeByOriOpType(current_op_name) != domi::ImplyType::TVM);
+    if (is_unknown_custom_op) {
+      GELOGI("op %s is not TVM op, move input size: %zu", current_op_name.c_str(), move_input_vec.size());
+      continue;
+    }
+    GELOGD("Current op %s is registered for remove input and tvm op", current_op_name.c_str());
 
     // 2.3 copy input to attr
     set<uint32_t> unused_inputs;
@@ -3367,7 +3399,8 @@ Status TensorFlowModelParser::OptimizeConstNodes4CustomOp(domi::tensorflow::Grap
         }
         for (size_t i = 0; i < it.input_order.size(); ++i) {
           int new_index = it.input_order[i];
-          if (new_index < 0 || new_index >= inputs.size()) {
+          const bool is_input_invalid = (new_index < 0) || (new_index >= inputs.size());
+          if (is_input_invalid) {
             REPORT_INNER_ERROR("E19999", "New order of %s has invalid index %d, out of range(0, %d)",
                                it_node_map.first.c_str(), new_index, inputs.size());
             GELOGE(INTERNAL_ERROR, "New order of %s has invalid index %d.", it_node_map.first.c_str(), new_index);

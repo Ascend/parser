@@ -61,13 +61,7 @@ using domi::caffe::InnerProductParameter;
 using domi::caffe::LayerParameter;
 using domi::caffe::NetParameter;
 using domi::ParseParamByOpFunc;
-using ge::caffe_op_map;
-using ge::CaffeOpParser;
 using ge::parser::ModelSaver;
-using ge::OpParser;
-using ge::OpParserFactory;
-using ge::Pb2Json;
-using ge::PreChecker;
 using std::ifstream;
 
 #define CAFFE_CHECK_NULL_AND_REPROT_ERRORMSG(val, errormsg)                                     \
@@ -299,16 +293,17 @@ Status CaffeModelParser::ParseInput(domi::caffe::NetParameter &proto_message, bo
         GELOGE(FAILED, "[Check][Size]input_dim and input_shape can not both exist!");
         return FAILED;
       }
-      int input_dim_size = proto_message.input_dim_size();
 
-      GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((input_dim_size / proto_message.input_size() != parser::DIM_DEFAULT_SIZE ||
-                                      input_dim_size % proto_message.input_size() != 0),
-                                     ErrorManager::GetInstance().ATCReportErrMessage(
-                                         "E11003", {"input_dim_size", "input_size"},
-                                         {std::to_string(input_dim_size), std::to_string(proto_message.input_size())});
-                                     return FAILED,
-                                     "[Check][Size]Model input_dim size[%d] is not 4 times of input size[%d].",
-                                     input_dim_size, proto_message.input_size())
+      const int32_t input_dim_size = proto_message.input_dim_size();
+      const bool is_input_invalid = (((input_dim_size / proto_message.input_size()) != parser::DIM_DEFAULT_SIZE) ||
+                                     ((input_dim_size % proto_message.input_size()) != 0));
+      if (is_input_invalid) {
+        ErrorManager::GetInstance().ATCReportErrMessage("E11003", {"input_dim_size", "input_size"},
+            {std::to_string(input_dim_size), std::to_string(proto_message.input_size())});
+        GELOGE(FAILED, "[Check][Size]Model input_dim size[%d] is not 4 times of input size[%d].",
+               input_dim_size, proto_message.input_size());
+        return FAILED;
+      }
 
       for (int i = 0; i < proto_message.input_size(); i++) {
         domi::caffe::LayerParameter *layer = proto_message.add_layer();
@@ -329,12 +324,14 @@ Status CaffeModelParser::ParseInput(domi::caffe::NetParameter &proto_message, bo
         input_data_flag = true;
       }
     } else if (proto_message.input_shape_size() > 0) {
-      GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(proto_message.input_shape_size() != proto_message.input_size(),
-          ErrorManager::GetInstance().ATCReportErrMessage("E11004", {"input_shape_size", "input_size"},
-                                                          {std::to_string(proto_message.input_shape_size()),
-                                                           std::to_string(proto_message.input_size())});
-          return FAILED, "[Check][Size]caffe net input_shape size(%d) is not equal input size(%d).",
-          proto_message.input_shape_size(), proto_message.input_size());
+      if (proto_message.input_shape_size() != proto_message.input_size()) {
+        ErrorManager::GetInstance().ATCReportErrMessage("E11004", {"input_shape_size", "input_size"},
+                                                        {std::to_string(proto_message.input_shape_size()),
+                                                         std::to_string(proto_message.input_size())});
+        GELOGE(FAILED, "[Check][Size]caffe net input_shape size(%d) is not equal input size(%d).",
+               proto_message.input_shape_size(), proto_message.input_size());
+        return FAILED;
+      }
 
       for (int i = 0; i < proto_message.input_size(); i++) {
         int dim_size = proto_message.input_shape(i).dim_size();
@@ -839,11 +836,11 @@ Status CaffeModelParser::AddNode(const domi::caffe::LayerParameter &layer, ge::C
   std::shared_ptr<OpParserFactory> factory = OpParserFactory::Instance(domi::CAFFE);
   GE_CHECK_NOTNULL(factory);
   std::shared_ptr<OpParser> op_parser = factory->CreateOpParser(op_type);
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(op_parser == nullptr,
-                                 ErrorManager::GetInstance().ATCReportErrMessage("E11009", {"opname", "optype"},
-                                                                                 {layer.name(), op_type});
-                                 return FAILED, "op_parser is null, op_type: %s.",
-                                 op_type.c_str());
+  if (op_parser == nullptr) {
+    ErrorManager::GetInstance().ATCReportErrMessage("E11009", {"opname", "optype"}, {layer.name(), op_type});
+    GELOGE(FAILED, "op_parser is null, op_type: %s.", op_type.c_str());
+    return FAILED;
+  }
 
   ge::OpDescPtr op;
   // Process change of tensordesc initialization of opdesc,
@@ -1229,12 +1226,14 @@ Status CaffeModelParser::PreCheck(const domi::caffe::NetParameter &net) {
     GE_RETURN_WITH_LOG_IF_ERROR(PreChecker::Instance().AddOp(&layer, layer.name(), layer.type()),
                                 "[Invoke][AddOp]Add layer to PreChecker failed, layer name: %s.",
                                 layer.name().c_str());
-    GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(PreChecker::Instance().CheckName(&layer) != SUCCESS, return FAILED,
-                                   "[Invoke][CheckName]Check op[%s] failed, name repeat in caffe prototxt.",
-                                   layer.name().c_str());
-    GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(PreChecker::Instance().CheckType(&layer) != SUCCESS, return FAILED,
-                                   "[Invoke][CheckType]Check op[%s]'s optype failed, type is not supported.",
-                                   layer.name().c_str());
+    if (PreChecker::Instance().CheckName(&layer) != SUCCESS) {
+      GELOGE(FAILED, "[Invoke][CheckName]Check op[%s] failed, name repeat in caffe prototxt.", layer.name().c_str());
+      return FAILED;
+    }
+    if (PreChecker::Instance().CheckType(&layer) != SUCCESS) {
+      GELOGE(FAILED, "[Invoke][CheckType]Check op[%s]'s optype failed, type is not supported.", layer.name().c_str());
+      return FAILED;
+    }
   }
 
   return SUCCESS;
@@ -1293,9 +1292,11 @@ Status CaffeModelParser::ParseFromMemory(const char *data, uint32_t size, ge::Co
   for (int32_t layer_index = 0; layer_index < layer_count; ++layer_index) {
     domi::caffe::LayerParameter &layer = const_cast<domi::caffe::LayerParameter &>(proto_message.layer(layer_index));
 
-    GE_CHK_BOOL_EXEC_INFO(CheckValidLayer(layer), continue,
-                          "[Check][Layer]layer phase is train, skip this layer, name:%s, type:%s.",
-                          layer.name().c_str(), layer.type().c_str());
+    if (!CheckValidLayer(layer)) {
+      GELOGI("[Check][Layer]layer phase is train, skip this layer, name:%s, type:%s.",
+             layer.name().c_str(), layer.type().c_str());
+      continue;
+    }
 
     CHECK_FALSE_EXEC(!((layer.type() == ge::parser::DATA_TYPE) && input_data_flag), has_error = true;
                      REPORT_INNER_ERROR("E19999", "net %s has input and data layer simultaneously, check invalid."
@@ -1453,22 +1454,15 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
   // parse network model by custom proto and get custom operators
   string custom_proto_path = ge::GetParserContext().custom_proto_path + "custom.proto";
   string caffe_proto_path = ge::GetParserContext().caffe_proto_path + "caffe.proto";
-  Status result = CustomProtoParse(model_path, custom_proto_path, caffe_proto_path, custom_operator_);
-  if (result != SUCCESS) {
-    GELOGE(FAILED, "[Parse][Model] by custom proto failed, model path: %s.", model_path);
+  GE_CHK_STATUS(CustomProtoParse(model_path, custom_proto_path, caffe_proto_path, custom_operator_),
+                "[Parse][Model] by custom proto failed, model path: %s.", model_path);
+
+  if (proto_message.layer_size() == 0) {
+    ErrorManager::GetInstance().ATCReportErrMessage("E11021", {"realpath"}, {model_path});
+    GELOGE(FAILED, "[Check][Size]The model file[%s] is consisted of layers-structure which is deprecated in Caffe "
+           "and unsupported in ATC. The \"layers\" should be changed to \"layer\".", model_path);
     return FAILED;
   }
-
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
-      proto_message.layer_size() == 0 && proto_message.layers_size() > 0,
-      ErrorManager::GetInstance().ATCReportErrMessage("E11021", {"realpath"}, {model_path});
-      return FAILED,
-             "[Check][Size]The model file[%s] is consisted of layers-structure which is deprecated in Caffe "
-             "and unsupported in ATC. The \"layers\" should be changed to \"layer\".",
-             model_path);
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((proto_message.layer_size() == 0),
-                                 ErrorManager::GetInstance().ATCReportErrMessage("E11022");
-                                 return FAILED, "[Check][Size]net layer num is zero, prototxt file may be invalid.");
 
   GE_RETURN_WITH_LOG_IF_ERROR(ProtoTypePassManager::Instance().Run(&proto_message, domi::CAFFE),
                               "Run ProtoType Pass Failed");
@@ -1515,9 +1509,11 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
   for (int32_t layer_index = 0; layer_index < layer_count; ++layer_index) {
     domi::caffe::LayerParameter &layer = const_cast<domi::caffe::LayerParameter &>(proto_message.layer(layer_index));
     SaveOrigionLayerTops(layer);
-    GE_CHK_BOOL_EXEC_INFO(CheckValidLayer(layer), continue,
-                          "[Check][Layer]layer phase is train, skip this layer, name:%s, type:%s.",
-                          layer.name().c_str(), layer.type().c_str());
+    if (!CheckValidLayer(layer)) {
+      GELOGI("[Check][Layer]layer phase is train, skip this layer, name:%s, type:%s.",
+             layer.name().c_str(), layer.type().c_str());
+      continue;
+    }
 
     CHECK_FALSE_EXEC(!((layer.type() == ge::parser::DATA_TYPE) && input_data_flag), has_error = true;
                      GELOGE(FAILED, "[Check][Layer]net %s has input and data layer simultaneously, check invalid."
@@ -2112,15 +2108,17 @@ Status CaffeWeightsParser::CheckLayersSize(const google::protobuf::Message *mess
     }
   }
 
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(num_layer == 0 && num_layers > 0,
-                                 ErrorManager::GetInstance().ATCReportErrMessage("E11023");
-                                 return FAILED,
-                                 "[Check][Param]The weight file is consisted of layers-structure which is deprecated "
-                                 "in Caffe and unsupported in ATC. The \"layers\" should be changed to \"layer\".");
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((num_layer == 0), ErrorManager::GetInstance().ATCReportErrMessage("E11024");
-                                 return FAILED,
-                                 "[Check][Param] Weight layer num is zero, weight file may be invalid.");
-
+  if (num_layer == 0 && num_layers > 0) {
+    ErrorManager::GetInstance().ATCReportErrMessage("E11023");
+    GELOGE(FAILED, "[Check][Param]The weight file is consisted of layers-structure which is deprecated "
+           "in Caffe and unsupported in ATC. The \"layers\" should be changed to \"layer\".");
+    return FAILED;
+  }
+  if (num_layer == 0) {
+    ErrorManager::GetInstance().ATCReportErrMessage("E11024");
+    GELOGE(FAILED, "[Check][Param] Weight layer num is zero, weight file may be invalid.");
+    return FAILED;
+  }
   return SUCCESS;
 }
 
@@ -2175,20 +2173,20 @@ Status CaffeWeightsParser::ConvertLayerParameter(const google::protobuf::Message
     GE_CHECK_NOTNULL(factory);
     std::shared_ptr<OpParser> op_parser = factory->CreateOpParser(op_type);
 
-    GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
-        (op_parser.get() == nullptr),
-        REPORT_INPUT_ERROR("E11009", std::vector<std::string>({"opname", "optype"}),
-                           std::vector<std::string>({layer_name, op_type}));
-        return FAILED,
-        "[Create][OpParser] failed for Op[%s], optype is %s", layer_name.c_str(), op_type.c_str());
+    if (op_parser.get() == nullptr) {
+      REPORT_INPUT_ERROR("E11009", std::vector<std::string>({"opname", "optype"}),
+                         std::vector<std::string>({layer_name, op_type}));
+      GELOGE(FAILED, "[Create][OpParser] failed for Op[%s], optype is %s", layer_name.c_str(), op_type.c_str());
+      return FAILED;
+    }
 
     // Parsing weight information through op parser
     Status status = op_parser->ParseWeights(layer_message, node);
-    GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
-        (status != SUCCESS),
-        REPORT_CALL_ERROR("E19999", "Parse weight for op:%s(%s) failed", layer_name.c_str(), op_type.c_str());
-        return status,
-        "[Parse][Weights] for op[%s] failed", layer_name.c_str());
+    if (status != SUCCESS) {
+      REPORT_CALL_ERROR("E19999", "Parse weight for op:%s(%s) failed", layer_name.c_str(), op_type.c_str());
+      GELOGE(FAILED, "[Parse][Weights] for op[%s] failed", layer_name.c_str());
+      return status;
+    }
   }
   return SUCCESS;
 }
@@ -2236,13 +2234,18 @@ Status CaffeWeightsParser::ConvertNetParameter(const NetParameter &param, ge::Co
   // Operator name and occurrence map, handle duplicate operators
   std::map<std::string, int32_t> layer_name_map;
 
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(num_layer == 0 && num_layers > 0,
-                                 ErrorManager::GetInstance().ATCReportErrMessage("E11023");
-                                 return FAILED, "[Check][Param] The weight file is consisted of layers-structure "
-                                 "which is deprecated in Caffe and unsupported in ATC. "
-                                 "The \"layers\" should be changed to \"layer\".");
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((num_layer == 0), ErrorManager::GetInstance().ATCReportErrMessage("E11024");
-                                 return FAILED, "weight layer num is zero, weight file may be invalid.");
+  if (num_layer == 0 && num_layers > 0) {
+    ErrorManager::GetInstance().ATCReportErrMessage("E11023");
+    GELOGE(FAILED, "[Check][Param] The weight file is consisted of layers-structure "
+                   "which is deprecated in Caffe and unsupported in ATC. "
+                   "The \"layers\" should be changed to \"layer\".");
+    return FAILED;
+  }
+  if (num_layer == 0) {
+    ErrorManager::GetInstance().ATCReportErrMessage("E11024");
+    GELOGE(FAILED, "weight layer num is zero, weight file may be invalid.");
+    return FAILED;
+  }
 
   for (int i = 0; i < num_layer; ++i) {
     const LayerParameter &layer = param.layer(i);
@@ -2301,18 +2304,20 @@ Status CaffeWeightsParser::ConvertNetParameter(const NetParameter &param, ge::Co
       GE_CHECK_NOTNULL(factory);
       std::shared_ptr<OpParser> op_parser = factory->CreateOpParser(op_type);
 
-      GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
-          (op_parser.get() == nullptr),
-          REPORT_INPUT_ERROR("E11009", std::vector<std::string>({"opname", "optype"}),
-                             std::vector<std::string>({layer_name, op_type}));
-          return FAILED, "[Create][OpParser] failed for Op[%s], optype is %s", layer_name.c_str(), op_type.c_str());
+      if (op_parser.get() == nullptr) {
+        REPORT_INPUT_ERROR("E11009", std::vector<std::string>({"opname", "optype"}),
+                           std::vector<std::string>({layer_name, op_type}));
+        GELOGE(FAILED, "[Create][OpParser] failed for Op[%s], optype is %s", layer_name.c_str(), op_type.c_str());
+        return FAILED;
+      }
 
       // Parsing weight information through op parser
       Status status = op_parser->ParseWeights(&layer, node);
-      GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
-          (status != SUCCESS),
-          REPORT_CALL_ERROR("E19999", "Parse weight for op:%s(%s) failed", layer_name.c_str(), op_type.c_str());
-          return status, "[Parse][Weights] for op[%s] failed", layer_name.c_str());
+      if (status != SUCCESS) {
+        REPORT_CALL_ERROR("E19999", "Parse weight for op:%s(%s) failed", layer_name.c_str(), op_type.c_str());
+        GELOGE(FAILED, "[Parse][Weights] for op[%s] failed", layer_name.c_str());
+        return status;
+      }
     }
   }
 
