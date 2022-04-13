@@ -2082,6 +2082,7 @@ TEST_F(UtestTensorflowParser, tensorflow_auto_mapping_parser_adapter_test)
   EXPECT_EQ(ret, SUCCESS);
 
   op_dest->SetType(ge::parser::SHAPE);
+  op_dest->AddOutputDesc(GeTensorDesc());
   ret = autoMappingParser.ParseParams(node_def, op_dest);
   EXPECT_EQ(ret, SUCCESS);
 }

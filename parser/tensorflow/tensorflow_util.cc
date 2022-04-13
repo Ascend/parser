@@ -301,7 +301,10 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY domi::Status TensorFlowUtil::Tr
 }
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY void TensorFlowUtil::AddNodeAttr(
     const std::string &attr_name, const domi::tensorflow::AttrValue &value, domi::tensorflow::NodeDef *const node_def) {
-  GE_CHK_BOOL_TRUE_EXEC_INFO(node_def == nullptr, return, "input parameter is null.");
+  if (node_def == nullptr) {
+    GELOGI("input parameter is null.");
+    return;
+  }
   node_def->mutable_attr()->insert(AttrValueMap::value_type(attr_name, value));
 }
 }  // namespace ge

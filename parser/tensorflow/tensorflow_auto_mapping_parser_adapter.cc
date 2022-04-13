@@ -109,6 +109,9 @@ Status TensorFlowAutoMappingParserAdapter::ParseParams(const Message *op_src, ge
         return FAILED;
       }
     }
+    const auto out_desc = op_dest->MutableOutputDesc(0);
+    GE_CHECK_NOTNULL(out_desc);
+    out_desc->SetDataType(out_type);
 
     std::shared_ptr<domi::tensorflow::NodeDef> pkg_node = ge::parser::MakeShared<domi::tensorflow::NodeDef>();
     GE_CHECK_NOTNULL(pkg_node);
