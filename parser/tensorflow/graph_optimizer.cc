@@ -93,6 +93,7 @@ Status ParserGraphOptimizer::GetFusionCluster(const bool has_get_next, const boo
   GE_CHECK_NOTNULL(graph_);
   for (auto node : graph_->GetDirectNode()) {
     GE_CHECK_NOTNULL(node);
+    GE_CHECK_NOTNULL(node->GetOpDesc());
     GE_IF_BOOL_EXEC(node->GetOpDesc()->GetType() != ge::parser::FRAMEWORK_OP_TYPE, continue)
     string type;
     GE_CHK_STATUS_RET(ge::parser::GetOriginalType(node, type));
@@ -284,6 +285,7 @@ Status ParserGraphOptimizer::InsertNode(ge::ComputeGraphPtr sub_graph, vector<ge
     GE_CHECK_NOTNULL(node);
     OpDescPtr op_def = node->GetOpDesc();
     NodePtr new_node = sub_graph->AddNode(op_def);
+    GE_CHECK_NOTNULL(new_node);
     node_map[node->GetName()] = new_node;
 
     // Input
@@ -440,6 +442,7 @@ Status ParserGraphOptimizer::RebuildFusionNode(vector<ge::InDataAnchorPtr> &inpu
                                                vector<ge::InControlAnchorPtr> &input_control_anchors,
                                                vector<ge::OutControlAnchorPtr> &output_control_anchors,
                                                ge::NodePtr fusion_node) {
+  GE_CHECK_NOTNULL(fusion_node);
   int32_t src_index = 0;
 
   for (auto out_anchor : output_anchors) {
