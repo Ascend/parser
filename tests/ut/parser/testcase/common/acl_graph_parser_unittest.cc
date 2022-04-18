@@ -34,6 +34,7 @@
 #include "parser/common/pass_manager.h"
 #include "parser/common/tbe_plugin_loader.h"
 #include "parser/common/parser_fp16_t.h"
+#include "parser/common/pre_checker.h"
 #undef protected
 #undef private
 
@@ -342,4 +343,15 @@ TEST_F(UtestAclGraphParser, test_operatoreq)
   int8 = fp16;
 }
 
+TEST_F(UtestAclGraphParser, test_pre_checker) {
+  PreChecker::Instance().fmk_op_types_ = nullptr;
+  const char* str = "iiii";
+  PreChecker::OpId id = str;
+  std::string type("ddd");
+  std::string name("lll");
+  Status ret = PreChecker::Instance().CheckTypeSupported(id, type, name, false);
+  EXPECT_EQ(ret, FAILED);
+  ret = PreChecker::Instance().CheckTypeSupported(id, type, name, true);
+  EXPECT_EQ(ret, FAILED);
+}
 } // namespace ge

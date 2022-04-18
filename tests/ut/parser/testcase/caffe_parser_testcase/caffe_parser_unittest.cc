@@ -39,6 +39,7 @@
 #include "graph/operator_reg.h"
 #include "parser/common/acl_graph_parser_util.h"
 #include "parser/caffe/caffe_reshape_parser.h"
+#include "common/op_map.h"
 #undef protected
 #undef private
 
@@ -265,6 +266,10 @@ TEST_F(UtestCaffeParser, acl_caffe_parser) {
   auto ret = ge::aclgrphParseCaffe(model_file.c_str(), weight_file.c_str(), parser_params, graph);
   EXPECT_EQ(ret, GRAPH_FAILED);
   ret = ge::aclgrphParseCaffe(model_file.c_str(), weight_file.c_str(), graph);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+  
+  caffe_op_map.clear();
+  ret = ge::aclgrphParseCaffe(model_file.c_str(), weight_file.c_str(), parser_params, graph);
   EXPECT_EQ(ret, GRAPH_FAILED);
 }
 

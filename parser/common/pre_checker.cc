@@ -99,9 +99,9 @@ Status PreChecker::CheckName(OpId id) {
     if (id != v.first && info.name == v.second.name) {
       Cause cause;
       cause.code = ErrorCode::NAME_REPEATED;
-      cause.message = "The name is repeated.";
+      cause.message = "The name is repeated in the graph.";
 
-      GELOGI("Name %s repeated.", info.name.c_str());
+      GELOGE(FAILED, "opname %s repeated, same name op in the graph", info.name.c_str());
       ErrorManager::GetInstance().ATCReportErrMessage("E19009", {"opname"}, {info.name});
       GE_RETURN_WITH_LOG_IF_ERROR(AddCause(id, cause), "[Add][Cause] failed.");
       GE_RETURN_WITH_LOG_IF_ERROR(AddCause(v.first, cause), "[Add][Cause] failed.");
@@ -265,9 +265,11 @@ Status PreChecker::CheckTypeSupported(OpId id, const string &type, const string 
     cause.code = ErrorCode::TYPE_UNSUPPORTED;
     cause.message = "The type is not supported.";
 
-    GELOGI("Check op[%s]'s type[%s] failed, it is not supported.", name.c_str(), type.c_str());
     if (!is_tensorflow) {
       ErrorManager::GetInstance().ATCReportErrMessage("E19010", {"opname", "optype"}, {name, type});
+      GELOGE(FAILED, "Check op[%s]'s type[%s] failed, it is not supported.", name.c_str(), type.c_str());
+    } else {
+      GELOGI("Check op[%s]'s type[%s] is not supported.", name.c_str(), type.c_str());
     }
     GE_RETURN_WITH_LOG_IF_ERROR(AddCause(id, cause), "[Add][Cause] failed.");
   }
