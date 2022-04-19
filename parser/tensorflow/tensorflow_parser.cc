@@ -1361,7 +1361,7 @@ Status TensorFlowModelParser::Parse(const char *model_path, ge::ComputeGraphPtr 
   domi::tensorflow::GraphDef ori_def;
   bool read = ge::parser::ReadProtoFromBinaryFile(model_path, &ori_def);
   if (!read) {
-    GELOGE(FAILED, "read_proto_from_binary failed.");
+    GELOGE(FAILED, "read_proto_from_binary failed. --framework=3, file format should be tensorflow.");
     return INTERNAL_ERROR;
   }
 
@@ -3186,7 +3186,7 @@ Status TensorFlowModelParser::TrimGraphByOutput(const domi::tensorflow::GraphDef
       GE_CHK_BOOL_EXEC(node_lookup.count(current_input) > 0U,
                        ErrorManager::GetInstance().ATCReportErrMessage("E10016", {"parameter", "opname"},
                                                                        {"out_nodes", current_input});
-                       return FAILED, "Input op[%s] not found in graph.", current_input.c_str());
+                       return FAILED, "op[%s] not found in graph.", current_input.c_str());
       const NodeDef *current_node = node_lookup[current_input];
       GE_CHECK_NOTNULL(current_node);
       for (const string &input_name : current_node->input()) {
@@ -3442,7 +3442,10 @@ Status TensorFlowModelParser::AddControlEdgeAfterRemoveInputs(domi::tensorflow::
     if (input_node_def->op() == parser::SWITCH || input_node_def->op() == parser::REFSWITCH) {
       NodeDef *identity_node_def = graph_def->add_node();
       GE_CHECK_NOTNULL(identity_node_def);
-      input_node_name = input_node_name + "identity";
+      std::string remove_input_name = remove_input;
+      remove_input_name = remove_input_name.find(":") == std::string::npos ?
+          input_node_name : (remove_input_name.replace(remove_input_name.find(":"), 1, "_"));
+      input_node_name = remove_input_name + "_identity";
       identity_node_def->set_name(input_node_name);
       identity_node_def->set_op(parser::IDENTITY);
       identity_node_def->add_input(remove_input);

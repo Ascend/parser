@@ -3008,6 +3008,15 @@ TEST_F(UtestTensorflowParser, tensorflow_AddControlEdgeAfterRemoveInputs_test)
   removed_inputs_vec.emplace_back("Add0");
   Status ret = tensorflow_parser.AddControlEdgeAfterRemoveInputs(&graph_def, node_def, all_node_map, removed_inputs_vec);
   EXPECT_EQ(ret, SUCCESS);
+
+  tensorflow::NodeDef *node_swith = initNodeDef();
+  node_swith->set_name("switch_op");
+  node_swith->set_op(parser::SWITCH);
+  all_node_map.emplace("switch_op", node_swith);
+  removed_inputs_vec.clear();
+  removed_inputs_vec.emplace_back("switch_op");
+  ret = tensorflow_parser.AddControlEdgeAfterRemoveInputs(&graph_def, node_swith, all_node_map, removed_inputs_vec);
+  EXPECT_EQ(ret, SUCCESS);
 }
 
 TEST_F(UtestTensorflowParser, tensorflow_GraphDefOptimizeIdentity_test)

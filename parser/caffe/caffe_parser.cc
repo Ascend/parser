@@ -1439,7 +1439,7 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
   bool has_error = false;
   GE_CHECK_NOTNULL(model_path);
   GE_CHECK_NOTNULL(graph);
-  GELOGI("Caffe Parse model file %s", model_path);
+  GELOGI("Caffe Parse model file [%s]", model_path);
 
   PreChecker::Instance().Clear();
 
@@ -1473,8 +1473,8 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
   GE_RETURN_IF_ERROR(PreCheck(proto_message));
 
   if (PreChecker::Instance().HasError()) {
-    REPORT_INNER_ERROR("E19999", "Precheck failed. Please read check report.");
-    GELOGE(INTERNAL_ERROR, "[Has][Error]Precheck failed. Please read check report.");
+    REPORT_INNER_ERROR("E19999", "Precheck failed. a report of json format will be create, Please read it.");
+    GELOGE(INTERNAL_ERROR, "[Has][Error]Precheck failed. a report of json format will be create, Please read it.");
     return FAILED;
   }
 
