@@ -1435,6 +1435,18 @@ Status CaffeModelParser::SaveDataLayerTops(const domi::caffe::LayerParameter &la
   return SUCCESS;
 }
 
+Status CaffeModelParser::ReportLayerInvalid(const domi::caffe::NetParameter &proto, const std::string &path) const {
+  if (proto.layers_size() > 0) {
+    ErrorManager::GetInstance().ATCReportErrMessage("E11021", {"realpath"}, {path});
+    GELOGE(FAILED, "[Check][Size]The model file[%s] is consisted of layers-structure which is deprecated in Caffe "
+                   "and unsupported in ATC. The \"layers\" should be changed to \"layer\".", path.c_str());
+  } else {
+    ErrorManager::GetInstance().ATCReportErrMessage("E11022");
+    GELOGE(FAILED, "[Check][Size]net layer num is zero, prototxt file may be invalid.");
+  }
+  return FAILED;
+}
+
 Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &graph) {
   bool has_error = false;
   GE_CHECK_NOTNULL(model_path);
@@ -1458,10 +1470,7 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
                 "[Parse][Model] by custom proto failed, model path: %s.", model_path);
 
   if (proto_message.layer_size() == 0) {
-    ErrorManager::GetInstance().ATCReportErrMessage("E11021", {"realpath"}, {model_path});
-    GELOGE(FAILED, "[Check][Size]The model file[%s] is consisted of layers-structure which is deprecated in Caffe "
-           "and unsupported in ATC. The \"layers\" should be changed to \"layer\".", model_path);
-    return FAILED;
+    return ReportLayerInvalid(proto_message, model_path);
   }
 
   GE_RETURN_WITH_LOG_IF_ERROR(ProtoTypePassManager::Instance().Run(&proto_message, domi::CAFFE),
