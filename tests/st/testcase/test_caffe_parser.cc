@@ -228,6 +228,25 @@ TEST_F(STestCaffeParser, acl_caffe_parser) {
   caffe_op_map.clear();
   ret = ge::aclgrphParseCaffe(model_file.c_str(), weight_file.c_str(), parser_params, graph);
   EXPECT_EQ(ret, GRAPH_FAILED);
+
+  {
+    proto.set_name("empty_layer");
+    auto &layers = *proto.add_layers();
+    layers.set_name("layers");
+
+    proto.clear_layer();
+    const std::string empty_layer = case_dir + "/origin_models/empty_layer.pbtxt";
+    ParerSTestsUtils::WriteProtoToTextFile(proto, empty_layer.c_str());
+    EXPECT_EQ(ge::aclgrphParseCaffe(empty_layer.c_str(), weight_file.c_str(), parser_params, graph), FAILED);
+
+    proto.clear_layers();
+    const std::string empty_layers = case_dir + "/origin_models/empty_layers.pbtxt";
+    ParerSTestsUtils::WriteProtoToTextFile(proto, empty_layers.c_str());
+    EXPECT_EQ(ge::aclgrphParseCaffe(empty_layers.c_str(), weight_file.c_str(), parser_params, graph), FAILED);
+
+    unlink(empty_layer.c_str());
+    unlink(empty_layers.c_str());
+  }
 }
 
 TEST_F(STestCaffeParser, modelparser_parsefrommemory_success)
