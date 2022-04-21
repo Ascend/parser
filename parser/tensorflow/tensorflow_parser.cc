@@ -1361,7 +1361,7 @@ Status TensorFlowModelParser::Parse(const char *model_path, ge::ComputeGraphPtr 
   domi::tensorflow::GraphDef ori_def;
   bool read = ge::parser::ReadProtoFromBinaryFile(model_path, &ori_def);
   if (!read) {
-    GELOGE(FAILED, "read_proto_from_binary failed. --framework=3, file format should be tensorflow.");
+    GELOGE(FAILED, "read tensorflow file failed when the inupt param value of --framework is 3.");
     return INTERNAL_ERROR;
   }
 
