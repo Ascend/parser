@@ -21,6 +21,9 @@
 #include <google/protobuf/io/zero_copy_stream_impl.h>
 #include <google/protobuf/text_format.h>
 #include <limits.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <fcntl.h>
 
 namespace ge {
 void ParerUTestsUtils::ClearParserInnerCtx() {
@@ -129,6 +132,16 @@ void ParerUTestsUtils::WriteProtoToBinaryFile(const google::protobuf::Message &p
   out.write(buf, size);
   out.close();
   delete[] buf;
+}
+
+void ParerUTestsUtils::WriteProtoToTextFile(const google::protobuf::Message &proto, const char *filename) {
+  const int32_t fd = open(filename, O_WRONLY | O_CREAT | O_TRUNC, 384U);
+  if (fd >= 0) {
+    google::protobuf::io::FileOutputStream output(fd);
+    google::protobuf::TextFormat::Print(proto, &output);
+    output.Close();
+    close(fd);
+  }
 }
 
 namespace ut {

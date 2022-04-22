@@ -313,6 +313,8 @@ class PARSER_FUNC_VISIBILITY CaffeModelParser : public domi::ModelParser {
 
   Status SaveDataLayerTops(const domi::caffe::LayerParameter &layer);
 
+  Status ReportLayerInvalid(const domi::caffe::NetParameter &proto, const std::string &path) const;
+
   std::map<std::string, ge::NodePtr> node_map;
 
   // key: blob name, value: layer name and index
