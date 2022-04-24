@@ -1056,7 +1056,7 @@ Status CaffeModelParser::AddEdges(ge::ComputeGraphPtr &graph) {
                                                                         {top_blob_layer_pair.first});
                         GELOGE(INTERNAL_ERROR, "[Find][TopLayer] %s failed.", top_blob_layer_pair.first.c_str());
                         return ge::FAILED;)
-        GE_IF_BOOL_EXEC(top_node_iter == node_map.end(),
+        GE_IF_BOOL_EXEC(bottom_node_iter == node_map.end(),
                         ErrorManager::GetInstance().ATCReportErrMessage("E11015", {"opname"},
                                                                         {bottom_blob_layer_pair.first});
                         GELOGE(INTERNAL_ERROR, "[Find][BottomLayer] %s failed.", bottom_blob_layer_pair.first.c_str());
