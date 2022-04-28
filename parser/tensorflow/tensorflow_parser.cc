@@ -2470,82 +2470,6 @@ Status TensorFlowModelParser::ParseProtoWithSubgraph(const std::string &root_pro
   return SUCCESS;
 }
 
-// For the identity operator whose output is "_retval", optimize it.
-Status TensorFlowModelParser::OptimizeIdentityByOutput(map<string, NodeDef *> &nodedef_map,
-                                                       const string &curr_node_name, bool &clear_input_flag) {
-  auto context_iter = op_node_context_map_.find(curr_node_name);
-  if (context_iter == op_node_context_map_.end()) {
-    REPORT_INNER_ERROR("E19999", "Node:%s can't find in op_node_context_map_, check invalid", curr_node_name.c_str());
-    GELOGE(FAILED, "Can't find op node context.");
-    return INTERNAL_ERROR;
-  }
-  OpNodeContext op_node_context = context_iter->second;
-
-  const std::map<std::string, NodeDef *>::const_iterator node_def_iter = nodedef_map.find(curr_node_name);
-  if (node_def_iter == nodedef_map.cend()) {
-    REPORT_INNER_ERROR("E19999", "Node:%s can't find in nodedef_map, check invalid", curr_node_name.c_str());
-    GELOGE(FAILED, "Can't find nodedef");
-    return INTERNAL_ERROR;
-  }
-  domi::tensorflow::NodeDef *curr_node_def = node_def_iter->second;
-  GE_CHECK_NOTNULL(curr_node_def);
-  bool has_out_retval = false;
-  // For the identity operator whose output is "_retval", optimize it
-  std::map<std::string, std::vector<std::pair<int32_t, int32_t>>> output_map = op_node_context.output_map;
-  for (auto output_iter = output_map.cbegin(); output_iter != output_map.cend(); ++output_iter) {
-    const string &output_node_name = output_iter->first;
-    domi::tensorflow::NodeDef *output_node_def = nodedef_map[output_node_name];
-    GE_CHECK_NOTNULL(output_node_def);
-    if (output_node_def->op() == "_Retval") {
-      GELOGD("_Retval Identity need optimize.");
-      output_node_def->set_input(0, curr_node_def->input(0).c_str());
-      has_out_retval = true;
-      GELOGD("op %s set input(0):%s.", output_node_def->name().c_str(), curr_node_def->input(0).c_str());
-    }
-  }
-
-  // Deal with non _Retval output operator of Identity.
-  if (has_out_retval) {
-    std::map<std::string, std::vector<std::pair<int32_t, int32_t>>>::const_iterator output_iter = output_map.begin();
-    for (; output_iter != output_map.end(); ++output_iter) {
-      const string &output_node_name = output_iter->first;
-      domi::tensorflow::NodeDef *output_node_def = nodedef_map[output_node_name];
-      GE_CHECK_NOTNULL(output_node_def);
-      GE_IF_BOOL_EXEC(output_node_def->op() == "_Retval", continue);
-      for (int k = 0; k < output_node_def->input_size(); ++k) {
-        GE_IF_BOOL_EXEC(
-            output_node_def->input(k) == curr_node_name, output_node_def->set_input(k, curr_node_def->input(0).c_str());
-            GELOGD("%s op set input(%d):%s.", output_node_def->name().c_str(), k, curr_node_def->input(0).c_str());)
-      }
-    }
-    clear_input_flag = true;
-  }
-  return SUCCESS;
-}
-
-Status TensorFlowModelParser::GraphDefOptimizeIdentity(domi::tensorflow::GraphDef *graph_def,
-                                                       map<string, NodeDef *> &nodedef_map,
-                                                       const vector<NodeDef *> &nodedef_to_optimize) {
-  GE_CHECK_NOTNULL(graph_def);
-  if (!nodedef_to_optimize.empty()) {
-    // Building input and input relationships for all OP nodes
-    GE_RETURN_IF_ERROR(GetOpNodesContextFromGraph(*graph_def));
-  } else {
-    return SUCCESS;
-  }
-  for (auto &curr_node_def : nodedef_to_optimize) {
-    GE_CHECK_NOTNULL(curr_node_def);
-    bool clear_input_flag = false;
-    const string &curr_node_name = curr_node_def->name();
-    GE_RETURN_IF_ERROR(OptimizeIdentityByOutput(nodedef_map, curr_node_name, clear_input_flag));
-    if (clear_input_flag) {
-      curr_node_def->clear_input();
-    }
-  }
-  GELOGI("GraphDefOptimizeIdentity success.");
-  return SUCCESS;
-}
-
 Status TensorFlowModelParser::OptimizeSnapShot(domi::tensorflow::NodeDef *curr_mode_def,
                                                map<string, NodeDef *> &nodedef_map,
                                                const std::pair<string, int> &input_data,
@@ -2861,8 +2785,6 @@ Status TensorFlowModelParser::GraphDefOptimize(domi::tensorflow::GraphDef *graph
   GE_CHECK_NOTNULL(graph_def);
   map<string, NodeDef *> nodedef_map;
   vector<string> op_node_name_list;
-  // Save Identity and ReadVariableOp
-  vector<NodeDef *> identity_to_optimize;
   // Save Snapshot
   vector<NodeDef *> snapshot_to_optimize;
 
@@ -2872,16 +2794,12 @@ Status TensorFlowModelParser::GraphDefOptimize(domi::tensorflow::GraphDef *graph
     const string &node_name = node_def->name();
     Status ret = AddFmkNodeDefToMap(node_def, op_node_name_list);
     GE_CHK_STATUS_EXEC(ret, return PARAM_INVALID, "add node_def to map failed");
-    if (node_def->op() == ge::parser::IDENTITY || node_def->op() == ge::parser::READVARIABLEOP) {
-      identity_to_optimize.push_back(node_def);
-    } else if (node_def->op() == ge::parser::SNAPSHOT) {
+    if (node_def->op() == ge::parser::SNAPSHOT) {
       snapshot_to_optimize.push_back(node_def);
     }
     nodedef_map[node_name] = node_def;
   }
 
-  // Optimize for Identity/ReadVariableOp
-  GE_RETURN_IF_ERROR(GraphDefOptimizeIdentity(graph_def, nodedef_map, identity_to_optimize));
   // Optimize for Snapshot
   GE_RETURN_IF_ERROR(GraphDefOptimizeSnapShot(graph_def, nodedef_map, snapshot_to_optimize));
 

@@ -2825,29 +2825,6 @@ TEST_F(UtestTensorflowParser, tensorflow_UpdateEdgesControlInfo_test)
   model_parser.UpdateEdgesControlInfo(info);
 }
 
-TEST_F(UtestTensorflowParser, tensorflow_OptimizeIdentityByOutput_test)
-{
-  TensorFlowModelParser model_parser;
-  NodeDef *node_def = new NodeDef();
-  node_def->set_name("Placeholder");
-  node_def->set_op("Placeholder_0");
-  std::map<string, NodeDef *> nodedef_map;
-  nodedef_map.emplace("Placeholder", node_def);
-  std::string curr_node_name = "Placeholder";
-  bool clear_input_flag = true;
-  Status ret = model_parser.OptimizeIdentityByOutput(nodedef_map, curr_node_name, clear_input_flag);
-  EXPECT_EQ(ret, INTERNAL_ERROR);
-
-  GraphDef graph;
-  curr_node_name = "pre_node_a";
-  nodedef_map.emplace("pre_node_a", node_def);
-  node_def->set_op("pre_node_a");
-  GenOriginContext(&model_parser, curr_node_name);
-  ret = model_parser.OptimizeIdentityByOutput(nodedef_map, curr_node_name, clear_input_flag);
-  EXPECT_EQ(ret, SUCCESS);
-  delete node_def;
-}
-
 TEST_F(UtestTensorflowParser, tensorflow_OptimizeSnapShot_test)
 {
   TensorFlowModelParser model_parser;
@@ -3019,25 +2996,7 @@ TEST_F(UtestTensorflowParser, tensorflow_AddControlEdgeAfterRemoveInputs_test)
   EXPECT_EQ(ret, SUCCESS);
 }
 
-TEST_F(UtestTensorflowParser, tensorflow_GraphDefOptimizeIdentity_test)
-{
-  tensorflow::GraphDef graph_def;
-  TensorFlowModelParser tensorflow_parser;
-  tensorflow::NodeDef *node_def = initNodeDef();
-  node_def->set_name("post_node_d");
 
-  std::map<string, NodeDef *> nodedef_map;
-  nodedef_map.emplace("post_node_d", node_def);
-  nodedef_map.emplace("post_node_a", node_def);
-  nodedef_map.emplace("post_node_b", node_def);
-  std::vector<NodeDef *> nodedef_to_optimize;
-  nodedef_to_optimize.emplace_back(node_def);
-
-  std::string curr_node_name = "post_node_b";
-  GenOriginContext(&tensorflow_parser, curr_node_name);
-  Status ret = tensorflow_parser.GraphDefOptimizeIdentity(&graph_def, nodedef_map, nodedef_to_optimize);
-  EXPECT_EQ(ret, ge::PARAM_INVALID);
-}
 TEST_F(UtestTensorflowParser, tensorflow_optimizer_snapshot_no_retval_test) {
   std::string caseDir = __FILE__;
   std::size_t idx = caseDir.find_last_of("/");
