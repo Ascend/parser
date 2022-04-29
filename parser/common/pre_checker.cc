@@ -200,7 +200,7 @@ FMK_FUNC_HOST_VISIBILITY bool PreChecker::HasError() {
   return false;
 }
 
-Status PreChecker::Save(string file) {
+Status PreChecker::Save(const string &file) {
   uint32_t fail_num = 0;
   for (auto id : ops_) {
     if (HasError(id)) {

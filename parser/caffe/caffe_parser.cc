@@ -45,7 +45,6 @@
 #include "parser/caffe/caffe_custom_parser_adapter.h"
 #include "parser/caffe/caffe_op_parser.h"
 #include "parser/common/op_parser_factory.h"
-#include "parser/common/pre_checker.h"
 #include "parser/common/prototype_pass_manager.h"
 #include "framework/omg/parser/parser_types.h"
 #include "parser/common/model_saver.h"

@@ -32,7 +32,6 @@
 #include "onnx_op_parser.h"
 #include "onnx_util.h"
 #include "parser/common/op_parser_factory.h"
-#include "parser/common/pre_checker.h"
 #include "parser/common/acl_graph_parser_util.h"
 #include "parser/common/model_saver.h"
 #include "parser/common/parser_utils.h"

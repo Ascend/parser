@@ -64,6 +64,7 @@
 #include "parser/common/data_op_parser.h"
 #include "parser/common/model_saver.h"
 #include "framework/omg/parser/parser_api.h"
+#include "framework/omg/parser/parser_factory.h"
 #include "parser/common/parser_fp16_t.h"
 #include "parser/common/op_parser_factory.h"
 #include "parser/common/prototype_pass_manager.h"
@@ -151,7 +152,7 @@ void STestTensorflowParser::RegisterCustomOp() {
   .ParseParamsFn(ParseParams);
   std::vector<OpRegistrationData> reg_datas = domi::OpRegistry::Instance()->registrationDatas;
   for (auto reg_data : reg_datas) {
-    OpRegistrationTbe::Instance()->Finalize(reg_data);
+    domi::OpRegTbeParserFactory::Instance()->Finalize(reg_data);
     domi::OpRegistry::Instance()->Register(reg_data);
   }
   domi::OpRegistry::Instance()->registrationDatas.clear();
@@ -584,7 +585,7 @@ namespace {
   void register_tbe_op() {
     std::vector<OpRegistrationData> registrationDatas = OpRegistry::Instance()->registrationDatas;
     for (OpRegistrationData reg_data : registrationDatas) {
-      OpRegistrationTbe::Instance()->Finalize(reg_data);
+      domi::OpRegTbeParserFactory::Instance()->Finalize(reg_data);
       OpRegistry::Instance()->Register(reg_data);
     }
     OpRegistry::Instance()->registrationDatas.clear();

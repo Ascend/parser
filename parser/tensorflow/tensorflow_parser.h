@@ -35,6 +35,7 @@
 #include "omg/parser/model_parser.h"
 #include "omg/parser/op_parser.h"
 #include "omg/parser/weights_parser.h"
+#include "common/pre_checker.h"
 #include "parser/tensorflow/tensorflow_fusion_op_parser.h"
 #include "parser/tensorflow/tensorflow_util.h"
 #include "proto/om.pb.h"
@@ -154,6 +155,18 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
    */
   Status ParseProtoWithSubgraph(const std::string &root_proto, domi::GetGraphCallbackV2 callback,
                                 ge::ComputeGraphPtr &root_graph) override;
+
+  bool HasError() override {
+    return PreChecker::Instance().HasError();
+  }
+
+  Status Save(const string &file) override {
+    return PreChecker::Instance().Save(file);
+  }
+
+  void Clear() override {
+    PreChecker::Instance().Clear();
+  }
  private:
   Status Parse(const char *model_path, ge::ComputeGraphPtr &root_graph);
 
@@ -686,6 +699,18 @@ class PARSER_FUNC_VISIBILITY TensorFlowWeightsParser : public domi::WeightsParse
   Status Parse(const char *file, ge::Graph &graph) override;
 
   Status ParseFromMemory(const char *data, uint32_t size, ge::ComputeGraphPtr &graph) override;
+
+  bool HasError() override {
+    return PreChecker::Instance().HasError();
+  }
+
+  Status Save(const string &file) override {
+    return PreChecker::Instance().Save(file);
+  }
+
+  void Clear() override {
+    PreChecker::Instance().Clear();
+  }
 };
 }  // namespace domi
 #endif  // PARSER_TENSORFLOW_TENSORFLOW_PARSER_H_
