@@ -415,28 +415,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
   * @brief Delete the connection relationship of the identity operator connecting the Arg node in graphdef
   */
   Status GraphDefOptimize(domi::tensorflow::GraphDef *graph_def);
-  /**
-  * @ingroup domi_omg
-  * @brief Optimize for Identity/ReadVariableOp operator
-  * @param [in] graph_def GraphDef to be optimized
-  * @param [in] nodedef_map Map of all nodes in graph
-  * @param [in] nodedef_to_optimize vector of NodeDef to be optimized
-  * @return SUCCESS  optimize successfully
-  * @return others   failed
-  */
-  Status GraphDefOptimizeIdentity(domi::tensorflow::GraphDef *graph_def, map<string, NodeDef *> &nodedef_map,
-                                  const vector<NodeDef *> &nodedef_to_optimize);
-  /**
-  * @ingroup domi_omg
-  * @brief For the identity operator whose output is "_retval", optimize it.
-  * @param [in] nodedef_map Map of all nodes in graph
-  * @param [in] curr_node_name Name of node to be optimized
-  * @param [in] clear_input_flag Flag of whether to clear the input of the current node
-  * @return SUCCESS  optimize successfully
-  * @return others   failed
-  */
-  Status OptimizeIdentityByOutput(map<string, NodeDef *> &nodedef_map, const string &curr_node_name,
-                                  bool &clear_input_flag);
+
   Status GraphDefOptimizeSnapShot(domi::tensorflow::GraphDef *graph_def, map<string, NodeDef *> &nodedef_map,
                                   const vector<NodeDef *> &nodedef_to_optimize);
   Status GraphDefOptimizeDestroyTemporaryVariable(domi::tensorflow::GraphDef *graph_def,

@@ -594,6 +594,7 @@ Status OnnxModelParser::ParseOpParam(const ge::onnx::NodeProto *node_proto, ge::
 }
 
 Status OnnxModelParser::ParseAllNodeProto(ge::onnx::GraphProto &onnx_graph, ge::Graph &graph) {
+  bool has_error = false;
   for (int i = 0; i < onnx_graph.node_size(); i++) {
     ge::onnx::NodeProto *node_proto = onnx_graph.mutable_node(i);
     std::string node_name = node_proto->name();
@@ -605,7 +606,8 @@ Status OnnxModelParser::ParseAllNodeProto(ge::onnx::GraphProto &onnx_graph, ge::
     if (status != SUCCESS) {
       GELOGE(status, "[Adapt][OpType] Adapter op type for ori type %s failed.", ori_type.c_str());
       REPORT_CALL_ERROR("E19999", "Adapter op type for ori type %s failed.", ori_type.c_str());
-      return status;
+      has_error = true;
+      continue;
     }
     node_proto->set_op_type(ori_type);
 
@@ -616,7 +618,8 @@ Status OnnxModelParser::ParseAllNodeProto(ge::onnx::GraphProto &onnx_graph, ge::
     if (status != SUCCESS) {
       GELOGE(status, "[Trans][Node] Trans node to operator for %s:%s failed.", node_name.c_str(), op_type.c_str());
       REPORT_CALL_ERROR("E19999", "Trans node to operator for %s:%s failed.", node_name.c_str(), op_type.c_str());
-      return status;
+      has_error = true;
+      continue;
     }
 
     // 7. op parser
@@ -627,7 +630,8 @@ Status OnnxModelParser::ParseAllNodeProto(ge::onnx::GraphProto &onnx_graph, ge::
     status = ParseOpParam(node_proto, op, op_parser);
     if (status != SUCCESS) {
       GELOGE(status, "[Parse][Params] for %s:%s failed ret:%d.", node_name.c_str(), op_type.c_str(), status);
-      return status;
+      has_error = true;
+      continue;
     }
 
     GELOGI("After ParseParams, op[%s]: type[%s] have input size: %zu, output size: %zu",
@@ -638,7 +642,8 @@ Status OnnxModelParser::ParseAllNodeProto(ge::onnx::GraphProto &onnx_graph, ge::
     if (graph_status != ge::GRAPH_SUCCESS) {
       GELOGE(FAILED, "[Add][Op] Add op:%s to graph failed.", ParserUtils::GetOperatorName(op).c_str());
       REPORT_CALL_ERROR("E19999", "Add op:%s to graph failed.", ParserUtils::GetOperatorName(op).c_str());
-      return FAILED;
+      has_error = true;
+      continue;
     }
     name_operator_[ParserUtils::GetOperatorName(op)] = op;
 
@@ -647,11 +652,12 @@ Status OnnxModelParser::ParseAllNodeProto(ge::onnx::GraphProto &onnx_graph, ge::
     if (status != SUCCESS) {
       REPORT_INNER_ERROR("E19999", "ConstructInputOutputContext failed.");
       GELOGE(status, "[Construct][RelationMap] to input and output failed.");
-      return status;
+      has_error = true;
+      continue;
     }
   }
-  GELOGI("Parse all node proto success.");
-  return SUCCESS;
+  GELOGI("Parse all node proto end.");
+  return has_error ? FAILED : SUCCESS;
 }
 
 Status OnnxModelParser::GetGraphInputs(ge::onnx::GraphProto &onnx_graph, std::vector<ge::Operator> &input_ops) {
