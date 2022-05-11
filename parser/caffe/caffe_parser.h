@@ -40,6 +40,7 @@
 #include "omg/parser/op_parser.h"
 #include "omg/parser/model_parser.h"
 #include "omg/parser/weights_parser.h"
+#include "common/pre_checker.h"
 #include "proto/caffe/caffe.pb.h"
 #include "proto/om.pb.h"
 
@@ -123,6 +124,17 @@ class PARSER_FUNC_VISIBILITY CaffeModelParser : public domi::ModelParser {
     return domi::SUCCESS;
   }
 
+  bool HasError() override {
+    return PreChecker::Instance().HasError();
+  }
+
+  Status Save(const string &file) override {
+    return PreChecker::Instance().Save(file);
+  }
+
+  void Clear() override {
+    PreChecker::Instance().Clear();
+  }
  private:
   Status Parse(const char *model_path, ge::ComputeGraphPtr &graph);
 
@@ -345,6 +357,18 @@ class PARSER_FUNC_VISIBILITY CaffeWeightsParser : public domi::WeightsParser {
   Status Parse(const char *file, ge::Graph &graph) override;
 
   Status ParseFromMemory(const char *data, uint32_t size, ge::ComputeGraphPtr &graph) override;
+
+  bool HasError() override {
+    return PreChecker::Instance().HasError();
+  }
+
+  Status Save(const string &file) override {
+    return PreChecker::Instance().Save(file);
+  }
+
+  void Clear() override {
+    PreChecker::Instance().Clear();
+  }
 
  private:
   Status CheckNodes(ge::ComputeGraphPtr &graph);

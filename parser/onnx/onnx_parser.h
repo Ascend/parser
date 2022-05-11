@@ -38,6 +38,7 @@
 #include "omg/parser/op_parser.h"
 #include "omg/parser/weights_parser.h"
 #include "common/parser_utils.h"
+#include "common/pre_checker.h"
 #include "proto/onnx/ge_onnx.pb.h"
 
 namespace ge {
@@ -79,6 +80,18 @@ class PARSER_FUNC_VISIBILITY OnnxModelParser : public domi::ModelParser {
     (void)root_proto;
     (void)root_graph;
     return domi::SUCCESS;
+  }
+
+  bool HasError() override {
+    return PreChecker::Instance().HasError();
+  }
+
+  Status Save(const string &file) override {
+    return PreChecker::Instance().Save(file);
+  }
+
+  void Clear() override {
+    PreChecker::Instance().Clear();
   }
 
  private:
@@ -160,6 +173,18 @@ class PARSER_FUNC_VISIBILITY OnnxWeightsParser : public domi::WeightsParser {
     (void)size;
     (void)graph;
     return domi::SUCCESS;
+  }
+
+  bool HasError() override {
+    return PreChecker::Instance().HasError();
+  }
+
+  Status Save(const string &file) override {
+    return PreChecker::Instance().Save(file);
+  }
+
+  void Clear() override {
+    PreChecker::Instance().Clear();
   }
 };
 }  // namespace domi

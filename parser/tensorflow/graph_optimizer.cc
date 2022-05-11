@@ -15,7 +15,7 @@
  */
 
 #include "graph_optimizer.h"
-#include "common/op_types.h"
+#include "graph/op_types.h"
 #include "common/types_map.h"
 #include "common/util.h"
 #include "framework/omg/parser/parser_inner_ctx.h"
