@@ -142,7 +142,7 @@ class PreChecker {
    * @ingroup domi_omg
    * @brief Save inspection results（JSON）
    */
-  Status Save(string file);
+  Status Save(const string &file);
 
  private:
   /**

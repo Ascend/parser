@@ -24,6 +24,7 @@
 #include "external/parser/onnx_parser.h"
 #include "ut/parser/parser_ut_utils.h"
 #include "external/ge/ge_api_types.h"
+#include "framework/omg/parser/parser_factory.h"
 #include "tests/depends/ops_stub/ops_stub.h"
 
 #define protected public
@@ -103,7 +104,7 @@ void UtestOnnxParser::RegisterCustomOp() {
       .ParseParamsFn(ParseParams);
   std::vector<OpRegistrationData> reg_datas = domi::OpRegistry::Instance()->registrationDatas;
   for (auto reg_data : reg_datas) {
-    OpRegistrationTbe::Instance()->Finalize(reg_data);
+    domi::OpRegTbeParserFactory::Instance()->Finalize(reg_data);
     domi::OpRegistry::Instance()->Register(reg_data);
   }
   domi::OpRegistry::Instance()->registrationDatas.clear();

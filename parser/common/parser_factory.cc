@@ -16,6 +16,7 @@
 
 #include "omg/parser/parser_factory.h"
 #include "framework/common/debug/ge_log.h"
+#include "common/register_tbe.h"
 
 namespace domi {
 FMK_FUNC_HOST_VISIBILITY WeightsParserFactory *WeightsParserFactory::Instance() {
@@ -76,5 +77,14 @@ FMK_FUNC_HOST_VISIBILITY void ModelParserFactory::RegisterCreator(const domi::Fr
 
 ModelParserFactory::~ModelParserFactory() {
   creator_map_.clear();
+}
+
+FMK_FUNC_HOST_VISIBILITY OpRegTbeParserFactory *OpRegTbeParserFactory::Instance() {
+  static OpRegTbeParserFactory instance;
+  return &instance;
+}
+
+void OpRegTbeParserFactory::Finalize(const domi::OpRegistrationData &reg_data) {
+  (void)ge::OpRegistrationTbe::Instance()->Finalize(reg_data);
 }
 }  // namespace domi

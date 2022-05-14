@@ -40,7 +40,6 @@
 #include "parser/common/op_parser_factory.h"
 #include "parser/common/parser_fp16_t.h"
 #include "parser/common/pass_manager.h"
-#include "parser/common/pre_checker.h"
 #include "parser/common/prototype_pass_manager.h"
 #include "parser/common/thread_pool.h"
 #include "parser/common/parser_utils.h"
