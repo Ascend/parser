@@ -320,8 +320,8 @@ domi::Status GraphToFunctionDef::RecordArg(ge::ComputeGraphPtr graph, const vect
       return FAILED;
     }
 
-    (void)ge::AttrUtils::SetInt(op, "T", (int32_t)dtype);
-    (void)ge::AttrUtils::SetInt(op, "arg_index", (int32_t)index);
+    (void)ge::AttrUtils::SetInt(op, "T", static_cast<int32_t>(dtype));
+    (void)ge::AttrUtils::SetInt(op, "arg_index", static_cast<int32_t>(index));
     ge::NodePtr arg_node = graph->AddNode(op);
     GE_CHECK_NOTNULL(arg_node);
     bool node_exists = false;

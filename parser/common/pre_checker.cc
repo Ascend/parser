@@ -250,7 +250,7 @@ Status PreChecker::CheckTypeSupported(OpId id, const string &type, const string 
       Cause cause;
       cause.code = ErrorCode::TYPE_UNSUPPORTED;
       cause.message = "The type is not supported.";
-      GELOGI("Check op[%s]'s type[%s] failed, it is not supported.", name.c_str(), type.c_str());
+      GELOGI("Check op[%s]'s type[%s], The type is not supported.", name.c_str(), type.c_str());
       if (!is_tensorflow) {
         ErrorManager::GetInstance().ATCReportErrMessage("E19010", {"opname", "optype"}, {name, type});
       }

@@ -23,7 +23,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY RefSwitchOperator::RefSwitchOpe
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY RefSwitchOperator::~RefSwitchOperator() {}
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY RefSwitchOperator &RefSwitchOperator::T(ge::DataType t) {
-  Attr("T", (int64_t)t);
+  Attr("T", static_cast<int64_t>(t));
   return *this;
 }
 }  // namespace ge  AUTO GEN PLEASE DO NOT MODIFY IT
