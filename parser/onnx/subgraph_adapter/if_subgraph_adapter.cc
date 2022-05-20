@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include <unordered_set>
 #include "if_subgraph_adapter.h"
+#include <unordered_set>
 #include "subgraph_adapter_factory.h"
 #include "common/util.h"
 #include "framework/common/debug/ge_log.h"
