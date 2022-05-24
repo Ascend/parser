@@ -388,7 +388,8 @@ Status ParserGraphOptimizer::RebuildOutputAnchors(vector<ge::OutDataAnchorPtr> &
     GE_CHK_BOOL_EXEC(fusion_op_desc->AddOutputDesc(src_out_desc) == ge::GRAPH_SUCCESS, return FAILED);
 
     ge::DataType data_type = src_out_desc.GetDataType();
-    const std::map<int32_t, int32_t>::const_iterator iter = GE_TENSORFLOW_DATA_TYPE_MAP.find((int32_t)data_type);
+    const std::map<int32_t, int32_t>::const_iterator iter =
+        GE_TENSORFLOW_DATA_TYPE_MAP.find(static_cast<int32_t>(data_type));
     GE_IF_BOOL_EXEC(
         iter == GE_TENSORFLOW_DATA_TYPE_MAP.end(),
         REPORT_INNER_ERROR("E19999", "datatype:%d of output:%d in node:%s:%s is not supported",
@@ -397,7 +398,7 @@ Status ParserGraphOptimizer::RebuildOutputAnchors(vector<ge::OutDataAnchorPtr> &
         return PARAM_INVALID);
 
     int32_t dtype = iter->second;
-    output_list.push_back((int64_t)dtype);
+    output_list.push_back(static_cast<int64_t>(dtype));
     GELOGI("FUNCDEF: output_list push_back  %d.", dtype);
   }
   GE_IF_BOOL_EXEC(!output_list.empty(), (void)AttrUtils::SetListInt(fusion_op_desc, ge::T_OUT_DATATYPE, output_list));
@@ -424,7 +425,8 @@ Status ParserGraphOptimizer::RebuildInputAnchors(vector<ge::InDataAnchorPtr> &in
       return FAILED;
     }
     ge::DataType data_type = tensorDescPtr->GetDataType();
-    const std::map<int32_t, int32_t>::const_iterator iter = GE_TENSORFLOW_DATA_TYPE_MAP.find((int32_t)data_type);
+    const std::map<int32_t, int32_t>::const_iterator iter =
+        GE_TENSORFLOW_DATA_TYPE_MAP.find(static_cast<int32_t>(data_type));
     GE_IF_BOOL_EXEC(
         iter == GE_TENSORFLOW_DATA_TYPE_MAP.end(),
         REPORT_INNER_ERROR("E19999", "datatype:%d of input:%d in node:%s:%s is not supported",
@@ -433,7 +435,7 @@ Status ParserGraphOptimizer::RebuildInputAnchors(vector<ge::InDataAnchorPtr> &in
         return PARAM_INVALID);
 
     int32_t dtype = iter->second;
-    input_list.push_back((int64_t)dtype);
+    input_list.push_back(static_cast<int64_t>(dtype));
     GELOGI("FUNCDEF: input_list push_back  %d.", dtype);
   }
   GE_IF_BOOL_EXEC(!input_list.empty(), (void)AttrUtils::SetListInt(fusion_op_desc, ge::T_IN_DATATYPE, input_list));

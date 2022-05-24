@@ -97,7 +97,8 @@ bool OpRegistrationTbe::RegisterParser(const OpRegistrationData &reg_data) {
         return false;
       }
       OpParserRegisterar registerar __attribute__((unused)) = OpParserRegisterar(
-          domi::TENSORFLOW, GetOmOptype(reg_data), [=]() -> std::shared_ptr<OpParser> { return tf_parser_adapter; });
+          domi::TENSORFLOW, GetOmOptype(reg_data), [tf_parser_adapter]() -> std::shared_ptr<OpParser>
+          { return tf_parser_adapter; });
     }
     if (reg_data.GetFusionParseParamFn() != nullptr || reg_data.GetFusionParseParamByOpFn() != nullptr) {
       bool is_registed = factory->OpParserIsRegistered(GetOmOptype(reg_data), true);
@@ -115,7 +116,7 @@ bool OpRegistrationTbe::RegisterParser(const OpRegistrationData &reg_data) {
       }
       OpParserRegisterar registerar __attribute__((unused)) = OpParserRegisterar(
           domi::TENSORFLOW, GetOmOptype(reg_data),
-          [=]() -> std::shared_ptr<OpParser> { return tf_fusion_parser_adapter; }, true);
+          [tf_fusion_parser_adapter]() -> std::shared_ptr<OpParser> { return tf_fusion_parser_adapter; }, true);
     }
   } else {
     std::shared_ptr<OpParserFactory> factory = OpParserFactory::Instance(reg_data.GetFrameworkType());

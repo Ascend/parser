@@ -32,20 +32,20 @@ FMK_FUNC_HOST_VISIBILITY ShapeNOperator &ShapeNOperator::N(int64_t n) {
 FMK_FUNC_HOST_VISIBILITY int64_t ShapeNOperator::GetN() const { return GetIntAttr(SHAPEN_ATTR_N); }
 
 FMK_FUNC_HOST_VISIBILITY ShapeNOperator &ShapeNOperator::InType(ge::DataType t) {
-  Attr(SHAPEN_ATTR_IN_TYPE, (int64_t)t);
+  Attr(SHAPEN_ATTR_IN_TYPE, static_cast<int64_t>(t));
   return *this;
 }
 
 FMK_FUNC_HOST_VISIBILITY ge::DataType ShapeNOperator::GetInType() const {
-  return (ge::DataType)GetIntAttr(SHAPEN_ATTR_IN_TYPE);
+  return static_cast<ge::DataType>(GetIntAttr(SHAPEN_ATTR_IN_TYPE));
 }
 
 FMK_FUNC_HOST_VISIBILITY ShapeNOperator &ShapeNOperator::OutType(ge::DataType t) {
-  Attr(SHAPEN_ATTR_OUT_TYPE, (int64_t)t);
+  Attr(SHAPEN_ATTR_OUT_TYPE, static_cast<int64_t>(t));
   return *this;
 }
 
 FMK_FUNC_HOST_VISIBILITY ge::DataType ShapeNOperator::GetOutType() const {
-  return (ge::DataType)GetIntAttr(SHAPEN_ATTR_OUT_TYPE);
+  return static_cast<ge::DataType>(GetIntAttr(SHAPEN_ATTR_OUT_TYPE));
 }
 }  // namespace ge

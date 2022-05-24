@@ -17,6 +17,7 @@
 #include "parser/common/parser_fp16_t.h"
 
 #include "external/register/register_types.h"
+#include "graph/def_types.h"
 
 namespace {
 constexpr uint16_t kManBitLength = 11;
@@ -104,7 +105,7 @@ static float Fp16ToFloat(const uint16_t &fp_val) {
     m_ret = m_ret << (kFp32ManLen - kFp16ManLen);
   }
   uint32_t f_val = FP32_CONSTRUCTOR(s_ret, e_ret, m_ret);
-  auto p_ret_v = reinterpret_cast<float *>(&f_val);
+  auto p_ret_v = ge::PtrToPtr<uint32_t, float>(&f_val);
 
   return *p_ret_v;
 }
@@ -136,7 +137,7 @@ static double Fp16ToDouble(const uint16_t &fp_val) {
     m_ret = m_ret << (kFp64ManLen - kFp16ManLen);
   }
   uint64_t f_val = (s_ret << kFp64SignIndex) | (e_ret << kFp64ManLen) | (m_ret);
-  auto p_ret_v = reinterpret_cast<double *>(&f_val);
+  auto p_ret_v = ge::PtrToPtr<uint64_t, double>(&f_val);
 
   return *p_ret_v;
 }
@@ -178,7 +179,7 @@ static int8_t Fp16ToInt8(const uint16_t &fp_val) {
 
   if (FP16_IS_DENORM(fp_val)) {  // Denormalized number
     ret_v = 0;
-    ret = *(reinterpret_cast<uint8_t *>(&ret_v));
+    ret = *(ge::PtrToPtr<uint8_t, uint8_t>(&ret_v));
     return ret;
   }
 
@@ -853,7 +854,7 @@ fp16_t &fp16_t::operator=(const float &f_val) {
   uint16_t s_ret, m_ret;
   int16_t e_ret;
   uint32_t e_f, m_f;
-  const uint32_t ui32_v = *(reinterpret_cast<const uint32_t *>(&f_val));  // 1:8:23bit sign:exp:man
+  const uint32_t ui32_v = *(ge::PtrToPtr<const float, const uint32_t>(&f_val));  // 1:8:23bit sign:exp:man
   uint32_t m_len_delta;
 
   s_ret = static_cast<uint16_t>((ui32_v & kFp32SignMask) >> kFp32SignIndex);  // 4Byte->2Byte
@@ -1161,7 +1162,7 @@ fp16_t &fp16_t::operator=(const double &d_val) {
   int16_t e_ret;
   uint64_t e_d;
   uint64_t m_d;
-  uint64_t ui64_v = *(reinterpret_cast<const uint64_t *>(&d_val));  // 1:11:52bit sign:exp:man
+  uint64_t ui64_v = *(ge::PtrToPtr<const double, const uint64_t>(&d_val));  // 1:11:52bit sign:exp:man
   uint32_t m_len_delta;
 
   s_ret = static_cast<uint16_t>((ui64_v & kFp64SignMask) >> kFp64SignIndex);  // 4Byte

@@ -32,7 +32,7 @@ static void ConvertList(const std::pair<std::string, OpAttribute> &op_attr_pair,
 
   vector<int64_t> v_i;
   for (int32_t i = 0; i < a_list.i_size(); i++) {
-    v_i.push_back((int64_t)a_list.i(i));
+    v_i.push_back(static_cast<int64_t>(a_list.i(i)));
   }
   if (v_i.size() > 0) {
     (void)ge::AttrUtils::SetListInt(op_def, op_attr_pair.first, v_i);
@@ -56,7 +56,7 @@ static void ConvertList(const std::pair<std::string, OpAttribute> &op_attr_pair,
   }
   vector<int32_t> v_u;
   for (int32_t i = 0; i < a_list.u_size(); i++) {
-    v_u.push_back((int32_t)a_list.u(i));
+    v_u.push_back(static_cast<int32_t>(a_list.u(i)));
   }
   if (v_u.size() > 0) {
     (void)ge::AttrUtils::SetListInt(op_def, op_attr_pair.first, v_u);
