@@ -1203,7 +1203,7 @@ Status TensorFlowModelParser::ParseFromMemory(const char *data, uint32_t size, g
     graph_def = OriDef;
   } else {
     GELOGI("Before Trim, the Graph Node size is:%d", OriDef.node_size());
-    if (TrimGraph(OriDef, &graph_def)) {
+    if (static_cast<bool>(TrimGraph(OriDef, &graph_def))) {
       GELOGE(FAILED, "Trim Graph fail.");
       return INTERNAL_ERROR;
     }
@@ -1370,7 +1370,7 @@ Status TensorFlowModelParser::Parse(const char *model_path, ge::ComputeGraphPtr 
     graph_def = ori_def;
   } else {
     GELOGI("Before Trim, the Graph Node size is:%d", ori_def.node_size());
-    if (TrimGraph(ori_def, &graph_def)) {
+    if (static_cast<bool>(TrimGraph(ori_def, &graph_def))) {
       GELOGE(FAILED, "Trim Graph fail.");
       return INTERNAL_ERROR;
     }
@@ -3042,7 +3042,7 @@ Status TensorFlowModelParser::TrimGraphByInput(const domi::tensorflow::GraphDef 
   domi::tensorflow::GraphDef filtered_graph_def;
   filtered_graph_def.mutable_node()->Clear();
   for (const NodeDef &node : input_graph_def.node()) {
-    if (input_nodes.count(node.name())) {
+    if (static_cast<bool>(input_nodes.count(node.name()))) {
       *(filtered_graph_def.mutable_node()->Add()) = node;
     }
     if (!delete_nodes.count(node.name())) {
@@ -3051,7 +3051,7 @@ Status TensorFlowModelParser::TrimGraphByInput(const domi::tensorflow::GraphDef 
   }
   output_graph_def->Clear();
   for (const NodeDef &node : filtered_graph_def.node()) {
-    if (input_nodes.count(node.name())) {
+    if (static_cast<bool>(input_nodes.count(node.name()))) {
       NodeDef placeholder_node = node;
       placeholder_node.clear_input();
       GE_IF_BOOL_EXEC(node.op() != "Placeholder", placeholder_node.set_op("Placeholder"));
@@ -3099,7 +3099,7 @@ Status TensorFlowModelParser::TrimGraphByOutput(const domi::tensorflow::GraphDef
     std::set<string> next_inputs;
     for (const string &current_input : current_inputs) {
       required_nodes.insert(current_input);
-      GE_IF_BOOL_EXEC(input_nodes.count(current_input), continue);
+      GE_IF_BOOL_EXEC(static_cast<bool>(input_nodes.count(current_input)), continue);
       GE_CHK_BOOL_EXEC(node_lookup.count(current_input) > 0U,
                        ErrorManager::GetInstance().ATCReportErrMessage("E10016", {"parameter", "opname"},
                                                                        {"out_nodes", current_input});
@@ -3118,13 +3118,13 @@ Status TensorFlowModelParser::TrimGraphByOutput(const domi::tensorflow::GraphDef
   domi::tensorflow::GraphDef filtered_graph_def;
   filtered_graph_def.mutable_node()->Clear();
   for (const NodeDef &node : input_graph_def.node()) {
-    if (required_nodes.count(node.name())) {
+    if (static_cast<bool>(required_nodes.count(node.name()))) {
       *(filtered_graph_def.mutable_node()->Add()) = node;
     }
   }
   output_graph_def->Clear();
   for (const NodeDef &node : filtered_graph_def.node()) {
-    if (input_nodes.count(node.name())) {
+    if (static_cast<bool>(input_nodes.count(node.name()))) {
       NodeDef placeholder_node = node;
       placeholder_node.clear_input();
       GE_IF_BOOL_EXEC(node.op() != "Placeholder", placeholder_node.set_op("Placeholder"));

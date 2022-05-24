@@ -155,7 +155,7 @@ static uint8_t GetUint8ValByMan(uint8_t s_ret, const uint64_t &long_int_m, const
   if (need_round) {
     m_ret++;
   }
-  if (s_ret) {
+  if (static_cast<bool>(s_ret)) {
     m_ret = (~m_ret) + 1;
   }
   if (m_ret == 0) {
@@ -208,14 +208,14 @@ static int8_t Fp16ToInt8(const uint16_t &fp_val) {
       }
     }
   }
-  if (overflow_flag) {
+  if (static_cast<bool>(overflow_flag)) {
     ret_v = kInt8Max + s_ret;
   } else {
     // Generate final result
     ret_v = GetUint8ValByMan(s_ret, long_int_m, shift_out);
   }
 
-  ret = *(reinterpret_cast<uint8_t *>(&ret_v));
+  ret = *(ge::PtrToPtr<uint8_t, uint8_t>(&ret_v));
   return ret;
 }
 
@@ -284,7 +284,7 @@ static uint16_t GetUint16ValByMan(uint16_t s_ret, const uint64_t &long_int_m, co
   if (need_round && m_ret < kInt16Max) {
     m_ret++;
   }
-  if (s_ret) {
+  if (static_cast<bool>(s_ret)) {
     m_ret = (~m_ret) + 1;
   }
   if (m_ret == 0) {
@@ -308,7 +308,7 @@ static int16_t Fp16ToInt16(const uint16_t &fp_val) {
 
   if (FP16_IS_DENORM(fp_val)) {  // Denormalized number
     ret_v = 0;
-    ret = *(reinterpret_cast<uint8_t *>(&ret_v));
+    ret = *(ge::PtrToPtr<uint16_t, uint8_t>(&ret_v));
     return ret;
   }
 
@@ -337,13 +337,13 @@ static int16_t Fp16ToInt16(const uint16_t &fp_val) {
       }
     }
   }
-  if (overflow_flag) {
+  if (static_cast<bool>(overflow_flag)) {
     ret_v = kInt16Max + s_ret;
   } else {
     // Generate final result
     ret_v = GetUint16ValByMan(s_ret, long_int_m, shift_out);
   }
-  ret = *(reinterpret_cast<int16_t *>(&ret_v));
+  ret = *(ge::PtrToPtr<uint16_t, uint16_t>(&ret_v));
   return ret;
 }
 
@@ -434,7 +434,7 @@ static int32_t Fp16ToInt32(const uint16_t &fp_val) {
     ret_v = (s_ret << kBitShift31) | (m_ret);
   }
 
-  return *(reinterpret_cast<int32_t *>(&ret_v));
+  return *(ge::PtrToPtr<uint32_t, uint32_t>(&ret_v));
 }
 
 /// @ingroup fp16_t math conversion static method
@@ -892,7 +892,7 @@ fp16_t &fp16_t::operator=(const float &f_val) {
     if (need_round) {
       m_ret++;
     }
-    if (m_ret & kFp16ManHideBit) {
+    if (static_cast<bool>(m_ret & kFp16ManHideBit)) {
       e_ret++;
     }
   }
@@ -911,7 +911,7 @@ fp16_t &fp16_t::operator=(const int8_t &i_val) {
   if (m_ret == 0) {
     e_ret = 0;
   } else {
-    if (s_ret) {                                       // negative number(<0)
+    if (static_cast<bool>(s_ret)) {                                       // negative number(<0)
       m_ret = static_cast<uint16_t>(std::abs(i_val));  // complement
     }
 
@@ -932,7 +932,7 @@ fp16_t &fp16_t::operator=(const uint8_t &ui_val) {
   s_ret = 0;
   e_ret = 0;
   m_ret = ui_val;
-  if (m_ret) {
+  if (static_cast<bool>(m_ret)) {
     e_ret = kFp16ManLen;
     while ((m_ret & kFp16ManHideBit) == 0) {
       m_ret = m_ret << 1;
@@ -950,7 +950,7 @@ static void SetValByUint16Val(const uint16_t &input_val, const uint16_t &sign, u
   uint16_t m_min = kFp16ManHideBit;
   uint16_t m_max = m_min << 1;
   uint16_t len = static_cast<uint16_t>(GetManBitLength(m_tmp));
-  if (m_tmp) {
+  if (static_cast<bool>(m_tmp)) {
     int16_t e_ret;
     if (len > kDim11) {
       e_ret = kFp16ExpBias + kFp16ManLen;
@@ -990,11 +990,11 @@ fp16_t &fp16_t::operator=(const int16_t &i_val) {
   if (i_val == 0) {
     val = 0;
   } else {
-    uint16_t ui_val = *(reinterpret_cast<const uint16_t *>(&i_val));
+    uint16_t ui_val = *(ge::PtrToPtr<const int16_t, const int16_t>(&i_val));
     auto s_ret = static_cast<uint16_t>(ui_val >> kBitShift15);
-    if (s_ret) {
+    if (static_cast<bool>(s_ret)) {
       int16_t iValM = -i_val;
-      ui_val = *(reinterpret_cast<uint16_t *>(&iValM));
+      ui_val = *(ge::PtrToPtr<int16_t, uint16_t>(&iValM));
     }
     SetValByUint16Val(ui_val, s_ret, val);
   }
@@ -1096,11 +1096,11 @@ fp16_t &fp16_t::operator=(const int32_t &i_val) {
   if (i_val == 0) {
     val = 0;
   } else {
-    uint32_t ui_val = *(reinterpret_cast<const uint32_t *>(&i_val));
+    uint32_t ui_val = *(ge::PtrToPtr<const int32_t, const uint32_t>(&i_val));
     auto s_ret = static_cast<uint16_t>(ui_val >> kBitShift31);
-    if (s_ret) {
+    if (static_cast<bool>(s_ret)) {
       int32_t iValM = -i_val;
-      ui_val = *(reinterpret_cast<uint32_t *>(&iValM));
+      ui_val = *(ge::PtrToPtr<int32_t, uint32_t>(&iValM));
     }
     SetValByUint32Val(ui_val, s_ret, val);
   }
@@ -1205,7 +1205,7 @@ fp16_t &fp16_t::operator=(const double &d_val) {
     if (need_round) {
       m_ret++;
     }
-    if (m_ret & kFp16ManHideBit) {
+    if (static_cast<bool>(m_ret & kFp16ManHideBit)) {
       e_ret++;
     }
   }
@@ -1240,7 +1240,7 @@ fp16_t::operator uint64_t() const { return 0; }
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY int fp16_t::IsInf() const {
   if ((val & kFp16AbsMax) == kFp16ExpMask) {
-    if (val & kFp16SignMask) {
+    if (static_cast<bool>(val & kFp16SignMask)) {
       return -1;
     } else {
       return 1;

@@ -32,7 +32,7 @@ const char *const kSerializeFormat = "serialize_format";
 Status ParseParams(const Message *op_src, ArgOpOperator *const op) {
   GE_CHECK_NOTNULL(op_src);
   GE_CHECK_NOTNULL(op);
-  const domi::tensorflow::NodeDef *node = reinterpret_cast<const domi::tensorflow::NodeDef *>(op_src);
+  const domi::tensorflow::NodeDef *node = PtrToPtr<const Message, const domi::tensorflow::NodeDef>(op_src);
   GELOGD("TF op node name = %s, op type= %s, parse params", node->name().c_str(), node->op().c_str());
   domi::tensorflow::AttrValue output_attr_value;
   if (TensorFlowUtil::FindAttrValue(node, ge::ATTR_NAME_OUTPUT_TENSOR_DESC, output_attr_value)) {
