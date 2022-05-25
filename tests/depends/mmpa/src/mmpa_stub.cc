@@ -158,6 +158,17 @@ mmTimespec mmGetTickCount() {
   return rts;
 }
 
+INT32 mmGetSystemTime(mmSystemTime_t *sysTime) {
+  // Beijing olympics
+  sysTime->wYear = 2008;
+  sysTime->wMonth = 8;
+  sysTime->wDay = 8;
+  sysTime->wHour = 20;
+  sysTime->wMinute = 8;
+  sysTime->wSecond = 0;
+  return 0;
+}
+
 INT32 mmGetTid() {
   INT32 ret = (INT32)syscall(SYS_gettid);
 
