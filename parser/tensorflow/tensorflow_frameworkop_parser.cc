@@ -31,7 +31,7 @@ namespace ge {
 Status ParseParams(const Message *op_src, FrameworkOpOperator *op) {
   GE_CHECK_NOTNULL(op_src);
   GE_CHECK_NOTNULL(op);
-  const domi::tensorflow::NodeDef *node = PtrToPtr<const Message, const domi::tensorflow::NodeDef>(op_src);
+  const domi::tensorflow::NodeDef *node = reinterpret_cast<const domi::tensorflow::NodeDef *>(op_src);
   GELOGD("TF op node name = %s, op type= %s, parse params", node->name().c_str(), node->op().c_str());
   string type = node->op();
 

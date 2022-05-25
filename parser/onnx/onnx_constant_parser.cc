@@ -199,7 +199,7 @@ Status OnnxConstantParser::ParseConvertDataType(const ge::onnx::TensorProto &ten
 
 Status OnnxConstantParser::ParseConstFromInput(const ge::onnx::NodeProto *op_src, ge::Operator &op_def) {
   GE_CHECK_NOTNULL(op_src);
-  const NodeProto *node = PtrToPtr<const ge::onnx::NodeProto, const NodeProto>(op_src);
+  const NodeProto *node = reinterpret_cast<const NodeProto *>(op_src);
 
   // Get const Tensor from node
   Tensor tensor;
@@ -226,7 +226,7 @@ Status OnnxConstantParser::ParseConstFromInput(const ge::onnx::NodeProto *op_src
 
 Status OnnxConstantParser::ParseParams(const Message *op_src, ge::Operator &op_def) {
   GE_CHECK_NOTNULL(op_src);
-  const ge::onnx::NodeProto *node = PtrToPtr<const Message, const ge::onnx::NodeProto>(op_src);
+  const ge::onnx::NodeProto *node = reinterpret_cast<const ge::onnx::NodeProto *>(op_src);
   GE_CHECK_NOTNULL(node);
   GELOGD("Onnx op node name = %s, op type= %s, parse params", node->name().c_str(), node->op_type().c_str());
 

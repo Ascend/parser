@@ -161,7 +161,7 @@ static uint8_t GetUint8ValByMan(uint8_t s_ret, const uint64_t &long_int_m, const
   if (m_ret == 0) {
     s_ret = 0;
   }
-  return static_cast<uint8_t>((s_ret << kBitShift7) | (m_ret));
+  return static_cast<uint8_t>((s_ret << static_cast<uint8_t>(kBitShift7)) | (m_ret));
 }
 
 /// @ingroup fp16_t math conversion static method
@@ -562,7 +562,7 @@ static uint16_t Fp16Add(uint16_t v_1, uint16_t v_2) {
   int16_t e_ret = std::max(e_a, e_b);
   int16_t e_tmp = std::abs(e_a - e_b);
   if (e_a > e_b) {
-    m_trunc = (m_b << (kBitShift32 - static_cast<uint16_t>(e_tmp)));
+    m_trunc = (m_b << (static_cast<uint16_t>(kBitShift32) - static_cast<uint16_t>(e_tmp)));
     m_b = RightShift(m_b, e_tmp);
   } else if (e_a < e_b) {
     m_trunc = (m_a << (kBitShift32 - static_cast<uint16_t>(e_tmp)));

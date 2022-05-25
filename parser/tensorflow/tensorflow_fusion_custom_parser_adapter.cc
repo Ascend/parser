@@ -33,8 +33,7 @@ Status TensorFlowFusionCustomParserAdapter::ParseParams(const vector<const NodeD
   std::vector<const google::protobuf::Message *> inside_nodes;
   for (auto inside_node : v_input_const) {
     GE_CHECK_NOTNULL(inside_node);
-    const google::protobuf::Message *node_src =
-        PtrToPtr<const google::protobuf::Message, const google::protobuf::Message>(inside_node);
+    const google::protobuf::Message *node_src = reinterpret_cast<const google::protobuf::Message *>(inside_node);
     inside_nodes.push_back(node_src);
   }
   std::string ori_type = op_dest->GetType();
