@@ -20,7 +20,7 @@
 #include "graph/def_types.h"
 
 namespace {
-constexpr uint16_t kManBitLength = 11;
+constexpr uint16_t kManBitLength = 11U;
 }
 namespace ge {
 namespace parser {
@@ -100,7 +100,7 @@ static float Fp16ToFloat(const uint16_t &fp_val) {
     e_ret = 0;
     m_ret = 0;
   } else {
-    e_ret = hf_exp - kFp16ExpBias + kFp32ExpBias;
+    e_ret = static_cast<uint32_t>(hf_exp) - static_cast<uint32_t>(kFp16ExpBias) + static_cast<uint32_t>(kFp32ExpBias);
     m_ret = hf_man & kFp16ManMask;
     m_ret = m_ret << (kFp32ManLen - kFp16ManLen);
   }
@@ -132,7 +132,7 @@ static double Fp16ToDouble(const uint16_t &fp_val) {
     e_ret = 0;
     m_ret = 0;
   } else {
-    e_ret = hf_exp - kFp16ExpBias + kFp64ExpBias;
+    e_ret = static_cast<uint64_t>(hf_exp) - static_cast<uint64_t>(kFp16ExpBias) + static_cast<uint64_t>(kFp64ExpBias);
     m_ret = hf_man & kFp16ManMask;
     m_ret = m_ret << (kFp64ManLen - kFp16ManLen);
   }
@@ -156,7 +156,7 @@ static uint8_t GetUint8ValByMan(uint8_t s_ret, const uint64_t &long_int_m, const
     m_ret++;
   }
   if (static_cast<bool>(s_ret)) {
-    m_ret = (~m_ret) + 1;
+    m_ret = (~m_ret) + 1U;
   }
   if (m_ret == 0) {
     s_ret = 0;
@@ -285,7 +285,7 @@ static uint16_t GetUint16ValByMan(uint16_t s_ret, const uint64_t &long_int_m, co
     m_ret++;
   }
   if (static_cast<bool>(s_ret)) {
-    m_ret = (~m_ret) + 1;
+    m_ret = (~m_ret) + 1U;
   }
   if (m_ret == 0) {
     s_ret = 0;
@@ -676,14 +676,14 @@ static uint16_t Fp16Div(uint16_t v_1, uint16_t v_2) {
     uint64_t m_tmp;
     if (e_a > e_b) {
       m_tmp = m_a;
-      uint16_t tmp = e_a - e_b;
+      uint16_t tmp = static_cast<uint16_t>(e_a - e_b);
       for (int i = 0; i < tmp; i++) {
         m_tmp = m_tmp << 1;
       }
       m_a = m_tmp;
     } else if (e_a < e_b) {
       m_tmp = m_b;
-      uint16_t tmp = e_b - e_a;
+      uint16_t tmp = static_cast<uint16_t>(e_b - e_a);
       for (int i = 0; i < tmp; i++) {
         m_tmp = m_tmp << 1;
       }
@@ -918,7 +918,7 @@ fp16_t &fp16_t::operator=(const int8_t &i_val) {
     e_ret = kFp16ManLen;
     while ((m_ret & kFp16ManHideBit) == 0) {
       m_ret = m_ret << 1;
-      e_ret = e_ret - 1;
+      e_ret = e_ret - 1U;
     }
     e_ret = e_ret + kFp16ExpBias;
   }
@@ -936,7 +936,7 @@ fp16_t &fp16_t::operator=(const uint8_t &ui_val) {
     e_ret = kFp16ManLen;
     while ((m_ret & kFp16ManHideBit) == 0) {
       m_ret = m_ret << 1;
-      e_ret = e_ret - 1;
+      e_ret = e_ret - 1U;
     }
     e_ret = e_ret + kFp16ExpBias;
   }
@@ -954,7 +954,7 @@ static void SetValByUint16Val(const uint16_t &input_val, const uint16_t &sign, u
     int16_t e_ret;
     if (len > kDim11) {
       e_ret = kFp16ExpBias + kFp16ManLen;
-      uint16_t e_tmp = len - kDim11;
+      uint16_t e_tmp = len - static_cast<uint16_t>(kDim11);
       uint32_t trunc_mask = 1;
       for (int i = 1; i < e_tmp; i++) {
         trunc_mask = (trunc_mask << 1) + 1;
@@ -977,7 +977,7 @@ static void SetValByUint16Val(const uint16_t &input_val, const uint16_t &sign, u
         e_ret = e_ret + 1;
       }
     } else {
-      e_ret = kFp16ExpBias;
+      e_ret = static_cast<int16_t>(kFp16ExpBias);
       m_tmp = m_tmp << (kManBitLength - len);
       e_ret = e_ret + (len - 1);
     }
@@ -1039,7 +1039,7 @@ fp16_t &fp16_t::operator=(const uint16_t &ui_val) {
         val = kFp16Max;
       }
     } else {
-      e_ret = kFp16ExpBias;
+      e_ret = static_cast<int16_t>(kFp16ExpBias);
       m_ret = m_ret << (kDim11 - len);
       e_ret = e_ret + (len - 1);
     }
@@ -1058,7 +1058,7 @@ static void SetValByUint32Val(const uint32_t &input_val, const uint16_t &sign, u
     e_ret = kFp16ExpBias + kFp16ManLen;
     uint32_t m_trunc = 0;
     uint32_t trunc_mask = 1;
-    uint16_t e_tmp = len - kDim11;
+    uint16_t e_tmp = len - static_cast<uint16_t>(kDim11);
     for (int i = 1; i < e_tmp; i++) {
       trunc_mask = (trunc_mask << 1) + 1;
     }
@@ -1084,7 +1084,7 @@ static void SetValByUint32Val(const uint32_t &input_val, const uint16_t &sign, u
       m_tmp = kFp16MaxMan;
     }
   } else {
-    e_ret = kFp16ExpBias;
+    e_ret = static_cast<int16_t>(kFp16ExpBias);
     m_tmp = m_tmp << (kDim11 - len);
     e_ret = e_ret + (len - 1);
   }
@@ -1120,7 +1120,7 @@ fp16_t &fp16_t::operator=(const uint32_t &ui_val) {
       e_ret = kFp16ExpBias + kFp16ManLen;
       uint32_t m_trunc = 0;
       uint32_t trunc_mask = 1;
-      uint16_t e_tmp = len - kDim11;
+      uint16_t e_tmp = len - static_cast<uint16_t>(kDim11);
       for (int i = 1; i < e_tmp; i++) {
         trunc_mask = (trunc_mask << 1) + 1;
       }
@@ -1146,7 +1146,7 @@ fp16_t &fp16_t::operator=(const uint32_t &ui_val) {
         m_tmp = kFp16MaxMan;
       }
     } else {
-      e_ret = kFp16ExpBias;
+      e_ret = static_cast<int16_t>(kFp16ExpBias);
       m_tmp = m_tmp << (kDim11 - len);
       e_ret = e_ret + (len - 1);
     }
