@@ -161,7 +161,6 @@ domi::Status RemapFunctionDef(FunctionDef *fdef, const string &name, NameMapHelp
       if (node_def->input(i).find("^") != string::npos) {
         // Control input
         const string normalized = node_names.Renormalize(node_def->input(i).substr(1));
-
         GE_IF_BOOL_EXEC(normalized.empty(),
                         REPORT_INNER_ERROR("E19999", "Could not remap control input %s of node %s in function %s",
                                            node_def->input(i).c_str(), node_def->name().c_str(), name.c_str());
@@ -172,7 +171,6 @@ domi::Status RemapFunctionDef(FunctionDef *fdef, const string &name, NameMapHelp
         *node_def->mutable_input(i) = "^" + normalized;
       } else {
         const auto iter = tensor_renaming.find(node_def->input(i));
-
         GE_IF_BOOL_EXEC(iter == tensor_renaming.end(),
                         REPORT_INNER_ERROR("E19999", "Could not remap input %s of node %s in function %s",
                                            node_def->input(i).c_str(), node_def->name().c_str(), name.c_str());
@@ -188,14 +186,12 @@ domi::Status RemapFunctionDef(FunctionDef *fdef, const string &name, NameMapHelp
   // Remap return values.
   for (int r = 0; r < fdef->signature().output_arg_size(); ++r) {
     const string &ret_name = fdef->signature().output_arg(r).name();
-
     GE_IF_BOOL_EXEC(ret_name.empty(),
                     REPORT_INNER_ERROR("E19999", "Missing output %d to function %s", r, name.c_str());
                     GELOGE(domi::INTERNAL_ERROR, "Missing output %d to function %s .", r, name.c_str());
                     return domi::INTERNAL_ERROR);
 
     const string &return_value = return_values[ret_name];
-
     GE_IF_BOOL_EXEC(return_value.empty(),
                     REPORT_INNER_ERROR("E19999", "Could not remap return value %d ,%s of %s in function %s", r,
                                        ret_name.c_str(), return_value.c_str(), name.c_str());
@@ -204,12 +200,11 @@ domi::Status RemapFunctionDef(FunctionDef *fdef, const string &name, NameMapHelp
                     return domi::INTERNAL_ERROR);
 
     const auto iter = tensor_renaming.find(return_value);
-
-    GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(iter == tensor_renaming.end(),
-                                   REPORT_INNER_ERROR("E19999", "can not find value[%s] in tensor_renaming map",
-                                                      return_value.c_str());
-                                   return domi::INTERNAL_ERROR,
-                                   "can not find value[%s] in tensor_renaming map.", return_value.c_str());
+    if (iter == tensor_renaming.end()) {
+      REPORT_INNER_ERROR("E19999", "can not find value[%s] in tensor_renaming map", return_value.c_str());
+      GELOGE(FAILED, "can not find value[%s] in tensor_renaming map.", return_value.c_str());
+      return domi::INTERNAL_ERROR;
+    }
 
     (*fdef->mutable_ret())[ret_name] = iter->second;
   }
@@ -227,7 +222,7 @@ domi::Status GraphToFunctionDef::RecordResult(ge::ComputeGraphPtr graph,
     GE_CHECK_NOTNULL(anchor);
     GE_CHECK_NOTNULL(anchor->GetOwnerNode()->GetOpDesc());
     int32_t type = anchor->GetOwnerNode()->GetOpDesc()->GetOutputDesc(anchor->GetIdx()).GetDataType();
-    auto iter = GE_TENSORFLOW_DATA_TYPE_MAP.find(type);
+    std::map<int32_t, int32_t>::const_iterator iter = GE_TENSORFLOW_DATA_TYPE_MAP.find(type);
     GE_IF_BOOL_EXEC(iter == GE_TENSORFLOW_DATA_TYPE_MAP.end(),
                     REPORT_INNER_ERROR("E19999", "datatype:%d of output:%d in node:%s:%s is not supported",
                                        type, anchor->GetIdx(), anchor->GetOwnerNode()->GetName().c_str(),
@@ -304,7 +299,7 @@ domi::Status GraphToFunctionDef::RecordArg(ge::ComputeGraphPtr graph, const vect
     GE_CHECK_NOTNULL_EXEC(tensor_desc_ptr, return domi::FAILED);
 
     int32_t type = tensor_desc_ptr->GetDataType();
-    auto iter = GE_TENSORFLOW_DATA_TYPE_MAP.find(type);
+    std::map<int32_t, int32_t>::const_iterator iter = GE_TENSORFLOW_DATA_TYPE_MAP.find(type);
     GE_IF_BOOL_EXEC(iter == GE_TENSORFLOW_DATA_TYPE_MAP.end(),
                     REPORT_INNER_ERROR("E19999", "datatype:%d of input:%d in node:%s:%s is not supported",
                                        type, anchor->GetIdx(), anchor->GetOwnerNode()->GetName().c_str(),
@@ -325,8 +320,8 @@ domi::Status GraphToFunctionDef::RecordArg(ge::ComputeGraphPtr graph, const vect
       return FAILED;
     }
 
-    (void)ge::AttrUtils::SetInt(op, "T", (int32_t)dtype);
-    (void)ge::AttrUtils::SetInt(op, "arg_index", (int32_t)index);
+    (void)ge::AttrUtils::SetInt(op, "T", static_cast<int32_t>(dtype));
+    (void)ge::AttrUtils::SetInt(op, "arg_index", static_cast<int32_t>(index));
     ge::NodePtr arg_node = graph->AddNode(op);
     GE_CHECK_NOTNULL(arg_node);
     bool node_exists = false;
@@ -378,7 +373,6 @@ domi::Status GraphToFunctionDef::DavGraphToFunctionDef(ge::ComputeGraphPtr graph
     GE_CHECK_NOTNULL(node);
     if (node->GetOpDesc()->GetType() == ge::parser::DATA) {
       int64_t index = 0;
-
       int64_t type = 1;
       GE_CHK_BOOL_RET_STATUS(ge::AttrUtils::GetInt(node->GetOpDesc(), "T", type), PARAM_INVALID,
                              "Get type attr failed");
@@ -400,7 +394,6 @@ domi::Status GraphToFunctionDef::DavGraphToFunctionDef(ge::ComputeGraphPtr graph
     if (node->GetOpDesc()->GetType() == ge::parser::NETOUTPUT) {
       int64_t index = 0;
       int64_t type = 1;
-
       GE_CHK_BOOL_RET_STATUS(ge::AttrUtils::GetInt(node->GetOpDesc(), "T", type), PARAM_INVALID,
                              "Get type attr failed");
 
@@ -589,7 +582,10 @@ bool GraphToFunctionDef::FindAttrValue(const domi::tensorflow::NodeDef *node_def
 
 void GraphToFunctionDef::AddNodeAttr(const string &attr_name, const domi::tensorflow::AttrValue &value,
                                      domi::tensorflow::NodeDef *node_def) {
-  GE_CHK_BOOL_TRUE_EXEC_INFO(node_def == nullptr, return, "input parameter is null.");
+  if (node_def == nullptr) {
+    GELOGI("input parameter is null.");
+    return;
+  }
   node_def->mutable_attr()->insert(AttrValueMap::value_type(attr_name, value));
 }
 }  // namespace ge

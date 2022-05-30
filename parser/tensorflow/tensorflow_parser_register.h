@@ -30,8 +30,6 @@
 #include "parser/tensorflow/tensorflow_op_parser.h"
 #include "proto/tensorflow/node_def.pb.h"
 
-using domi::tensorflow::NodeDef;
-
 namespace ge {
 class PARSER_FUNC_VISIBILITY TensorflowFinalizeable {
  public:

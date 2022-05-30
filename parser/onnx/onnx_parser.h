@@ -38,6 +38,7 @@
 #include "omg/parser/op_parser.h"
 #include "omg/parser/weights_parser.h"
 #include "common/parser_utils.h"
+#include "common/pre_checker.h"
 #include "proto/onnx/ge_onnx.pb.h"
 
 namespace ge {
@@ -81,6 +82,18 @@ class PARSER_FUNC_VISIBILITY OnnxModelParser : public domi::ModelParser {
     return domi::SUCCESS;
   }
 
+  bool HasError() override {
+    return PreChecker::Instance().HasError();
+  }
+
+  Status Save(const string &file) override {
+    return PreChecker::Instance().Save(file);
+  }
+
+  void Clear() override {
+    PreChecker::Instance().Clear();
+  }
+
  private:
   Status ParseAllNodeProto(ge::onnx::GraphProto &onnx_graph, ge::Graph &graph);
 
@@ -96,7 +109,7 @@ class PARSER_FUNC_VISIBILITY OnnxModelParser : public domi::ModelParser {
 
   Status ConstructOriType(const ge::onnx::NodeProto *node_proto, std::string &ori_type);
 
-  Status AdapterOpType(const ge::onnx::NodeProto *node_proto, std::string &ori_type, std::string &om_type);
+  Status AdapterOpType(const ge::onnx::NodeProto *node_proto, std::string &ori_type, std::string &op_type);
 
   Status TransNodeToOperator(const ge::onnx::NodeProto *node_proto, ge::Operator &op, const string &op_type) const;
 
@@ -106,7 +119,7 @@ class PARSER_FUNC_VISIBILITY OnnxModelParser : public domi::ModelParser {
 
   Status GetGraphInputs(ge::onnx::GraphProto &onnx_graph, std::vector<ge::Operator> &input_ops);
 
-  Status GetGraphOutputs(std::vector<std::pair<Operator, std::vector<size_t>>> &outputs,
+  Status GetGraphOutputs(std::vector<std::pair<Operator, std::vector<size_t>>> &output_ops,
                          ParserUtils::OutputMapping &out_tensor_to_nodes);
 
   Status Prechecker(ge::onnx::GraphProto &onnx_graph);
@@ -115,7 +128,7 @@ class PARSER_FUNC_VISIBILITY OnnxModelParser : public domi::ModelParser {
 
   Status GetModelFromMemory(const char *data, uint32_t size, ge::onnx::ModelProto &onnx_model) const;
 
-  Status ModelParseToGraph(const ge::onnx::ModelProto &onnx_model, ge::Graph &graph);
+  Status ModelParseToGraph(const ge::onnx::ModelProto &onnx_model, ge::Graph &root_graph);
 
   Status ModelParseToGraphImpl(bool is_subgraph, ge::onnx::GraphProto &onnx_graph, ge::Graph &graph);
 
@@ -160,6 +173,18 @@ class PARSER_FUNC_VISIBILITY OnnxWeightsParser : public domi::WeightsParser {
     (void)size;
     (void)graph;
     return domi::SUCCESS;
+  }
+
+  bool HasError() override {
+    return PreChecker::Instance().HasError();
+  }
+
+  Status Save(const string &file) override {
+    return PreChecker::Instance().Save(file);
+  }
+
+  void Clear() override {
+    PreChecker::Instance().Clear();
   }
 };
 }  // namespace domi

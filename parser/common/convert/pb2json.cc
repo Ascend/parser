@@ -31,11 +31,17 @@ using std::string;
 namespace ge {
 namespace {
 const int kSignificantDigits = 10;
+const int kMaxParseDepth = 20;
 }
 // JSON parses non utf8 character throwing exceptions, so some fields need to be shielded through black fields
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY void Pb2Json::Message2Json(const ProtobufMsg &message,
                                                                             const set<string> &black_fields, Json &json,
-                                                                            bool enum2str) {
+                                                                            bool enum2str, int depth) {
+  if (depth > kMaxParseDepth) {
+    REPORT_INNER_ERROR("E19999", "Message depth:%d can not exceed %d.", depth, kMaxParseDepth);
+    GELOGE(FAILED, "[Check][Param]Message depth can not exceed %d.", kMaxParseDepth);
+    return;
+  }
   auto descriptor = message.GetDescriptor();
   auto reflection = message.GetReflection();
   if (descriptor == nullptr || reflection == nullptr) {
@@ -57,7 +63,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY void Pb2Json::Message2Json(cons
 
     if (field->is_repeated()) {
       if (reflection->FieldSize(message, field) > 0) {
-        RepeatedMessage2Json(message, field, reflection, black_fields, json[field->name()], enum2str);
+        RepeatedMessage2Json(message, field, reflection, black_fields, json[field->name()], enum2str, depth);
       }
       continue;
     }
@@ -66,18 +72,18 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY void Pb2Json::Message2Json(cons
       continue;
     }
 
-    OneField2Json(message, field, reflection, black_fields, json, enum2str);
+    OneField2Json(message, field, reflection, black_fields, json, enum2str, depth);
   }
 }
 
 void Pb2Json::OneField2Json(const ProtobufMsg &message, const ProtobufFieldDescriptor *field,
                             const ProtobufReflection *reflection, const set<string> &black_fields, Json &json,
-                            bool enum2str) {
+                            bool enum2str, int depth) {
   switch (field->type()) {
     case ProtobufFieldDescriptor::TYPE_MESSAGE: {
       const ProtobufMsg &tmp_message = reflection->GetMessage(message, field);
       if (0UL != tmp_message.ByteSizeLong()) {
-        Message2Json(tmp_message, black_fields, json[field->name()], enum2str);
+        Message2Json(tmp_message, black_fields, json[field->name()], enum2str, depth + 1);
       }
       break;
     }
@@ -163,9 +169,9 @@ string Pb2Json::TypeBytes2String(string &field_name, string &type_bytes) {
 
 void Pb2Json::RepeatedMessage2Json(const ProtobufMsg &message, const ProtobufFieldDescriptor *field,
                                    const ProtobufReflection *reflection, const set<string> &black_fields, Json &json,
-                                   bool enum2str) {
+                                   bool enum2str, int depth) {
   if ((field == nullptr) || (reflection == nullptr)) {
-    Message2Json(message, black_fields, json, enum2str);
+    Message2Json(message, black_fields, json, enum2str, depth + 1);
     return;
   }
 
@@ -175,7 +181,7 @@ void Pb2Json::RepeatedMessage2Json(const ProtobufMsg &message, const ProtobufFie
       case ProtobufFieldDescriptor::TYPE_MESSAGE: {
         const ProtobufMsg &tmp_message = reflection->GetRepeatedMessage(message, field, i);
         if (0UL != tmp_message.ByteSizeLong()) {
-          Message2Json(tmp_message, black_fields, tmp_json, enum2str);
+          Message2Json(tmp_message, black_fields, tmp_json, enum2str, depth + 1);
         }
       } break;
 

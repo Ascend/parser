@@ -94,7 +94,7 @@ Status TensorFlowShapeNParser::ParseN(const domi::tensorflow::NodeDef *node, Sha
 
 Status TensorFlowShapeNParser::ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) {
   GE_CHECK_NOTNULL(op_dest);
-  const NodeDef *node = DOMI_DYNAMIC_CAST<const NodeDef *>(op_src);
+  const domi::tensorflow::NodeDef *node = DOMI_DYNAMIC_CAST<const domi::tensorflow::NodeDef *>(op_src);
   GE_CHECK_NOTNULL(node);
   ShapeNOperator op;
   op.Name(node->name());
@@ -154,13 +154,13 @@ Status TensorFlowShapeNParser::ParseParams(const Message *op_src, ge::OpDescPtr 
 }
 
 // AUTO GEN PLEASE DO NOT MODIFY IT
-Status TensorFlowShapeNParser::PreParseParams(const domi::tensorflow::NodeDef *node, ShapeNOperator *op) {
+Status TensorFlowShapeNParser::PreParseParams(const domi::tensorflow::NodeDef *node, const ShapeNOperator *op) {
   (void)node;
   (void)op;
   return SUCCESS;
 }
 
-Status TensorFlowShapeNParser::PostParseParams(const domi::tensorflow::NodeDef *node, ShapeNOperator *op) {
+Status TensorFlowShapeNParser::PostParseParams(const domi::tensorflow::NodeDef *node, const ShapeNOperator *op) {
   (void)node;
   (void)op;
   return SUCCESS;

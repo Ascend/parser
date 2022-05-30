@@ -55,9 +55,11 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status ModelSaver::SaveJsonToFi
   }
 
   char real_path[PATH_MAX] = {0};
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(strlen(file_path) >= PATH_MAX,
-                                 REPORT_INNER_ERROR("E19999", "file path %s is too long!", file_path);
-                                 return FAILED, "[Check][Param] file path %s is too long!", file_path);
+  if (strlen(file_path) >= PATH_MAX) {
+    REPORT_INNER_ERROR("E19999", "file path %s is too long!", file_path);
+    GELOGE(FAILED, "[Check][Param] file path %s is too long!", file_path);
+    return FAILED;
+  }
   if (realpath(file_path, real_path) == nullptr) {
     GELOGI("File %s does not exit, it will be created.", file_path);
   }

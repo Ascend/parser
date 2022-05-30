@@ -32,9 +32,9 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY ConstantOperator &ConstantOpera
 }
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY ConstantOperator &ConstantOperator::DType(ge::DataType t) {
-  Attr(VAR_ATTR_DTYPE, (int64_t)t);
+  Attr(VAR_ATTR_DTYPE, static_cast<int64_t>(t));
   return *this;
 }
 
-ge::DataType ConstantOperator::GetDType() const { return (ge::DataType)GetIntAttr(VAR_ATTR_DTYPE); }
+ge::DataType ConstantOperator::GetDType() const { return static_cast<ge::DataType>(GetIntAttr(VAR_ATTR_DTYPE)); }
 }  // namespace ge

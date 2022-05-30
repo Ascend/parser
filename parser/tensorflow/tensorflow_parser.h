@@ -35,6 +35,7 @@
 #include "omg/parser/model_parser.h"
 #include "omg/parser/op_parser.h"
 #include "omg/parser/weights_parser.h"
+#include "common/pre_checker.h"
 #include "parser/tensorflow/tensorflow_fusion_op_parser.h"
 #include "parser/tensorflow/tensorflow_util.h"
 #include "proto/om.pb.h"
@@ -45,15 +46,6 @@
 #include "external/register/scope/scope_fusion_pass_register.h"
 #include "scope/scope_pass_manager.h"
 #include "common/parser_utils.h"
-
-using ge::ScopePassManager;
-using domi::tensorflow::GraphDef;
-using domi::tensorflow::DT_HALF;
-using domi::tensorflow::NodeDef;
-using domi::tensorflow::GraphDef;
-using domi::tensorflow::AttrValue;
-using domi::tensorflow::DataType;
-using ge::OpParser;
 
 namespace ge {
 using std::string;
@@ -130,7 +122,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
 
   Status ParseProtoWithSubgraph(const google::protobuf::Message *root_proto,
                                 domi::GetGraphCallback callback,
-                                ge::ComputeGraphPtr &graph) override;
+                                ge::ComputeGraphPtr &root_graph) override;
 
   /*
   * @ingroup domi_omg
@@ -163,6 +155,18 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
    */
   Status ParseProtoWithSubgraph(const std::string &root_proto, domi::GetGraphCallbackV2 callback,
                                 ge::ComputeGraphPtr &root_graph) override;
+
+  bool HasError() override {
+    return PreChecker::Instance().HasError();
+  }
+
+  Status Save(const string &file) override {
+    return PreChecker::Instance().Save(file);
+  }
+
+  void Clear() override {
+    PreChecker::Instance().Clear();
+  }
  private:
   Status Parse(const char *model_path, ge::ComputeGraphPtr &root_graph);
 
@@ -238,15 +242,6 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
   * @return FAILED get failed
   */
   Status GetOpNodeOutputMap(const domi::tensorflow::GraphDef &graph_def);
-
-  /**
-  * @ingroup domi_omg
-  * @brief Verifying the validity of graphdef object parsed by pb
-  * @param [in] graph_def Parsed tensorflow:: graphdef object
-  * @return SUCCESS check successfully
-  * @return FAILED check failed
-  */
-  Status CheckGraphDefValid(const domi::tensorflow::GraphDef &graph_def) const;
 
   /**
   * @ingroup domi_omg
@@ -433,28 +428,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
   * @brief Delete the connection relationship of the identity operator connecting the Arg node in graphdef
   */
   Status GraphDefOptimize(domi::tensorflow::GraphDef *graph_def);
-  /**
-  * @ingroup domi_omg
-  * @brief Optimize for Identity/ReadVariableOp operator
-  * @param [in] graph_def GraphDef to be optimized
-  * @param [in] nodedef_map Map of all nodes in graph
-  * @param [in] nodedef_to_optimize vector of NodeDef to be optimized
-  * @return SUCCESS  optimize successfully
-  * @return others   failed
-  */
-  Status GraphDefOptimizeIdentity(domi::tensorflow::GraphDef *graph_def, map<string, NodeDef *> &nodedef_map,
-                                  const vector<NodeDef *> &nodedef_to_optimize);
-  /**
-  * @ingroup domi_omg
-  * @brief For the identity operator whose output is "_retval", optimize it.
-  * @param [in] nodedef_map Map of all nodes in graph
-  * @param [in] curr_node_name Name of node to be optimized
-  * @param [in] clear_input_flag Flag of whether to clear the input of the current node
-  * @return SUCCESS  optimize successfully
-  * @return others   failed
-  */
-  Status OptimizeIdentityByOutput(map<string, NodeDef *> &nodedef_map, const string &curr_node_name,
-                                  bool &clear_input_flag);
+
   Status GraphDefOptimizeSnapShot(domi::tensorflow::GraphDef *graph_def, map<string, NodeDef *> &nodedef_map,
                                   const vector<NodeDef *> &nodedef_to_optimize);
   Status GraphDefOptimizeDestroyTemporaryVariable(domi::tensorflow::GraphDef *graph_def,
@@ -469,7 +443,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
   void OptimizeDestroyTemporaryVariable(domi::tensorflow::GraphDef *const graph_def,
                                         domi::tensorflow::NodeDef *const nodeCurrent, bool &clearInputFlag) const;
   static void OptimizeTranspose(std::map<std::string, DelTransposeInfo> &transposeInfo);
-  static void SoftmaxAddAttr(GraphDef *const graph_def);
+  static void SoftmaxAddAttr(domi::tensorflow::GraphDef *const graph_def);
 
   /**
   * @ingroup domi_omg
@@ -551,7 +525,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
    * @return false optimize failed
    *
    */
-  Status OptimizeConstNodes4CustomOp(domi::tensorflow::GraphDef *graph_def);
+  Status OptimizeConstNodes4CustomOp(domi::tensorflow::GraphDef *graph_def) const;
 
   /**
    * @ingroup domi_omg
@@ -565,7 +539,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
   Status RemoveInputs(domi::tensorflow::GraphDef *graph_def,
                       domi::tensorflow::NodeDef *node_def,
                       const set<uint32_t> &remove_index_set,
-                      const map<string, NodeDef *> &all_node_map);
+                      const map<string, NodeDef *> &all_node_map) const;
 
   Status AddControlEdgeAfterRemoveInputs(domi::tensorflow::GraphDef *graph_def,
                                          domi::tensorflow::NodeDef *node_def,
@@ -611,7 +585,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
 
   static Status GetFunctionProto(const string &file, domi::tensorflow::GraphDefLibrary &graph_def_library);
 
-  Status SetOriginNodeContext(NodeDef *node_def, OpNodeContext &op_node_context,
+  Status SetOriginNodeContext(const NodeDef *node_def, OpNodeContext &op_node_context,
                               const std::vector<std::pair<std::string, int32_t>> &inputs,
                               const std::vector<std::pair<std::string, int32_t>> &outputs);
 
@@ -642,7 +616,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
   Status AddFusionNodeDef(shared_ptr<ge::ScopeGraph> &scope_graph, vector<string> &node_name_list);
 
   static Status AddScopeInnerNode(TensorFlowModelParser *parser, ge::ComputeGraphPtr &graph,
-                                  std::mutex *graph_mutex, const domi::tensorflow::NodeDef *node_def);
+                                  std::mutex *const graph_mutex, const domi::tensorflow::NodeDef *node_def);
 
   static void DumpNodeContext(const string &node_name, const OpNodeContext &ctx, const string &phase);
   void DumpAllNodeContext(const string &phase) const;
@@ -725,6 +699,18 @@ class PARSER_FUNC_VISIBILITY TensorFlowWeightsParser : public domi::WeightsParse
   Status Parse(const char *file, ge::Graph &graph) override;
 
   Status ParseFromMemory(const char *data, uint32_t size, ge::ComputeGraphPtr &graph) override;
+
+  bool HasError() override {
+    return PreChecker::Instance().HasError();
+  }
+
+  Status Save(const string &file) override {
+    return PreChecker::Instance().Save(file);
+  }
+
+  void Clear() override {
+    PreChecker::Instance().Clear();
+  }
 };
 }  // namespace domi
 #endif  // PARSER_TENSORFLOW_TENSORFLOW_PARSER_H_

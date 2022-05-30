@@ -492,7 +492,7 @@ domi::Status AclGrphParseUtil::GetOutputLeaf(NodePtr node,
 }
 
 domi::Status AclGrphParseUtil::GetDefaultOutInfo(ge::ComputeGraphPtr &compute_graph,
-                                                 std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info) {
+    std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info) {
   std::vector<std::pair<std::string, int32_t>> default_out_nodes = ge::GetParserContext().default_out_nodes;
   if (!default_out_nodes.empty()) {
     for (size_t i = 0; i < default_out_nodes.size(); ++i) {
@@ -613,24 +613,27 @@ domi::Status AclGrphParseUtil::ParseParamsBeforeGraph(const std::map<AscendStrin
   ge::GetParserContext().out_tensor_names.clear();
   ge::GetParserContext().data_tensor_names.clear();
 
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(CheckOptions(parser_params) != SUCCESS,
-                                 return PARAM_INVALID, "[Check][Options] Parse paragrams invalid, graph:%s.",
-                                 graph_name.c_str());
+  if (CheckOptions(parser_params) != SUCCESS) {
+    GELOGE(FAILED, "[Check][Options] Parse paragrams invalid, graph:%s.", graph_name.c_str());
+    return PARAM_INVALID;
+  }
   // support paragrams: out_nodes, is_output_adjust_hw_layout, output, enable_scope_fusion_passes
   SetDefaultFormat();
 
   string out_nodes;
   GetAclParams(parser_params, ge::ir_option::OUT_NODES, out_nodes);
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(ParseAclOutputNodes(out_nodes) != SUCCESS,
-                                 return PARAM_INVALID,
-                                 "[Invoke][ParseAclOutputNodes] Parse out_nodes failed, graph:%s.", graph_name.c_str());
+  if (ParseAclOutputNodes(out_nodes) != SUCCESS) {
+    GELOGE(FAILED, "[Invoke][ParseAclOutputNodes] Parse out_nodes failed, graph:%s.", graph_name.c_str());
+    return PARAM_INVALID;
+  }
 
   string is_output_adjust_hw_layout;
   GetAclParams(parser_params, ge::ir_option::IS_OUTPUT_ADJUST_HW_LAYOUT, is_output_adjust_hw_layout);
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(ParseAclOutputFp16NodesFormat(is_output_adjust_hw_layout) != SUCCESS,
-                                 return PARAM_INVALID,
-                                 "[Invoke][ParseAclOutputFp16NodesFormat] Parse is_output_adjust_hw_layout failed, "
-                                 "graph:%s.", graph_name.c_str());
+  if (ParseAclOutputFp16NodesFormat(is_output_adjust_hw_layout) != SUCCESS) {
+    GELOGE(FAILED, "[Invoke][ParseAclOutputFp16NodesFormat] Parse is_output_adjust_hw_layout failed, graph:%s.",
+           graph_name.c_str());
+    return PARAM_INVALID;
+  }
 
   string tmp_name;
   GetAclParams(parser_params, ge::ir_option::OUTPUT, tmp_name);
@@ -638,10 +641,11 @@ domi::Status AclGrphParseUtil::ParseParamsBeforeGraph(const std::map<AscendStrin
 
   string enable_scope_fusion_passes;
   GetAclParams(parser_params, ge::ir_option::ENABLE_SCOPE_FUSION_PASSES, enable_scope_fusion_passes);
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(ParseAclEnableScope(enable_scope_fusion_passes) != SUCCESS,
-                                 return PARAM_INVALID,
-                                 "[Invoke][ParseAclEnableScope] Parse enable_scope_fusion_passes failed, graph:%s.",
-                                 graph_name.c_str());
+  if (ParseAclEnableScope(enable_scope_fusion_passes) != SUCCESS) {
+    GELOGE(FAILED, "[Invoke][ParseAclEnableScope] Parse enable_scope_fusion_passes failed, graph:%s.",
+           graph_name.c_str());
+    return PARAM_INVALID;
+  }
 
   return SUCCESS;
 }
@@ -657,10 +661,11 @@ domi::Status AclGrphParseUtil::ParseParamsAfterGraph(ge::Graph &graph,
 
   string is_input_adjust_hw_layout;
   GetAclParams(parser_params, ge::ir_option::IS_INPUT_ADJUST_HW_LAYOUT, is_input_adjust_hw_layout);
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(
-      ParseAclInputFp16Nodes(compute_graph, input_fp16_nodes, is_input_adjust_hw_layout) != SUCCESS,
-      return PARAM_INVALID, "[Invoke][ParseAclInputFp16Nodes] Parse input_fp16_nodes failed, graph:%s",
-      compute_graph->GetName().c_str());
+  if (ParseAclInputFp16Nodes(compute_graph, input_fp16_nodes, is_input_adjust_hw_layout) != SUCCESS) {
+    GELOGE(FAILED, "[Invoke][ParseAclInputFp16Nodes] Parse input_fp16_nodes failed, graph:%s",
+           compute_graph->GetName().c_str());
+    return PARAM_INVALID;
+  }
 
   return SUCCESS;
 }
@@ -689,30 +694,35 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY std::string RealPath(const char
 
 // Get file length
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY long GetFileLength(const std::string &input_file) {
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(input_file.empty(),
-                                 REPORT_INNER_ERROR("E19999", "input_file path is null, check invalid.");
-                                 return -1, "[Check][Param] input_file path is null.");
+  if (input_file.empty()) {
+    REPORT_INNER_ERROR("E19999", "input_file path is null, check invalid.");
+    GELOGE(FAILED, "[Check][Param] input_file path is null.");
+    return -1;
+  }
 
   std::string real_path = RealPath(input_file.c_str());
   char_t err_buf[kMaxErrStrLen + 1U] = {};
   const auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], kMaxErrStrLen);
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(real_path.empty(),
-                                 REPORT_INPUT_ERROR("E19000", std::vector<std::string>({"path", "errmsg"}),
-                                                    std::vector<std::string>({real_path, err_msg}));
-                                 return -1, "[Get][Path] input_file path '%s' not valid", input_file.c_str());
+  if (real_path.empty()) {
+    REPORT_INPUT_ERROR("E19000", std::vector<std::string>({"path", "errmsg"}),
+                       std::vector<std::string>({real_path, err_msg}));
+    GELOGE(FAILED, "[Get][Path] input_file path '%s' not valid", input_file.c_str());
+    return -1;
+  }
   unsigned long long file_length = 0;
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(mmGetFileSize(input_file.c_str(), &file_length) != EN_OK,
-                                 ErrorManager::GetInstance().ATCReportErrMessage("E19001", {"file", "errmsg"},
-                                                                                 {input_file, err_msg});
-                                 return -1, "[Open][File] [%s] failed. %s", input_file.c_str(), err_msg);
+  if (mmGetFileSize(input_file.c_str(), &file_length) != EN_OK) {
+    ErrorManager::GetInstance().ATCReportErrMessage("E19001", {"file", "errmsg"}, {input_file, err_msg});
+    GELOGE(FAILED, "[Open][File] [%s] failed. %s", input_file.c_str(), err_msg);
+    return -1;
+  }
 
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((file_length == 0 || file_length > kMaxFileSizeLimit),
-                                 REPORT_INPUT_ERROR(
-                                     "E19015", std::vector<std::string>({"file", "size", "maxsize"}),
-                                     std::vector<std::string>({input_file, std::to_string(file_length),
-                                                              std::to_string(kMaxFileSizeLimit)}));
-                                 return -1, "[Check][Param] File[%s] size %lld is out of range(0,%d).",
-                                 input_file.c_str(), file_length, kMaxFileSizeLimit);
+  if ((file_length == 0) || (file_length > kMaxFileSizeLimit)) {
+    REPORT_INPUT_ERROR("E19015", std::vector<std::string>({ "file", "size", "maxsize" }),
+        std::vector<std::string>({ input_file, std::to_string(file_length), std::to_string(kMaxFileSizeLimit) }));
+    GELOGE(FAILED, "[Check][Param] File[%s] size %lld is out of range(0,%d).",
+           input_file.c_str(), file_length, kMaxFileSizeLimit);
+    return -1;
+  }
   return static_cast<long>(file_length);
 }
 
@@ -725,9 +735,11 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY uint64_t GetCurrentTimestamp() 
 }
 
 static bool ReadProtoFromCodedInputStream(CodedInputStream &coded_stream, Message *proto) {
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(proto == nullptr,
-                                 REPORT_INNER_ERROR("E19999", "param proto is nullptr, check invalid");
-                                 return false, "[Check][Param] incorrect parameter. nullptr == proto");
+  if (proto == nullptr) {
+    REPORT_INNER_ERROR("E19999", "param proto is nullptr, check invalid");
+    GELOGE(FAILED, "[Check][Param] incorrect parameter. nullptr == proto");
+    return false;
+  }
 
   coded_stream.SetTotalBytesLimit(kProtoReadBytesLimit);
   return proto->ParseFromCodedStream(&coded_stream);
@@ -743,17 +755,23 @@ static bool ReadProtoFromCodedInputStream(CodedInputStream &coded_stream, Messag
  */
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadBytesFromBinaryFile(const char *file_name, char **buffer,
                                                                               int &length) {
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((file_name == nullptr),
-                                 REPORT_INNER_ERROR("E19999", "param file_name is nullptr, check invalid");
-                                 return false, "[Check][Param] incorrect parameter. file is nullptr");
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((buffer == nullptr),
-                                 REPORT_INNER_ERROR("E19999", "param buffer is nullptr, check invalid");
-                                 return false, "[Check][Param] incorrect parameter. buffer is nullptr");
+  if (file_name == nullptr) {
+    REPORT_INNER_ERROR("E19999", "param file_name is nullptr, check invalid");
+    GELOGE(FAILED, "[Check][Param] incorrect parameter. file is nullptr");
+    return false;
+  }
+  if (buffer == nullptr) {
+    REPORT_INNER_ERROR("E19999", "param buffer is nullptr, check invalid");
+    GELOGE(FAILED, "[Check][Param] incorrect parameter. buffer is nullptr");
+    return false;
+  }
 
   std::string real_path = RealPath(file_name);
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(real_path.empty(),
-                                 REPORT_INNER_ERROR("E19999", "file path '%s' not valid, realpath failed", file_name);
-                                 return false, "[Check][Param]file path '%s' not valid, realpath failed", file_name);
+  if (real_path.empty()) {
+    REPORT_INNER_ERROR("E19999", "file path '%s' not valid, realpath failed", file_name);
+    GELOGE(FAILED, "[Check][Param]file path '%s' not valid, realpath failed", file_name);
+    return false;
+  }
 
   std::ifstream file(real_path.c_str(), std::ios::binary | std::ios::ate);
   if (!file.is_open()) {
@@ -763,16 +781,22 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadBytesFromBinaryFile(co
   }
 
   length = static_cast<int>(file.tellg());
-
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((length <= 0), file.close(); REPORT_INNER_ERROR("E19999", "file length <= 0");
-                                 return false, "[Check][Param] file length <= 0");
+  if ((length <= 0)) {
+    file.close();
+    REPORT_INNER_ERROR("E19999", "file length <= 0");
+    GELOGE(FAILED, "[Check][Param] file length <= 0");
+    return false;
+  }
 
   file.seekg(0, std::ios::beg);
 
   *buffer = new(std::nothrow) char[length]();
-  GE_CHK_BOOL_TRUE_EXEC_RET_STATUS(*buffer == nullptr, false, file.close();
-                                   REPORT_CALL_ERROR("E19999", "new an object failed."),
-                                   "[Create][Buffer] new an object failed.");
+  if (*buffer == nullptr) {
+    REPORT_INNER_ERROR("E19999", "[Create][Buffer] new an object failed, length=%d.", length);
+    GELOGE(FAILED, "[Create][Buffer] new an object failed, length=%d.", length);
+    file.close();
+    return false;
+  }
 
   file.read(*buffer, length);
   file.close();
@@ -780,16 +804,23 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadBytesFromBinaryFile(co
 }
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadProtoFromBinaryFile(const char *file, Message *proto) {
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((file == nullptr || proto == nullptr),
-                                 REPORT_INNER_ERROR("E19999", "param file or proto is nullptr, check invalid");
-                                 return false, "[Check][Param] Input parameter file or proto is nullptr!");
+  if ((file == nullptr) || (proto == nullptr)) {
+    REPORT_INNER_ERROR("E19999", "param file or proto is nullptr, check invalid");
+    GELOGE(FAILED, "[Check][Param] Input parameter file or proto is nullptr!");
+    return false;
+  }
 
   std::string real_path = RealPath(file);
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(real_path.empty(),
-                                 REPORT_INNER_ERROR("E19999", "file path '%s' not valid, realpath failed", file);
-                                 return false, "[Check][Param]pb file path '%s' not valid, realpath failed", file);
+  if (real_path.empty()) {
+    REPORT_INNER_ERROR("E19999", "file path '%s' not valid, realpath failed", file);
+    GELOGE(FAILED, "[Check][Param]pb file path '%s' not valid, realpath failed", file);
+    return false;
+  }
 
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(GetFileLength(real_path) == -1, return false, "[Get][FileLength]file size not valid.");
+  if (GetFileLength(real_path) == -1) {
+    GELOGE(FAILED, "[Get][FileLength]file size not valid.");
+    return false;
+  }
 
   std::ifstream fs(real_path, std::ifstream::in | std::ifstream::binary);
   if (!fs.is_open()) {
@@ -815,32 +846,37 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadProtoFromBinaryFile(co
 }
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadProtoFromArray(const void *data, int size, Message *proto) {
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((proto == nullptr || data == nullptr || size == 0),
-                                 REPORT_INNER_ERROR("E19999", "param proto or data is nullptr "
-                                                    "or size is 0, check invalid"); return false,
-                                 "[Check][Param]incorrect parameter. proto is nullptr || data is nullptr || size is 0");
+  if ((proto == nullptr) || (data == nullptr) || (size == 0)) {
+    REPORT_INNER_ERROR("E19999", "param proto or data is nullptr or size is 0, check invalid");
+    GELOGE(FAILED, "[Check][Param]incorrect parameter. proto is nullptr || data is nullptr || size is 0");
+    return false;
+  }
 
-  google::protobuf::io::CodedInputStream coded_stream(reinterpret_cast<uint8_t *>(const_cast<void *>(data)), size);
+  google::protobuf::io::CodedInputStream coded_stream(PtrToPtr<void, uint8_t>(const_cast<void *>(data)), size);
   return ReadProtoFromCodedInputStream(coded_stream, proto);
 }
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadProtoFromText(const char *file,
                                                                         google::protobuf::Message *message) {
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((file == nullptr || message == nullptr),
-                                 REPORT_INNER_ERROR("E19999", "param file or message is nullptr, check invalid");
-                                 return false,
-                                 "[Check][Param]incorrect parameter. nullptr == file || nullptr == message");
+  if ((file == nullptr) || (message == nullptr)) {
+    REPORT_INNER_ERROR("E19999", "param file or message is nullptr, check invalid");
+    GELOGE(FAILED, "[Check][Param]incorrect parameter. nullptr == file || nullptr == message");
+    return false;
+  }
 
   std::string real_path = RealPath(file);
   char_t err_buf[kMaxErrStrLen + 1U] = {};
   const auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], kMaxErrStrLen);
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(real_path.empty(),
-                                 ErrorManager::GetInstance().ATCReportErrMessage("E19000", {"path", "errmsg"},
-                                                                                 {file, err_msg});
-                                 return false, "[Check][Param]Path[%s]'s realpath is empty, errmsg[%s]", file,
-                                 err_msg);
+  if (real_path.empty()) {
+    ErrorManager::GetInstance().ATCReportErrMessage("E19000", {"path", "errmsg"}, {file, err_msg});
+    GELOGE(FAILED, "[Check][Param]Path[%s]'s realpath is empty, errmsg[%s]", file, err_msg);
+    return false;
+  }
 
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG(GetFileLength(real_path) == -1, return false, "[Check][Param] file size not valid.");
+  if (GetFileLength(real_path) == -1) {
+    GELOGE(FAILED, "[Check][Param] file size not valid.");
+    return false;
+  }
 
   std::ifstream fs(real_path.c_str(), std::ifstream::in);
 
@@ -863,10 +899,11 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadProtoFromText(const ch
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadProtoFromMem(const char *data, int size,
                                                                        google::protobuf::Message *message) {
-  GE_CHK_BOOL_TRUE_EXEC_WITH_LOG((data == nullptr || message == nullptr),
-                                 REPORT_INNER_ERROR("E19999", "param data or message is nullptr,check invalid");
-                                 return false,
-                                 "[Check][Param] incorrect parameter. data is nullptr || message is nullptr");
+  if ((data == nullptr) || (message == nullptr)) {
+    REPORT_INNER_ERROR("E19999", "param data or message is nullptr,check invalid");
+    GELOGE(FAILED, "[Check][Param] incorrect parameter. data is nullptr || message is nullptr");
+    return false;
+  }
   std::string str(data, static_cast<size_t>(size));
   std::istringstream fs(str);
 
@@ -901,7 +938,7 @@ Status GetOriginalType(const ge::NodePtr &node, string &type) {
   return SUCCESS;
 }
 
-FMK_FUNC_HOST_VISIBILITY bool ValidateStr(const std::string &str, const std::string &mode) {
+FMK_FUNC_HOST_VISIBILITY bool ValidateStr(const std::string &filePath, const std::string &mode) {
   char ebuff[kMaxBuffSize];
   regex_t reg;
   int cflags = REG_EXTENDED | REG_NOSUB;
@@ -913,7 +950,7 @@ FMK_FUNC_HOST_VISIBILITY bool ValidateStr(const std::string &str, const std::str
     return true;
   }
 
-  ret = regexec(&reg, str.c_str(), 0, nullptr, 0);
+  ret = regexec(&reg, filePath.c_str(), 0, nullptr, 0);
   if (ret) {
     regerror(ret, &reg, ebuff, kMaxBuffSize);
     GELOGE(ge::PARAM_INVALID, "[Invoke][RegExec] failed, reason: %s", ebuff);

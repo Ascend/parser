@@ -15,6 +15,7 @@
  */
 
 #include "if_subgraph_adapter.h"
+#include <unordered_set>
 #include "subgraph_adapter_factory.h"
 #include "common/util.h"
 #include "framework/common/debug/ge_log.h"
@@ -27,12 +28,12 @@ const int kIfNodeAttrSize = 2;
 }  // namespace
 domi::Status IfSubgraphAdapter::AdaptAndFindAllSubgraphs(
     ge::onnx::NodeProto *parent_node, std::vector<ge::onnx::GraphProto *> &onnx_graphs,
-    std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph) {
+    std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph, const std::string &parent_graph_name) {
   GE_CHECK_NOTNULL(parent_node);
   GELOGI("Onnx parent node name=%s, op type=%s, adapt subgraph.", parent_node->name().c_str(),
          parent_node->op_type().c_str());
 
-  auto ret = ParseIfNodeSubgraphs(parent_node, onnx_graphs, name_to_onnx_graph);
+  auto ret = ParseIfNodeSubgraphs(parent_node, onnx_graphs, name_to_onnx_graph, parent_graph_name);
   if (ret != SUCCESS) {
     GELOGE(ret, "[Parse][Node] Parse if node failed.");
     REPORT_CALL_ERROR("E19999", "[Parse][Node] Parse if node:%s failed.", parent_node->name().c_str());
@@ -44,7 +45,7 @@ domi::Status IfSubgraphAdapter::AdaptAndFindAllSubgraphs(
 
 domi::Status IfSubgraphAdapter::ParseIfNodeSubgraphs(
     ge::onnx::NodeProto *parent_node, std::vector<ge::onnx::GraphProto *> &onnx_graphs,
-    std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph) {
+    std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph, const std::string &parent_graph_name) {
   if (parent_node->attribute_size() != kIfNodeAttrSize) {
     GELOGE(FAILED, "[Parse][Node] Invalid graph, if node attribute size:%d must be 2.", parent_node->attribute_size());
     REPORT_INNER_ERROR("E19999", "Invalid graph, if node attribute size:%d must be 2.", parent_node->attribute_size());
@@ -67,7 +68,11 @@ domi::Status IfSubgraphAdapter::ParseIfNodeSubgraphs(
       return FAILED;
     }
     std::string unique_subgraph_name;
-    OnnxUtil::GenUniqueSubgraphName(itr->second, itr->first, parent_node->name(), unique_subgraph_name);
+    std::string node_name = parent_node->name();
+    if (!parent_graph_name.empty()) {
+      node_name = OnnxUtil::GenUniqueNodeName(parent_graph_name, node_name);
+    }
+    OnnxUtil::GenUniqueSubgraphName(itr->second, itr->first, node_name, unique_subgraph_name);
     GELOGI("Adapt if node attribute:%s, subgraph name:%s.", attr_name.c_str(), unique_subgraph_name.c_str());
     ge::onnx::GraphProto *onnx_graph = attribute->mutable_g();
     name_to_onnx_graph[unique_subgraph_name] = onnx_graph;
@@ -91,8 +96,8 @@ domi::Status IfSubgraphAdapter::ParseIfNodeSubgraphs(
 
 domi::Status IfSubgraphAdapter::GetSubgraphsAllInputs(ge::onnx::GraphProto &onnx_graph,
                                                       std::set<std::string> &all_inputs) const {
-  std::set<std::string> graph_inputs;
-  std::set<std::string> graph_outputs;
+  std::unordered_set<std::string> graph_inputs;
+  std::unordered_set<std::string> graph_outputs;
   for (int i = 0; i < onnx_graph.node_size(); i++) {
     ge::onnx::NodeProto *node_proto = onnx_graph.mutable_node(i);
     for (int j = 0; j < node_proto->input_size(); j++) {
@@ -102,10 +107,12 @@ domi::Status IfSubgraphAdapter::GetSubgraphsAllInputs(ge::onnx::GraphProto &onnx
       graph_outputs.emplace(node_proto->output(j));
     }
   }
-
+  std::unordered_set<std::string> graph_initializer_tensors;
+  for (int32_t i = 0; i < onnx_graph.initializer_size(); i++) {
+    graph_initializer_tensors.emplace(onnx_graph.initializer(i).name());
+  }
   for (const auto &input : graph_inputs) {
-    auto out_iter = graph_outputs.find(input);
-    if (out_iter == graph_outputs.end()) {
+    if (graph_outputs.count(input) == 0 && graph_initializer_tensors.count(input) == 0) {
       // Record input node need to be constructed
       all_inputs.emplace(input);
     }

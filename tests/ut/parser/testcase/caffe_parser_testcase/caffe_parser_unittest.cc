@@ -39,6 +39,7 @@
 #include "graph/operator_reg.h"
 #include "parser/common/acl_graph_parser_util.h"
 #include "parser/caffe/caffe_reshape_parser.h"
+#include "common/op_map.h"
 #undef protected
 #undef private
 
@@ -162,7 +163,7 @@ static ge::NodePtr GenNodeFromOpDesc(ge::OpDescPtr opDesc){
 void UtestCaffeParser::RegisterCustomOp() {
   std::vector<OpRegistrationData> reg_datas = domi::OpRegistry::Instance()->registrationDatas;
   for (auto reg_data : reg_datas) {
-    OpRegistrationTbe::Instance()->Finalize(reg_data);
+    domi::OpRegTbeParserFactory::Instance()->Finalize(reg_data);
     domi::OpRegistry::Instance()->Register(reg_data);
   }
   domi::OpRegistry::Instance()->registrationDatas.clear();
@@ -266,6 +267,29 @@ TEST_F(UtestCaffeParser, acl_caffe_parser) {
   EXPECT_EQ(ret, GRAPH_FAILED);
   ret = ge::aclgrphParseCaffe(model_file.c_str(), weight_file.c_str(), graph);
   EXPECT_EQ(ret, GRAPH_FAILED);
+
+  caffe_op_map.clear();
+  ret = ge::aclgrphParseCaffe(model_file.c_str(), weight_file.c_str(), parser_params, graph);
+  EXPECT_EQ(ret, GRAPH_FAILED);
+
+  {
+    proto.set_name("empty_layer");
+    auto &layers = *proto.add_layers();
+    layers.set_name("layers");
+
+    proto.clear_layer();
+    const std::string empty_layer = case_dir + "/caffe_model/empty_layer.pbtxt";
+    ParerUTestsUtils::WriteProtoToTextFile(proto, empty_layer.c_str());
+    EXPECT_EQ(ge::aclgrphParseCaffe(empty_layer.c_str(), weight_file.c_str(), parser_params, graph), FAILED);
+
+    proto.clear_layers();
+    const std::string empty_layers = case_dir + "/caffe_model/empty_layers.pbtxt";
+    ParerUTestsUtils::WriteProtoToTextFile(proto, empty_layers.c_str());
+    EXPECT_EQ(ge::aclgrphParseCaffe(empty_layers.c_str(), weight_file.c_str(), parser_params, graph), FAILED);
+
+    unlink(empty_layer.c_str());
+    unlink(empty_layers.c_str());
+  }
 }
 
 TEST_F(UtestCaffeParser, ParseFromMemory_success)

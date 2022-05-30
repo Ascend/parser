@@ -24,6 +24,7 @@
 #include "st/parser_st_utils.h"
 #include "external/ge/ge_api_types.h"
 #include "tests/depends/ops_stub/ops_stub.h"
+#include "framework/omg/parser/parser_factory.h"
 #include "parser/onnx/onnx_parser.h"
 
 namespace ge {
@@ -96,7 +97,7 @@ void STestOnnxParser::RegisterCustomOp() {
 
   std::vector<OpRegistrationData> reg_datas = domi::OpRegistry::Instance()->registrationDatas;
   for (auto reg_data : reg_datas) {
-    OpRegistrationTbe::Instance()->Finalize(reg_data);
+    domi::OpRegTbeParserFactory::Instance()->Finalize(reg_data);
     domi::OpRegistry::Instance()->Register(reg_data);
   }
   domi::OpRegistry::Instance()->registrationDatas.clear();

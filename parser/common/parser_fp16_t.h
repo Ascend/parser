@@ -91,16 +91,16 @@ using BitShift = enum {
 };
 /// @ingroup fp16 basic parameter
 /// @brief   fp16 exponent bias
-constexpr uint16_t kFp16ExpBias = 15;
+constexpr uint16_t kFp16ExpBias = 15U;
 /// @ingroup fp16 basic parameter
 /// @brief   the exponent bit length of fp16 is 5
-constexpr uint16_t kFp16ExpLen = 5;
+constexpr uint16_t kFp16ExpLen = 5U;
 /// @ingroup fp16 basic parameter
 /// @brief   the mantissa bit length of fp16 is 10
-constexpr uint16_t kFp16ManLen = 10;
+constexpr uint16_t kFp16ManLen = 10U;
 /// @ingroup fp16 basic parameter
 /// @brief   bit index of sign in fp16
-constexpr uint16_t kFp16SignIndex = 15;
+constexpr uint16_t kFp16SignIndex = 15U;
 /// @ingroup fp16 basic parameter
 /// @brief   sign mask of fp16         (1 00000 00000 00000)
 constexpr uint16_t kFp16SignMask = 0x8000;
@@ -164,16 +164,16 @@ constexpr uint16_t kFp16MinNormal = 1.0f / (2 << 14);
 #define FP16_IS_INVALID(x) (((x) & kFp16ExpMask) == kFp16ExpMask)
 /// @ingroup fp32 basic parameter
 /// @brief   fp32 exponent bias
-constexpr uint16_t kFp32ExpBias = 127;
+constexpr uint16_t kFp32ExpBias = 127U;
 /// @ingroup fp32 basic parameter
 /// @brief   the exponent bit length of float/fp32 is 8
-constexpr uint16_t kFp32ExpLen = 8;
+constexpr uint16_t kFp32ExpLen = 8U;
 /// @ingroup fp32 basic parameter
 /// @brief   the mantissa bit length of float/fp32 is 23
-constexpr uint16_t kFp32ManLen = 23;
+constexpr uint16_t kFp32ManLen = 23U;
 /// @ingroup fp32 basic parameter
 /// @brief   bit index of sign in float/fp32
-constexpr uint16_t kFp32SignIndex = 31;
+constexpr uint16_t kFp32SignIndex = 31U;
 /// @ingroup fp32 basic parameter
 /// @brief   sign mask of fp32         (1 0000 0000  0000 0000 0000 0000 000)
 constexpr uint32_t kFp32SignMask = 0x80000000u;
@@ -191,10 +191,10 @@ constexpr uint32_t kFp32ManHideBit = 0x00800000u;
 constexpr uint32_t kFp32AbsMax = 0x7FFFFFFFu;
 /// @ingroup fp32 basic parameter
 /// @brief   maximum exponent value of fp32 is 255(1111 1111)
-constexpr uint32_t kFp32MaxExp = 0xFF;
+constexpr uint32_t kFp32MaxExp = 0xFFU;
 /// @ingroup fp32 basic parameter
 /// @brief   maximum mantissa value of fp32    (1111 1111 1111 1111 1111 111)
-constexpr uint32_t kFp32MaxMan = 0x7FFFFF;
+constexpr uint32_t kFp32MaxMan = 0x7FFFFFU;
 /// @ingroup fp32 special value judgment
 /// @brief   whether a fp32 is NaN
 #define FP32_IS_NAN(x) ((((x) & kFp32ExpMask) == kFp32ExpMask) && ((x) & kFp32ManMask))
@@ -218,16 +218,16 @@ constexpr uint32_t kFp32MaxMan = 0x7FFFFF;
 #define FP32_CONSTRUCTOR(s, e, m) (((s) << kFp32SignIndex) | ((e) << kFp32ManLen) | ((m) & kFp32MaxMan))
 /// @ingroup fp64 basic parameter
 /// @brief   fp64 exponent bias
-constexpr uint16_t kFp64ExpBias = 1023;
+constexpr uint16_t kFp64ExpBias = 1023U;
 /// @ingroup fp64 basic parameter
 /// @brief   the exponent bit length of double/fp64 is 11
-constexpr uint16_t kFp64ExpLen = 11;
+constexpr uint16_t kFp64ExpLen = 11U;
 /// @ingroup fp64 basic parameter
 /// @brief   the mantissa bit length of double/fp64 is 52
-constexpr uint16_t kFp64ManLen = 52;
+constexpr uint16_t kFp64ManLen = 52U;
 /// @ingroup fp64 basic parameter
 /// @brief   bit index of sign in double/fp64 is 63
-constexpr uint16_t kFp64SignIndex = 63;
+constexpr uint16_t kFp64SignIndex = 63U;
 /// @ingroup fp64 basic parameter
 /// @brief   sign mask of fp64                (1 000                   (total 63bits 0))
 constexpr uint64_t kFp64SignMask = 0x8000000000000000LLu;
@@ -269,14 +269,14 @@ constexpr int16_t kInt16Max = 0x7FFF;
 constexpr uint16_t kBitLen16Max = 0xFFFF;
 /// @ingroup integer special value judgment
 /// @brief   maximum positive value of int32_t           (0111 1111 1111 1111 1111 1111 1111 1111)
-constexpr int32_t kInt32Max = 0x7FFFFFFFu;
+constexpr int32_t kInt32Max = 0x7FFFFFFF;
 /// @ingroup integer special value judgment
 /// @brief   maximum value of a data with 32 bits length (1111 1111 1111 1111 1111 1111 1111 1111)
 constexpr uint32_t kBitLen32Max = 0xFFFFFFFFu;
 /// @ingroup integer special value judgment
 /// @brief   maximum positive value of int64_t
 /// (0111 1111 1111 1111 1111 1111 1111 1111 1111 1111 1111 1111 1111 1111 1111 1111)
-constexpr int64_t kInt64Max = 0x7FFFFFFFFFFFFFFFu;
+constexpr int64_t kInt64Max = 0x7FFFFFFFFFFFFFFF;
 /// @ingroup integer special value judgment
 /// @brief   maximum value of a data with 64 bits length
 /// (1111 1111 1111 1111 1111 1111 1111 1111 1111 1111 1111 1111 1111 1111 1111 1111)

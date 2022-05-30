@@ -65,7 +65,7 @@ class PARSER_FUNC_VISIBILITY OnnxConstantParser : public OnnxOpParser {
           *(addr_trans.get() + i) = static_cast<bool>(
               std::fabs(*((addr).get() + i)) > std::numeric_limits<T>::epsilon());
         }
-        (tensor).SetData(reinterpret_cast<uint8_t *>(addr_trans.get()), (count) * sizeof(bool));
+        (tensor).SetData(PtrToPtr<bool, uint8_t>(addr_trans.get()), (count) * sizeof(bool));
         break;
       }
 #define CASE_SET_DATA(dt_type, value_type, addr, count, tensor)                                     \

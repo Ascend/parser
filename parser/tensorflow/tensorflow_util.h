@@ -18,14 +18,11 @@
 #define OMG_PARSER_TENSORFLOW_TENSORFLOW_UTIL_H_
 
 #include <map>
-#include <set>
 #include <string>
 #include <unordered_map>
-#include <vector>
 #include "parser/common/op_def/operator.h"
 #include "external/graph/attr_value.h"
 #include "external/graph/graph.h"
-#include "external/graph/operator.h"
 #include "framework/omg/parser/parser_types.h"
 #include "framework/omg/omg_inner_types.h"
 #include "graph/compute_graph.h"
@@ -36,11 +33,6 @@
 #include "graph/utils/op_desc_utils.h"
 #include "graph/utils/tensor_utils.h"
 #include "proto/tensorflow/graph.pb.h"
-
-using domi::tensorflow::NodeDef;
-using domi::tensorflow::FunctionDef;
-using domi::tensorflow::AttrValue_ListValue;
-using domi::tensorflow::FunctionDefLibrary;
 
 namespace ge {
 /***************************TensorFlow attribute type, constant definition*******************************************/
@@ -167,7 +159,7 @@ class TensorFlowUtil {
    * @return FAILED            parsing failed
    *
    */
-  static domi::Status ParseDataType(const NodeDef *node_src,
+  static domi::Status ParseDataType(const domi::tensorflow::NodeDef *node_src,
                                     const std::string &attr_src,
                                     domi::tensorflow::DataType &data_type);
 

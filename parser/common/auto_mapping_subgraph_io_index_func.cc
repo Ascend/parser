@@ -21,11 +21,11 @@
 #include "graph/op_desc.h"
 #include "graph/utils/attr_utils.h"
 #include "graph/debug/ge_attr_define.h"
-#include "graph/debug/ge_util.h"
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/node_utils.h"
 #include "register/register_fmk_types.h"
 #include "framework/common/debug/ge_log.h"
+#include "framework/common/util.h"
 
 namespace ge {
 namespace {

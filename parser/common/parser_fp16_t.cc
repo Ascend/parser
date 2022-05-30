@@ -17,15 +17,16 @@
 #include "parser/common/parser_fp16_t.h"
 
 #include "external/register/register_types.h"
+#include "graph/def_types.h"
 
 namespace {
-constexpr uint16_t kManBitLength = 11;
+constexpr uint16_t kManBitLength = 11U;
 }
 namespace ge {
 namespace parser {
 /// @ingroup fp16_t global filed
 /// @brief   round mode of last valid digital
-enum TagFp16RoundMode g_round_mode = TagFp16RoundMode::kRoundToNearest;
+const TagFp16RoundMode g_round_mode = TagFp16RoundMode::kRoundToNearest;
 
 void ExtractFp16(const uint16_t &val, uint16_t &s, int16_t &e, uint16_t &m) {
   // 1.Extract
@@ -99,12 +100,12 @@ static float Fp16ToFloat(const uint16_t &fp_val) {
     e_ret = 0;
     m_ret = 0;
   } else {
-    e_ret = hf_exp - kFp16ExpBias + kFp32ExpBias;
+    e_ret = (static_cast<uint32_t>(hf_exp) - static_cast<uint32_t>(kFp16ExpBias)) + static_cast<uint32_t>(kFp32ExpBias);
     m_ret = hf_man & kFp16ManMask;
     m_ret = m_ret << (kFp32ManLen - kFp16ManLen);
   }
   uint32_t f_val = FP32_CONSTRUCTOR(s_ret, e_ret, m_ret);
-  auto p_ret_v = reinterpret_cast<float *>(&f_val);
+  auto p_ret_v = ge::PtrToPtr<uint32_t, float>(&f_val);
 
   return *p_ret_v;
 }
@@ -131,12 +132,12 @@ static double Fp16ToDouble(const uint16_t &fp_val) {
     e_ret = 0;
     m_ret = 0;
   } else {
-    e_ret = hf_exp - kFp16ExpBias + kFp64ExpBias;
+    e_ret = (static_cast<uint64_t>(hf_exp) - static_cast<uint64_t>(kFp16ExpBias)) + static_cast<uint64_t>(kFp64ExpBias);
     m_ret = hf_man & kFp16ManMask;
     m_ret = m_ret << (kFp64ManLen - kFp16ManLen);
   }
   uint64_t f_val = (s_ret << kFp64SignIndex) | (e_ret << kFp64ManLen) | (m_ret);
-  auto p_ret_v = reinterpret_cast<double *>(&f_val);
+  auto p_ret_v = ge::PtrToPtr<uint64_t, double>(&f_val);
 
   return *p_ret_v;
 }
@@ -154,13 +155,13 @@ static uint8_t GetUint8ValByMan(uint8_t s_ret, const uint64_t &long_int_m, const
   if (need_round) {
     m_ret++;
   }
-  if (s_ret) {
-    m_ret = (~m_ret) + 1;
+  if (static_cast<bool>(s_ret)) {
+    m_ret = (~m_ret) + 1U;
   }
   if (m_ret == 0) {
     s_ret = 0;
   }
-  return static_cast<uint8_t>((s_ret << kBitShift7) | (m_ret));
+  return static_cast<uint8_t>((s_ret << static_cast<uint8_t>(kBitShift7)) | (m_ret));
 }
 
 /// @ingroup fp16_t math conversion static method
@@ -178,7 +179,7 @@ static int8_t Fp16ToInt8(const uint16_t &fp_val) {
 
   if (FP16_IS_DENORM(fp_val)) {  // Denormalized number
     ret_v = 0;
-    ret = *(reinterpret_cast<uint8_t *>(&ret_v));
+    ret = *(ge::PtrToPtr<uint8_t, uint8_t>(&ret_v));
     return ret;
   }
 
@@ -207,14 +208,14 @@ static int8_t Fp16ToInt8(const uint16_t &fp_val) {
       }
     }
   }
-  if (overflow_flag) {
+  if (static_cast<bool>(overflow_flag)) {
     ret_v = kInt8Max + s_ret;
   } else {
     // Generate final result
     ret_v = GetUint8ValByMan(s_ret, long_int_m, shift_out);
   }
 
-  ret = *(reinterpret_cast<uint8_t *>(&ret_v));
+  ret = *(ge::PtrToPtr<uint8_t, uint8_t>(&ret_v));
   return ret;
 }
 
@@ -283,8 +284,8 @@ static uint16_t GetUint16ValByMan(uint16_t s_ret, const uint64_t &long_int_m, co
   if (need_round && m_ret < kInt16Max) {
     m_ret++;
   }
-  if (s_ret) {
-    m_ret = (~m_ret) + 1;
+  if (static_cast<bool>(s_ret)) {
+    m_ret = (~m_ret) + 1U;
   }
   if (m_ret == 0) {
     s_ret = 0;
@@ -307,7 +308,7 @@ static int16_t Fp16ToInt16(const uint16_t &fp_val) {
 
   if (FP16_IS_DENORM(fp_val)) {  // Denormalized number
     ret_v = 0;
-    ret = *(reinterpret_cast<uint8_t *>(&ret_v));
+    ret = *(ge::PtrToPtr<uint16_t, uint8_t>(&ret_v));
     return ret;
   }
 
@@ -336,13 +337,13 @@ static int16_t Fp16ToInt16(const uint16_t &fp_val) {
       }
     }
   }
-  if (overflow_flag) {
+  if (static_cast<bool>(overflow_flag)) {
     ret_v = kInt16Max + s_ret;
   } else {
     // Generate final result
     ret_v = GetUint16ValByMan(s_ret, long_int_m, shift_out);
   }
-  ret = *(reinterpret_cast<int16_t *>(&ret_v));
+  ret = *(ge::PtrToPtr<uint16_t, uint16_t>(&ret_v));
   return ret;
 }
 
@@ -433,7 +434,7 @@ static int32_t Fp16ToInt32(const uint16_t &fp_val) {
     ret_v = (s_ret << kBitShift31) | (m_ret);
   }
 
-  return *(reinterpret_cast<int32_t *>(&ret_v));
+  return *(ge::PtrToPtr<uint32_t, uint32_t>(&ret_v));
 }
 
 /// @ingroup fp16_t math conversion static method
@@ -498,8 +499,8 @@ static uint16_t Fp16AddCalVal(uint16_t s_ret, int16_t e_ret, uint16_t m_ret, uin
   }
 
   bool b_last_bit = ((m_ret & 1) > 0);
-  bool b_trunc_high = 0;
-  bool b_trunc_left = 0;
+  bool b_trunc_high = false;
+  bool b_trunc_left = false;
   b_trunc_high = (g_round_mode == TagFp16RoundMode::kRoundToNearest) && ((m_trunc & kFp32SignMask) > 0);
   b_trunc_left = (g_round_mode == TagFp16RoundMode::kRoundToNearest) && ((m_trunc & kFp32AbsMax) > 0);
   m_ret = ManRoundToNearest(b_last_bit, b_trunc_high, b_trunc_left, m_ret, shift_out);
@@ -561,7 +562,7 @@ static uint16_t Fp16Add(uint16_t v_1, uint16_t v_2) {
   int16_t e_ret = std::max(e_a, e_b);
   int16_t e_tmp = std::abs(e_a - e_b);
   if (e_a > e_b) {
-    m_trunc = (m_b << (kBitShift32 - static_cast<uint16_t>(e_tmp)));
+    m_trunc = (m_b << (static_cast<uint16_t>(kBitShift32) - static_cast<uint16_t>(e_tmp)));
     m_b = RightShift(m_b, e_tmp);
   } else if (e_a < e_b) {
     m_trunc = (m_a << (kBitShift32 - static_cast<uint16_t>(e_tmp)));
@@ -602,7 +603,7 @@ static uint16_t Fp16Mul(uint16_t v_1, uint16_t v_2) {
   m_a = m_a_tmp;
   m_b = m_b_tmp;
 
-  e_ret = e_a + e_b - kFp16ExpBias - kDim10;
+  e_ret = ((e_a + e_b) - kFp16ExpBias) - kDim10;
   mul_m = m_a * m_b;
   s_ret = s_a ^ s_b;
 
@@ -621,8 +622,8 @@ static uint16_t Fp16Mul(uint16_t v_1, uint16_t v_2) {
     e_ret = e_ret + 1;
   }
   bool b_last_bit = ((mul_m & 1) > 0);
-  bool b_trunc_high = 0;
-  bool b_trunc_left = 0;
+  bool b_trunc_high = false;
+  bool b_trunc_left = false;
   b_trunc_high = (g_round_mode == TagFp16RoundMode::kRoundToNearest) && ((m_trunc & kFp32SignMask) > 0);
   b_trunc_left = (g_round_mode == TagFp16RoundMode::kRoundToNearest) && ((m_trunc & kFp32AbsMax) > 0);
   mul_m = ManRoundToNearest(b_last_bit, b_trunc_high, b_trunc_left, mul_m);
@@ -675,14 +676,14 @@ static uint16_t Fp16Div(uint16_t v_1, uint16_t v_2) {
     uint64_t m_tmp;
     if (e_a > e_b) {
       m_tmp = m_a;
-      uint16_t tmp = e_a - e_b;
+      uint16_t tmp = static_cast<uint16_t>(e_a - e_b);
       for (int i = 0; i < tmp; i++) {
         m_tmp = m_tmp << 1;
       }
       m_a = m_tmp;
     } else if (e_a < e_b) {
       m_tmp = m_b;
-      uint16_t tmp = e_b - e_a;
+      uint16_t tmp = static_cast<uint16_t>(e_b - e_a);
       for (int i = 0; i < tmp; i++) {
         m_tmp = m_tmp << 1;
       }
@@ -853,7 +854,7 @@ fp16_t &fp16_t::operator=(const float &f_val) {
   uint16_t s_ret, m_ret;
   int16_t e_ret;
   uint32_t e_f, m_f;
-  const uint32_t ui32_v = *(reinterpret_cast<const uint32_t *>(&f_val));  // 1:8:23bit sign:exp:man
+  const uint32_t ui32_v = *(ge::PtrToPtr<const float, const uint32_t>(&f_val));  // 1:8:23bit sign:exp:man
   uint32_t m_len_delta;
 
   s_ret = static_cast<uint16_t>((ui32_v & kFp32SignMask) >> kFp32SignIndex);  // 4Byte->2Byte
@@ -891,7 +892,7 @@ fp16_t &fp16_t::operator=(const float &f_val) {
     if (need_round) {
       m_ret++;
     }
-    if (m_ret & kFp16ManHideBit) {
+    if (static_cast<bool>(m_ret & kFp16ManHideBit)) {
       e_ret++;
     }
   }
@@ -910,14 +911,14 @@ fp16_t &fp16_t::operator=(const int8_t &i_val) {
   if (m_ret == 0) {
     e_ret = 0;
   } else {
-    if (s_ret) {                                       // negative number(<0)
+    if (static_cast<bool>(s_ret)) {                                       // negative number(<0)
       m_ret = static_cast<uint16_t>(std::abs(i_val));  // complement
     }
 
     e_ret = kFp16ManLen;
     while ((m_ret & kFp16ManHideBit) == 0) {
       m_ret = m_ret << 1;
-      e_ret = e_ret - 1;
+      e_ret = e_ret - 1U;
     }
     e_ret = e_ret + kFp16ExpBias;
   }
@@ -931,11 +932,11 @@ fp16_t &fp16_t::operator=(const uint8_t &ui_val) {
   s_ret = 0;
   e_ret = 0;
   m_ret = ui_val;
-  if (m_ret) {
+  if (static_cast<bool>(m_ret)) {
     e_ret = kFp16ManLen;
     while ((m_ret & kFp16ManHideBit) == 0) {
       m_ret = m_ret << 1;
-      e_ret = e_ret - 1;
+      e_ret = e_ret - 1U;
     }
     e_ret = e_ret + kFp16ExpBias;
   }
@@ -949,11 +950,11 @@ static void SetValByUint16Val(const uint16_t &input_val, const uint16_t &sign, u
   uint16_t m_min = kFp16ManHideBit;
   uint16_t m_max = m_min << 1;
   uint16_t len = static_cast<uint16_t>(GetManBitLength(m_tmp));
-  if (m_tmp) {
+  if (static_cast<bool>(m_tmp)) {
     int16_t e_ret;
     if (len > kDim11) {
       e_ret = kFp16ExpBias + kFp16ManLen;
-      uint16_t e_tmp = len - kDim11;
+      uint16_t e_tmp = len - static_cast<uint16_t>(kDim11);
       uint32_t trunc_mask = 1;
       for (int i = 1; i < e_tmp; i++) {
         trunc_mask = (trunc_mask << 1) + 1;
@@ -964,8 +965,8 @@ static void SetValByUint16Val(const uint16_t &input_val, const uint16_t &sign, u
         e_ret = e_ret + 1;
       }
       bool b_last_bit = ((m_tmp & 1) > 0);
-      bool b_trunc_high = 0;
-      bool b_trunc_left = 0;
+      bool b_trunc_high = false;
+      bool b_trunc_left = false;
       if (g_round_mode == TagFp16RoundMode::kRoundToNearest) {  // trunc
         b_trunc_high = ((m_trunc & kFp32SignMask) > 0);
         b_trunc_left = ((m_trunc & kFp32AbsMax) > 0);
@@ -976,7 +977,7 @@ static void SetValByUint16Val(const uint16_t &input_val, const uint16_t &sign, u
         e_ret = e_ret + 1;
       }
     } else {
-      e_ret = kFp16ExpBias;
+      e_ret = static_cast<int16_t>(kFp16ExpBias);
       m_tmp = m_tmp << (kManBitLength - len);
       e_ret = e_ret + (len - 1);
     }
@@ -989,11 +990,11 @@ fp16_t &fp16_t::operator=(const int16_t &i_val) {
   if (i_val == 0) {
     val = 0;
   } else {
-    uint16_t ui_val = *(reinterpret_cast<const uint16_t *>(&i_val));
+    uint16_t ui_val = *(ge::PtrToPtr<const int16_t, const int16_t>(&i_val));
     auto s_ret = static_cast<uint16_t>(ui_val >> kBitShift15);
-    if (s_ret) {
+    if (static_cast<bool>(s_ret)) {
       int16_t iValM = -i_val;
-      ui_val = *(reinterpret_cast<uint16_t *>(&iValM));
+      ui_val = *(ge::PtrToPtr<int16_t, uint16_t>(&iValM));
     }
     SetValByUint16Val(ui_val, s_ret, val);
   }
@@ -1023,8 +1024,8 @@ fp16_t &fp16_t::operator=(const uint16_t &ui_val) {
         e_ret = e_ret + 1;
       }
       bool b_last_bit = ((m_ret & 1) > 0);
-      bool b_trunc_high = 0;
-      bool b_trunc_left = 0;
+      bool b_trunc_high = false;
+      bool b_trunc_left = false;
       if (g_round_mode == TagFp16RoundMode::kRoundToNearest) {  // trunc
         b_trunc_high = ((m_trunc & kFp32SignMask) > 0);
         b_trunc_left = ((m_trunc & kFp32AbsMax) > 0);
@@ -1038,7 +1039,7 @@ fp16_t &fp16_t::operator=(const uint16_t &ui_val) {
         val = kFp16Max;
       }
     } else {
-      e_ret = kFp16ExpBias;
+      e_ret = static_cast<int16_t>(kFp16ExpBias);
       m_ret = m_ret << (kDim11 - len);
       e_ret = e_ret + (len - 1);
     }
@@ -1057,7 +1058,7 @@ static void SetValByUint32Val(const uint32_t &input_val, const uint16_t &sign, u
     e_ret = kFp16ExpBias + kFp16ManLen;
     uint32_t m_trunc = 0;
     uint32_t trunc_mask = 1;
-    uint16_t e_tmp = len - kDim11;
+    uint16_t e_tmp = len - static_cast<uint16_t>(kDim11);
     for (int i = 1; i < e_tmp; i++) {
       trunc_mask = (trunc_mask << 1) + 1;
     }
@@ -1067,8 +1068,8 @@ static void SetValByUint32Val(const uint32_t &input_val, const uint16_t &sign, u
       e_ret = e_ret + 1;
     }
     bool b_last_bit = ((m_tmp & 1) > 0);
-    bool b_trunc_high = 0;
-    bool b_trunc_left = 0;
+    bool b_trunc_high = false;
+    bool b_trunc_left = false;
     if (g_round_mode == TagFp16RoundMode::kRoundToNearest) {  // trunc
       b_trunc_high = ((m_trunc & kFp32SignMask) > 0);
       b_trunc_left = ((m_trunc & kFp32AbsMax) > 0);
@@ -1083,7 +1084,7 @@ static void SetValByUint32Val(const uint32_t &input_val, const uint16_t &sign, u
       m_tmp = kFp16MaxMan;
     }
   } else {
-    e_ret = kFp16ExpBias;
+    e_ret = static_cast<int16_t>(kFp16ExpBias);
     m_tmp = m_tmp << (kDim11 - len);
     e_ret = e_ret + (len - 1);
   }
@@ -1095,11 +1096,11 @@ fp16_t &fp16_t::operator=(const int32_t &i_val) {
   if (i_val == 0) {
     val = 0;
   } else {
-    uint32_t ui_val = *(reinterpret_cast<const uint32_t *>(&i_val));
+    uint32_t ui_val = *(ge::PtrToPtr<const int32_t, const uint32_t>(&i_val));
     auto s_ret = static_cast<uint16_t>(ui_val >> kBitShift31);
-    if (s_ret) {
+    if (static_cast<bool>(s_ret)) {
       int32_t iValM = -i_val;
-      ui_val = *(reinterpret_cast<uint32_t *>(&iValM));
+      ui_val = *(ge::PtrToPtr<int32_t, uint32_t>(&iValM));
     }
     SetValByUint32Val(ui_val, s_ret, val);
   }
@@ -1119,7 +1120,7 @@ fp16_t &fp16_t::operator=(const uint32_t &ui_val) {
       e_ret = kFp16ExpBias + kFp16ManLen;
       uint32_t m_trunc = 0;
       uint32_t trunc_mask = 1;
-      uint16_t e_tmp = len - kDim11;
+      uint16_t e_tmp = len - static_cast<uint16_t>(kDim11);
       for (int i = 1; i < e_tmp; i++) {
         trunc_mask = (trunc_mask << 1) + 1;
       }
@@ -1145,7 +1146,7 @@ fp16_t &fp16_t::operator=(const uint32_t &ui_val) {
         m_tmp = kFp16MaxMan;
       }
     } else {
-      e_ret = kFp16ExpBias;
+      e_ret = static_cast<int16_t>(kFp16ExpBias);
       m_tmp = m_tmp << (kDim11 - len);
       e_ret = e_ret + (len - 1);
     }
@@ -1161,7 +1162,7 @@ fp16_t &fp16_t::operator=(const double &d_val) {
   int16_t e_ret;
   uint64_t e_d;
   uint64_t m_d;
-  uint64_t ui64_v = *(reinterpret_cast<const uint64_t *>(&d_val));  // 1:11:52bit sign:exp:man
+  uint64_t ui64_v = *(ge::PtrToPtr<const double, const uint64_t>(&d_val));  // 1:11:52bit sign:exp:man
   uint32_t m_len_delta;
 
   s_ret = static_cast<uint16_t>((ui64_v & kFp64SignMask) >> kFp64SignIndex);  // 4Byte
@@ -1204,7 +1205,7 @@ fp16_t &fp16_t::operator=(const double &d_val) {
     if (need_round) {
       m_ret++;
     }
-    if (m_ret & kFp16ManHideBit) {
+    if (static_cast<bool>(m_ret & kFp16ManHideBit)) {
       e_ret++;
     }
   }
@@ -1239,7 +1240,7 @@ fp16_t::operator uint64_t() const { return 0; }
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY int fp16_t::IsInf() const {
   if ((val & kFp16AbsMax) == kFp16ExpMask) {
-    if (val & kFp16SignMask) {
+    if (static_cast<bool>(val & kFp16SignMask)) {
       return -1;
     } else {
       return 1;

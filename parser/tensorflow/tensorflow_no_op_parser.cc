@@ -26,7 +26,7 @@ using namespace ge::parser;
 
 namespace ge {
 Status TensorFlowNoOpParser::ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) {
-  const NodeDef *node = DOMI_DYNAMIC_CAST<const NodeDef *>(op_src);
+  const domi::tensorflow::NodeDef *node = DOMI_DYNAMIC_CAST<const domi::tensorflow::NodeDef *>(op_src);
   GE_CHECK_NOTNULL(node);
   GELOGD("TF op node name = %s, op type= %s, parse params", node->name().c_str(), node->op().c_str());
   NoOpOperator op;

@@ -93,7 +93,7 @@ Status TensorFlowDataParser::ParseInputFromModel(const Message *op_src, const ge
   GE_RETURN_WITH_LOG_IF_ERROR(TensorFlowUtil::CheckAttrHasType(attr_value, TENSORFLOW_ATTR_TYPE_SHAPE),
                               "check Attr %s failed", TENSORFLOW_ATTR_SHAPE.c_str());
 
-  const TensorShapeProto &data_shape = attr_value.shape();
+  const domi::tensorflow::TensorShapeProto &data_shape = attr_value.shape();
   for (auto i = 0; i < data_shape.dim_size(); i++) {
     model_input_dims_v.push_back(data_shape.dim(i).size());
   }
@@ -110,7 +110,7 @@ Status TensorFlowDataParser::ParseInputFromUser(const Message *op_src, const ge:
   std::string name = op_def->GetName();
   if (input_dims.count(name) == 0) {
     GELOGI("input shape of node %s is not designated ,need parse from model", name.c_str());
-    for (uint32_t i = 0; i < model_input_dims_v.size(); i++) {
+    for (size_t i = 0; i < model_input_dims_v.size(); ++i) {
       user_input_dims_v.push_back(model_input_dims_v[i]);
     }
 
@@ -138,7 +138,7 @@ Status TensorFlowDataParser::ParseInputFromUser(const Message *op_src, const ge:
 }
 
 Status TensorFlowDataParser::CheckInputShape(const std::string &name) {
-  for (uint32_t i = 0; i < user_input_dims_v.size(); i++) {
+  for (size_t i = 0; i < user_input_dims_v.size(); ++i) {
     // if input_shape has some placeholders, user should designate them.
     // dim i = 0, means empty tensor.
     // dim i = -1 or -2, means unknown shape.

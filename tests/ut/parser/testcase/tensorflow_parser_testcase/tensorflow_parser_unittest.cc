@@ -176,7 +176,7 @@ void UtestTensorflowParser::RegisterCustomOp() {
   .ParseParamsFn(ParseParams);
   std::vector<OpRegistrationData> reg_datas = domi::OpRegistry::Instance()->registrationDatas;
   for (auto reg_data : reg_datas) {
-    OpRegistrationTbe::Instance()->Finalize(reg_data);
+    domi::OpRegTbeParserFactory::Instance()->Finalize(reg_data);
     domi::OpRegistry::Instance()->Register(reg_data);
   }
   domi::OpRegistry::Instance()->registrationDatas.clear();
@@ -599,7 +599,7 @@ namespace {
   void register_tbe_op() {
     std::vector<OpRegistrationData> registrationDatas = OpRegistry::Instance()->registrationDatas;
     for (OpRegistrationData reg_data : registrationDatas) {
-      OpRegistrationTbe::Instance()->Finalize(reg_data);
+      domi::OpRegTbeParserFactory::Instance()->Finalize(reg_data);
       OpRegistry::Instance()->Register(reg_data);
     }
     OpRegistry::Instance()->registrationDatas.clear();
@@ -1288,7 +1288,7 @@ TEST_F(UtestTensorflowParser, tensorflow_parserfrommemory_failed)
   ret = ge::aclgrphParseTensorFlow(modelFile.c_str(), parser_params, graph);
   ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
   ret = modelParser.ParseFromMemory(data, size, compute_graph);
-  EXPECT_EQ(ret, INTERNAL_ERROR);
+  EXPECT_NE(ret, SUCCESS);
 }
 
 TEST_F(UtestTensorflowParser, modelparser_parsefrommemory_success)
@@ -1419,7 +1419,7 @@ TEST_F(UtestTensorflowParser, tensorflow_parserAllGraph_failed)
   ge::ComputeGraphPtr root_graph = ge::GraphUtils::GetComputeGraph(graph);
   TensorFlowModelParser tensorflow_parser;
   ret = tensorflow_parser.ParseAllGraph(reinterpret_cast<google::protobuf::Message *>(&graphDef), root_graph);
-  EXPECT_EQ(INTERNAL_ERROR, ret);
+  ASSERT_NE(ret, SUCCESS);
 }
 
 TEST_F(UtestTensorflowParser, test_parse_acl_output_nodes)
@@ -2082,6 +2082,7 @@ TEST_F(UtestTensorflowParser, tensorflow_auto_mapping_parser_adapter_test)
   EXPECT_EQ(ret, SUCCESS);
 
   op_dest->SetType(ge::parser::SHAPE);
+  op_dest->AddOutputDesc(GeTensorDesc());
   ret = autoMappingParser.ParseParams(node_def, op_dest);
   EXPECT_EQ(ret, SUCCESS);
 }
@@ -2824,29 +2825,6 @@ TEST_F(UtestTensorflowParser, tensorflow_UpdateEdgesControlInfo_test)
   model_parser.UpdateEdgesControlInfo(info);
 }
 
-TEST_F(UtestTensorflowParser, tensorflow_OptimizeIdentityByOutput_test)
-{
-  TensorFlowModelParser model_parser;
-  NodeDef *node_def = new NodeDef();
-  node_def->set_name("Placeholder");
-  node_def->set_op("Placeholder_0");
-  std::map<string, NodeDef *> nodedef_map;
-  nodedef_map.emplace("Placeholder", node_def);
-  std::string curr_node_name = "Placeholder";
-  bool clear_input_flag = true;
-  Status ret = model_parser.OptimizeIdentityByOutput(nodedef_map, curr_node_name, clear_input_flag);
-  EXPECT_EQ(ret, INTERNAL_ERROR);
-
-  GraphDef graph;
-  curr_node_name = "pre_node_a";
-  nodedef_map.emplace("pre_node_a", node_def);
-  node_def->set_op("pre_node_a");
-  GenOriginContext(&model_parser, curr_node_name);
-  ret = model_parser.OptimizeIdentityByOutput(nodedef_map, curr_node_name, clear_input_flag);
-  EXPECT_EQ(ret, SUCCESS);
-  delete node_def;
-}
-
 TEST_F(UtestTensorflowParser, tensorflow_OptimizeSnapShot_test)
 {
   TensorFlowModelParser model_parser;
@@ -3007,27 +2985,18 @@ TEST_F(UtestTensorflowParser, tensorflow_AddControlEdgeAfterRemoveInputs_test)
   removed_inputs_vec.emplace_back("Add0");
   Status ret = tensorflow_parser.AddControlEdgeAfterRemoveInputs(&graph_def, node_def, all_node_map, removed_inputs_vec);
   EXPECT_EQ(ret, SUCCESS);
+
+  tensorflow::NodeDef *node_swith = initNodeDef();
+  node_swith->set_name("switch_op");
+  node_swith->set_op(parser::SWITCH);
+  all_node_map.emplace("switch_op", node_swith);
+  removed_inputs_vec.clear();
+  removed_inputs_vec.emplace_back("switch_op");
+  ret = tensorflow_parser.AddControlEdgeAfterRemoveInputs(&graph_def, node_swith, all_node_map, removed_inputs_vec);
+  EXPECT_EQ(ret, SUCCESS);
 }
 
-TEST_F(UtestTensorflowParser, tensorflow_GraphDefOptimizeIdentity_test)
-{
-  tensorflow::GraphDef graph_def;
-  TensorFlowModelParser tensorflow_parser;
-  tensorflow::NodeDef *node_def = initNodeDef();
-  node_def->set_name("post_node_d");
 
-  std::map<string, NodeDef *> nodedef_map;
-  nodedef_map.emplace("post_node_d", node_def);
-  nodedef_map.emplace("post_node_a", node_def);
-  nodedef_map.emplace("post_node_b", node_def);
-  std::vector<NodeDef *> nodedef_to_optimize;
-  nodedef_to_optimize.emplace_back(node_def);
-
-  std::string curr_node_name = "post_node_b";
-  GenOriginContext(&tensorflow_parser, curr_node_name);
-  Status ret = tensorflow_parser.GraphDefOptimizeIdentity(&graph_def, nodedef_map, nodedef_to_optimize);
-  EXPECT_EQ(ret, ge::PARAM_INVALID);
-}
 TEST_F(UtestTensorflowParser, tensorflow_optimizer_snapshot_no_retval_test) {
   std::string caseDir = __FILE__;
   std::size_t idx = caseDir.find_last_of("/");
@@ -3696,7 +3665,8 @@ TEST_F(UtestTensorflowParser, tensorflow_Pb2Json_OneField2Json_test)
   ge::Operator ops = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc);
   field->CppTypeName(google::protobuf::FieldDescriptor::CPPTYPE_ENUM);
   mess2Op.ParseField(reflection, node_def, field, depth, ops);
-  toJson.OneField2Json((*node_def), field, reflection, black_fields, json, enum2str);
+  toJson.OneField2Json((*node_def), field, reflection, black_fields, json, enum2str, 1);
+  toJson.OneField2Json((*node_def), field, reflection, black_fields, json, enum2str, 5);
   delete field;
 }
 

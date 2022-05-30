@@ -61,7 +61,7 @@ target_link_libraries(st_parser_proto PRIVATE
 
 ################################################################################
 set(DUPLICATE_PROTO_LIST
-    "${PARSER_DIR}/metadef/proto/proto_inner/ge_onnx.proto"
+    "${PARSER_DIR}/metadef/proto/onnx/ge_onnx.proto"
 )
 
 protobuf_generate(ge DUP_PROTO_SRCS DUP_PROTO_HDRS ${DUPLICATE_PROTO_LIST})
@@ -118,7 +118,10 @@ set(MATEDEF_SRC_FILES
     "${PARSER_DIR}/metadef/graph/resource_context_mgr.cc"
     "${PARSER_DIR}/metadef/graph/utils/constant_utils.cc"
     "${PARSER_DIR}/metadef/graph/utils/anchor_utils.cc"
+    "${PARSER_DIR}/metadef/graph/utils/file_utils.cc"
     "${PARSER_DIR}/metadef/graph/utils/ge_ir_utils.cc"
+    "${PARSER_DIR}/metadef/graph/utils/connection_matrix.cc"
+    "${PARSER_DIR}/metadef/graph/utils/cycle_detector.cc"
     "${PARSER_DIR}/metadef/graph/utils/graph_utils.cc"
     "${PARSER_DIR}/metadef/graph/utils/node_utils.cc"
     "${PARSER_DIR}/metadef/graph/utils/op_desc_utils.cc"
@@ -126,6 +129,8 @@ set(MATEDEF_SRC_FILES
     "${PARSER_DIR}/metadef/graph/utils/transformer_utils.cc"
     "${PARSER_DIR}/metadef/graph/utils/tuning_utils.cc"
     "${PARSER_DIR}/metadef/graph/utils/type_utils.cc"
+    "${PARSER_DIR}/metadef/graph/utils/trace/trace_manager.cc"
+    "${PARSER_DIR}/metadef/graph/common/large_bm.cc"
     "${PARSER_DIR}/metadef/ops/op_imp.cpp"
     "${PARSER_DIR}/metadef/third_party/transformer/src/axis_util.cc"
     "${PARSER_DIR}/metadef/third_party/transformer/src/expand_dimension.cc"
