@@ -158,6 +158,8 @@ void STestTensorflowParser::RegisterCustomOp() {
   domi::OpRegistry::Instance()->registrationDatas.clear();
 }
 
+extern void AddDumpOriginName(const std::string& subgraph_name, const ge::NodePtr parent_node, ge::NodePtr node);
+
 namespace {
   NodeDef* AddNode(GraphDef& graph, string type, string name) {
     NodeDef* nodeDef = graph.add_node();
@@ -4210,6 +4212,40 @@ TEST_F(STestTensorflowParser, tensorflow_optimizer_fmk_fusion_op) {
   Status ret = tensorflow_parser.ParseProto(reinterpret_cast<google::protobuf::Message *>(&graphDef), root_graph);
   EXPECT_EQ(ret, SUCCESS);
   EXPECT_EQ(root_graph->GetDirectNode().size(), 3);
+}
+
+TEST_F(STestTensorflowParser, AddDumpOriginName_test)
+{
+  GeTensorDesc scalar_tensor(GeShape(), ge::FORMAT_NCHW, ge::DT_FLOAT);
+  ge::ComputeGraphPtr graph = std::make_shared<ge::ComputeGraph>("default");
+  ge::OpDescPtr data_op = std::make_shared<ge::OpDesc>();
+  data_op->SetType(parser::WHILE);
+  data_op->SetName("WHILE0");
+  data_op->AddInputDesc(ge::GeTensorDesc());
+  data_op->AddOutputDesc(ge::GeTensorDesc());
+  ge::NodePtr while0 = graph->AddNode(data_op);
+
+  data_op = std::make_shared<ge::OpDesc>();
+  data_op->SetType(parser::LOOPCOND);
+  data_op->SetName("COND0");
+  data_op->AddInputDesc(ge::GeTensorDesc());
+  data_op->AddOutputDesc(ge::GeTensorDesc());
+  ge::NodePtr cond0 = graph->AddNode(data_op);
+  AddDumpOriginName(std::string("while"), while0, cond0);
+
+  data_op = std::make_shared<ge::OpDesc>();
+  data_op->SetType(parser::DATA);
+  data_op->SetName("Data1");
+  data_op->AddInputDesc(ge::GeTensorDesc());
+  data_op->AddOutputDesc(ge::GeTensorDesc());
+  ge::NodePtr data1 = graph->AddNode(data_op);
+  AddDumpOriginName(std::string("cond"), cond0, data1);
+
+  auto desc = data1->GetOpDesc();
+  std::vector<std::string> original_names;
+  (void)ge::AttrUtils::GetListStr(desc, ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names);
+  EXPECT_EQ(original_names.empty(), false);
+  EXPECT_EQ(original_names[0], "while/COND0/cond/Data1");
 }
 
 } // namespace ge

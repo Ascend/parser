@@ -189,6 +189,23 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, const std::map<Ascend
   GELOGI("AclgrphParse graph %s success.", ParserUtils::GetGraphName(graph).c_str());
   return ge::SUCCESS;
 }
+void AddDumpOriginName(const std::string& subgraph_name, const ge::NodePtr parent_node, ge::NodePtr node)
+{
+  std::vector<std::string> original_names;
+  auto parend_desc = parent_node->GetOpDesc();
+  (void)ge::AttrUtils::GetListStr(parend_desc, ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names);
+  if (original_names.empty()) {
+    original_names.emplace_back(string(subgraph_name).append("/").append(node->GetName()));
+  } else {
+    // for fusion node also used original_names[0]
+    (void)original_names[0].append("/").append(subgraph_name).append("/").append(node->GetName());
+  }
+
+  if (!ge::AttrUtils::SetListStr(node->GetOpDesc(), ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names)) {
+    GELOGW("Set %s to %s fail.", ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES.c_str(), node->GetOpDesc()->GetName().c_str());
+  }
+  GELOGD("Add dump origin name %s for node %s.", original_names[0].c_str(), node->GetName().c_str());
+}
 }  // namespace ge
 
 namespace ge {
@@ -279,6 +296,7 @@ Status PostOpProcessForSubgraph(const ParseArg &arg) {
     if ((node->GetOpDesc() == nullptr) || (node->GetType() == "Variable") || (node->GetType() == "VariableV2")) {
       continue;
     }
+    AddDumpOriginName(arg.subgraph_name, arg.parent_node, node);
     node->GetOpDesc()->SetName(node->GetOwnerComputeGraph()->GetName() + "/" + node->GetName());
   }
 
