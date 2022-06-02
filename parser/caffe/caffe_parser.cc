@@ -982,7 +982,7 @@ Status CaffeModelParser::AddTensorDescToOpDescByIr(ge::OpDescPtr &op_desc, const
         }
       }
       GELOGI("op [%s], type[%s], update input(%d) with name %s %s", op_desc->GetName().c_str(),
-             op_desc->GetType().c_str(), i, input_name.c_str(), ret == ge::GRAPH_SUCCESS ? "success" : "failed");
+             op_desc->GetType().c_str(), i, input_name.c_str(), ret == ge::GRAPH_SUCCESS ? "success" : "not success");
     }
 
     for (int i = 0; i < layer.top_size(); i++) {
