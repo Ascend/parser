@@ -122,7 +122,7 @@ class OpParserRegisterar {
    * @param [in] fun          Creator function corresponding to Op
    */
   OpParserRegisterar(const domi::FrameworkType framework, const std::string &op_type, OpParserFactory::CREATOR_FUN fun,
-                     bool is_fusion_op = false) {
+                     bool is_fusion_op = false) noexcept {
     OpParserFactory::Instance(framework)->RegisterCreator(op_type, fun, is_fusion_op);
   }
   ~OpParserRegisterar() {}
@@ -145,7 +145,8 @@ class CustomParserAdapterRegistry {
 // Register Creator function for the custom custom operator ParserAdapter
 class CustomParserAdapterRegistrar {
  public:
-  CustomParserAdapterRegistrar(const domi::FrameworkType framework, CustomParserAdapterRegistry::CREATOR_FUN fun) {
+  CustomParserAdapterRegistrar(const domi::FrameworkType framework,
+                               CustomParserAdapterRegistry::CREATOR_FUN fun) noexcept {
     CustomParserAdapterRegistry::Instance()->Register(framework, fun);
   }
   ~CustomParserAdapterRegistrar() {}
