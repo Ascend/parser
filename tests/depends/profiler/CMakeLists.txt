@@ -14,15 +14,15 @@
 # ============================================================================
 
 #cmake_minimum_required(VERSION 2.8)
-project(profiler_stub)
+project(parser_profiler_stub)
 
 file(GLOB_RECURSE SRC_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     "src/profiler_stub.cc"
 )
 include_directories(${PARSER_DIR}/metadef/third_party/fwkacllib/inc)
 
-add_library(profiler_stub SHARED ${SRC_FILES})
+add_library(parser_profiler_stub SHARED ${SRC_FILES})
 
-target_link_libraries(profiler_stub PRIVATE
+target_link_libraries(parser_profiler_stub PRIVATE
     $<BUILD_INTERFACE:intf_pub>
 )

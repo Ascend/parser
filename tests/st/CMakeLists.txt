@@ -135,6 +135,7 @@ set(MATEDEF_SRC_FILES
     "${PARSER_DIR}/metadef/third_party/transformer/src/axis_util.cc"
     "${PARSER_DIR}/metadef/third_party/transformer/src/expand_dimension.cc"
     "${PARSER_DIR}/metadef/third_party/transformer/src/transfer_shape_according_to_format.cc"
+    "${PARSER_DIR}/metadef/third_party/transformer/src/transfer_shape_utils.cc"
 )
 
 # include directories
@@ -374,6 +375,6 @@ target_link_libraries(st_parser
     st_parser_proto
     json
     -Wl,--whole-archive st_parser_common -Wl,--no-whole-archive
-    st_parser_graph st_parser_register error_manager_stub mmpa_stub attr_util_stub
-    gtest gtest_main slog_stub ascend_protobuf c_sec  -lrt -ldl -lgcov
+    st_parser_graph st_parser_register error_manager_stub parser_mmpa_stub attr_util_stub
+    gtest gtest_main parser_slog_stub ascend_protobuf c_sec  -lrt -ldl -lgcov
 )

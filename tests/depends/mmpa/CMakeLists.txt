@@ -29,8 +29,8 @@ include_directories(${PARSER_DIR}/metadef/metadef/inc)
 include_directories(${PARSER_DIR}/metadef/inc/framework)
 include_directories(${PARSER_DIR}/metadef/metadef/inc/external)
 
-add_library(mmpa_stub SHARED ${SRCS})
-target_link_libraries(mmpa_stub PRIVATE
+add_library(parser_mmpa_stub SHARED ${SRCS})
+target_link_libraries(parser_mmpa_stub PRIVATE
     $<BUILD_INTERFACE:intf_pub>
     -Wl,--no-as-needed
     ascend_protobuf
