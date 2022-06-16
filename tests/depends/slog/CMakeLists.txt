@@ -14,13 +14,13 @@
 # ============================================================================
 
 #cmake_minimum_required(VERSION 2.8)
-project(slog_stub)
+project(parser_slog_stub)
 
 file(GLOB_RECURSE SRC_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     "src/*.cc"
 )
 include_directories(${PARSER_DIR}/metadef/third_party/fwkacllib/inc)
-add_library(slog_stub SHARED ${SRC_FILES})
-target_link_libraries(slog_stub PRIVATE
+add_library(parser_slog_stub SHARED ${SRC_FILES})
+target_link_libraries(parser_slog_stub PRIVATE
     $<BUILD_INTERFACE:intf_pub>
 )
