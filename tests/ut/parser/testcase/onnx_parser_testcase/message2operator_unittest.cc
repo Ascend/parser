@@ -69,4 +69,32 @@ TEST_F(UtestMessage2Operator, pb2json_one_field_json) {
   Json json;
   ge::Pb2Json::Message2Json(input_node, std::set<std::string>{}, json, true);
 }
+
+TEST_F(UtestMessage2Operator, pb2json_one_field_json_depth_max) {
+  ge::onnx::NodeProto input_node;
+  ge::onnx::AttributeProto *attribute = input_node.add_attribute();
+  attribute->set_name("attribute");
+  attribute->set_type(onnx::AttributeProto::AttributeType(1));
+  ge::onnx::TensorProto *attribute_tensor = attribute->mutable_t();
+  attribute_tensor->set_data_type(1);
+  attribute_tensor->add_dims(4);
+  attribute_tensor->set_raw_data("\007");
+  Json json;
+  ge::Pb2Json::Message2Json(input_node, std::set<std::string>{}, json, true, 21);
+}
+
+TEST_F(UtestMessage2Operator, pb2json_one_field_json_type) {
+  ge::onnx::NodeProto input_node;
+  ge::onnx::AttributeProto *attribute = input_node.add_attribute();
+  attribute->set_name("attribute");
+  attribute->set_type(onnx::AttributeProto::AttributeType(1));
+  ge::onnx::TensorProto *attribute_tensor = attribute->mutable_t();
+  attribute_tensor->set_data_type(3);
+  attribute_tensor->add_dims(4);
+  attribute_tensor->set_raw_data("\007");
+  Json json;
+  ge::Pb2Json::Message2Json(input_node, std::set<std::string>{}, json, true);
+}
+
+
 }  // namespace ge

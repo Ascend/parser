@@ -3942,11 +3942,39 @@ TEST_F(UtestTensorflowParser, custom_parser_adapter_register)
   ASSERT_EQ(nullptr, func);
 }
 
+static Status ParseParamsStub1(const google::protobuf::Message* op_src, ge::Operator& op_dest) {
+  return SUCCESS;
+}
+
 TEST_F(UtestTensorflowParser, tensorflow_parser_api_test)
 {
+
+  REGISTER_CUSTOM_OP("Add11")
+  .FrameworkType(domi::TENSORFLOW)
+  .OriginOpType("Add11")
+  .ParseParamsFn(ParseParamsStub1);
   std::map<std::string, std::string> options = {{"ge.runFlag", "1"}};
+  options.insert(std::pair<string, string>(string(ge::FRAMEWORK_TYPE), to_string(domi::TENSORFLOW)));
   Status ret = ParserInitialize(options);
   EXPECT_EQ(ret, SUCCESS);
+
+  ret = ParserInitialize(options);
+  EXPECT_EQ(ret, SUCCESS);
+
+  ret = ParserFinalize();
+  EXPECT_EQ(ret, SUCCESS);
+
+  ret = ParserFinalize();
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(UtestTensorflowParser, tensorflow_parser_api_test_cafee)
+{
+  std::map<std::string, std::string> options = {{"ge.runFlag", "1"}};
+  options.insert(std::pair<string, string>(string(ge::FRAMEWORK_TYPE), to_string(domi::CAFFE)));
+  Status ret = ParserInitialize(options);
+  EXPECT_EQ(ret, SUCCESS);
+  options.insert(std::pair<string, string>(string(ge::FRAMEWORK_TYPE), to_string(domi::CAFFE)));
 
   ret = ParserInitialize(options);
   EXPECT_EQ(ret, SUCCESS);
@@ -4153,6 +4181,36 @@ TEST_F(UtestTensorflowParser, parser_UpdateGraph_test)
   Status ret = graphOptimizer.UpdateGraph(nodes);
   EXPECT_EQ(ret, PARAM_INVALID);
 }
+
+TEST_F(UtestTensorflowParser, tensorflow_optimizer_fmk_fusion_op_) {
+  std::string caseDir = __FILE__;
+  std::size_t idx = caseDir.find_last_of("/");
+  caseDir = caseDir.substr(0, idx);
+  const std::string root_proto = caseDir + "/origin_models/getnext_dynamic_fusion.pbtxt";
+  domi::tensorflow::GraphDef graphDef;
+
+  bool protoRet = parser::ReadProtoFromText(root_proto.c_str(), &graphDef);
+  ASSERT_EQ(protoRet, true);
+
+  TensorFlowModelParser tensorflow_parser;
+  ge::ComputeGraphPtr root_graph = ge::parser::MakeShared<ge::ComputeGraph>("tmp_graph");
+  Status ret = tensorflow_parser.ParseProto(reinterpret_cast<google::protobuf::Message *>(&graphDef), root_graph);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(root_graph->GetDirectNode().size(), 3);
+}
+
+
+
+TEST_F(UtestTensorflowParser, parser_UpdateGraph_node_0)
+{
+  std::vector<NodePtr> nodes;
+  ge::ComputeGraphPtr subGraph = std::make_shared<ge::ComputeGraph>("default");
+  ParserGraphOptimizer graphOptimizer(subGraph, domi::TENSORFLOW);
+  Status ret = graphOptimizer.UpdateGraph(nodes);
+  EXPECT_EQ(ret, PARAM_INVALID);
+}
+
+
 
 TEST_F(UtestTensorflowParser, parser_RebuildFusionNode_test)
 {

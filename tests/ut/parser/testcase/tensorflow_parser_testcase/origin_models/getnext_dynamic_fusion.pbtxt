@@ -1,0 +1,174 @@
+node {
+  name: "IteratorV2"
+  op: "IteratorV2"
+  attr {
+    key: "op_def"
+    value {
+      s: "\n\007GetNext\032\032\n\ncomponents2\014output_types\"\036\n\014output_types\022\nlist(type)(\0010\001\" \n\routput_shapes\022\013list(shape)(\0010\001\"\026\n\014channel_name\022\006string\210\001\001"
+    }
+  }
+  attr {
+    key: "output_types"
+    value {
+      list {
+        type: DT_INT64
+      }
+    }
+  }
+  attr {
+    key: "output_tensor_desc"
+    value {
+      list {
+        func {
+          name: "0"
+          attr {
+            key: "serialize_datatype"
+            value: {
+              i: 9
+            }
+          }
+          attr {
+            key: "serialize_format"
+            value: {
+              i: 1
+            }
+          }
+          attr {
+            key: "serialize_shape"
+            value {
+              type: DT_INT32
+            }
+          }
+        }
+      }
+    }
+  }
+}
+node {
+  name: "IteratorGetNext"
+  op: "IteratorGetNext"
+  input: "IteratorV2"
+  attr {
+    key: "output_types"
+    value {
+      list {
+        type: DT_INT64
+      }
+    }
+  }
+  attr {
+    key: "op_def"
+    value {
+      s: "\n\007GetNext\032\032\n\ncomponents2\014output_types\"\036\n\014output_types\022\nlist(type)(\0010\001\" \n\routput_shapes\022\013list(shape)(\0010\001\"\026\n\014channel_name\022\006string\210\001\001"
+    }
+  }
+  attr {
+    key: "input_tensor_desc"
+    value {
+      list {
+        func {
+          name: "0"
+          attr {
+            key: "serialize_datatype"
+            value: {
+              i: 9
+            }
+          }
+          attr {
+            key: "serialize_format"
+            value: {
+              i: 1
+            }
+          }
+          attr {
+            key: "serialize_shape"
+            value {
+              type: DT_INT32
+            }
+          }
+        }
+      }
+    }
+  }
+  attr {
+    key: "output_tensor_desc"
+    value {
+      list {
+        func {
+          name: "0"
+          attr {
+            key: "serialize_datatype"
+            value: {
+              i: 9
+            }
+          }
+          attr {
+            key: "serialize_format"
+            value: {
+              i: 1
+            }
+          }
+          attr {
+            key: "serialize_shape"
+            value {
+              list {
+                  i: -1
+                  i: -1
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+node {
+  name: "getnext_shape_0"
+  op: "Shape"
+  input: "IteratorGetNext"
+  attr {
+    key: "op_def"
+    value {
+      s: "\n\005Shape\022\n\n\005input\"\001T\032\022\n\006output\"\010out_type\"\t\n\001T\022\004type\"\034\n\010out_type\022\004type\032\0020\003:\006\n\0042\002\003\t"
+    }
+  }
+}
+node {
+  name: "retval_GetNext_0_0"
+  op: "_Retval"
+  input: "IteratorGetNext"
+  attr {
+    key: "index"
+    value {
+      i: 0
+    }
+  }
+  attr {
+    key: "op_def"
+    value {
+      s: ""
+    }
+  }
+}
+node {
+  name: "retval_GetNext_0_1"
+  op: "_Retval"
+  input: "getnext_shape_0"
+  attr {
+    key: "index"
+    value {
+      i: 1
+    }
+  }
+  attr {
+    key: "op_def"
+    value {
+      s: ""
+    }
+  }
+}
+library {
+}
+versions {
+  producer: 134
+}

@@ -1194,4 +1194,55 @@ TEST_F(UtestCaffeParser, CaffeWeightsParser_ReorderInput_test)
   modelParser.ReorderInput(net);
 }
 
+TEST_F(UtestCaffeParser, CaffeOpParser_ParseParms_test)
+{
+  CaffeOpParser parser;
+  std::string case_dir = __FILE__;
+  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
+  std::string caffe_proto = case_dir + "/../../../../../metadef/proto/caffe/";
+  google::protobuf::compiler::DiskSourceTree sourceTree;
+  sourceTree.MapPath("project_root", caffe_proto);
+  google::protobuf::compiler::Importer importer(&sourceTree, nullptr);
+  importer.Import("project_root/caffe.proto");
+  auto descriptor = importer.pool()->FindMessageTypeByName("domi.caffe.LayerParameter");
+  ge::OpDescPtr op_desc_src = std::make_shared<ge::OpDesc>("Abs", "AbsVal");
+  google::protobuf::DynamicMessageFactory factory;
+  const google::protobuf::Message *proto = factory.GetPrototype(descriptor);
+  const google::protobuf::Message *message = proto->New();
+  ge::Operator op_src = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc_src);
+  Status ret = parser.ParseParams(message, op_src);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(UtestCaffeParser, CaffeModelParser_Constructor_and_delete)
+{
+  CaffeModelParser modelParser;
+  domi::caffe::NetParameter net;
+  net.add_input("111");
+  bool input_data_flag = true;
+  net.add_input_shape();
+  Status ret = modelParser.ParseInput(net, input_data_flag);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(UtestCaffeParser, ParseFromMemory_success_graph)
+{
+  std::string caseDir = __FILE__;
+  std::size_t idx = caseDir.find_last_of("/");
+  caseDir = caseDir.substr(0, idx);
+  std::string modelFile = caseDir + "/caffe_model/caffe_add.pbtxt";
+  std::string weight_file = caseDir + "/caffe_model/caffe_add.caffemodel";
+
+  const char* tmp_tf_pb_model = modelFile.c_str();
+  const char* tmp_tf_weight_model = weight_file.c_str();
+  ge::Graph graph;
+
+  Status ret = ge::aclgrphParseCaffe(modelFile.c_str(), weight_file.c_str(), graph);
+  CaffeModelParser modelParser;
+  MemBuffer* memBuffer1 = ParerUTestsUtils::MemBufferFromFile(tmp_tf_pb_model);
+  ret = modelParser.ParseFromMemory((char*)memBuffer1->data, memBuffer1->size, graph);
+  EXPECT_EQ(ret, SUCCESS);
+  delete memBuffer1;
+}
+
 } // namespace ge
