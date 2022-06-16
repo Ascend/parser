@@ -218,6 +218,47 @@ TEST_F(UtestOnnxParser, onnx_parser_to_json) {
   const char *model_null = nullptr;
   ret = onnx_parser.ToJson(model_null, json_null);
   EXPECT_EQ(ret, FAILED);
+
+  char *data = nullptr;
+  uint32_t size = 0;
+  ge::ComputeGraphPtr graph;
+  ret = onnx_parser.ParseFromMemory(data, size, graph);
+  EXPECT_EQ(ret, SUCCESS);
+
+  google::protobuf::Message *proto = nullptr;
+  ret = onnx_parser.ParseProto(proto, graph);
+  EXPECT_EQ(ret, SUCCESS);
+
+  domi::GetGraphCallback callback;
+  ret = onnx_parser.ParseProtoWithSubgraph(proto, callback, graph);
+  EXPECT_EQ(ret, SUCCESS);
+
+  ret = onnx_parser.ParseAllGraph(proto, graph);
+  EXPECT_EQ(ret, SUCCESS);
+
+  string file = "./";
+  ret = onnx_parser.Save(file);
+  EXPECT_NE(ret, SUCCESS);
+
+  bool ret1 = onnx_parser.HasError();
+  EXPECT_EQ(ret1, SUCCESS);
+  onnx_parser.Clear();
+
+  OnnxWeightsParser onnx_weight_parser;
+  char *file1 = nullptr;
+  ge::Graph graph1;
+  ret =  onnx_weight_parser.Parse(file1, graph1);
+  EXPECT_EQ(ret, SUCCESS);
+
+  ret =  onnx_weight_parser.ParseFromMemory(data, size, graph);
+  EXPECT_EQ(ret, SUCCESS);
+
+  ret1 = onnx_weight_parser.HasError();
+  EXPECT_EQ(ret1, SUCCESS);
+
+  ret = onnx_weight_parser.Save(file);
+  EXPECT_NE(ret, SUCCESS);
+  onnx_weight_parser.Clear();
 }
 
 TEST_F(UtestOnnxParser, onnx_parser_const_data_type) {

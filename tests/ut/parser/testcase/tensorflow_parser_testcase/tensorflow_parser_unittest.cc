@@ -1398,6 +1398,13 @@ TEST_F(UtestTensorflowParser, tensorflow_ParserProto_failed)
   ASSERT_EQ(ret, PARAM_INVALID);
 }
 
+std::unique_ptr<google::protobuf::Message> getGraphCallback(const google::protobuf::Message *root_proto, const std::string &graph)
+{
+  (void)root_proto;
+  (void)graph;
+  return nullptr;
+}
+
 TEST_F(UtestTensorflowParser, tensorflow_parserAllGraph_failed)
 {
   std::string caseDir = __FILE__;
@@ -1421,6 +1428,11 @@ TEST_F(UtestTensorflowParser, tensorflow_parserAllGraph_failed)
   ge::ComputeGraphPtr root_graph = ge::GraphUtils::GetComputeGraph(graph);
   TensorFlowModelParser tensorflow_parser;
   ret = tensorflow_parser.ParseAllGraph(reinterpret_cast<google::protobuf::Message *>(&graphDef), root_graph);
+  ASSERT_NE(ret, SUCCESS);
+
+  domi::GetGraphCallback callback(&getGraphCallback);
+  const auto message_root_proto = reinterpret_cast<google::protobuf::Message *>(&graphDef);
+  ret = tensorflow_parser.ParseProtoWithSubgraph(message_root_proto, callback, root_graph);
   ASSERT_NE(ret, SUCCESS);
 }
 
@@ -3768,6 +3780,8 @@ TEST_F(UtestTensorflowParser, tensorflow_tbe_tfplugin_loader_test)
   pluginLoad.ProcessSoFullName(fileList, caffeParserPath, full_name, caffe_parser_so_suff);
   ASSERT_EQ(caffeParserPath, full_name);
 
+  void *p = (void*)malloc(sizeof(int));
+  pluginLoad.handles_vec_.push_back(p);
   pluginLoad.ClearHandles_();
 
   std::cout << __FILE__ << std::endl;
@@ -4630,7 +4644,7 @@ TEST_F(UtestTensorflowParser, tensorflow_SoftmaxAddAttr)
 
 TEST_F(UtestTensorflowParser, tensorflow_InferInputFormats)
 {
-  domiTensorFormat_t ret;
+  domiTensorFormat_t ret2;
   TensorFlowModelParser modelParser;
 
   GetParserContext().format = DOMI_TENSOR_RESERVED;
@@ -4638,15 +4652,38 @@ TEST_F(UtestTensorflowParser, tensorflow_InferInputFormats)
   NodeDef *node = MallocNodeDef("node", "DATA");
   modelParser.nodedef_map_["node"] = node;
   tensorflow_op_map["DATA"] = "node";
-  ret = modelParser.InferInputFormats();
-  EXPECT_EQ(ret, domi::DOMI_TENSOR_NHWC);
+  ret2 = modelParser.InferInputFormats();
+  EXPECT_EQ(ret2, domi::DOMI_TENSOR_NHWC);
   delete node;
   
   NodeDef* node1 = nullptr;
   modelParser.nodedef_map_["node"] = node1;
 
-  ret = modelParser.InferInputFormats();
-  EXPECT_EQ(ret, domi::DOMI_TENSOR_RESERVED);
+  ret2 = modelParser.InferInputFormats();
+  EXPECT_EQ(ret2, domi::DOMI_TENSOR_RESERVED);
+
+  char *data = nullptr;
+  uint32_t size = 0;
+  ge::Graph graph;
+  Status ret = modelParser.ParseFromMemory(data, size, graph);
+  EXPECT_EQ(ret, SUCCESS);
+
+  string file = "./";
+  ret = modelParser.Save(file);
+  EXPECT_NE(ret, SUCCESS);
+
+  bool ret1 = modelParser.HasError();
+  EXPECT_EQ(ret1, SUCCESS);
+  modelParser.Clear();
+
+  TensorFlowWeightsParser tensorflow_weights_parser;
+  string file_path = "./";
+  ret = tensorflow_weights_parser.Save(file_path);
+  EXPECT_NE(ret, SUCCESS);
+
+  ret1 = tensorflow_weights_parser.HasError();
+  EXPECT_EQ(ret1, SUCCESS);
+  tensorflow_weights_parser.Clear();
 }
 
 TEST_F(UtestTensorflowParser, tensorflow_GetTransposeInfo)
