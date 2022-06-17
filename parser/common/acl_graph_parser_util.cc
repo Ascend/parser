@@ -22,6 +22,7 @@
 #include <cstdlib>
 #include <ctime>
 #include <fstream>
+#include <atomic>
 
 #include "common/string_util.h"
 #include "common/util.h"
@@ -61,6 +62,7 @@ const std::set<domi::FrameworkType> kSupportTensorAsOutput = {
     domi::CAFFE,
     domi::ONNX
 };
+std::atomic<uint32_t> graph_name_index {};
 
 static string GetSoPath() {
   Dl_info dl_info;
@@ -637,7 +639,8 @@ domi::Status AclGrphParseUtil::ParseParamsBeforeGraph(const std::map<AscendStrin
 
   string tmp_name;
   GetAclParams(parser_params, ge::ir_option::OUTPUT, tmp_name);
-  graph_name = tmp_name.empty() ? (kGraphDefaultName + "_" + ge::parser::CurrentTimeInStr()) : tmp_name;
+  graph_name = tmp_name.empty() ? (kGraphDefaultName + "_" +
+    ge::parser::CurrentTimeInStr() + "_" + std::to_string(graph_name_index++)) : tmp_name;
 
   string enable_scope_fusion_passes;
   GetAclParams(parser_params, ge::ir_option::ENABLE_SCOPE_FUSION_PASSES, enable_scope_fusion_passes);

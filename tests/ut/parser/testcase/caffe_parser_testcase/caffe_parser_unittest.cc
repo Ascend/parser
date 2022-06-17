@@ -40,6 +40,7 @@
 #include "parser/common/acl_graph_parser_util.h"
 #include "parser/caffe/caffe_reshape_parser.h"
 #include "common/op_map.h"
+#include "parser/common/prototype_pass_manager.h"
 #undef protected
 #undef private
 
@@ -51,6 +52,7 @@
 
 using namespace domi::caffe;
 using namespace ge;
+using CreateFn = std::function<ProtoTypeBasePass *(void)>;
 
 namespace ge {
 class UtestCaffeParser : public testing::Test {
@@ -64,6 +66,11 @@ class UtestCaffeParser : public testing::Test {
 
  public:
   void RegisterCustomOp();
+};
+
+class RegisterPass : public ProtoTypeBasePass {
+ public:
+  Status Run(google::protobuf::Message *message) { return SUCCESS; }
 };
 
 static ge::NodePtr GenNodeFromOpDesc(ge::OpDescPtr opDesc){
@@ -835,6 +842,19 @@ TEST_F(UtestCaffeParser, CaffeWeightsParser_ConvertLayerParameter_test)
 {
   CaffeWeightsParser weightParser;
   ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>("tmp_graph");
+  auto tensor_desc = std::make_shared<GeTensorDesc>();
+  tensor_desc->SetShape(GeShape({1}));
+  tensor_desc->SetDataType(DT_FLOAT);
+  tensor_desc->SetFormat(FORMAT_CHWN);
+
+  auto op_desc = std::make_shared<OpDesc>("Abs", "Abs");
+  op_desc->AddInputDesc(tensor_desc->Clone());
+  auto node = compute_graph->AddNode(op_desc);
+  
+  auto op_desc1 = std::make_shared<OpDesc>("Abs", "Abs");
+  op_desc1->AddInputDesc(tensor_desc->Clone());
+  auto nodeptr = compute_graph->AddNodeFront(node);
+
   domi::caffe::NetParameter net;
   ge::OpDescPtr op_desc_src = std::make_shared<ge::OpDesc>("Abs", "AbsVal");
   domi::caffe::LayerParameter *layer = net.add_layer();
@@ -1142,8 +1162,16 @@ TEST_F(UtestCaffeParser, CaffeModelParser_ParseLayerParameter_test)
   auto descriptor = importer.pool()->FindMessageTypeByName("domi.caffe.LayerParameter");
   google::protobuf::DynamicMessageFactory factory;
   const google::protobuf::Message *proto = factory.GetPrototype(descriptor);
-  const google::protobuf::Message *message = proto->New();
+  google::protobuf::Message *message = proto->New();
   Status ret = modelParser.ParseLayerParameter(descriptor, message, operators);
+  EXPECT_EQ(ret, SUCCESS);
+
+  const domi::FrameworkType fmk_type = domi::TENSORFLOW;
+  const char_t *const pass_name = "PASS_NAME";
+  auto func = [&](){ return new (std::nothrow) RegisterPass();};
+  CreateFn create_fn = func;
+  ProtoTypePassRegistry::GetInstance().RegisterProtoTypePass(pass_name, create_fn, fmk_type);
+  ret = ProtoTypePassManager::Instance().Run(message, fmk_type);
   EXPECT_EQ(ret, SUCCESS);
   delete message;
 }
@@ -1192,6 +1220,64 @@ TEST_F(UtestCaffeParser, CaffeWeightsParser_ReorderInput_test)
   layer2->set_name("Data");
   layer2->set_type("Input");
   modelParser.ReorderInput(net);
+
+  std::vector<int32_t> idx_vector = {0,1,2,4};
+  ge::GetParserContext().out_nodes_map.insert(pair<std::string, std::vector<int32_t>>("add", idx_vector));
+  const string op_name = "add";
+  const int32_t index = 0;
+  bool ret =  modelParser.IsOutputTop(op_name, index);
+  EXPECT_EQ(ret, true);
+}
+
+TEST_F(UtestCaffeParser, CaffeOpParser_ParseParms_test)
+{
+  CaffeOpParser parser;
+  std::string case_dir = __FILE__;
+  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
+  std::string caffe_proto = case_dir + "/../../../../../metadef/proto/caffe/";
+  google::protobuf::compiler::DiskSourceTree sourceTree;
+  sourceTree.MapPath("project_root", caffe_proto);
+  google::protobuf::compiler::Importer importer(&sourceTree, nullptr);
+  importer.Import("project_root/caffe.proto");
+  auto descriptor = importer.pool()->FindMessageTypeByName("domi.caffe.LayerParameter");
+  ge::OpDescPtr op_desc_src = std::make_shared<ge::OpDesc>("Abs", "AbsVal");
+  google::protobuf::DynamicMessageFactory factory;
+  const google::protobuf::Message *proto = factory.GetPrototype(descriptor);
+  const google::protobuf::Message *message = proto->New();
+  ge::Operator op_src = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc_src);
+  Status ret = parser.ParseParams(message, op_src);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(UtestCaffeParser, CaffeModelParser_Constructor_and_delete)
+{
+  CaffeModelParser modelParser;
+  domi::caffe::NetParameter net;
+  net.add_input("111");
+  bool input_data_flag = true;
+  net.add_input_shape();
+  Status ret = modelParser.ParseInput(net, input_data_flag);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(UtestCaffeParser, ParseFromMemory_success_graph)
+{
+  std::string caseDir = __FILE__;
+  std::size_t idx = caseDir.find_last_of("/");
+  caseDir = caseDir.substr(0, idx);
+  std::string modelFile = caseDir + "/caffe_model/caffe_add.pbtxt";
+  std::string weight_file = caseDir + "/caffe_model/caffe_add.caffemodel";
+
+  const char* tmp_tf_pb_model = modelFile.c_str();
+  const char* tmp_tf_weight_model = weight_file.c_str();
+  ge::Graph graph;
+
+  Status ret = ge::aclgrphParseCaffe(modelFile.c_str(), weight_file.c_str(), graph);
+  CaffeModelParser modelParser;
+  MemBuffer* memBuffer1 = ParerUTestsUtils::MemBufferFromFile(tmp_tf_pb_model);
+  ret = modelParser.ParseFromMemory((char*)memBuffer1->data, memBuffer1->size, graph);
+  EXPECT_EQ(ret, SUCCESS);
+  delete memBuffer1;
 }
 
 } // namespace ge

@@ -218,6 +218,47 @@ TEST_F(UtestOnnxParser, onnx_parser_to_json) {
   const char *model_null = nullptr;
   ret = onnx_parser.ToJson(model_null, json_null);
   EXPECT_EQ(ret, FAILED);
+
+  char *data = nullptr;
+  uint32_t size = 0;
+  ge::ComputeGraphPtr graph;
+  ret = onnx_parser.ParseFromMemory(data, size, graph);
+  EXPECT_EQ(ret, SUCCESS);
+
+  google::protobuf::Message *proto = nullptr;
+  ret = onnx_parser.ParseProto(proto, graph);
+  EXPECT_EQ(ret, SUCCESS);
+
+  domi::GetGraphCallback callback;
+  ret = onnx_parser.ParseProtoWithSubgraph(proto, callback, graph);
+  EXPECT_EQ(ret, SUCCESS);
+
+  ret = onnx_parser.ParseAllGraph(proto, graph);
+  EXPECT_EQ(ret, SUCCESS);
+
+  string file = "./";
+  ret = onnx_parser.Save(file);
+  EXPECT_NE(ret, SUCCESS);
+
+  bool ret1 = onnx_parser.HasError();
+  EXPECT_EQ(ret1, SUCCESS);
+  onnx_parser.Clear();
+
+  OnnxWeightsParser onnx_weight_parser;
+  char *file1 = nullptr;
+  ge::Graph graph1;
+  ret =  onnx_weight_parser.Parse(file1, graph1);
+  EXPECT_EQ(ret, SUCCESS);
+
+  ret =  onnx_weight_parser.ParseFromMemory(data, size, graph);
+  EXPECT_EQ(ret, SUCCESS);
+
+  ret1 = onnx_weight_parser.HasError();
+  EXPECT_EQ(ret1, SUCCESS);
+
+  ret = onnx_weight_parser.Save(file);
+  EXPECT_NE(ret, SUCCESS);
+  onnx_weight_parser.Clear();
 }
 
 TEST_F(UtestOnnxParser, onnx_parser_const_data_type) {
@@ -242,6 +283,7 @@ TEST_F(UtestOnnxParser, OnnxModelParser_ConvertToGeDataType_test)
   ret = model_parser.ConvertToGeDataType(type);
   EXPECT_EQ(ret, ge::DataType::DT_UNDEFINED);
 }
+
 
 TEST_F(UtestOnnxParser, OnnxModelParser_ParseConvertData_test)
 {
@@ -277,6 +319,23 @@ TEST_F(UtestOnnxParser, OnnxModelParser_ParseConvertData_test)
   ret = constant_parser.ParseConvertData(tensor_proto, tensor, count);
   EXPECT_EQ(ret, SUCCESS);
 }
+
+TEST_F(UtestOnnxParser, OnnxModelParser_ParseConvertData_test_bool)
+{
+  OnnxConstantParser constant_parser;
+  ge::onnx::TensorProto tensor_proto;
+  tensor_proto.set_data_type(OnnxDataType::INT32);
+  ge::Tensor tensor ;
+  TensorDesc tensor_desc = tensor.GetTensorDesc();
+  tensor_desc.SetDataType(ge::DataType::DT_BOOL);
+  tensor.SetTensorDesc(tensor_desc);
+  int count = 1;
+  tensor_proto.set_raw_data("Test");
+  Status ret = constant_parser.ParseConvertData(tensor_proto, tensor, count);
+  EXPECT_EQ(ret, SUCCESS);
+
+}
+
 
 TEST_F(UtestOnnxParser, OnnxConstantParser_ParseConvertTensor_test)
 {
@@ -421,6 +480,23 @@ TEST_F(UtestOnnxParser, onnx_test_GetModelFromMemory)
 
   ret = modelParser.GetModelFromFile(data, model_proto);
   EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(UtestOnnxParser, onnx_test_TransNodeToOperator_SetTensorData)
+{
+  ge::onnx::ModelProto model_proto;
+  ge::onnx::GraphProto* graph = model_proto.mutable_graph();
+  ge::onnx::NodeProto *node_proto = graph->add_node();
+  node_proto->set_op_type("Add1");
+  node_proto->set_domain("add.onnx");
+  node_proto->set_name("Conv2D");
+  ge::OpDescPtr op_desc_src = std::make_shared<ge::OpDesc>("Add", "add.onnx");
+  ge::Operator op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc_src);
+  std::string op_type = "Add";
+
+  OnnxModelParser onnx_parser;
+  Status ret = onnx_parser.TransNodeToOperator(node_proto, op, op_type);
+  EXPECT_EQ(ret, SUCCESS);
 }
 
 } // namespace ge

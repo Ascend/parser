@@ -344,6 +344,7 @@ TEST_F(UtestAclGraphParser, test_operatoreq)
 }
 
 TEST_F(UtestAclGraphParser, test_pre_checker) {
+  TBEPluginLoader tbe_plugin;
   PreChecker::Instance().fmk_op_types_ = nullptr;
   const char* str = "iiii";
   PreChecker::OpId id = str;
