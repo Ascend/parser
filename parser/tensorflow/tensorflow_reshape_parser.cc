@@ -21,7 +21,9 @@
 #include "parser/common/util.h"
 #include "parser/tensorflow/tensorflow_util.h"
 #include "parser/common/acl_graph_parser_util.h"
+#include "parser/common/parser_utils.h"
 #include "omg/parser/parser_inner_ctx.h"
+#include "register/register_utils.h"
 
 using domi::TENSORFLOW;
 using namespace ge::parser;
@@ -57,9 +59,14 @@ Status TensorFlowReshapeParser::ParseDesc(const domi::tensorflow::AttrValue &att
   return SUCCESS;
 }
 
-Status TensorFlowReshapeParser::ParseParams(const Message *op_src, ge::OpDescPtr &op) {
+Status TensorFlowReshapeParser::ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) {
   GE_CHECK_NOTNULL(op_src);
-  GE_CHECK_NOTNULL(op);
+  GE_CHECK_NOTNULL(op_dest);
+
+  ge::Operator op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_dest);
+  GE_CHK_STATUS_RET(domi::OperatorAutoMapping(op_src, op),
+                    "call auto mapping failed for node:%s", ParserUtils::GetOperatorName(op).c_str());
+  op.BreakConnect();
 
   const domi::tensorflow::NodeDef *node_src = DOMI_DYNAMIC_CAST<const domi::tensorflow::NodeDef *>(op_src);
   GE_CHECK_NOTNULL(node_src);
@@ -82,10 +89,10 @@ Status TensorFlowReshapeParser::ParseParams(const Message *op_src, ge::OpDescPtr
                                "parse output desc failed");
       }
 
-      GE_CHK_BOOL_RET_STATUS(ge::AttrUtils::SetTensorDesc(op, RESHAPE_ATTR_NAME_INPUT_DESC, input_desc), FAILED,
+      GE_CHK_BOOL_RET_STATUS(ge::AttrUtils::SetTensorDesc(op_dest, RESHAPE_ATTR_NAME_INPUT_DESC, input_desc), FAILED,
                              "set input desc failed");
 
-      GE_CHK_BOOL_RET_STATUS(ge::AttrUtils::SetTensorDesc(op, RESHAPE_ATTR_NAME_OUTPUT_DESC, output_desc), FAILED,
+      GE_CHK_BOOL_RET_STATUS(ge::AttrUtils::SetTensorDesc(op_dest, RESHAPE_ATTR_NAME_OUTPUT_DESC, output_desc), FAILED,
                              "set output desc failed"););
 
   return SUCCESS;

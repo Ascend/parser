@@ -34,7 +34,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowReshapeParser : public TensorFlowOpParser
   * @return FAILED parse failed
   * @author
   */
-  Status ParseParams(const Message *op_src, ge::OpDescPtr &op) override;
+  Status ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) override;
 };
 }  // namespace ge
 
