@@ -208,10 +208,10 @@ void AddDumpOriginName(const std::string& subgraph_name, const ge::NodePtr paren
 }
 void AddDumpOriginNameForRootGraph(const ge::ComputeGraphPtr& graph) {
   for (auto &node : graph->GetDirectNode()) {
-    if (!ge::AttrUtils::SetListStr(node->GetOpDesc(), ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, {node->GetName()})) {
-      GELOGW("Set %s to %s fail.", ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES.c_str(), node->GetOpDesc()->GetName().c_str());
+    if (ge::AttrUtils::SetListStr(node->GetOpDesc(), ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, {node->GetName()})) {
+      GELOGD("Add dump origin name %s for node %s.", node->GetName().c_str(),
+             node->GetName().c_str());
     }
-    GELOGD("Add dump origin name %s for node %s.", node->GetName().c_str(), node->GetName().c_str());
   }
 }
 }  // namespace ge
