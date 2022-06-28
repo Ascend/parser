@@ -17,6 +17,7 @@ PARSER_ONNX_SRC_FILES := \
     onnx_data_parser.cc \
     onnx_util.cc \
     onnx_constant_parser.cc \
+    onnx_file_constant_parser.cc \
     proto/onnx/ge_onnx.proto \
     proto/om.proto \
 

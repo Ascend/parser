@@ -131,6 +131,7 @@ const char *YOLO2REORG = "Yolo2Reorg";
 const char *REDUCESUM = "ReduceSum";
 const char *SUM = "Sum";
 const char *CONSTANT = "Const";
+const char *FILECONSTANT = "FileConstant";
 const char *RESIZEBILINEAR = "ResizeBilinear";
 const char *RESIZEBILINEARGRAD = "ResizeBilinearGrad";
 const char *MAXIMUM = "Maximum";
