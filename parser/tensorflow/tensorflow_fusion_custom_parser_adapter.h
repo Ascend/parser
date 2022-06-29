@@ -42,7 +42,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowFusionCustomParserAdapter : public Tensor
   * @return FAILED parse failed
   * @author
   */
-  Status ParseParams(const std::vector<ge::Operator> &v_input_const, ge::NodePtr &node);
+  Status ParseParams(const std::vector<ge::Operator> &v_input_const, ge::NodePtr &node) const;
 };
 }  // namespace ge
 

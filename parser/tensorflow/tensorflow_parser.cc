@@ -3059,7 +3059,7 @@ Status TensorFlowModelParser::TrimGraphByInput(const domi::tensorflow::GraphDef 
       GE_CHECK_NOTNULL(current_node);
       for (const string &input_name : current_node->input()) {
         string input_node_name = NodeNameFromInput(input_name);
-        if (!delete_nodes.count(input_node_name)) {
+        if (delete_nodes.count(input_node_name) == 0U) {
           next_inputs.insert(input_node_name);
         }
       }
@@ -3072,7 +3072,7 @@ Status TensorFlowModelParser::TrimGraphByInput(const domi::tensorflow::GraphDef 
     if (static_cast<bool>(input_nodes.count(node.name()))) {
       *(filtered_graph_def.mutable_node()->Add()) = node;
     }
-    if (!delete_nodes.count(node.name())) {
+    if (delete_nodes.count(node.name()) == 0U) {
       *(filtered_graph_def.mutable_node()->Add()) = node;
     }
   }
@@ -3135,7 +3135,7 @@ Status TensorFlowModelParser::TrimGraphByOutput(const domi::tensorflow::GraphDef
       GE_CHECK_NOTNULL(current_node);
       for (const string &input_name : current_node->input()) {
         string input_node_name = NodeNameFromInput(input_name);
-        if (!required_nodes.count(input_node_name)) {
+        if (required_nodes.count(input_node_name) == 0U) {
           next_inputs.insert(input_node_name);
         }
       }

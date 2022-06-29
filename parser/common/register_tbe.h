@@ -27,7 +27,7 @@ class OpRegistrationTbe {
   bool Finalize(const OpRegistrationData &reg_data, bool is_train = false);
 
  private:
-  bool RegisterParser(const OpRegistrationData &reg_data);
+  bool RegisterParser(const OpRegistrationData &reg_data) const;
 };
 }  // namespace ge
 

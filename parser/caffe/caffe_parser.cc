@@ -74,6 +74,7 @@ using std::ifstream;
 
 namespace {
 const size_t kMaxErrStrLen = 128U;
+std::map<std::vector<std::string>, std::vector<std::string>> params_share_map;
 }  //  namespace
 
 namespace ge {
@@ -282,7 +283,7 @@ Status CheckPathValid(const char *model_path, const string &custom_proto, string
 const set<string> CaffeWeightsParser::skiped_layer_type_ = {"Split",   "SoftmaxWithLoss", "Accuracy", "Data",
                                                             "Dropout", "MultiLabelLMDB",  "Python",   "AnnotatedData"};
 
-Status CaffeModelParser::ParseInput(domi::caffe::NetParameter &proto_message, bool &input_data_flag) {
+Status CaffeModelParser::ParseInput(domi::caffe::NetParameter &proto_message, bool &input_data_flag) const {
   if (proto_message.input_size() > 0) {
     GELOGI("This net exsit input.");
 
@@ -456,7 +457,7 @@ Status CaffeModelParser::CustomProtoParse(const char *model_path, const string &
   return ret;
 }
 
-Status CaffeModelParser::ReadModelWithoutWarning(const char *model_path, google::protobuf::Message *message) {
+Status CaffeModelParser::ReadModelWithoutWarning(const char *model_path, google::protobuf::Message *message) const {
   int32_t copy_fd = mmDup(STDERR_FILENO);
   if (copy_fd < 0) {
     char_t err_buf[kMaxErrStrLen + 1U] = {};
@@ -536,7 +537,7 @@ Status CaffeModelParser::ReadCaffeModelFromText(const char *model_path, google::
 
 Status CaffeModelParser::ParseLayerParameter(const google::protobuf::Descriptor *layer_descriptor,
                                              const google::protobuf::Message *message,
-                                             vector<ge::Operator> &operators) {
+                                             vector<ge::Operator> &operators) const {
   auto field_name = layer_descriptor->FindFieldByName(kFieldName);
   CAFFE_CHECK_NULL_AND_REPROT_ERRORMSG(field_name, "Does not find name in google::protobuf::Descriptor");
   auto field_type = layer_descriptor->FindFieldByName(kFieldType);
@@ -624,7 +625,7 @@ void CaffeModelParser::AddOutputInfoToContext(string layer_name, int32_t top_ind
   ge::GetParserContext().user_out_nodes.push_back(std::make_pair(layer_name, top_index));
 }
 
-Status CaffeModelParser::ParseOutputNodeTopInfo(const domi::caffe::NetParameter &proto_message) {
+Status CaffeModelParser::ParseOutputNodeTopInfo(const domi::caffe::NetParameter &proto_message) const {
   if (ge::GetParserContext().user_out_tensors.empty()) {
     return SUCCESS;
   }
@@ -932,7 +933,7 @@ Status CaffeModelParser::AddTensorDescToOpDesc(ge::OpDescPtr &op_desc, const dom
 }
 
 Status CaffeModelParser::AddTensorDescToOpDescByIr(ge::OpDescPtr &op_desc, const domi::caffe::LayerParameter &layer,
-                                                   const string &op_type) {
+                                                   const string &op_type) const {
   if (std::find(kAddTensorIrSkipNodes.begin(), kAddTensorIrSkipNodes.end(), op_type) != kAddTensorIrSkipNodes.end()) {
     op_desc = ge::parser::MakeShared<ge::OpDesc>(layer.name(), op_type);
     GE_CHECK_NOTNULL(op_desc);
@@ -1202,7 +1203,7 @@ std::string CaffeModelParser::RemapTopNameByLayer(const domi::caffe::LayerParame
   return (top_name + "_" + layer.name() + "_" + std::to_string(index));
 }
 
-Status CaffeModelParser::PreCheck(const domi::caffe::NetParameter &net) {
+Status CaffeModelParser::PreCheck(const domi::caffe::NetParameter &net) const {
   // Add layer in the model to PreChecker and check the general parameters
   PreChecker::Instance().SetModelName(net.name());
   for (int i = 0; i < net.layer_size(); i++) {
@@ -1977,7 +1978,7 @@ Status CaffeWeightsParser::ParseLayerField(const google::protobuf::Reflection *r
 }
 
 Status CaffeWeightsParser::ConvertBlobsProto(const google::protobuf::Message *message,
-                                             google::protobuf::Message *blobs) {
+                                             google::protobuf::Message *blobs) const {
   const google::protobuf::Reflection *blobs_reflection = message->GetReflection();
   CAFFE_CHECK_NULL_AND_REPROT_ERRORMSG(blobs_reflection, "Get Reflection failed in google::protobuf::Message");
   vector<const google::protobuf::FieldDescriptor *> field_desc;

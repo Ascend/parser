@@ -67,7 +67,7 @@ bool GetIdentifier(const std::string &line, int &identifier) {
       break;
     }
     if (line[i] >= kMinNum && line[i] <= kMaxNum) {
-      identifier = identifier * kDecimalMulti + line[i] - kMinNum;
+      identifier = identifier * kDecimalMulti + static_cast<int>(line[i]) - static_cast<int>(kMinNum);
     }
     if (identifier > kMaxIdentifier || identifier < 0) {
       return false;

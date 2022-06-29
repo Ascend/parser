@@ -19,8 +19,6 @@
 
 #include <memory>
 
-#include "common/fmk_error_codes.h"
-
 namespace ge {
 ///
 /// @ingroup domi_omg
