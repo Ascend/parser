@@ -25,6 +25,5 @@ using ge::parser::IDENTITY;
 using ge::parser::READVARIABLEOP;
 
 namespace ge {
-REGISTER_OP_PARSER_CREATOR(TENSORFLOW, IDENTITY, TensorFlowIdentityParser);
 REGISTER_OP_PARSER_CREATOR(TENSORFLOW, READVARIABLEOP, TensorFlowIdentityParser);
 }  // namespace ge

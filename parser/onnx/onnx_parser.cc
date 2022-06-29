@@ -44,6 +44,12 @@
 #include "graph/utils/node_utils.h"
 #include "graph/utils/type_utils.h"
 #include "subgraph_adapter/subgraph_adapter_factory.h"
+#include "framework/common/types.h"
+#include "mmpa/mmpa_api.h"
+
+namespace {
+const std::string kLocation = "location";
+}
 
 namespace ge {
 graphStatus PrepareBeforeParse(AclGrphParseUtil &acl_graph_parse_util,
@@ -160,7 +166,8 @@ namespace ge {
 namespace {
 const std::map<std::string, std::string> kOnnxOpMap = {
     {ge::kOpTypeInput, ge::parser::DATA},
-    {ge::kOpTypeConstant, ge::parser::CONSTANT}
+    {ge::kOpTypeConstant, ge::parser::CONSTANT},
+    {ge::kFileConstant, ge::parser::FILECONSTANT}
 };
 const int64_t kDimValue = 1;
 
@@ -350,12 +357,16 @@ Status OnnxModelParser::ParseInitializer(ge::onnx::GraphProto &onnx_graph,
     ge::onnx::NodeProto *const_node = onnx_graph.add_node();
     std::string output_name = it.first + "_" + to_string(index++);
     const_node->set_name(output_name);
-    const_node->set_op_type(ge::kOpTypeConstant);
     const_node->add_output(it.first);
     ge::onnx::AttributeProto *attribute = const_node->add_attribute();
     attribute->set_name(ge::kAttrNameValue);
     ge::onnx::TensorProto *attribute_t = attribute->mutable_t();
     *attribute_t = it.second;
+    if (it.second.data_location() == ge::onnx::TensorProto_DataLocation_EXTERNAL) {
+      const_node->set_op_type(kFileConstant);
+    } else {
+      const_node->set_op_type(ge::kOpTypeConstant);
+    }
   }
 
   return SUCCESS;
@@ -722,6 +733,51 @@ Status OnnxModelParser::GetModelFromFile(const char *file, ge::onnx::ModelProto 
     REPORT_CALL_ERROR("E19999", "Read onnx model file:%s failed.", file);
     GELOGE(PARAM_INVALID, "[Read][ModeFile] failed.");
     return FAILED;
+  }
+
+  if (SetExternalPath(file, onnx_model) != SUCCESS) {
+    REPORT_CALL_ERROR("E19999", "Set external path failed, file[%s]", file);
+    GELOGE(PARAM_INVALID, "[Set][ExternalPath] failed.");
+    return PARAM_INVALID;
+  }
+  return SUCCESS;
+}
+
+Status OnnxModelParser::SetExternalPath(const char *file, ge::onnx::ModelProto &onnx_model) const {
+  std::string real_path = ge::parser::RealPath(file);
+  const size_t file_len = real_path.length();
+  std::unique_ptr<char[]> tmp_file(new (std::nothrow) char[file_len + 1U]);
+  GE_CHECK_NOTNULL(tmp_file);
+
+  const auto ret = strncpy_s(tmp_file.get(), file_len + 1U, real_path.c_str(), file_len);
+  if (ret != EN_OK) {
+    REPORT_CALL_ERROR("E19999", "strncpy_s failed, src=%p, dst=%p, src_len=%zu, dst_len=%zu, ret=%d.",
+                      real_path.c_str(), tmp_file.get(), file_len, file_len + 1U, ret);
+    GELOGE(FAILED, "strncpy_s failed, src=%p, dst=%p, src_len=%zu, dst_len=%zu.",
+           real_path.c_str(), tmp_file.get(), file_len, file_len + 1U);
+    return FAILED;
+  }
+  const char *const dir = mmDirName(tmp_file.get());
+  GE_CHECK_NOTNULL(dir);
+
+  const ge::onnx::GraphProto &onnx_graph = onnx_model.graph();
+  for (int32_t i = 0; i < onnx_graph.initializer_size(); ++i) {
+    const ge::onnx::TensorProto &initializer_tensor = onnx_graph.initializer(i);
+    if (initializer_tensor.data_location() != ge::onnx::TensorProto_DataLocation_EXTERNAL) {
+      continue;
+    }
+    for (int32_t j = 0; j < initializer_tensor.external_data_size(); ++j) {
+      ge::onnx::StringStringEntryProto &string_proto =
+          const_cast<ge::onnx::StringStringEntryProto &>(initializer_tensor.external_data(j));
+      if (string_proto.key() != kLocation) {
+        continue;
+      }
+      const std::string &file_name = string_proto.value();
+      const std::string new_file = std::string(dir) + MMPA_PATH_SEPARATOR_STR + file_name;
+      GELOGD("[%s] is external data. concat dir[%s] and file_name[%s], new_file[%s]",
+             initializer_tensor.name().c_str(), dir, file_name.c_str(), new_file.c_str());
+      string_proto.set_value(new_file);
+    }
   }
   return SUCCESS;
 }

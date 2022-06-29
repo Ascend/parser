@@ -4,6 +4,7 @@ set(SRC_LIST
     "onnx_data_parser.cc"
     "onnx_util.cc"
     "onnx_constant_parser.cc"
+    "onnx_file_constant_parser.cc"
     "subgraph_adapter/if_subgraph_adapter.cc"
     "subgraph_adapter/subgraph_adapter_factory.cc"
 )
