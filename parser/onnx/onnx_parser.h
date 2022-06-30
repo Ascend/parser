@@ -126,6 +126,8 @@ class PARSER_FUNC_VISIBILITY OnnxModelParser : public domi::ModelParser {
   
   Status GetModelFromFile(const char *file, ge::onnx::ModelProto &onnx_model) const;
 
+  Status SetExternalPath(const char *file, ge::onnx::ModelProto &onnx_model) const;
+
   Status GetModelFromMemory(const char *data, uint32_t size, ge::onnx::ModelProto &onnx_model) const;
 
   Status ModelParseToGraph(const ge::onnx::ModelProto &onnx_model, ge::Graph &root_graph);

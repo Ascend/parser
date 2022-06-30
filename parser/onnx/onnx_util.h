@@ -48,6 +48,7 @@ const char *const kAttrNameIndex = "index";
 const char *const kAttrNameIsSubgraphOp = "is_subgraph_op";
 const char *const kOpTypeConstant = "Constant";
 const char *const kOpTypeInput = "Input";
+const char *const kFileConstant = "FileConstant";
 
 class OnnxUtil {
  public:

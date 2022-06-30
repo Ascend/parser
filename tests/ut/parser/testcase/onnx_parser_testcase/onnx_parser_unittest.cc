@@ -30,6 +30,7 @@
 #define protected public
 #define private public
 #include "parser/onnx/onnx_constant_parser.h"
+#include "parser/onnx/onnx_file_constant_parser.h"
 #include "parser/onnx/onnx_util.h"
 #include "parser/onnx/onnx_parser.h"
 #undef protected
@@ -316,6 +317,190 @@ TEST_F(UtestOnnxParser, OnnxConstantParser_ParseConvertDataType_test)
   EXPECT_EQ(ret, FAILED);
 }
 
+TEST_F(UtestOnnxParser, FileConstantGetTensorProto)
+{
+  OnnxFileConstantParser parser;
+  ge::onnx::NodeProto input_node;
+  ge::onnx::TensorProto tensor_proto;
+  Status ret = parser.GetTensorProto(&input_node, tensor_proto);
+  EXPECT_EQ(ret, FAILED);
+
+  ge::onnx::AttributeProto *attribute = input_node.add_attribute();
+  attribute->set_name("attribute");
+  attribute = input_node.add_attribute();
+  attribute->set_name("value");
+
+  ge::onnx::TensorProto *attribute_tensor = attribute->mutable_t();
+  *attribute_tensor = tensor_proto;
+  ret = parser.GetTensorProto(&input_node, tensor_proto);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(UtestOnnxParser, FileConstantParseShape)
+{
+  OnnxFileConstantParser parser;
+  ge::onnx::TensorProto tensor_proto;
+  tensor_proto.add_dims(4);
+  tensor_proto.add_dims(2);
+  ge::OpDescPtr op_desc_src = std::make_shared<ge::OpDesc>("file_constant", "FileConstant");
+  ge::Operator op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc_src);
+
+  parser.ParseShape(tensor_proto, op);
+
+  std::vector<int64_t> attr_value;
+  op.GetAttr("shape", attr_value);
+  EXPECT_EQ(attr_value.size(), 2U);
+  if (attr_value.size() == 2U) {
+    EXPECT_EQ(attr_value[0], 4);
+    EXPECT_EQ(attr_value[1], 2);
+  }
+}
+
+TEST_F(UtestOnnxParser, FileConstantParseDataType)
+{
+  OnnxFileConstantParser parser;
+  ge::onnx::TensorProto tensor_proto;
+  tensor_proto.set_data_type(OnnxDataType::UNDEFINED);
+  ge::OpDescPtr op_desc_src = std::make_shared<ge::OpDesc>("file_constant", "FileConstant");
+  ge::Operator op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc_src);
+
+  Status ret = parser.ParseDataType(tensor_proto, op);
+  EXPECT_EQ(ret, FAILED);
+
+  tensor_proto.set_data_type(OnnxDataType::UINT8);
+  ret = parser.ParseDataType(tensor_proto, op);
+  EXPECT_EQ(ret, SUCCESS);
+  ge::DataType attr_value;
+  op.GetAttr("dtype", attr_value);
+  EXPECT_EQ(attr_value, ge::DataType::DT_UINT8);
+}
+
+TEST_F(UtestOnnxParser, FileConstantParseAttr)
+{
+  OnnxFileConstantParser parser;
+  ge::onnx::StringStringEntryProto string_proto;
+  ge::NamedAttrs attrs;
+
+  // test location
+  string_proto.set_key("location");
+  string_proto.set_value("/usr/local");
+  Status ret = parser.SetPathAttr(string_proto, attrs);
+  EXPECT_EQ(ret, SUCCESS);
+  std::string attr_value;
+  AttrUtils::GetStr(attrs, "location", attr_value);
+  EXPECT_EQ(attr_value, "/usr/local");
+
+  // test offset
+  string_proto.set_key("offset");
+  string_proto.set_value("123");
+  ret = parser.SetPathAttr(string_proto, attrs);
+  EXPECT_EQ(ret, SUCCESS);
+  int64_t offset_value;
+  AttrUtils::GetInt(attrs, "offset", offset_value);
+  EXPECT_EQ(offset_value, 123 * 4096);
+
+  // offset overflow
+  string_proto.set_key("offset");
+  string_proto.set_value("9223372036854775800");
+  ret = parser.SetPathAttr(string_proto, attrs);
+  EXPECT_EQ(ret, FAILED);
+
+  // itol exception
+  string_proto.set_key("offset");
+  string_proto.set_value("999999999999999999999999999999999999");
+  ret = parser.SetPathAttr(string_proto, attrs);
+  EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(UtestOnnxParser, FileConstantParsePath)
+{
+  OnnxFileConstantParser parser;
+  ge::onnx::TensorProto tensor_proto;
+  ge::OpDescPtr op_desc_src = std::make_shared<ge::OpDesc>("file_constant", "FileConstant");
+  ge::Operator op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc_src);
+
+
+  // without location, error
+  auto ret = parser.ParsePath(tensor_proto, op);
+  EXPECT_EQ(ret, FAILED);
+
+  // SetPathAttr error
+  ge::onnx::StringStringEntryProto *offset_proto = tensor_proto.add_external_data();
+  offset_proto->set_key("offset");
+  offset_proto->set_value("999999999999999999999999999999");
+  ret = parser.ParsePath(tensor_proto, op);
+  EXPECT_EQ(ret, FAILED);
+
+  // has location, success
+  ge::onnx::StringStringEntryProto *string_proto = tensor_proto.add_external_data();
+  string_proto->set_key("location");
+  string_proto->set_value("/usr/local");
+  offset_proto->set_key("offset");
+  offset_proto->set_value("0");
+  ret = parser.ParsePath(tensor_proto, op);
+  EXPECT_EQ(ret, SUCCESS);
+
+  // check location
+  std::string attr_value;
+  ge::NamedAttrs attrs;
+  AttrUtils::GetNamedAttrs(op_desc_src, "file_constant_path", attrs);
+  AttrUtils::GetStr(attrs, "location", attr_value);
+  EXPECT_EQ(attr_value, "/usr/local");
+}
+
+TEST_F(UtestOnnxParser, FileConstantParseParam)
+{
+  OnnxFileConstantParser parser;
+  ge::onnx::NodeProto input_node;
+  ge::OpDescPtr op_desc_src = std::make_shared<ge::OpDesc>("file_constant", "FileConstant");
+  ge::Operator op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc_src);
+
+  // get tensor proto failed
+  auto ret = parser.ParseParams(reinterpret_cast<Message *>(&input_node), op);
+  EXPECT_EQ(ret, FAILED);
+
+  ge::onnx::TensorProto tensor_proto;
+  ge::onnx::AttributeProto *attribute = input_node.add_attribute();
+  attribute->set_name("value");
+  ge::onnx::TensorProto *attribute_tensor = attribute->mutable_t();
+  *attribute_tensor = tensor_proto;
+
+  // parse data type failed
+  attribute_tensor->set_data_type(OnnxDataType::UNDEFINED);
+  ret = parser.ParseParams(reinterpret_cast<Message *>(&input_node), op);
+  EXPECT_EQ(ret, FAILED);
+
+  // parse path failed
+  attribute_tensor->set_data_type(OnnxDataType::UINT16);
+  ret = parser.ParseParams(reinterpret_cast<Message *>(&input_node), op);
+  EXPECT_EQ(ret, FAILED);
+
+  // success
+  ge::onnx::StringStringEntryProto *string_proto = attribute_tensor->add_external_data();
+  string_proto->set_key("location");
+  string_proto->set_value("/usr/local");
+  attribute_tensor->add_dims(4);
+  ret = parser.ParseParams(reinterpret_cast<Message *>(&input_node), op);
+  EXPECT_EQ(ret, SUCCESS);
+
+  // check location, shape, dtype
+  NamedAttrs attrs;
+  AttrUtils::GetNamedAttrs(*op_desc_src, "file_constant_path", attrs);
+  std::string file_path;
+  AttrUtils::GetStr(attrs, "location", file_path);
+  EXPECT_EQ(file_path, "/usr/local");
+
+  std::vector<int64_t> dims;
+  op.GetAttr("shape", dims);
+  EXPECT_EQ(dims.size(), 1);
+  if (!dims.empty()) {
+    EXPECT_EQ(dims[0], 4);
+  }
+  DataType dtype;
+  op.GetAttr("dtype", dtype);
+  EXPECT_EQ(dtype, ge::DataType::DT_UINT16);
+}
+
 TEST_F(UtestOnnxParser, OnnxModelParser_ParseInput_test)
 {
   OnnxModelParser model_parser;
@@ -386,6 +571,25 @@ TEST_F(UtestOnnxParser, onnx_test_ModelParseToGraph)
 
   Status ret = modelParser.ModelParseToGraph(model_proto, root_graph);
   EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(UtestOnnxParser, onnx_test_SetExternalPath)
+{
+  OnnxModelParser modelParser;
+  ge::onnx::ModelProto model_proto;
+  auto ret = modelParser.SetExternalPath("", model_proto);
+  EXPECT_NE(ret, SUCCESS);
+
+  ge::onnx::GraphProto &graph_proto = const_cast<ge::onnx::GraphProto &>(model_proto.graph());
+  graph_proto.add_initializer();
+  ge::onnx::TensorProto* tensor_proto = graph_proto.add_initializer();
+  tensor_proto->set_data_location(ge::onnx::TensorProto_DataLocation::TensorProto_DataLocation_EXTERNAL);
+  tensor_proto->add_external_data();
+  ge::onnx::StringStringEntryProto *string_proto = tensor_proto->add_external_data();
+  string_proto->set_key("location");
+  string_proto->set_value("if.onnx");
+  ret = modelParser.SetExternalPath("/usr/local", model_proto);
+  EXPECT_EQ(ret, SUCCESS);
 }
 
 TEST_F(UtestOnnxParser, onnx_test_ParseFromMemory)

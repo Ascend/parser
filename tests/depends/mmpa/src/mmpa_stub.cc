@@ -15,6 +15,7 @@
  */
 
 #include "mmpa/mmpa_api.h"
+#include <string>
 
 typedef int mmErrorMSg;
 
@@ -300,4 +301,23 @@ CHAR *mmGetErrorFormatMessage(mmErrorMSg errnum, CHAR *buf, mmSize size)
     return NULL;
   }
   return strerror_r(errnum, buf, size);
+}
+
+CHAR *mmDirName(CHAR *path) {
+  if (path == NULL) {
+    return NULL;
+  }
+#if (defined(_WIN32) || defined(_WIN64) || defined(_MSC_VER))
+  char separator = '\\';
+#else
+  char separator = '/';
+#endif
+  std::string path_str(path);
+  const size_t last_sep_pos = path_str.rfind(separator);
+  if (last_sep_pos == std::string::npos) {
+    return NULL;
+  }
+
+  path[last_sep_pos] = '\0';
+  return path;
 }
