@@ -4245,7 +4245,7 @@ TEST_F(STestTensorflowParser, AddDumpOriginName_test)
   std::vector<std::string> original_names;
   (void)ge::AttrUtils::GetListStr(desc, ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names);
   EXPECT_EQ(original_names.empty(), false);
-  EXPECT_EQ(original_names[0], "while/COND0/cond/Data1");
+  EXPECT_EQ(original_names[0], "WHILE0/while/COND0/cond/Data1");
 }
 
 } // namespace ge
