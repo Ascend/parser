@@ -48,7 +48,7 @@ static bool IsRoundOne(uint64_t man, uint16_t trunc_len) {
   uint64_t mask0 = 0x4;
   uint64_t mask1 = 0x2;
   uint64_t mask2;
-  uint16_t shift_out = static_cast<uint16_t>(trunc_len - kDim2);
+  uint16_t shift_out = static_cast<uint16_t>(trunc_len - static_cast<uint16_t>(kDim2));
   mask0 = mask0 << shift_out;
   mask1 = mask1 << shift_out;
   mask2 = mask1 - 1;
@@ -89,7 +89,7 @@ static float Fp16ToFloat(const uint16_t &fp_val) {
   int16_t hf_exp;
   ExtractFp16(fp_val, hf_sign, hf_exp, hf_man);
 
-  while (hf_man && !(hf_man & kFp16ManHideBit)) {
+  while ((hf_man != 0U) && ((hf_man & kFp16ManHideBit) == 0U)) {
     hf_man <<= 1;
     hf_exp--;
   }
@@ -120,7 +120,7 @@ static double Fp16ToDouble(const uint16_t &fp_val) {
   int16_t hf_exp;
   ExtractFp16(fp_val, hf_sign, hf_exp, hf_man);
 
-  while (hf_man && !(hf_man & kFp16ManHideBit)) {
+  while ((hf_man != 0U) && ((hf_man & kFp16ManHideBit) == 0U)) {
     hf_man <<= 1;
     hf_exp--;
   }
@@ -128,7 +128,7 @@ static double Fp16ToDouble(const uint16_t &fp_val) {
   uint64_t e_ret;
   uint64_t m_ret;
   uint64_t s_ret = hf_sign;
-  if (!hf_man) {
+  if (hf_man == 0U) {
     e_ret = 0;
     m_ret = 0;
   } else {
@@ -256,7 +256,7 @@ static uint8_t Fp16ToUInt8(const uint16_t &fp_val) {
         shift_out++;
       }
     }
-    if (!overflow_flag) {
+    if (overflow_flag == 0U) {
       bool need_round = IsRoundOne(long_int_m, shift_out + kFp16ManLen);
       m_ret = static_cast<uint8_t>((long_int_m >> (kFp16ManLen + shift_out)) & kBitLen8Max);
       if (need_round && m_ret != kBitLen8Max) {
@@ -290,7 +290,7 @@ static uint16_t GetUint16ValByMan(uint16_t s_ret, const uint64_t &long_int_m, co
   if (m_ret == 0) {
     s_ret = 0;
   }
-  return static_cast<uint16_t>((s_ret << kBitShift15) | (m_ret));
+  return static_cast<uint16_t>((s_ret << static_cast<uint16_t>(kBitShift15)) | (m_ret));
 }
 
 /// @ingroup fp16_t math conversion static method
@@ -431,7 +431,7 @@ static int32_t Fp16ToInt32(const uint16_t &fp_val) {
       s_ret = 0;
     }
     // Generate final result
-    ret_v = (s_ret << kBitShift31) | (m_ret);
+    ret_v = (s_ret << static_cast<uint16_t>(kBitShift31)) | (m_ret);
   }
 
   return *(ge::PtrToPtr<uint32_t, uint32_t>(&ret_v));
@@ -565,7 +565,7 @@ static uint16_t Fp16Add(uint16_t v_1, uint16_t v_2) {
     m_trunc = (m_b << (static_cast<uint16_t>(kBitShift32) - static_cast<uint16_t>(e_tmp)));
     m_b = RightShift(m_b, e_tmp);
   } else if (e_a < e_b) {
-    m_trunc = (m_a << (kBitShift32 - static_cast<uint16_t>(e_tmp)));
+    m_trunc = (m_a << (static_cast<uint16_t>(kBitShift32) - static_cast<uint16_t>(e_tmp)));
     m_a = RightShift(m_a, e_tmp);
   }
   // calculate mantissav
@@ -603,7 +603,7 @@ static uint16_t Fp16Mul(uint16_t v_1, uint16_t v_2) {
   m_a = m_a_tmp;
   m_b = m_b_tmp;
 
-  e_ret = ((e_a + e_b) - kFp16ExpBias) - kDim10;
+  e_ret = ((e_a + e_b) - kFp16ExpBias) - static_cast<int16_t>(kDim10);
   mul_m = m_a * m_b;
   s_ret = s_a ^ s_b;
 
@@ -905,7 +905,7 @@ fp16_t &fp16_t::operator=(const float &f_val) {
 fp16_t &fp16_t::operator=(const int8_t &i_val) {
   uint16_t s_ret, e_ret, m_ret;
 
-  s_ret = static_cast<uint16_t>(((static_cast<uint8_t>(i_val)) & 0x80) >> kDim7);
+  s_ret = static_cast<uint16_t>(((static_cast<uint8_t>(i_val)) & 0x80) >> static_cast<uint8_t>(kDim7));
   m_ret = static_cast<uint16_t>(((static_cast<uint8_t>(i_val)) & kInt8Max));
 
   if (m_ret == 0) {
@@ -952,14 +952,14 @@ static void SetValByUint16Val(const uint16_t &input_val, const uint16_t &sign, u
   uint16_t len = static_cast<uint16_t>(GetManBitLength(m_tmp));
   if (static_cast<bool>(m_tmp)) {
     int16_t e_ret;
-    if (len > kDim11) {
+    if (len > static_cast<uint16_t>(kDim11)) {
       e_ret = kFp16ExpBias + kFp16ManLen;
       uint16_t e_tmp = len - static_cast<uint16_t>(kDim11);
       uint32_t trunc_mask = 1;
       for (int i = 1; i < e_tmp; i++) {
         trunc_mask = (trunc_mask << 1) + 1;
       }
-      uint32_t m_trunc = (m_tmp & trunc_mask) << (kBitShift32 - e_tmp);
+      uint32_t m_trunc = (m_tmp & trunc_mask) << (static_cast<uint16_t>(kBitShift32) - e_tmp);
       for (int i = 0; i < e_tmp; i++) {
         m_tmp = (m_tmp >> 1);
         e_ret = e_ret + 1;
@@ -991,7 +991,7 @@ fp16_t &fp16_t::operator=(const int16_t &i_val) {
     val = 0;
   } else {
     uint16_t ui_val = *(ge::PtrToPtr<const int16_t, const int16_t>(&i_val));
-    auto s_ret = static_cast<uint16_t>(ui_val >> kBitShift15);
+    auto s_ret = static_cast<uint16_t>(ui_val >> static_cast<uint16_t>(kBitShift15));
     if (static_cast<bool>(s_ret)) {
       int16_t iValM = -i_val;
       ui_val = *(ge::PtrToPtr<int16_t, uint16_t>(&iValM));
@@ -1018,7 +1018,7 @@ fp16_t &fp16_t::operator=(const uint16_t &ui_val) {
       for (int i = 1; i < e_tmp; i++) {
         trunc_mask = (trunc_mask << 1) + 1;
       }
-      m_trunc = (m_ret & trunc_mask) << (kBitShift32 - e_tmp);
+      m_trunc = (m_ret & trunc_mask) << (static_cast<uint16_t>(kBitShift32) - e_tmp);
       for (int i = 0; i < e_tmp; i++) {
         m_ret = (m_ret >> 1);
         e_ret = e_ret + 1;
@@ -1040,7 +1040,7 @@ fp16_t &fp16_t::operator=(const uint16_t &ui_val) {
       }
     } else {
       e_ret = static_cast<int16_t>(kFp16ExpBias);
-      m_ret = m_ret << (kDim11 - len);
+      m_ret = m_ret << (static_cast<uint16_t>(kDim11) - len);
       e_ret = e_ret + (len - 1);
     }
     val = FP16_CONSTRUCTOR(0u, static_cast<uint16_t>(e_ret), m_ret);
@@ -1062,7 +1062,7 @@ static void SetValByUint32Val(const uint32_t &input_val, const uint16_t &sign, u
     for (int i = 1; i < e_tmp; i++) {
       trunc_mask = (trunc_mask << 1) + 1;
     }
-    m_trunc = (m_tmp & trunc_mask) << (kBitShift32 - e_tmp);
+    m_trunc = (m_tmp & trunc_mask) << (static_cast<uint16_t>(kBitShift32) - e_tmp);
     for (int i = 0; i < e_tmp; i++) {
       m_tmp = (m_tmp >> 1);
       e_ret = e_ret + 1;
@@ -1085,7 +1085,7 @@ static void SetValByUint32Val(const uint32_t &input_val, const uint16_t &sign, u
     }
   } else {
     e_ret = static_cast<int16_t>(kFp16ExpBias);
-    m_tmp = m_tmp << (kDim11 - len);
+    m_tmp = m_tmp << (static_cast<uint16_t>(kDim11) - len);
     e_ret = e_ret + (len - 1);
   }
   auto m_ret = static_cast<uint16_t>(m_tmp);
@@ -1097,7 +1097,7 @@ fp16_t &fp16_t::operator=(const int32_t &i_val) {
     val = 0;
   } else {
     uint32_t ui_val = *(ge::PtrToPtr<const int32_t, const uint32_t>(&i_val));
-    auto s_ret = static_cast<uint16_t>(ui_val >> kBitShift31);
+    auto s_ret = static_cast<uint16_t>(ui_val >> static_cast<uint16_t>(kBitShift31));
     if (static_cast<bool>(s_ret)) {
       int32_t iValM = -i_val;
       ui_val = *(ge::PtrToPtr<int32_t, uint32_t>(&iValM));
@@ -1124,7 +1124,7 @@ fp16_t &fp16_t::operator=(const uint32_t &ui_val) {
       for (int i = 1; i < e_tmp; i++) {
         trunc_mask = (trunc_mask << 1) + 1;
       }
-      m_trunc = (m_tmp & trunc_mask) << static_cast<uint32_t>(kBitShift32 - e_tmp);
+      m_trunc = (m_tmp & trunc_mask) << static_cast<uint32_t>(static_cast<uint16_t>(kBitShift32) - e_tmp);
       for (uint16_t i = 0; i < e_tmp; i++) {
         m_tmp = (m_tmp >> 1);
         e_ret = e_ret + 1;
@@ -1147,7 +1147,7 @@ fp16_t &fp16_t::operator=(const uint32_t &ui_val) {
       }
     } else {
       e_ret = static_cast<int16_t>(kFp16ExpBias);
-      m_tmp = m_tmp << (kDim11 - len);
+      m_tmp = m_tmp << (static_cast<uint16_t>(kDim11) - len);
       e_ret = e_ret + (len - 1);
     }
     auto m_ret = static_cast<uint16_t>(m_tmp);
