@@ -75,7 +75,7 @@ bool OpRegistrationTbe::Finalize(const OpRegistrationData &reg_data, bool is_tra
   return ret;
 }
 
-bool OpRegistrationTbe::RegisterParser(const OpRegistrationData &reg_data) {
+bool OpRegistrationTbe::RegisterParser(const OpRegistrationData &reg_data) const {
   if (reg_data.GetFrameworkType() == domi::TENSORFLOW) {
     std::shared_ptr<OpParserFactory> factory = OpParserFactory::Instance(domi::TENSORFLOW);
     if (factory == nullptr) {

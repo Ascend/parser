@@ -45,7 +45,7 @@ domi::Status IfSubgraphAdapter::AdaptAndFindAllSubgraphs(
 
 domi::Status IfSubgraphAdapter::ParseIfNodeSubgraphs(
     ge::onnx::NodeProto *parent_node, std::vector<ge::onnx::GraphProto *> &onnx_graphs,
-    std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph, const std::string &parent_graph_name) {
+    std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph, const std::string &parent_graph_name) const {
   if (parent_node->attribute_size() != kIfNodeAttrSize) {
     GELOGE(FAILED, "[Parse][Node] Invalid graph, if node attribute size:%d must be 2.", parent_node->attribute_size());
     REPORT_INNER_ERROR("E19999", "Invalid graph, if node attribute size:%d must be 2.", parent_node->attribute_size());

@@ -218,9 +218,9 @@ Status PreChecker::Save(const string &file) {
 
   // Constructing JSON information of operators in order of network
   for (auto id : ops_) {
-    auto iter = op_map_.find(id);
-    GE_CHK_BOOL_RET_STATUS(iter != op_map_.end(), FAILED, "[Check][Param] don't find this op.");
-    Info &info = iter->second;
+    std::map<OpId, Info>::const_iterator iter = op_map_.find(id);
+    GE_CHK_BOOL_RET_STATUS(iter != op_map_.cend(), FAILED, "[Check][Param] don't find this op.");
+    const Info &info = iter->second;
 
     // Initialization operator general information
     nlohmann::json op = {{kKeyOpName, info.name}, {kKeyOpType, info.type}};

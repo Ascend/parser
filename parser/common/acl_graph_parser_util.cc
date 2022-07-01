@@ -266,7 +266,7 @@ void AclGrphParseUtil::SetDefaultFormat() {
   }
 }
 
-domi::Status AclGrphParseUtil::ParseAclOutputNodes(const string &out_nodes) {
+domi::Status AclGrphParseUtil::ParseAclOutputNodes(const string &out_nodes) const {
   try {
     ge::GetParserContext().out_nodes_map.clear();
     ge::GetParserContext().user_out_nodes.clear();
@@ -492,7 +492,7 @@ domi::Status AclGrphParseUtil::GetOutputLeaf(NodePtr node,
 }
 
 domi::Status AclGrphParseUtil::GetDefaultOutInfo(ge::ComputeGraphPtr &compute_graph,
-    std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info) {
+    std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info) const {
   std::vector<std::pair<std::string, int32_t>> default_out_nodes = ge::GetParserContext().default_out_nodes;
   if (!default_out_nodes.empty()) {
     for (size_t i = 0; i < default_out_nodes.size(); ++i) {
@@ -587,7 +587,7 @@ domi::Status AclGrphParseUtil::CheckOptions(const std::map<AscendString, AscendS
     }
 
     string key_str = key_ascend;
-    auto it = ge::ir_option::ir_parser_suppported_options.find(key_str);
+    std::set<std::string>::const_iterator it = ge::ir_option::ir_parser_suppported_options.find(key_str);
     if (it == ge::ir_option::ir_parser_suppported_options.end()) {
       ErrorManager::GetInstance().ATCReportErrMessage("E10016", {"parameter", "opname"}, {"parser_params", key_str});
       GELOGE(PARAM_INVALID, "[Check][Param] Input options include unsupported option(%s).Please check!", key_ascend);
@@ -651,7 +651,7 @@ domi::Status AclGrphParseUtil::ParseParamsBeforeGraph(const std::map<AscendStrin
 }
 
 domi::Status AclGrphParseUtil::ParseParamsAfterGraph(ge::Graph &graph,
-                                                     const std::map<AscendString, AscendString> &parser_params) {
+                                                     const std::map<AscendString, AscendString> &parser_params) const {
   // support paragrams: input_fp16_nodes, is_input_adjust_hw_layout,
   ComputeGraphPtr compute_graph = GraphUtils::GetComputeGraph(graph);
   GE_CHECK_NOTNULL(compute_graph);
@@ -943,7 +943,7 @@ FMK_FUNC_HOST_VISIBILITY bool ValidateStr(const std::string &filePath, const std
   regex_t reg;
   int cflags = REG_EXTENDED | REG_NOSUB;
   int ret = regcomp(&reg, mode.c_str(), cflags);
-  if (ret) {
+  if (ret != 0) {
     regerror(ret, &reg, ebuff, kMaxBuffSize);
     GELOGW("regcomp failed, reason: %s", ebuff);
     regfree(&reg);
@@ -951,7 +951,7 @@ FMK_FUNC_HOST_VISIBILITY bool ValidateStr(const std::string &filePath, const std
   }
 
   ret = regexec(&reg, filePath.c_str(), 0, nullptr, 0);
-  if (ret) {
+  if (ret != 0) {
     regerror(ret, &reg, ebuff, kMaxBuffSize);
     GELOGE(ge::PARAM_INVALID, "[Invoke][RegExec] failed, reason: %s", ebuff);
     regfree(&reg);

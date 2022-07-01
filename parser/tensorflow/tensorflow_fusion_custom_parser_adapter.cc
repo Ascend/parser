@@ -59,7 +59,7 @@ Status TensorFlowFusionCustomParserAdapter::ParseParams(const vector<const NodeD
 }
 
 Status TensorFlowFusionCustomParserAdapter::ParseParams(const std::vector<ge::Operator> &v_input_const,
-                                                        ge::NodePtr &node) {
+                                                        ge::NodePtr &node) const {
   GE_CHECK_NOTNULL(node);
   auto op_dest = node->GetOpDesc();
   GE_CHECK_NOTNULL(op_dest);
