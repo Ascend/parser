@@ -195,24 +195,15 @@ void AddDumpOriginName(const std::string& subgraph_name, const ge::NodePtr paren
   auto parend_desc = parent_node->GetOpDesc();
   (void)ge::AttrUtils::GetListStr(parend_desc, ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names);
   if (original_names.empty()) {
-    original_names.emplace_back(string(subgraph_name).append("/").append(node->GetName()));
-  } else {
-    // for fusion node also used original_names[0]
-    (void)original_names[0].append("/").append(subgraph_name).append("/").append(node->GetName());
+    original_names.emplace_back(parent_node->GetName());
   }
+  // for fusion node also used original_names[0]
+  (void)original_names[0].append("/").append(subgraph_name).append("/").append(node->GetName());
 
   if (!ge::AttrUtils::SetListStr(node->GetOpDesc(), ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names)) {
     GELOGW("Set %s to %s fail.", ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES.c_str(), node->GetOpDesc()->GetName().c_str());
   }
   GELOGD("Add dump origin name %s for node %s.", original_names[0].c_str(), node->GetName().c_str());
-}
-void AddDumpOriginNameForRootGraph(const ge::ComputeGraphPtr& graph) {
-  for (auto &node : graph->GetDirectNode()) {
-    if (ge::AttrUtils::SetListStr(node->GetOpDesc(), ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, {node->GetName()})) {
-      GELOGD("Add dump origin name %s for node %s.", node->GetName().c_str(),
-             node->GetName().c_str());
-    }
-  }
 }
 }  // namespace ge
 
@@ -281,7 +272,6 @@ Status GenSubgraphParseTasks(const ge::ComputeGraphPtr &parent_graph, std::deque
 
 Status PostOpProcessForSubgraph(const ParseArg &arg) {
   if (arg.parent_node == nullptr) {
-    AddDumpOriginNameForRootGraph(arg.graph);
     return SUCCESS;
   }
   std::string op_type = arg.parent_node->GetType();
