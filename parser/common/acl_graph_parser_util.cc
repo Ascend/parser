@@ -590,7 +590,7 @@ domi::Status AclGrphParseUtil::CheckOptions(const std::map<AscendString, AscendS
 
     string key_str = key_ascend;
     std::set<std::string>::const_iterator it = ge::ir_option::ir_parser_suppported_options.find(key_str);
-    if (it == ge::ir_option::ir_parser_suppported_options.end()) {
+    if (it == ge::ir_option::ir_parser_suppported_options.cend()) {
       ErrorManager::GetInstance().ATCReportErrMessage("E10016", {"parameter", "opname"}, {"parser_params", key_str});
       GELOGE(PARAM_INVALID, "[Check][Param] Input options include unsupported option(%s).Please check!", key_ascend);
       return PARAM_INVALID;
