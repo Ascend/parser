@@ -96,21 +96,24 @@ target_link_options(fmk_parser PRIVATE
 )
 
 target_link_libraries(fmk_parser
-    $<BUILD_INTERFACE:intf_pub>
-    static_mmpa
-    -Wl,--no-as-needed
-    ascend_protobuf
-    error_manager
-    parser_common
-    graph
-    register
-    _caffe_parser
-    c_sec
-    slog
-    -Wl,--as-needed
-    json
-    -lrt
-    -ldl
+    PRIVATE
+        intf_pub
+        static_mmpa
+        -Wl,--no-as-needed
+        ascend_protobuf
+        error_manager
+        parser_common
+        graph
+        register
+        _caffe_parser
+        c_sec
+        slog
+        -Wl,--as-needed
+        json
+        -lrt
+        -ldl
+    PUBLIC
+        parser_headers
 )
 
 ##################################################################
@@ -181,13 +184,6 @@ set_target_properties(fmk_parser_stub PROPERTIES
 )
 
 ############ install ############
-set(INSTALL_BASE_DIR "")
-set(INSTALL_LIBRARY_DIR lib)
-
-install(TARGETS fmk_parser OPTIONAL
-    LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}
-)
-
 install(TARGETS fmk_parser_stub OPTIONAL
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}/stub
 )

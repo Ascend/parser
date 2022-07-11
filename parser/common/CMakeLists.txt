@@ -85,26 +85,22 @@ target_link_options(parser_common PRIVATE
     -Wl,-Bsymbolic
 )
 
-target_link_libraries(parser_common PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
-    static_mmpa
-    -Wl,--no-as-needed
-    graph
-    ascend_protobuf
-    register
-    c_sec
-    slog
-    error_manager
-    -Wl,--as-needed
-    json
-    -lrt
-    -ldl
+target_link_libraries(parser_common
+    PRIVATE
+        intf_pub
+        static_mmpa
+        -Wl,--no-as-needed
+        graph
+        ascend_protobuf
+        register
+        c_sec
+        slog
+        error_manager
+        -Wl,--as-needed
+        json
+        -lrt
+        -ldl
+    PUBLIC
+        parser_headers
 )
 
-############ install ############
-set(INSTALL_BASE_DIR "")
-set(INSTALL_LIBRARY_DIR lib)
-
-install(TARGETS parser_common OPTIONAL
-    LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}
-)
