@@ -96,7 +96,7 @@ target_link_options(fmk_parser PRIVATE
 )
 
 target_link_libraries(fmk_parser
-    PRIVATE
+    PUBLIC
         intf_pub
         static_mmpa
         -Wl,--no-as-needed
@@ -112,7 +112,6 @@ target_link_libraries(fmk_parser
         json
         -lrt
         -ldl
-    PUBLIC
         parser_headers
 )
 
