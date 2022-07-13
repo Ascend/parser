@@ -1,6 +1,13 @@
 cmake_minimum_required(VERSION 3.14)
 project (Parser[CXX])
 
+set(INSTALL_BASE_DIR "")
+set(INSTALL_LIBRARY_DIR lib)
+set(INSTALL_RUNTIME_DIR bin)
+set(INSTALL_INCLUDE_DIR include)
+set(INSTALL_CONFIG_DIR  cmake)
+include(CMakePackageConfigHelpers)
+
 set(PARSER_DIR ${CMAKE_CURRENT_LIST_DIR})
 
 if (DEFINED ENV{D_PKG_SERVER})
@@ -84,6 +91,17 @@ set(PARSER_PROTO_LIST
 )
 
 protobuf_generate(parser_protos PARSER_PROTO_SRCS PARSER_PROTO_HDRS ${PARSER_PROTO_LIST} TARGET)
+
+add_library(parser_headers INTERFACE)
+target_include_directories(parser_headers INTERFACE
+    $<BUILD_INTERFACE:${PARSER_DIR}/inc>
+    $<BUILD_INTERFACE:${PARSER_DIR}/inc/external>
+    $<BUILD_INTERFACE:${PARSER_DIR}/inc/external/parser>
+    $<INSTALL_INTERFACE:include>
+    $<INSTALL_INTERFACE:include/parser>
+    $<INSTALL_INTERFACE:include/parser/external>
+    $<INSTALL_INTERFACE:include/parser/external/parser>
+)
 
 set(PARSER_GRAPH_LIBRARY_PROTO_SRC
     "${CMAKE_BINARY_DIR}/proto/parser_protos/proto/tensorflow/graph_library.pb.cc"
@@ -211,23 +229,46 @@ target_link_options(_caffe_parser PRIVATE
     -Wl,-Bsymbolic
 )
 
-target_link_libraries(_caffe_parser PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
-    -Wl,--no-as-needed
-    ascend_protobuf
-    -Wl,--as-needed
+target_link_libraries(_caffe_parser
+    PRIVATE
+        intf_pub
+        -Wl,--no-as-needed
+        ascend_protobuf
+        -Wl,--as-needed
+    PUBLIC
+        parser_headers
 )
-
-############ install ############
-set(INSTALL_BASE_DIR "")
-set(INSTALL_LIBRARY_DIR lib)
-
-install(TARGETS _caffe_parser OPTIONAL
-    LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}
-)
-
 
 add_subdirectory(parser)
 add_subdirectory(parser/common)
 add_subdirectory(parser/func_to_graph)
 add_subdirectory(parser/onnx)
+
+install(TARGETS _caffe_parser parser_common fmk_onnx_parser fmk_parser parser_headers
+    EXPORT parser-targets
+    LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR} OPTIONAL COMPONENT opensdk
+    ARCHIVE DESTINATION ${INSTALL_LIBRARY_DIR} OPTIONAL COMPONENT opensdk
+    RUNTIME DESTINATION ${INSTALL_RUNTIME_DIR} OPTIONAL COMPONENT opensdk
+)
+install(FILES   ${PARSER_DIR}/inc/external/parser/onnx_parser.h
+                ${PARSER_DIR}/inc/external/parser/caffe_parser.h
+                ${PARSER_DIR}/inc/external/parser/tensorflow_parser.h
+        DESTINATION ${INSTALL_INCLUDE_DIR}/parser/external/parser COMPONENT opensdk EXCLUDE_FROM_ALL
+)
+
+if (PACKAGE STREQUAL "opensdk")
+    install(EXPORT parser-targets DESTINATION ${INSTALL_CONFIG_DIR}
+        FILE parser-targets.cmake COMPONENT opensdk EXCLUDE_FROM_ALL
+    )
+    set(PKG_NAME parser)
+    configure_package_config_file(${TOP_DIR}/cmake/config/pkg_config_template.cmake.in
+        ${CMAKE_CURRENT_BINARY_DIR}/parser-config.cmake
+        INSTALL_DESTINATION ${INSTALL_CONFIG_DIR}
+        PATH_VARS INSTALL_BASE_DIR INSTALL_INCLUDE_DIR INSTALL_LIBRARY_DIR INSTALL_RUNTIME_DIR INSTALL_CONFIG_DIR
+        INSTALL_PREFIX ${CMAKE_INSTALL_PREFIX}
+    )
+    unset(PKG_NAME)
+    install(FILES ${CMAKE_CURRENT_BINARY_DIR}/parser-config.cmake
+        DESTINATION ${INSTALL_CONFIG_DIR} COMPONENT opensdk EXCLUDE_FROM_ALL
+    )
+endif()

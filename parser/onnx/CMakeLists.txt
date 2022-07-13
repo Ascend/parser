@@ -70,21 +70,24 @@ target_link_options(fmk_onnx_parser PRIVATE
     -Wl,-Bsymbolic
 )
 
-target_link_libraries(fmk_onnx_parser PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
-    static_mmpa
-    -Wl,--no-as-needed
-    ascend_protobuf
-    register
-    c_sec
-    parser_common
-    graph
-    slog
-    -Wl,--as-needed
-    json
-    -lrt
-    -ldl
-    error_manager
+target_link_libraries(fmk_onnx_parser
+    PRIVATE
+        intf_pub
+        static_mmpa
+        -Wl,--no-as-needed
+        ascend_protobuf
+        register
+        c_sec
+        parser_common
+        graph
+        slog
+        -Wl,--as-needed
+        json
+        -lrt
+        -ldl
+        error_manager
+    PUBLIC
+        parser_headers
 )
 
 ##################################################################
@@ -140,13 +143,6 @@ set_target_properties(fmk_onnx_parser_stub PROPERTIES
 )
 
 ############ install ############
-set(INSTALL_BASE_DIR "")
-set(INSTALL_LIBRARY_DIR lib)
-
-install(TARGETS fmk_onnx_parser OPTIONAL
-    LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}
-)
-
 install(TARGETS fmk_onnx_parser_stub OPTIONAL
     LIBRARY DESTINATION ${INSTALL_LIBRARY_DIR}/stub
 )
