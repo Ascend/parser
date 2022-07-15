@@ -96,8 +96,10 @@ target_link_options(fmk_parser PRIVATE
 )
 
 target_link_libraries(fmk_parser
-    PUBLIC
+    PRIVATE
         intf_pub
+        json
+    PUBLIC
         static_mmpa
         -Wl,--no-as-needed
         ascend_protobuf
@@ -109,7 +111,6 @@ target_link_libraries(fmk_parser
         c_sec
         slog
         -Wl,--as-needed
-        json
         -lrt
         -ldl
         parser_headers
