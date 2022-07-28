@@ -29,6 +29,7 @@
 #include "parser/common/op_parser_factory.h"
 #include "parser/tensorflow/tensorflow_op_parser.h"
 #include "proto/tensorflow/node_def.pb.h"
+#include "register/register_utils.h"
 
 namespace ge {
 class PARSER_FUNC_VISIBILITY TensorflowFinalizeable {
@@ -106,6 +107,10 @@ class PARSER_FUNC_VISIBILITY TensorflowOpParserAdapter : public TensorFlowOpPars
       GELOGE(domi::FAILED, "Param is null");
       return domi::FAILED;
     }
+    ge::Operator op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_dest);
+    GE_CHK_STATUS_RET(domi::OperatorAutoMapping(op_src, op),
+                      "[Call][AutoMapping] failed.");
+    op.BreakConnect();
     GE_RETURN_IF_ERROR(parse_params_fn_(node, param.get()));
     param.get()->Name(node->name());
     std::shared_ptr<ParserOperator> op_param = std::static_pointer_cast<ParserOperator>(param);
