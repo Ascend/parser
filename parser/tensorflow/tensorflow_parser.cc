@@ -3373,7 +3373,7 @@ Status TensorFlowModelParser::AddControlEdgeAfterRemoveInputs(domi::tensorflow::
       return FAILED;
     }
     NodeDef *input_node_def = it->second;
-    if (input_node_def->op() == parser::SWITCH || input_node_def->op() == parser::REFSWITCH) {
+    if ((input_node_def->op() == parser::SWITCH) || (input_node_def->op() == parser::REFSWITCH)) {
       NodeDef *identity_node_def = graph_def->add_node();
       GE_CHECK_NOTNULL(identity_node_def);
       std::string remove_input_name = remove_input;
@@ -3426,8 +3426,8 @@ Status TensorFlowModelParser::RemoveInputs(domi::tensorflow::GraphDef *graph_def
     for (auto &remove_input : remove_inputs_map) {
       string remove_input_name = remove_input.first;
       vector<int> remove_input_indexs = remove_input.second;
-      if ((*input_it) == remove_input_name &&
-          std::find(remove_input_indexs.begin(), remove_input_indexs.end(), index) != remove_input_indexs.end()) {
+      if (((*input_it) == remove_input_name) &&
+          (std::find(remove_input_indexs.begin(), remove_input_indexs.end(), index) != remove_input_indexs.end())) {
         GELOGD("Remove input:%s, index:%d", remove_input_name.c_str(), index);
         flag = true;
         removed_inputs_vec.emplace_back(remove_input_name);
@@ -3481,7 +3481,7 @@ void TensorFlowModelParser::RemoveInputAttr(domi::tensorflow::NodeDef *node_def,
 
       if (flag) {
         // 2.1 remove the input attr
-        if (!tmp_attr->empty() && attr_it != tmp_attr->end()) {
+        if (!tmp_attr->empty() && (attr_it != tmp_attr->end())) {
           attr_it = tmp_attr->erase(attr_it);
         } else {
           ++attr_it;
@@ -3990,7 +3990,7 @@ Status TensorFlowModelParser::UpdateOutputsInfo(const ParserUtils::OutputMapping
 Status TensorFlowModelParser::AddExternalGraph(const ComputeGraphPtr &root_graph) {
   GE_CHECK_NOTNULL(root_graph);
   for (const NodePtr &node : root_graph->GetAllNodes()) {
-    if (node == nullptr || node->GetOpDesc() == nullptr) {
+    if ((node == nullptr) || (node->GetOpDesc() == nullptr)) {
       continue;
     }
     std::string model_data;
@@ -4010,6 +4010,7 @@ Status TensorFlowModelParser::AddExternalGraph(const ComputeGraphPtr &root_graph
         REPORT_CALL_ERROR("E19999", "Failed to map and add sub graph, node:%s.", node->GetName().c_str());
         return INTERNAL_ERROR;
       }
+      (void)node->GetOpDesc()->DelAttr(kExternalModel);
     }
   }
   return SUCCESS;
