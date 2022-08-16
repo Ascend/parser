@@ -28,6 +28,7 @@
 #include "parser/common/op_parser_factory.h"
 #include "framework/omg/parser/parser_types.h"
 #include "register/tensor_assign.h"
+#include "register/register_utils.h"
 
 using domi::tensorflow::NodeDef;
 using domi::TENSORFLOW;
@@ -90,6 +91,9 @@ Status TensorFlowConstantParser::ParseParams(const Message *op_src, ge::OpDescPt
   const NodeDef *node = DOMI_DYNAMIC_CAST<const NodeDef *>(op_src);
   GE_CHECK_NOTNULL(node);
   GELOGD("TF op node name = %s, op type= %s, parse params", node->name().c_str(), node->op().c_str());
+  ge::Operator org_op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_dest);
+  GE_CHK_STATUS_RET(domi::OperatorAutoMapping(op_src, org_op),
+                    "[Call][AutoMapping] failed.");
   ConstantOperator op;
   op.Name(node->name());
 
