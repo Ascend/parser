@@ -20,11 +20,15 @@
 #include <functional>
 #include "external/graph/graph.h"
 #include "external/register/register_error_codes.h"
+#include "graph/node.h"
 
 namespace ge {
 domi::Status AutoMappingSubgraphIndexByDataNodeAndOutputNodesInfo(
     const ge::Graph &graph,
     const std::function<domi::Status(int data_index, int &parent_input_index)> &input,
     const std::function<domi::Status(int netoutput_index, int &parent_output_index)> &output);
+// only data node may set default NHWC/NCHW format by parser when call NpuOnnxGraphOp
+// this function should be called before AutoMappingSubgraphIndexByDataNodeAndOutputNodesInfo
+domi::Status AutoMappingSubgraphDataFormat(const NodePtr &parent_node, const ge::Graph &graph);
 } // namespace ge
 #endif  // PARSER_COMMON_AUTO_MAPPING_SUBGRAPH_IO_INDEX_FUNC_H_

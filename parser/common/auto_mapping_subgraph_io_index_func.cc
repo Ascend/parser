@@ -21,6 +21,7 @@
 #include "graph/op_desc.h"
 #include "graph/utils/attr_utils.h"
 #include "graph/debug/ge_attr_define.h"
+#include "graph/debug/ge_op_types.h"
 #include "graph/utils/graph_utils.h"
 #include "graph/utils/node_utils.h"
 #include "register/register_fmk_types.h"
@@ -141,6 +142,49 @@ Status AutoMappingSubgraphIndexByDataNodeAndOutputNodesInfo(
     return ret;
   }
 
+  return SUCCESS;
+}
+
+domi::Status AutoMappingSubgraphDataFormat(const NodePtr &parent_node, const ge::Graph &graph) {
+  GE_CHECK_NOTNULL(parent_node);
+  const auto &parent_op_desc = parent_node->GetOpDesc();
+  GE_CHECK_NOTNULL(parent_op_desc);
+  const auto &compute_graph = ge::GraphUtils::GetComputeGraph(graph);
+  GE_CHECK_NOTNULL(compute_graph);
+  const auto data_nodes = FindNodesByType(compute_graph, DATA);
+  for (size_t i = 0U; i < data_nodes.size(); ++i) {
+    const auto &data_op_desc = data_nodes[i]->GetOpDesc();
+    GE_CHECK_NOTNULL(data_op_desc);
+    int32_t index = -1;
+    // when this function has been called, PARENT_INDEX has not been set
+    if (!ge::AttrUtils::GetInt(data_op_desc, ge::ATTR_NAME_INDEX, index)) {
+      REPORT_INNER_ERROR("E19999", "Get attr:index failed, op_name:%s", data_nodes[i]->GetName().c_str());
+      GELOGE(FAILED, "[Get][Attr] Get attr:index failed, op_name:%s", data_nodes[i]->GetName().c_str());
+      return FAILED;
+    }
+    GE_CHK_BOOL_RET_STATUS(static_cast<size_t>(index) < parent_op_desc->GetAllInputsSize(), PARAM_INVALID,
+                           "[Check][Index] failed, index=%d should less than %zu.", index,
+                           parent_op_desc->GetAllInputsSize());
+    // set data format by node input desc
+    const auto input_format = parent_op_desc->GetInputDesc(index).GetFormat();
+    const auto input_original_format = parent_op_desc->GetInputDesc(index).GetOriginFormat();
+    const auto input_desc = data_op_desc->MutableInputDesc(0U);
+    const auto output_desc = data_op_desc->MutableOutputDesc(0U);
+    GE_CHECK_NOTNULL(input_desc);
+    GE_CHECK_NOTNULL(output_desc);
+    input_desc->SetFormat(input_format);
+    input_desc->SetOriginFormat(input_original_format);
+    output_desc->SetFormat(input_format);
+    output_desc->SetOriginFormat(input_original_format);
+    GELOGD("Set index %d of data[%zu], node:%s, format:%d->%d, original "
+           "format:%d->%d, from parent node:%s, node_type:%s",
+           index, i, data_nodes[i]->GetName().c_str(),
+           static_cast<int32_t>(output_desc->GetFormat()),
+           static_cast<int32_t>(input_format),
+           static_cast<int32_t>(output_desc->GetOriginFormat()),
+           static_cast<int32_t>(input_original_format),
+           parent_node->GetName().c_str(), parent_node->GetType().c_str());
+  }
   return SUCCESS;
 }
 }  // namespace ge
