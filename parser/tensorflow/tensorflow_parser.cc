@@ -318,6 +318,12 @@ Status PostOpProcessForSubgraph(const ParseArg &arg) {
 }
 
 Status MappingAndAddSubGraph(const NodePtr &node, const Graph &graph, const ComputeGraphPtr &root_graph) {
+  // Inner function, data format need be set by parant node
+  GE_CHK_STATUS_RET(AutoMappingSubgraphDataFormat(node, graph),
+                    "[Call][AutoMappingSubgraphDataFormat] failed, node:%s, "
+                    "root graph:%s, graph:%s",
+                    node->GetName().c_str(), root_graph->GetName().c_str(),
+                    ParserUtils::GetGraphName(graph).c_str());
   // Inner function, input params have been checked by caller
   Status status = AutoMappingSubgraphIndexByDataNodeAndOutputNodesInfo(
       graph,
