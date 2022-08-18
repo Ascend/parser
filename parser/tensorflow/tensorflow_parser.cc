@@ -101,7 +101,8 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, ge::Graph &graph) {
   }
 
   // Create an empty computegraph
-  ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>("tmpGraph");
+  ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>("tmpGraph" +
+      std::to_string(ge::parser::GetCurrentTimestamp()));
   if (compute_graph == nullptr) {
     REPORT_CALL_ERROR("E19999", "New ComputeGraph failed");
     GELOGE(FAILED, "Create ComputeGraph fail.");
@@ -154,7 +155,8 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, const std::map<Ascend
     return ge::FAILED;
   }
   // Create an empty computegraph
-  string graph_name = output_name.empty() ? "tmpGraph" : output_name;
+  string graph_name = output_name.empty() ? ("tmpGraph" +
+      std::to_string(ge::parser::GetCurrentTimestamp())) : output_name;
   ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>(graph_name);
   if (compute_graph == nullptr) {
     REPORT_CALL_ERROR("E19999", "New ComputeGraph failed");
