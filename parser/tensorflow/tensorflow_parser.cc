@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -430,7 +430,7 @@ Status TensorFlowModelParser::DefunToPartitionedCall(const domi::tensorflow::Nod
 }
 
 Status TensorFlowModelParser::TransNodeToOpDesc(const domi::tensorflow::NodeDef *node_def, ge::OpDescPtr &op,
-                                                const string &op_type) {
+                                                const string &op_type) const {
   GE_CHECK_NOTNULL(node_def);
   string node_name = node_def->name();
   ge::Operator op_factory = ge::OperatorFactory::CreateOperator(node_name.c_str(), op_type.c_str());

@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -102,7 +102,8 @@ Status ParseParams(const Message *op_src, FrameworkOpOperator *op) {
                   REPORT_CALL_ERROR("E19999", "Trans NodeDef:%s(%s) to string failed",
                                     pkg_node->name().c_str(), pkg_node->op().c_str());
                   GELOGE(PARAM_INVALID, "In FrameworkOp trans NodeDef to string failed.");
-                  GE_DELETE_NEW_SINGLE(pkg_node); return PARAM_INVALID);
+                  GE_DELETE_NEW_SINGLE(pkg_node);
+                  return PARAM_INVALID);
 
   op->NodeDefPkg(serialized_node);
 

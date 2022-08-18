@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@
 #ifndef GE_PARSER_TENSORFLOW_TENSORFLOW_CONSTANT_PARSER_H_
 #define GE_PARSER_TENSORFLOW_TENSORFLOW_CONSTANT_PARSER_H_
 
-#include <string>
 #include "common/op_def/constant_op.h"
 #include "parser/common/data_op_parser.h"
 #include "parser/tensorflow/tensorflow_op_parser.h"
