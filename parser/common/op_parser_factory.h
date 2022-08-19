@@ -159,39 +159,40 @@ class CustomParserAdapterRegistrar {
  * @param [in] op_type      Op type
  * @param [in] clazz        OpParser implementation class
  */
-#define REGISTER_OP_PARSER_CREATOR(framework, op_type, clazz)                              \
-  std::shared_ptr<OpParser> Creator_##framework##_##op_type##_Op_Parser() {                \
-    std::shared_ptr<clazz> ptr = ge::parser::MakeShared<clazz>();                                  \
-    if (ptr == nullptr) {                                                                  \
-      GELOGW("MakeShared failed, result is nullptr.");                                     \
-    }                                                                                      \
-    return std::shared_ptr<OpParser>(ptr);                                                 \
-  }                                                                                        \
-  ge::OpParserRegisterar g_##framework##_##op_type##_Op_Parser_Creator(framework, op_type, \
-                                                                       Creator_##framework##_##op_type##_Op_Parser)
+#define REGISTER_OP_PARSER_CREATOR(framework, op_type, clazz)                                    \
+  std::shared_ptr<OpParser> Creator_##framework##_##op_type##_Op_Parser() {                      \
+    std::shared_ptr<clazz> ptr = ge::parser::MakeShared<clazz>();                                \
+    if (ptr == nullptr) {                                                                        \
+      GELOGW("MakeShared failed, result is nullptr.");                                           \
+    }                                                                                            \
+    return std::shared_ptr<OpParser>(ptr);                                                       \
+  }                                                                                              \
+  const ge::OpParserRegisterar g_##framework##_##op_type##_Op_Parser_Creator(framework, op_type, \
+      Creator_##framework##_##op_type##_Op_Parser)
 
 #define REGISTER_FUSION_OP_PARSER_CREATOR(framework, op_type, clazz)               \
   std::shared_ptr<OpParser> Creator_##framework##_##op_type##_Fusion_Op_Parser() { \
-    std::shared_ptr<clazz> ptr = ge::parser::MakeShared<clazz>();                          \
+    std::shared_ptr<clazz> ptr = ge::parser::MakeShared<clazz>();                  \
     if (ptr == nullptr) {                                                          \
       GELOGW("MakeShared failed, result is nullptr.");                             \
     }                                                                              \
     return std::shared_ptr<OpParser>(ptr);                                         \
   }                                                                                \
-  OpParserRegisterar g_##framework##_##op_type##_Fusion_Op_Parser_Creator(         \
-    framework, op_type, Creator_##framework##_##op_type##_Fusion_Op_Parser, true)
+  const OpParserRegisterar g_##framework##_##op_type##_Fusion_Op_Parser_Creator(   \
+      framework, op_type, Creator_##framework##_##op_type##_Fusion_Op_Parser, true)
 
 /// @brief xxxCustomParserAdapter Registration Macro
 /// @param [in] framework    Framework type
 /// @param [in] clazz        CaffeCustomParserAdapter adaptation class
-#define REGISTER_CUSTOM_PARSER_ADAPTER_CREATOR(framework, clazz)         \
+#define REGISTER_CUSTOM_PARSER_ADAPTER_CREATOR(framework, clazz)        \
   std::shared_ptr<OpParser> Creator_##framework##_Op_Parser_Adapter() { \
-    std::shared_ptr<clazz> ptr = ge::parser::MakeShared<clazz>();               \
+    std::shared_ptr<clazz> ptr = ge::parser::MakeShared<clazz>();       \
     if (ptr == nullptr) {                                               \
       GELOGW("MakeShared failed, result is nullptr.");                  \
     }                                                                   \
     return std::shared_ptr<OpParser>(ptr);                              \
   }                                                                     \
-  CustomParserAdapterRegistrar g_##framework##_Op_Parser_Creator(framework, Creator_##framework##_Op_Parser_Adapter)
+  const CustomParserAdapterRegistrar g_##framework##_Op_Parser_Creator( \
+      framework, Creator_##framework##_Op_Parser_Adapter)
 }  // namespace ge
 #endif  // PARSER_COMMON_OP_PARSER_FACTORY_H_

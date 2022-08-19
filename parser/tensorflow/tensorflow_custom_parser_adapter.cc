@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@ Status TensorFlowCustomParserAdapter::ParseParams(const Message *op_src, ge::OpD
   return SUCCESS;
 }
 
-Status TensorFlowCustomParserAdapter::ParseParams(const Operator &op_src, ge::OpDescPtr &op_dest) {
+Status TensorFlowCustomParserAdapter::ParseParams(const Operator &op_src, ge::OpDescPtr &op_dest) const {
   GELOGI("Tensorflow custom op begin to parse params: op node name = %s, op type = %s.",
          ParserUtils::GetOperatorName(op_src).c_str(), ParserUtils::GetOperatorType(op_src).c_str());
   GE_CHECK_NOTNULL(op_dest);

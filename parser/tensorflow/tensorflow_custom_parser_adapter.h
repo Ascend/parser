@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -42,7 +42,7 @@ class PARSER_FUNC_VISIBILITY TensorFlowCustomParserAdapter : public TensorFlowOp
    * @return FAILED parse failed
    * @author
    */
-   Status ParseParams(const Operator &op_src, ge::OpDescPtr &op_dest);
+   Status ParseParams(const Operator &op_src, ge::OpDescPtr &op_dest) const;
 };
 }  // namespace ge
 

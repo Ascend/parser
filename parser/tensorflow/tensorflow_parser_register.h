@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,7 +40,7 @@ class PARSER_FUNC_VISIBILITY TensorflowFinalizeable {
 
 class PARSER_FUNC_VISIBILITY TensorflowReceiver {
  public:
-  TensorflowReceiver(TensorflowFinalizeable &f) { f.Finalize(); }
+ TensorflowReceiver(TensorflowFinalizeable &f) noexcept { f.Finalize(); }
   ~TensorflowReceiver() {}
 };
 
