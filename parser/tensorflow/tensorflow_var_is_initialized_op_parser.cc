@@ -33,7 +33,7 @@ Status ParseParams(const Message *op_src, VarIsInitializedOpOperator *const op) 
   return SUCCESS;
 }
 
-DOMI_REGISTER_TENSORFLOW_PARSER(VARISINITIALIZEDOP, VarIsInitializedOpOperator).SetParseParamsFn(ParseParams);
+DOMI_REGISTER_TENSORFLOW_PARSER(VARISINITIALIZEDOP, VarIsInitializedOpOperator, ParseParams);
 
-DOMI_REGISTER_TENSORFLOW_PARSER(ISVARIABLEINITIALIZED, VarIsInitializedOpOperator).SetParseParamsFn(ParseParams);
+DOMI_REGISTER_TENSORFLOW_PARSER(ISVARIABLEINITIALIZED, VarIsInitializedOpOperator, ParseParams);
 }  // namespace ge

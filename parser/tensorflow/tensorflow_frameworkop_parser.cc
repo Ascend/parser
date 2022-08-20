@@ -132,5 +132,5 @@ Status ParseParams(const Message *op_src, FrameworkOpOperator *op) {
   return SUCCESS;
 }
 
-DOMI_REGISTER_TENSORFLOW_PARSER(FRAMEWORKOP, FrameworkOpOperator).SetParseParamsFn(ParseParams);
+DOMI_REGISTER_TENSORFLOW_PARSER(FRAMEWORKOP, FrameworkOpOperator, ParseParams);
 }  // namespace ge

@@ -64,5 +64,5 @@ Status ParseParams(const Message *op_src, ArgOpOperator *const op) {
   return SUCCESS;
 }
 
-DOMI_REGISTER_TENSORFLOW_PARSER(ge::parser::ARG, ArgOpOperator).SetParseParamsFn(ParseParams);
+DOMI_REGISTER_TENSORFLOW_PARSER(ge::parser::ARG, ArgOpOperator, ParseParams);
 }  // namespace ge

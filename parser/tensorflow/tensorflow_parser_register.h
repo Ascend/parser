@@ -34,13 +34,13 @@
 namespace ge {
 class PARSER_FUNC_VISIBILITY TensorflowFinalizeable {
  public:
-  virtual bool Finalize() = 0;
+  virtual bool Finalize() const = 0;
   virtual ~TensorflowFinalizeable() {}
 };
 
 class PARSER_FUNC_VISIBILITY TensorflowReceiver {
  public:
- TensorflowReceiver(TensorflowFinalizeable &f) noexcept { f.Finalize(); }
+ explicit TensorflowReceiver(const TensorflowFinalizeable &f) noexcept { f.Finalize(); }
   ~TensorflowReceiver() {}
 };
 
@@ -70,7 +70,7 @@ class PARSER_FUNC_VISIBILITY TensorflowParserBuilder : public TensorflowWeightPa
     return *this;
   }
 
-  bool Finalize() override {
+  bool Finalize() const override {
     auto op_parser_adapter = ge::parser::MakeShared<TensorflowOpParserAdapter<Param>>(*this);
     if (op_parser_adapter == nullptr) {
       GELOGE(FAILED, "Op parser adapter is null.");
@@ -124,13 +124,13 @@ class PARSER_FUNC_VISIBILITY TensorflowOpParserAdapter : public TensorFlowOpPars
 };
 }  // namespace tensorflow_parser
 
-#define DOMI_REGISTER_TENSORFLOW_PARSER(name, param_clazz) \
-  DOMI_REGISTER_TENSORFLOW_PARSER_UNIQ_HELPER(__COUNTER__, name, param_clazz)
-#define DOMI_REGISTER_TENSORFLOW_PARSER_UNIQ_HELPER(ctr, name, param_clazz) \
-  DOMI_REGISTER_TENSORFLOW_PARSER_UNIQ(ctr, name, param_clazz)
-#define DOMI_REGISTER_TENSORFLOW_PARSER_UNIQ(ctr, name, param_clazz)                  \
-  static TensorflowReceiver register_tensorflow_parser##ctr __attribute__((unused)) = \
-    tensorflow_parser::TensorflowParserBuilder<param_clazz>(name)
+#define DOMI_REGISTER_TENSORFLOW_PARSER(name, param_clazz, func) \
+  DOMI_REGISTER_TENSORFLOW_PARSER_UNIQ_HELPER(__COUNTER__, name, param_clazz, func)
+#define DOMI_REGISTER_TENSORFLOW_PARSER_UNIQ_HELPER(ctr, name, param_clazz, func) \
+  DOMI_REGISTER_TENSORFLOW_PARSER_UNIQ(ctr, name, param_clazz, func)
+#define DOMI_REGISTER_TENSORFLOW_PARSER_UNIQ(ctr, name, param_clazz, func) \
+  const TensorflowReceiver register_tensorflow_parser##ctr( \
+      tensorflow_parser::TensorflowParserBuilder<param_clazz>(name).SetParseParamsFn(func))
 }  // namespace ge
 
 #endif  // PARSER_TENSORFLOW_TENSORFLOW_PARSER_REGISTER_H_
