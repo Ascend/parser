@@ -273,9 +273,9 @@ Status ParseParams(const Message *op_src, VariableOperator *op) {
   return SUCCESS;
 }
 
-DOMI_REGISTER_TENSORFLOW_PARSER(VARIABLE, VariableOperator).SetParseParamsFn(ParseParams);
+DOMI_REGISTER_TENSORFLOW_PARSER(VARIABLE, VariableOperator, ParseParams);
 
-DOMI_REGISTER_TENSORFLOW_PARSER(VARHANDLEOP, VariableOperator).SetParseParamsFn(ParseParams);
+DOMI_REGISTER_TENSORFLOW_PARSER(VARHANDLEOP, VariableOperator, ParseParams);
 
-DOMI_REGISTER_TENSORFLOW_PARSER(TEMPORARYVARIABLE, VariableOperator).SetParseParamsFn(ParseParams);
+DOMI_REGISTER_TENSORFLOW_PARSER(TEMPORARYVARIABLE, VariableOperator, ParseParams);
 }  // namespace ge

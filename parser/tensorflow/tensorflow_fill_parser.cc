@@ -63,5 +63,5 @@ domi::Status ParseParams(const domi::tensorflow::NodeDef *node, FillOperator *op
   return domi::SUCCESS;
 }
 
-DOMI_REGISTER_TENSORFLOW_PARSER(FILL, FillOperator).SetParseParamsFn(ParseParams);
+DOMI_REGISTER_TENSORFLOW_PARSER(FILL, FillOperator, ParseParams);
 }  // namespace ge
