@@ -191,21 +191,25 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, const std::map<Ascend
   GELOGI("AclgrphParse graph %s success.", ParserUtils::GetGraphName(graph).c_str());
   return ge::SUCCESS;
 }
-void AddDumpOriginName(const std::string& subgraph_name, const ge::NodePtr parent_node, ge::NodePtr node)
-{
+
+void AddDumpOriginName(const ge::NodePtr parent_node, const std::string& subgraph_name, ge::ComputeGraphPtr graph) {
+  if (parent_node == nullptr) {
+    return; // Root graph no need set dump origin name as parser always keep the origin node name
+  }
   std::vector<std::string> original_names;
-  auto parend_desc = parent_node->GetOpDesc();
-  (void)ge::AttrUtils::GetListStr(parend_desc, ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names);
+  (void)ge::AttrUtils::GetListStr(parent_node->GetOpDesc(), ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names);
   if (original_names.empty()) {
     original_names.emplace_back(parent_node->GetName());
   }
   // for fusion node also used original_names[0]
-  (void)original_names[0].append("/").append(subgraph_name).append("/").append(node->GetName());
-
-  if (!ge::AttrUtils::SetListStr(node->GetOpDesc(), ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names)) {
-    GELOGW("Set %s to %s fail.", ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES.c_str(), node->GetOpDesc()->GetName().c_str());
+  std::string prefix = original_names[0].append("/").append(subgraph_name).append("/");
+  for (const ge::NodePtr &node : graph->GetDirectNode()) {
+    original_names[0] = prefix + node->GetName();
+    if (!ge::AttrUtils::SetListStr(node->GetOpDesc(), ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names)) {
+      GELOGW("Set dump origin name to %s fail.", node->GetOpDesc()->GetName().c_str());
+    }
+    GELOGD("Add dump origin name %s for node %s.", original_names[0].c_str(), node->GetName().c_str());
   }
-  GELOGD("Add dump origin name %s for node %s.", original_names[0].c_str(), node->GetName().c_str());
 }
 }  // namespace ge
 
@@ -273,6 +277,7 @@ Status GenSubgraphParseTasks(const ge::ComputeGraphPtr &parent_graph, std::deque
 }
 
 Status PostOpProcessForSubgraph(const ParseArg &arg) {
+  AddDumpOriginName(arg.parent_node, arg.subgraph_name, arg.graph);
   if (arg.parent_node == nullptr) {
     return SUCCESS;
   }
@@ -297,7 +302,6 @@ Status PostOpProcessForSubgraph(const ParseArg &arg) {
     if ((node->GetOpDesc() == nullptr) || (node->GetType() == "Variable") || (node->GetType() == "VariableV2")) {
       continue;
     }
-    AddDumpOriginName(arg.subgraph_name, arg.parent_node, node);
     node->GetOpDesc()->SetName(node->GetOwnerComputeGraph()->GetName() + "/" + node->GetName());
   }
 
