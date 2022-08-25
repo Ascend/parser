@@ -61,7 +61,7 @@ class PARSER_FUNC_VISIBILITY TensorflowParserBuilder : public TensorflowWeightPa
  public:
   using ParseParamsFn = std::function<domi::Status(const domi::tensorflow::NodeDef *, Param *)>;
 
-  explicit TensorflowParserBuilder(const std::string &davinci_optype) : davinci_optype_(davinci_optype) {}
+  explicit TensorflowParserBuilder(const std::string &davinci_optype)  noexcept : davinci_optype_(davinci_optype) {}
 
   ~TensorflowParserBuilder() override {}
 

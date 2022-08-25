@@ -21,9 +21,9 @@
 #include "parser/common/data_op_parser.h"
 #include "parser/tensorflow/tensorflow_op_parser.h"
 
+namespace ge {
 using domi::tensorflow::NodeDef;
 
-namespace ge {
 class PARSER_FUNC_VISIBILITY TensorFlowConstantParser : public TensorFlowOpParser {
  public:
   Status ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) override;

@@ -913,8 +913,10 @@ Status TensorFlowModelParser::CheckOpType(const domi::tensorflow::NodeDef *node_
   GE_IF_BOOL_EXEC(
       op_type == ge::parser::SPARSESOFTMAXCROSSENTROPYWITHLOGITS,
       GE_CHK_STATUS_RET(CheckOpShapeDim(node_def, check_dims[op_type], valid), "failed to check op shape");
-      GE_IF_BOOL_EXEC(!valid, op_type = ge::parser::FRAMEWORKOP; GELOGI("Set op %s to frameworkop", node_name.c_str());
-                      framework_ops_[node_name] = node_def;););
+      GE_IF_BOOL_EXEC(!valid, op_type = ge::parser::FRAMEWORKOP;
+          GELOGI("Set op %s to frameworkop", node_name.c_str());
+          framework_ops_[node_name] = node_def;);
+  );
 
   GE_IF_BOOL_EXEC(
       op_type == ge::parser::ADD || op_type == ge::parser::MULTIPLY || op_type == ge::parser::MEAN,
@@ -974,7 +976,8 @@ Status TensorFlowModelParser::ParseNodeDef(TensorFlowModelParser *parser, ge::Co
                   GELOGD("CCE %s parsering", node_op.c_str()););
   GE_IF_BOOL_EXEC((implyType == domi::ImplyType::HCCL) && (op_type != ge::parser::FRAMEWORKOP),
                   GELOGD("HCCL %s parsering", node_op.c_str()););
-  GE_IF_BOOL_EXEC(op_type == ge::parser::FRAMEWORKOP, GELOGD("FRAMEWORKOP %s parsering", node_op.c_str()););
+  GE_IF_BOOL_EXEC(op_type == ge::parser::FRAMEWORKOP,
+                  GELOGD("FRAMEWORKOP %s parsering", node_op.c_str()););
   GELOGD("TF op node name = %s, op type= %s, trans to op type %s", node_name.c_str(), node_op.c_str(), op_type.c_str());
 
   // Construct operator by IR
@@ -2326,7 +2329,8 @@ Status TensorFlowModelParser::ParseProto(const google::protobuf::Message *proto,
   // Loop analysis of op_nodes and map them to nodes in graph
   ret = AddFmkNode(graph, scope_graph, op_node_name_list, isDatasetInit);
   PARSER_TIMESTAMP_END(AddFmkNode, "TensorFlowModelParser::AddFmkNode");
-  GE_CHK_STATUS_EXEC(ret, DeleteFuisonNodeDef(); return ret, "AddFmkNode failed");
+  GE_CHK_STATUS_EXEC(ret, DeleteFuisonNodeDef();
+      return ret, "AddFmkNode failed");
   GELOGD("[TF Parser] Add framework node success");
 
   ret = AddEdges(graph);
@@ -3008,12 +3012,16 @@ Status TensorFlowModelParser::GetFormatTranspose(const NodeDef *transpose_node, 
   GE_IF_BOOL_EXEC(
       type == domi::tensorflow::DT_INT32,
       const int32_t *data = reinterpret_cast<const int32_t *>(tensor.tensor_content().data());
-      for (int i = 0; i < parser::DIM_DEFAULT_SIZE; i++) { perm_value.push_back(data[i]); });
+      for (int i = 0; i < parser::DIM_DEFAULT_SIZE; i++) {
+        perm_value.push_back(data[i]);
+      });
 
   GE_IF_BOOL_EXEC(
       type == domi::tensorflow::DT_INT64,
       const int64_t *data = reinterpret_cast<const int64_t *>(tensor.tensor_content().data());
-      for (int i = 0; i < parser::DIM_DEFAULT_SIZE; i++) { perm_value.push_back(data[i]); });
+      for (int i = 0; i < parser::DIM_DEFAULT_SIZE; i++) {
+        perm_value.push_back(data[i]);
+      });
 
   // 0, 1, 2, 3 present dim num.
   vector<int64_t> perm_to_nchw = {0, 3, 1, 2};

@@ -39,7 +39,7 @@ Status TensorFlowMergeParser::ParseParams(const Message *op_src, ge::OpDescPtr &
   int32_t input_tensor_num = attr_num.i();
 
   // add dynamic input
-  graphStatus ret = op_desc->AddDynamicInputDesc("x", input_tensor_num);
+  const graphStatus ret = op_desc->AddDynamicInputDesc("x", input_tensor_num);
   if (ret != GRAPH_SUCCESS) {
     REPORT_CALL_ERROR("E19999", "Add Dynamic InputDesc name:x to node:%s(%s) failed",
                       op_desc->GetName().c_str(), op_desc->GetType().c_str());
