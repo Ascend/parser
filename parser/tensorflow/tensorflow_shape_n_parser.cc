@@ -83,7 +83,8 @@ Status TensorFlowShapeNParser::ParseN(const domi::tensorflow::NodeDef *node, Sha
   // The upper caller guarantees the input params is not empty.
   domi::tensorflow::AttrValue attr;
   const int64_t attr_n = 2;
-  CHECK_FALSE_EXEC(TensorFlowUtil::FindAttrValue(node, SHAPEN_ATTR_N, attr), op->N(attr_n); return SUCCESS);
+  CHECK_FALSE_EXEC(TensorFlowUtil::FindAttrValue(node, SHAPEN_ATTR_N, attr), op->N(attr_n);
+      return SUCCESS);
 
   GE_RETURN_WITH_LOG_IF_ERROR(TensorFlowUtil::CheckAttrHasType(attr, "int"), "check Attr N failed");
 
@@ -133,7 +134,7 @@ Status TensorFlowShapeNParser::ParseParams(const Message *op_src, ge::OpDescPtr 
     if (ret != SUCCESS) {
       return ret;
     }
-    graphStatus status = op_dest->AddDynamicOutputDesc("y", dynamic_tensor_num);
+    const graphStatus status = op_dest->AddDynamicOutputDesc("y", dynamic_tensor_num);
     if (status != GRAPH_SUCCESS) {
       REPORT_CALL_ERROR("E19999", "Add Dynamic OuputDesc name:y to node:%s(%s) failed",
                         op_dest->GetName().c_str(), op_dest->GetType().c_str());
@@ -141,7 +142,7 @@ Status TensorFlowShapeNParser::ParseParams(const Message *op_src, ge::OpDescPtr 
       return FAILED;
     }
   }
-  graphStatus status = op_dest->AddDynamicInputDesc("x", dynamic_tensor_num);
+  const graphStatus status = op_dest->AddDynamicInputDesc("x", dynamic_tensor_num);
   if (status != GRAPH_SUCCESS) {
     REPORT_CALL_ERROR("E19999", "Add Dynamic InputDesc name:x to node:%s(%s) failed",
                       op_dest->GetName().c_str(), op_dest->GetType().c_str());

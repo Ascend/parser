@@ -31,21 +31,21 @@ namespace ge {
   do {                                                                                                      \
     google::protobuf::RepeatedField<FIELD> val_vec;                                                         \
     int32_t val_size = 0;                                                                                   \
-    val_vec = (tensor).FIELD##_val();                                                                         \
+    val_vec = (tensor).FIELD##_val();                                                                       \
     val_size = val_vec.size();                                                                              \
-    if ((index) < val_size) {                                                                                 \
-      (param) = val_vec.Get(index);                                                                           \
-    } else if ((tensor).has_tensor_shape()) {                                                                 \
-      const std::string tensor_content = (tensor).tensor_content();                                           \
-      char *buf = const_cast<char *>(tensor_content.data());                                                \
-      FIELD *buf_v = reinterpret_cast<FIELD *>(buf);                                                        \
+    if ((index) < val_size) {                                                                               \
+      (param) = val_vec.Get(index);                                                                         \
+    } else if ((tensor).has_tensor_shape()) {                                                               \
+      const std::string &tensor_content = (tensor).tensor_content();                                        \
+      const char *buf = tensor_content.data();                                                              \
+      const FIELD *buf_v = reinterpret_cast<const FIELD *>(buf);                                            \
       if (static_cast<uint32_t>(index) >= tensor_content.length() / sizeof(FIELD)) {                        \
         REPORT_INNER_ERROR("E19999", "Const data size of node:%s is smaller than index:%d, not supported!", \
                            node_def->name().c_str(), index);                                                \
         GELOGE(domi::PARAM_INVALID, "Const data size is smaller than index :%d,not supported!", index);     \
         return domi::PARAM_INVALID;                                                                         \
       }                                                                                                     \
-      (param) = buf_v[index];                                                                                 \
+      (param) = buf_v[index];                                                                               \
     } else {                                                                                                \
       REPORT_INNER_ERROR("E19999", "Const data size of node:%s is smaller than index:%d, not supported!",   \
                          node_def->name().c_str(), index);                                                  \

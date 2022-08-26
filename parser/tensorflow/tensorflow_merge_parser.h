@@ -25,4 +25,4 @@ class PARSER_FUNC_VISIBILITY TensorFlowMergeParser : public TensorFlowOpParser {
   Status ParseParams(const Message *op_src, ge::OpDescPtr &op_desc) override;
 };
 }  // namespace ge
-#endif  //_DOMI_OMG_PARSER_TENSORFLOW_TENSORFLOW_MERGE_PARSER_H_
+#endif  // _DOMI_OMG_PARSER_TENSORFLOW_TENSORFLOW_MERGE_PARSER_H_

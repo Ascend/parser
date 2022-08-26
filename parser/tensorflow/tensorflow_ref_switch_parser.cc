@@ -40,8 +40,8 @@ Status TensorFlowRefSwitchParser::ParseT(const domi::tensorflow::NodeDef *node, 
 
   GE_RETURN_WITH_LOG_IF_ERROR(TensorFlowUtil::CheckAttrHasType(attr, "type"), "check Attr T failed");
 
-  domi::tensorflow::DataType tfType = attr.type();
-  ge::DataType type = domi::TensorAssign::ConvertTensorflowDataType(tfType);
+  const domi::tensorflow::DataType tfType = attr.type();
+  const ge::DataType type = domi::TensorAssign::ConvertTensorflowDataType(tfType);
   CHECK_FALSE_EXEC(type != ge::DataType::DT_UNDEFINED,
                    REPORT_CALL_ERROR("E19999", "Data type %s of node %s is not supported",
                                      DataType_Name(tfType).c_str(),

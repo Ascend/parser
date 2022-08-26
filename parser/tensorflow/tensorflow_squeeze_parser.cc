@@ -38,27 +38,30 @@ Status TensorFlowSqueezeParser::ParseDesc(const domi::tensorflow::AttrValue &att
   auto a_list = attr_value.list();
   GE_CHK_BOOL_RET_STATUS(TensorFlowUtil::ParseFromAttrValueList(ge_desc, a_list, 0, tf_datatype), domi::PARAM_INVALID,
                          "parse ge_desc failed.");
-  uint32_t size_type;
-  auto data_type = ge_desc.GetDataType();
-  bool type_ret = ge::TypeUtils::GetDataTypeLength(data_type, size_type);
+  uint32_t size_type = 0U;
+  const auto data_type = ge_desc.GetDataType();
+  const bool type_ret = ge::TypeUtils::GetDataTypeLength(data_type, size_type);
   GE_IF_BOOL_EXEC(!type_ret,
                   REPORT_CALL_ERROR("E19999", "Data type %s is not supported",
                                     ge::TypeUtils::DataTypeToSerialString(data_type).c_str());
-                  GELOGE(domi::PARAM_INVALID, "Can't GetDataTypeLength of data_type: %s",
+                  GELOGE(domi::PARAM_INVALID, "Can't GetDataTypeLength of data_type: %s.",
                          ge::TypeUtils::DataTypeToSerialString(data_type).c_str());
                   return domi::PARAM_INVALID);
   // calculate size
   int64_t real_size = 1;
-  for (uint32_t j = 0; j < ge_desc.GetShape().GetDimNum(); ++j) {
+  for (uint32_t j = 0U; j < ge_desc.GetShape().GetDimNum(); ++j) {
     int64_t tmp_dim = ge_desc.GetShape().GetDim(j);
-    GE_IF_BOOL_EXEC(tmp_dim < 0, real_size = tmp_dim * (-1) * real_size; continue;);
+    if (tmp_dim < 0) {
+      real_size = tmp_dim * (-1) * real_size;
+      continue;
+    }
     PARSER_INT64_MULCHECK(real_size, tmp_dim);
     real_size *= tmp_dim;
   }
   PARSER_INT64_MULCHECK(real_size, size_type);
   ge::TensorUtils::SetSize(ge_desc, real_size * size_type);
   ge::TensorUtils::SetRealDimCnt(ge_desc, ge_desc.GetShape().GetDimNum());
-  GELOGD("after translate tf_desc, datatype: %s, format: %s, real size: %ld, size_type: %u",
+  GELOGD("After translate tf_desc, datatype: %s, format: %s, real size: %ld, size_type: %u",
          ge::TypeUtils::DataTypeToSerialString(ge_desc.GetDataType()).c_str(),
          ge::TypeUtils::FormatToSerialString(ge_desc.GetFormat()).c_str(), real_size * size_type, size_type);
   return SUCCESS;
@@ -80,8 +83,8 @@ Status TensorFlowSqueezeParser::ParseParams(const Message *op_src, ge::OpDescPtr
   domi::tensorflow::AttrValue axis;
   domi::tensorflow::AttrValue dims;
 
-  bool has_axis = TensorFlowUtil::FindAttrValue(node, SQUEEZE_ATTR_AXIS, axis);
-  bool has_dims = TensorFlowUtil::FindAttrValue(node, SQUEEZE_ATTR_DIMS, dims);
+  const bool has_axis = TensorFlowUtil::FindAttrValue(node, SQUEEZE_ATTR_AXIS, axis);
+  const bool has_dims = TensorFlowUtil::FindAttrValue(node, SQUEEZE_ATTR_DIMS, dims);
   if (!has_axis && !has_dims) {
     return SUCCESS;
   }

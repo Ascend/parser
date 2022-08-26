@@ -25,11 +25,11 @@
 #include "proto/tensorflow/graph.pb.h"
 #include "proto/tensorflow/node_def.pb.h"
 
+namespace ge {
 using google::protobuf::Message;
 using domi::tensorflow::NodeDef;
 using domi::tensorflow::TensorProto;
 
-namespace ge {
 /**
  * @ingroup domi_omg
  * @brief Used to parse TensorFlow operator information

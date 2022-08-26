@@ -34,26 +34,29 @@ Status TensorFlowReshapeParser::ParseDesc(const domi::tensorflow::AttrValue &att
   auto a_list = attr_value.list();
   GE_CHK_BOOL_RET_STATUS(TensorFlowUtil::ParseFromAttrValueList(ge_desc, a_list, 0, tf_datatype), PARAM_INVALID,
                          "parse ge_desc failed.");
-  uint32_t size_type = 1;
+  uint32_t size_type = 1U;
   auto data_type = ge_desc.GetDataType();
   bool type_ret = ge::TypeUtils::GetDataTypeLength(data_type, size_type);
   GE_IF_BOOL_EXEC(!type_ret,
                   REPORT_CALL_ERROR("E19999", "Data type %s is not supported",
                                     ge::TypeUtils::DataTypeToSerialString(data_type).c_str());
-                  GELOGE(FAILED, "Can't GetDataTypeLength of data_type: %s",
+                  GELOGE(FAILED, "Can't GetDataTypeLength of data_type: %s.",
                          ge::TypeUtils::DataTypeToSerialString(data_type).c_str());
                   return PARAM_INVALID);
   // calculate size
   int64_t real_size = 1;
-  for (uint32_t j = 0; j < ge_desc.GetShape().GetDimNum(); ++j) {
+  for (uint32_t j = 0U; j < ge_desc.GetShape().GetDimNum(); ++j) {
     int64_t tmp_dim = ge_desc.GetShape().GetDim(j);
-    GE_IF_BOOL_EXEC(tmp_dim < 0, real_size = tmp_dim * (-1) * real_size; continue;);
+    if (tmp_dim < 0) {
+      real_size = tmp_dim * (-1) * real_size;
+      continue;
+    }
     real_size *= tmp_dim;
   }
   PARSER_INT64_MULCHECK(real_size, size_type);
   ge::TensorUtils::SetSize(ge_desc, real_size * size_type);
   ge::TensorUtils::SetRealDimCnt(ge_desc, ge_desc.GetShape().GetDimNum());
-  GELOGI("after translate tf_desc, datatype: %s, format: %s, real size: %ld, size_type: %u",
+  GELOGI("After translate tf_desc, datatype: %s, format: %s, real size: %ld, size_type: %u",
          ge::TypeUtils::DataTypeToSerialString(ge_desc.GetDataType()).c_str(),
          ge::TypeUtils::FormatToSerialString(ge_desc.GetFormat()).c_str(), real_size * size_type, size_type);
   return SUCCESS;

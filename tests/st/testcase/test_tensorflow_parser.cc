@@ -158,7 +158,7 @@ void STestTensorflowParser::RegisterCustomOp() {
   domi::OpRegistry::Instance()->registrationDatas.clear();
 }
 
-extern void AddDumpOriginName(const std::string& subgraph_name, const ge::NodePtr parent_node, ge::NodePtr node);
+void AddDumpOriginName(const ge::NodePtr parent_node, const std::string& subgraph_name, ge::ComputeGraphPtr graph);
 
 namespace {
   NodeDef* AddNode(GraphDef& graph, string type, string name) {
@@ -4291,35 +4291,43 @@ TEST_F(STestTensorflowParser, tensorflow_optimizer_fmk_fusion_op) {
 TEST_F(STestTensorflowParser, AddDumpOriginName_test)
 {
   GeTensorDesc scalar_tensor(GeShape(), ge::FORMAT_NCHW, ge::DT_FLOAT);
-  ge::ComputeGraphPtr graph = std::make_shared<ge::ComputeGraph>("default");
-  ge::OpDescPtr data_op = std::make_shared<ge::OpDesc>();
-  data_op->SetType(parser::WHILE);
-  data_op->SetName("WHILE0");
-  data_op->AddInputDesc(ge::GeTensorDesc());
-  data_op->AddOutputDesc(ge::GeTensorDesc());
-  ge::NodePtr while0 = graph->AddNode(data_op);
+  ge::ComputeGraphPtr parent_graph = std::make_shared<ge::ComputeGraph>("parent_graph");
+  ge::OpDescPtr parent = std::make_shared<ge::OpDesc>();
+  parent->SetType("Foo");
+  parent->SetName("foo");
+  ge::NodePtr foo = parent_graph->AddNode(parent);
 
-  data_op = std::make_shared<ge::OpDesc>();
-  data_op->SetType(parser::LOOPCOND);
-  data_op->SetName("COND0");
-  data_op->AddInputDesc(ge::GeTensorDesc());
-  data_op->AddOutputDesc(ge::GeTensorDesc());
-  ge::NodePtr cond0 = graph->AddNode(data_op);
-  AddDumpOriginName(std::string("while"), while0, cond0);
 
-  data_op = std::make_shared<ge::OpDesc>();
-  data_op->SetType(parser::DATA);
-  data_op->SetName("Data1");
-  data_op->AddInputDesc(ge::GeTensorDesc());
-  data_op->AddOutputDesc(ge::GeTensorDesc());
-  ge::NodePtr data1 = graph->AddNode(data_op);
-  AddDumpOriginName(std::string("cond"), cond0, data1);
+  ge::ComputeGraphPtr sub_graph = std::make_shared<ge::ComputeGraph>("sub_graph");
+  auto child = std::make_shared<ge::OpDesc>();
+  child->SetType("Bar");
+  child->SetName("bar");
+  ge::NodePtr bar = sub_graph->AddNode(child);
 
-  auto desc = data1->GetOpDesc();
+  AddDumpOriginName(foo, "f", sub_graph);
+
   std::vector<std::string> original_names;
-  (void)ge::AttrUtils::GetListStr(desc, ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names);
-  EXPECT_EQ(original_names.empty(), false);
-  EXPECT_EQ(original_names[0], "WHILE0/while/COND0/cond/Data1");
+  (void)ge::AttrUtils::GetListStr(bar->GetOpDesc(), ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names);
+  EXPECT_EQ(original_names.size(), 1U);
+  EXPECT_EQ(original_names[0], "foo/f/bar");
+
+  (void)ge::AttrUtils::SetListStr(foo->GetOpDesc(), ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names);
+  AddDumpOriginName(foo, "f", sub_graph);
+
+  original_names.clear();
+  (void)ge::AttrUtils::GetListStr(bar->GetOpDesc(), ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names);
+  EXPECT_EQ(original_names.size(), 1U);
+  EXPECT_EQ(original_names[0], "foo/f/bar/f/bar");
+
+  original_names.push_back("abc");
+  (void)ge::AttrUtils::SetListStr(foo->GetOpDesc(), ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names);
+  AddDumpOriginName(foo, "f", sub_graph);
+
+  original_names.clear();
+  (void)ge::AttrUtils::GetListStr(bar->GetOpDesc(), ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names);
+  EXPECT_EQ(original_names.size(), 2U);
+  EXPECT_EQ(original_names[0], "foo/f/bar/f/bar/f/bar");
+  EXPECT_EQ(original_names[1], "abc");
 }
 
 } // namespace ge

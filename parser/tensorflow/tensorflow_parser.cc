@@ -191,21 +191,25 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, const std::map<Ascend
   GELOGI("AclgrphParse graph %s success.", ParserUtils::GetGraphName(graph).c_str());
   return ge::SUCCESS;
 }
-void AddDumpOriginName(const std::string& subgraph_name, const ge::NodePtr parent_node, ge::NodePtr node)
-{
+
+void AddDumpOriginName(const ge::NodePtr parent_node, const std::string& subgraph_name, ge::ComputeGraphPtr graph) {
+  if (parent_node == nullptr) {
+    return; // Root graph no need set dump origin name as parser always keep the origin node name
+  }
   std::vector<std::string> original_names;
-  auto parend_desc = parent_node->GetOpDesc();
-  (void)ge::AttrUtils::GetListStr(parend_desc, ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names);
+  (void)ge::AttrUtils::GetListStr(parent_node->GetOpDesc(), ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names);
   if (original_names.empty()) {
     original_names.emplace_back(parent_node->GetName());
   }
   // for fusion node also used original_names[0]
-  (void)original_names[0].append("/").append(subgraph_name).append("/").append(node->GetName());
-
-  if (!ge::AttrUtils::SetListStr(node->GetOpDesc(), ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names)) {
-    GELOGW("Set %s to %s fail.", ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES.c_str(), node->GetOpDesc()->GetName().c_str());
+  std::string prefix = original_names[0].append("/").append(subgraph_name).append("/");
+  for (const ge::NodePtr &node : graph->GetDirectNode()) {
+    original_names[0] = prefix + node->GetName();
+    if (!ge::AttrUtils::SetListStr(node->GetOpDesc(), ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names)) {
+      GELOGW("Set dump origin name to %s fail.", node->GetOpDesc()->GetName().c_str());
+    }
+    GELOGD("Add dump origin name %s for node %s.", original_names[0].c_str(), node->GetName().c_str());
   }
-  GELOGD("Add dump origin name %s for node %s.", original_names[0].c_str(), node->GetName().c_str());
 }
 }  // namespace ge
 
@@ -273,6 +277,7 @@ Status GenSubgraphParseTasks(const ge::ComputeGraphPtr &parent_graph, std::deque
 }
 
 Status PostOpProcessForSubgraph(const ParseArg &arg) {
+  AddDumpOriginName(arg.parent_node, arg.subgraph_name, arg.graph);
   if (arg.parent_node == nullptr) {
     return SUCCESS;
   }
@@ -297,7 +302,6 @@ Status PostOpProcessForSubgraph(const ParseArg &arg) {
     if ((node->GetOpDesc() == nullptr) || (node->GetType() == "Variable") || (node->GetType() == "VariableV2")) {
       continue;
     }
-    AddDumpOriginName(arg.subgraph_name, arg.parent_node, node);
     node->GetOpDesc()->SetName(node->GetOwnerComputeGraph()->GetName() + "/" + node->GetName());
   }
 
@@ -909,8 +913,10 @@ Status TensorFlowModelParser::CheckOpType(const domi::tensorflow::NodeDef *node_
   GE_IF_BOOL_EXEC(
       op_type == ge::parser::SPARSESOFTMAXCROSSENTROPYWITHLOGITS,
       GE_CHK_STATUS_RET(CheckOpShapeDim(node_def, check_dims[op_type], valid), "failed to check op shape");
-      GE_IF_BOOL_EXEC(!valid, op_type = ge::parser::FRAMEWORKOP; GELOGI("Set op %s to frameworkop", node_name.c_str());
-                      framework_ops_[node_name] = node_def;););
+      GE_IF_BOOL_EXEC(!valid, op_type = ge::parser::FRAMEWORKOP;
+          GELOGI("Set op %s to frameworkop", node_name.c_str());
+          framework_ops_[node_name] = node_def;);
+  );
 
   GE_IF_BOOL_EXEC(
       op_type == ge::parser::ADD || op_type == ge::parser::MULTIPLY || op_type == ge::parser::MEAN,
@@ -970,7 +976,8 @@ Status TensorFlowModelParser::ParseNodeDef(TensorFlowModelParser *parser, ge::Co
                   GELOGD("CCE %s parsering", node_op.c_str()););
   GE_IF_BOOL_EXEC((implyType == domi::ImplyType::HCCL) && (op_type != ge::parser::FRAMEWORKOP),
                   GELOGD("HCCL %s parsering", node_op.c_str()););
-  GE_IF_BOOL_EXEC(op_type == ge::parser::FRAMEWORKOP, GELOGD("FRAMEWORKOP %s parsering", node_op.c_str()););
+  GE_IF_BOOL_EXEC(op_type == ge::parser::FRAMEWORKOP,
+                  GELOGD("FRAMEWORKOP %s parsering", node_op.c_str()););
   GELOGD("TF op node name = %s, op type= %s, trans to op type %s", node_name.c_str(), node_op.c_str(), op_type.c_str());
 
   // Construct operator by IR
@@ -2322,7 +2329,8 @@ Status TensorFlowModelParser::ParseProto(const google::protobuf::Message *proto,
   // Loop analysis of op_nodes and map them to nodes in graph
   ret = AddFmkNode(graph, scope_graph, op_node_name_list, isDatasetInit);
   PARSER_TIMESTAMP_END(AddFmkNode, "TensorFlowModelParser::AddFmkNode");
-  GE_CHK_STATUS_EXEC(ret, DeleteFuisonNodeDef(); return ret, "AddFmkNode failed");
+  GE_CHK_STATUS_EXEC(ret, DeleteFuisonNodeDef();
+      return ret, "AddFmkNode failed");
   GELOGD("[TF Parser] Add framework node success");
 
   ret = AddEdges(graph);
@@ -3004,12 +3012,16 @@ Status TensorFlowModelParser::GetFormatTranspose(const NodeDef *transpose_node, 
   GE_IF_BOOL_EXEC(
       type == domi::tensorflow::DT_INT32,
       const int32_t *data = reinterpret_cast<const int32_t *>(tensor.tensor_content().data());
-      for (int i = 0; i < parser::DIM_DEFAULT_SIZE; i++) { perm_value.push_back(data[i]); });
+      for (int i = 0; i < parser::DIM_DEFAULT_SIZE; i++) {
+        perm_value.push_back(data[i]);
+      });
 
   GE_IF_BOOL_EXEC(
       type == domi::tensorflow::DT_INT64,
       const int64_t *data = reinterpret_cast<const int64_t *>(tensor.tensor_content().data());
-      for (int i = 0; i < parser::DIM_DEFAULT_SIZE; i++) { perm_value.push_back(data[i]); });
+      for (int i = 0; i < parser::DIM_DEFAULT_SIZE; i++) {
+        perm_value.push_back(data[i]);
+      });
 
   // 0, 1, 2, 3 present dim num.
   vector<int64_t> perm_to_nchw = {0, 3, 1, 2};
