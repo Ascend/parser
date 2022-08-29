@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020~2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -389,7 +389,8 @@ Status CaffeModelParser::ParseInput(domi::caffe::NetParameter &proto_message, bo
 
 
 Status CaffeModelParser::ParseNetModelByCustomProto(const char *model_path, const string &custom_proto_path,
-                                                    const string &custom_proto_name, vector<ge::Operator> &operators) {
+                                                    const string &custom_proto_name,
+                                                    vector<ge::Operator> &operators) const {
   google::protobuf::compiler::DiskSourceTree source_tree;
   source_tree.MapPath(kProjectRoot, custom_proto_path);
   google::protobuf::compiler::Importer importer(&source_tree, nullptr);
@@ -1926,7 +1927,7 @@ Status CaffeWeightsParser::ConvertLayerProto(const google::protobuf::Message *me
 Status CaffeWeightsParser::ParseLayerField(const google::protobuf::Reflection *reflection,
                                            const google::protobuf::Message *message,
                                            const google::protobuf::FieldDescriptor *field,
-                                           google::protobuf::Message *layer) {
+                                           google::protobuf::Message *layer) const {
   GELOGD("Start to parse field: %s.", field->name().c_str());
   domi::caffe::LayerParameter *layer_proto = PtrToPtr<google::protobuf::Message, domi::caffe::LayerParameter>(layer);
   string filed_name = field->name();

@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020~2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ const int kBlobIndexOne = 1;
 
 Status CaffeCustomParserAdapter::ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) {
   GE_CHECK_NOTNULL(op_src);
-  const LayerParameter *layer = reinterpret_cast<const LayerParameter *>(op_src);
+  const LayerParameter *layer = PtrToPtr<const Message, const LayerParameter>(op_src);
   GELOGD("Caffe layer name = %s, layer type= %s, parse params", layer->name().c_str(), layer->type().c_str());
   GE_CHECK_NOTNULL(op_dest);
 
@@ -78,12 +78,37 @@ Status CaffeCustomParserAdapter::ParseParams(const Operator &op_src, const ge::O
   return SUCCESS;
 }
 
+Status CaffeCustomParserAdapter::AddEdgeFromConstNode(const NodePtr &const_node, const int32_t index,
+                                                      const bool update_in_turn, ge::NodePtr &node) const {
+  GE_CHECK_NOTNULL(const_node);
+  GE_CHECK_NOTNULL(node);
+  auto op = node->GetOpDesc();
+  GE_CHECK_NOTNULL(op);
+  auto valid_input_name = op->GetValidInputNameByIndex(index);
+  if (update_in_turn || valid_input_name.empty()) {
+    if (node->AddLinkFrom(static_cast<const uint32_t &>(index), const_node) != GRAPH_SUCCESS) {
+      REPORT_CALL_ERROR("E19999", "AddEdge failed of from Node %s output to Node %s input %d",
+                        const_node->GetName().c_str(), node->GetName().c_str(), index);
+      GELOGE(GRAPH_FAILED, "[Invoke][AddLinkFrom] AddEdge failed of from Node %s output to Node %s input %d",
+             const_node->GetName().c_str(), node->GetName().c_str(), index);
+    }
+  } else {
+    if (node->AddLinkFrom(valid_input_name, const_node) != GRAPH_SUCCESS) {
+      REPORT_CALL_ERROR("E19999", "AddEdge failed of from Node %s output to Node %s input %s",
+                        const_node->GetName().c_str(), node->GetName().c_str(), valid_input_name.c_str());
+      GELOGE(GRAPH_FAILED, "[Invoke][AddLinkFrom] AddEdge failed of from Node %s output to Node %s input %s",
+             const_node->GetName().c_str(), node->GetName().c_str(), valid_input_name.c_str());
+    }
+  }
+  return SUCCESS;
+}
+
 Status CaffeCustomParserAdapter::ParseWeights(const Message *op_src, ge::NodePtr &node) {
   GE_CHECK_NOTNULL(node);
   auto op = node->GetOpDesc();
   GE_CHECK_NOTNULL(op_src);
   GE_CHECK_NOTNULL(op);
-  const LayerParameter *layer = reinterpret_cast<const LayerParameter *>(op_src);
+  const LayerParameter *layer = PtrToPtr<const Message, const LayerParameter>(op_src);
 
   GE_CHK_BOOL_RET_STATUS(layer != nullptr, FAILED, "[Convert][Type]Dynamic cast op_src to LayerParameter failed");
   GELOGI("layer: %s blobs_size: %d bottom_size: %d", layer->name().c_str(), layer->blobs_size(), layer->bottom_size());
@@ -100,11 +125,11 @@ Status CaffeCustomParserAdapter::ParseWeights(const Message *op_src, ge::NodePtr
     GE_CHK_STATUS_RET(ConvertWeight(layer->blobs(i), layer->name(), weight),
                       "[Convert][Blobs] (%d) for layer %s failed", i, layer->name().c_str());
     GE_IF_BOOL_EXEC(layer->type() == kConvolution && i == kBlobIndexOne,
-                    const ConvolutionParameter &conv_params_src = layer->convolution_param();
-                    bias_en = conv_params_src.bias_term(););
+                    bias_en = layer->convolution_param().bias_term();
+                   );
     GE_IF_BOOL_EXEC(layer->type() == kInnerProduct && i == kBlobIndexOne,
-                    const InnerProductParameter &fc_params_src = layer->inner_product_param();
-                    bias_en = fc_params_src.bias_term(););
+                    bias_en = layer->inner_product_param().bias_term();
+                    );
     auto bias_shape = weight->MutableTensorDesc().GetShape();
     // The num 0, 1, 2, 3 represet the dim index.
     bool matched = bias_en && bias_shape.GetDimNum() == static_cast<size_t>(ge::parser::DIM_DEFAULT_SIZE) &&
@@ -127,24 +152,8 @@ Status CaffeCustomParserAdapter::ParseWeights(const Message *op_src, ge::NodePtr
 
     // add edge from const to current node
     auto const_node = owner_graph->AddNodeFront(const_opdesc);
-    GE_CHECK_NOTNULL(const_node);
     auto index = start_pos + i;
-    auto valid_input_name = op->GetValidInputNameByIndex(static_cast<uint32_t>(index));
-    if (update_in_turn || valid_input_name.empty()) {
-      if (node->AddLinkFrom(static_cast<const uint32_t &>(index), const_node) != GRAPH_SUCCESS) {
-        REPORT_CALL_ERROR("E19999", "AddEdge failed of from Node %s output to Node %s input %d",
-                          const_node->GetName().c_str(), node->GetName().c_str(), index);
-        GELOGE(GRAPH_FAILED, "[Invoke][AddLinkFrom] AddEdge failed of from Node %s output to Node %s input %d",
-               const_node->GetName().c_str(), node->GetName().c_str(), index);
-      }
-    } else {
-      if (node->AddLinkFrom(valid_input_name, const_node) != GRAPH_SUCCESS) {
-        REPORT_CALL_ERROR("E19999", "AddEdge failed of from Node %s output to Node %s input %s",
-                          const_node->GetName().c_str(), node->GetName().c_str(), valid_input_name.c_str());
-        GELOGE(GRAPH_FAILED, "[Invoke][AddLinkFrom] AddEdge failed of from Node %s output to Node %s input %s",
-               const_node->GetName().c_str(), node->GetName().c_str(), valid_input_name.c_str());
-      }
-    }
+    GE_CHK_STATUS_RET_NOLOG(AddEdgeFromConstNode(const_node, static_cast<int32_t>(index), update_in_turn, node));
 
     std::vector<ge::NodePtr> original_nodes;
     ge::GraphUtils::RecordOriginalNames(original_nodes, const_node);

@@ -1,5 +1,5 @@
 /**
- * Copyright 2019-2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020~2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,27 +17,14 @@
 #ifndef INC_EXTERNAL_ACL_GRAPH_CAFFE_H_
 #define INC_EXTERNAL_ACL_GRAPH_CAFFE_H_
 
-#if defined(_MSC_VER)
-#ifdef FUNC_VISIBILITY
-#define PARSER_FUNC_VISIBILITY _declspec(dllexport)
-#else
-#define PARSER_FUNC_VISIBILITY
-#endif
-#else
-#ifdef FUNC_VISIBILITY
-#define PARSER_FUNC_VISIBILITY __attribute__((visibility("default")))
-#else
-#define PARSER_FUNC_VISIBILITY
-#endif
-#endif
-
 #include <memory>
 #include <string>
 #include <vector>
-
+#include <map>
 #include "graph/ascend_string.h"
 #include "graph/ge_error_codes.h"
 #include "graph/graph.h"
+#include "parser_common.h"
 
 namespace ge {
 PARSER_FUNC_VISIBILITY graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file,

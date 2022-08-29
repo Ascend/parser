@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020~2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,9 @@ using namespace ge::parser;
 using domi::CAFFE;
 
 namespace ge {
+namespace {
+  const char *kData = "Data";
+}
 Status CaffeDataParser::GetOutputDesc(const string &name, const std::vector<int64_t> &input_dims,
                                       const ge::OpDescPtr &op) const {
   GE_CHECK_NOTNULL(op);
@@ -51,10 +54,10 @@ Status CaffeDataParser::ParseParams(const Message *op_src, ge::OpDescPtr &op) {
   GELOGD("Caffe layer name = %s, layer type= %s, parse params", layer->name().c_str(), layer->type().c_str());
 
   if (layer->type() == ge::parser::INPUT_TYPE) {
-    GE_CHK_STATUS_RET(ParseParamsForInput(layer, op), "[Parse][Params] failed, Caffe layer name = %s, "
+    GE_CHK_STATUS_RET(ParseParamsForInput(*layer, op), "[Parse][Params] failed, Caffe layer name = %s, "
                       "layer type= %s", layer->name().c_str(), layer->type().c_str());
   } else if (layer->type() == ge::parser::DUMMY_DATA) {
-    GE_CHK_STATUS_RET(ParseParamsForDummyData(layer, op), "[Parse][Params] failed, Caffe layer name = %s, "
+    GE_CHK_STATUS_RET(ParseParamsForDummyData(*layer, op), "[Parse][Params] failed, Caffe layer name = %s, "
                       "layer type= %s", layer->name().c_str(), layer->type().c_str());
   } else {
     REPORT_INNER_ERROR("E19999", "layer:%s(%s) type is not %s or %s, check invalid",
@@ -66,14 +69,14 @@ Status CaffeDataParser::ParseParams(const Message *op_src, ge::OpDescPtr &op) {
   return SUCCESS;
 }
 
-Status CaffeDataParser::ParseParamsForInput(const domi::caffe::LayerParameter *layer, ge::OpDescPtr &op) {
-  if (layer->has_input_param()) {
-    const domi::caffe::InputParameter &input_param = layer->input_param();
+Status CaffeDataParser::ParseParamsForInput(const domi::caffe::LayerParameter &layer, ge::OpDescPtr &op) const {
+  if (layer.has_input_param()) {
+    const domi::caffe::InputParameter &input_param = layer.input_param();
     if (input_param.shape_size() == 0) {
       ErrorManager::GetInstance().ATCReportErrMessage(
-          "E11027", {"layername", "layertype"}, {layer->name(), layer->type()});
+          "E11027", {"layername", "layertype"}, {layer.name(), layer.type()});
       GELOGE(PARAM_INVALID, "[Check][Param]input_param shape size is zero, check invalid, "
-             "caffe layer name [%s], layer type [%s].", layer->name().c_str(), layer->type().c_str());
+             "caffe layer name [%s], layer type [%s].", layer.name().c_str(), layer.type().c_str());
       return FAILED;
     }
     for (int i = 0; i < input_param.shape_size(); i++) {
@@ -84,7 +87,7 @@ Status CaffeDataParser::ParseParamsForInput(const domi::caffe::LayerParameter *l
       for (auto &blob_shape_dim_temp : blob_shape.dim()) {
         model_dims.push_back(blob_shape_dim_temp);
       }
-      string name = layer->name();
+      string name = layer.name();
       GE_IF_BOOL_EXEC(shape_map.count(name) != 0, model_dims = shape_map.at(name));
       GE_CHK_STATUS_RET(GetOutputDesc(name, model_dims, op),
                         "[Get][OutputDesc] failed in layer %s", name.c_str());
@@ -93,13 +96,13 @@ Status CaffeDataParser::ParseParamsForInput(const domi::caffe::LayerParameter *l
     // Get from external input
     const ge::ParserContext &ctx = GetParserContext();
     std::map<std::string, std::vector<int64_t>> input_dims = ctx.input_dims;
-    string name = layer->name();
+    string name = layer.name();
     std::map<std::string, std::vector<int64_t>>::const_iterator search = input_dims.find(name);
     if (search == input_dims.end()) {
-      REPORT_INPUT_ERROR("E11005", std::vector<std::string>({"input"}), std::vector<std::string>({layer->name()}));
+      REPORT_INPUT_ERROR("E11005", std::vector<std::string>({"input"}), std::vector<std::string>({layer.name()}));
       GELOGE(PARAM_INVALID, "[Check][Param] Caffe prototxt has no input_param or user "
              "should set --input_shape in atc parameter, caffe layer name [%s], layer type [%s].",
-             layer->name().c_str(), layer->type().c_str());
+             layer.name().c_str(), layer.type().c_str());
       return FAILED;
     }
     std::vector<int64_t> dims = search->second;
@@ -109,14 +112,14 @@ Status CaffeDataParser::ParseParamsForInput(const domi::caffe::LayerParameter *l
   return SUCCESS;
 }
 
-Status CaffeDataParser::ParseParamsForDummyData(const domi::caffe::LayerParameter *layer, ge::OpDescPtr &op) {
-  if (layer->has_dummy_data_param()) {
-    const domi::caffe::DummyDataParameter &dummy_data_param = layer->dummy_data_param();
+Status CaffeDataParser::ParseParamsForDummyData(const domi::caffe::LayerParameter &layer, ge::OpDescPtr &op) const {
+  if (layer.has_dummy_data_param()) {
+    const domi::caffe::DummyDataParameter &dummy_data_param = layer.dummy_data_param();
     if (dummy_data_param.shape_size() == 0) {
       ErrorManager::GetInstance().ATCReportErrMessage(
-          "E11027", {"layername", "layertype"}, {layer->name(), layer->type()});
+          "E11027", {"layername", "layertype"}, {layer.name(), layer.type()});
       GELOGE(PARAM_INVALID, "[Check][Param] input_param shape size is zero, caffe layer name [%s], layer type [%s].",
-             layer->name().c_str(), layer->type().c_str());
+             layer.name().c_str(), layer.type().c_str());
       return FAILED;
     }
     for (int i = 0; i < dummy_data_param.shape_size(); i++) {
@@ -129,7 +132,7 @@ Status CaffeDataParser::ParseParamsForDummyData(const domi::caffe::LayerParamete
         model_dims.push_back(blob_shape_dim_temp);
       }
 
-      string name = layer->name();
+      string name = layer.name();
       GE_IF_BOOL_EXEC(shape_map.count(name) != 0, model_dims = shape_map.at(name));
       GE_CHK_STATUS_RET(GetOutputDesc(name, model_dims, op),
                         "[Get][OutputDesc] failed in layer %s", name.c_str());
@@ -138,13 +141,13 @@ Status CaffeDataParser::ParseParamsForDummyData(const domi::caffe::LayerParamete
     // Get from external input
     const ge::ParserContext &ctx = GetParserContext();
     std::map<std::string, std::vector<int64_t>> input_dims = ctx.input_dims;
-    string name = layer->name();
+    string name = layer.name();
     std::map<std::string, std::vector<int64_t>>::const_iterator search = input_dims.find(name);
     if (search == input_dims.end()) {
-      REPORT_INPUT_ERROR("E11005", std::vector<std::string>({"input"}), std::vector<std::string>({layer->name()}));
+      REPORT_INPUT_ERROR("E11005", std::vector<std::string>({"input"}), std::vector<std::string>({layer.name()}));
       GELOGE(PARAM_INVALID, "[Check][Param] Caffe prototxt has no input_param or user "
              "should set --input_shape in atc parameter, caffe layer name [%s], layer type [%s].",
-             layer->name().c_str(), layer->type().c_str());
+             layer.name().c_str(), layer.type().c_str());
       return FAILED;
     }
     std::vector<int64_t> dims = search->second;
@@ -153,6 +156,5 @@ Status CaffeDataParser::ParseParamsForDummyData(const domi::caffe::LayerParamete
   }
   return SUCCESS;
 }
-
-REGISTER_OP_PARSER_CREATOR(CAFFE, DATA, CaffeDataParser);
+REGISTER_OP_PARSER_CREATOR(CAFFE, kData, CaffeDataParser);
 }  // namespace ge

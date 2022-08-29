@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020~2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,6 +28,9 @@ using domi::ONNX;
 using namespace ge::parser;
 
 namespace ge {
+namespace {
+  const char *kData = "Data";
+}
 Status OnnxDataParser::ParseParams(const Message *op_src, ge::Operator &op_def) {
   GE_CHECK_NOTNULL(op_src);
   const ge::onnx::NodeProto *node_src = PtrToPtr<const Message, const ge::onnx::NodeProto>(op_src);
@@ -140,5 +143,5 @@ Status OnnxDataParser::ParseInputFromUser(const ge::Operator &op_def) {
   return SUCCESS;
 }
 
-REGISTER_OP_PARSER_CREATOR(ONNX, DATA, OnnxDataParser);
+REGISTER_OP_PARSER_CREATOR(ONNX, kData, OnnxDataParser);
 }  // namespace ge

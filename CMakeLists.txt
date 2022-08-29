@@ -253,6 +253,7 @@ install(TARGETS _caffe_parser parser_common fmk_onnx_parser fmk_parser parser_he
 install(FILES   ${PARSER_DIR}/inc/external/parser/onnx_parser.h
                 ${PARSER_DIR}/inc/external/parser/caffe_parser.h
                 ${PARSER_DIR}/inc/external/parser/tensorflow_parser.h
+                ${PARSER_DIR}/inc/external/parser/parser_common.h
         DESTINATION ${INSTALL_INCLUDE_DIR}/parser/external/parser COMPONENT opensdk EXCLUDE_FROM_ALL
 )
 

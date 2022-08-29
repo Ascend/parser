@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020~2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,9 @@ using GeTensorDesc = ge::GeTensorDesc;
 using namespace ge::parser;
 
 namespace ge {
+namespace {
+  const char *kConstant = "Const";
+}
 Status OnnxConstantParser::ParseConvertData(const ge::onnx::TensorProto &tensor_proto, ge::Tensor &tensor, int count) {
   int64_t data_type = tensor_proto.data_type();
   if (ge::OnnxUtil::ConvertOnnxDataType(data_type) == ge::DataType::DT_UNDEFINED) {
@@ -47,27 +50,22 @@ Status OnnxConstantParser::ParseConvertData(const ge::onnx::TensorProto &tensor_
   }
 
   std::map<uint32_t, int32_t> datatype_val_size_map = {
-      // for int32, uint8, int8, uint16, int16, bool, and float16 values
-      {OnnxDataType::INT32, tensor_proto.int32_data_size()},
-      {OnnxDataType::UINT8, tensor_proto.int32_data_size()},
-      {OnnxDataType::INT8, tensor_proto.int32_data_size()},
-      {OnnxDataType::UINT16, tensor_proto.int32_data_size()},
-      {OnnxDataType::INT16, tensor_proto.int32_data_size()},
-      {OnnxDataType::BOOL, tensor_proto.int32_data_size()},
-      {OnnxDataType::FLOAT16, tensor_proto.int32_data_size()},
-      // for int64 values
-      {OnnxDataType::INT64, tensor_proto.int64_data_size()},
-      // for string values
-      {OnnxDataType::STRING, tensor_proto.string_data_size()},
-      // for float and complex64 values
-      {OnnxDataType::FLOAT, tensor_proto.float_data_size()},
-      {OnnxDataType::COMPLEX64, tensor_proto.float_data_size()},
-      // for double and complex128 values
-      {OnnxDataType::DOUBLE, tensor_proto.double_data_size()},
-      {OnnxDataType::COMPLEX128, tensor_proto.double_data_size()},
-      // for uint64 and uint32 values
-      {OnnxDataType::UINT64, tensor_proto.uint64_data_size()},
-      {OnnxDataType::UINT32, tensor_proto.uint64_data_size()},
+    // for int32, uint8, int8, uint16, int16, bool, and float16 values
+    {OnnxDataType::INT32, tensor_proto.int32_data_size()}, {OnnxDataType::UINT8, tensor_proto.int32_data_size()},
+    {OnnxDataType::INT8, tensor_proto.int32_data_size()}, {OnnxDataType::UINT16, tensor_proto.int32_data_size()},
+    {OnnxDataType::INT16, tensor_proto.int32_data_size()}, {OnnxDataType::BOOL, tensor_proto.int32_data_size()},
+    {OnnxDataType::FLOAT16, tensor_proto.int32_data_size()},
+    // for int64 values
+    {OnnxDataType::INT64, tensor_proto.int64_data_size()},
+    // for string values
+    {OnnxDataType::STRING, tensor_proto.string_data_size()},
+    // for float and complex64 values
+    {OnnxDataType::FLOAT, tensor_proto.float_data_size()}, {OnnxDataType::COMPLEX64, tensor_proto.float_data_size()},
+    // for double and complex128 values
+    {OnnxDataType::DOUBLE, tensor_proto.double_data_size()},
+    {OnnxDataType::COMPLEX128, tensor_proto.double_data_size()},
+    // for uint64 and uint32 values
+    {OnnxDataType::UINT64, tensor_proto.uint64_data_size()}, {OnnxDataType::UINT32, tensor_proto.uint64_data_size()},
   };
 
   int32_t datatype_val_size = 0;
@@ -199,7 +197,7 @@ Status OnnxConstantParser::ParseConvertDataType(const ge::onnx::TensorProto &ten
 
 Status OnnxConstantParser::ParseConstFromInput(const ge::onnx::NodeProto *op_src, ge::Operator &op_def) {
   GE_CHECK_NOTNULL(op_src);
-  const NodeProto *node = reinterpret_cast<const NodeProto *>(op_src);
+  const NodeProto *node = PtrToPtr<const ge::onnx::NodeProto, const NodeProto>(op_src);
 
   // Get const Tensor from node
   Tensor tensor;
@@ -226,7 +224,7 @@ Status OnnxConstantParser::ParseConstFromInput(const ge::onnx::NodeProto *op_src
 
 Status OnnxConstantParser::ParseParams(const Message *op_src, ge::Operator &op_def) {
   GE_CHECK_NOTNULL(op_src);
-  const ge::onnx::NodeProto *node = reinterpret_cast<const ge::onnx::NodeProto *>(op_src);
+  const ge::onnx::NodeProto *node = PtrToPtr<const Message, const ge::onnx::NodeProto>(op_src);
   GE_CHECK_NOTNULL(node);
   GELOGD("Onnx op node name = %s, op type= %s, parse params", node->name().c_str(), node->op_type().c_str());
 
@@ -237,5 +235,5 @@ Status OnnxConstantParser::ParseParams(const Message *op_src, ge::Operator &op_d
   return SUCCESS;
 }
 
-REGISTER_OP_PARSER_CREATOR(ONNX, CONSTANT, OnnxConstantParser);
+REGISTER_OP_PARSER_CREATOR(ONNX, kConstant, OnnxConstantParser);
 }  // namespace ge
