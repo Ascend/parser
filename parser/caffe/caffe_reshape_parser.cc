@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020~2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,6 +36,7 @@ const int kAnchorIndexZero = 0;
 const int kAnchorIndexOne = 1;
 const int32_t RESHAPE_AXIS_DEFAULT_VALUE = 0;
 const int32_t RESHAPE_NUM_AXES_DEFAULT_VALUE = -1;
+const char *kReshape = "Reshape";
 }  // namespace
 
 Status CaffeReshapeParser::ParseParams(const Message *op_src, ge::OpDescPtr &op) {
@@ -127,9 +128,8 @@ Status CaffeReshapeParser::AddConstInput(ge::NodePtr &node) {
   for (size_t i = 0; i < dims_size; ++i) {
     data[i] = attr_shape[i];
   }
-  GE_IF_BOOL_EXEC(
-      constTensor->SetData(PtrToPtr<int64_t, uint8_t>(data.get()), dims_size * sizeof(int64_t)) != ge::GRAPH_SUCCESS,
-      GELOGW("SetData failed for GeTensor."););  // no need to return
+  GE_IF_BOOL_EXEC(constTensor->SetData(PtrToPtr<int64_t, uint8_t>(data.get()), dims_size * sizeof(int64_t)) !=
+                  ge::GRAPH_SUCCESS, GELOGW("SetData failed for GeTensor."););  // no need to return
 
   // construct const node and add edge
   auto const_opdesc = ge::OpDescUtils::CreateConstOp(constTensor);
@@ -151,5 +151,5 @@ Status CaffeReshapeParser::AddConstInput(ge::NodePtr &node) {
   return SUCCESS;
 }
 
-REGISTER_OP_PARSER_CREATOR(CAFFE, RESHAPE, CaffeReshapeParser);
+REGISTER_OP_PARSER_CREATOR(CAFFE, kReshape, CaffeReshapeParser);
 }  // namespace ge

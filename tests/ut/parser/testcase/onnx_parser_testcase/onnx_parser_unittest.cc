@@ -703,4 +703,23 @@ TEST_F(UtestOnnxParser, onnx_test_TransNodeToOperator_SetTensorData)
   EXPECT_EQ(ret, SUCCESS);
 }
 
+TEST_F(UtestOnnxParser, onnx_test_const_input_op)
+{
+  ge::onnx::ModelProto model_proto;
+  ge::onnx::GraphProto* graph = model_proto.mutable_graph();
+  ge::onnx::NodeProto *node_proto = graph->add_node();
+  node_proto->set_op_type("Constant");
+  node_proto->set_domain("const.onnx");
+  node_proto->set_name("const_11");
+  ge::OpDescPtr op_desc_src = std::make_shared<ge::OpDesc>("Constant", "const.onnx");
+  ge::Operator op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc_src);
+  std::string op_type = "Constant";
+
+  OnnxModelParser onnx_parser;
+  std::vector<ge::Operator> input_ops;
+  onnx_parser.name_operator_["const_11"] = op;
+  Status ret = onnx_parser.GetGraphInputs(*graph, input_ops);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(input_ops.size() > 0, true);
+}
 } // namespace ge

@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020~2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,6 +54,20 @@ class PARSER_FUNC_VISIBILITY CaffeCustomParserAdapter : public CaffeOpParser {
    * @author
    */
   Status ParseWeights(const Message *op_src, ge::NodePtr &node) override;
+
+  /**
+   * @ingroup domi_omg
+   * @brief parse weight of the operation
+   * @param [in] const_node const node to add link edge
+   * @param [in] index index of current node to add link
+   * @param [in] update_in_turn flag of update in turn
+   * @param [out] node params after parsing
+   * @return SUCCESS parse successfullyparse failed
+   * @return FAILED
+   * @author
+   */
+Status AddEdgeFromConstNode(const NodePtr &const_node, const int32_t index,
+                          const bool update_in_turn, ge::NodePtr &node) const;
 };
 }  // namespace ge
 

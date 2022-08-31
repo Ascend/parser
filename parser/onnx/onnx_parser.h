@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020~2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,7 +45,7 @@ namespace ge {
 class PARSER_FUNC_VISIBILITY OnnxModelParser : public domi::ModelParser {
  public:
   OnnxModelParser() {}
-  virtual ~OnnxModelParser() {}
+  ~OnnxModelParser() override {}
 
   Status Parse(const char *file, ge::Graph &graph) override;
 

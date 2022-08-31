@@ -352,18 +352,18 @@ TEST_F(UtestCaffeParser, caffe_parser_ParseParamsForDummyData_test)
   domi::caffe::NetParameter net;
   ge::OpDescPtr op = std::make_shared<ge::OpDesc>("conv", "Convolution");
   domi::caffe::LayerParameter *lay = net.add_layer();
-  Status ret = caffe_parser.ParseParamsForDummyData(lay, op);
+  Status ret = caffe_parser.ParseParamsForDummyData(*lay, op);
   EXPECT_EQ(ret, FAILED);
 
-  ret = caffe_parser.ParseParamsForInput(lay, op);
+  ret = caffe_parser.ParseParamsForInput(*lay, op);
   EXPECT_EQ(ret, FAILED);
 
   domi::caffe::DummyDataParameter *dummyData = lay->mutable_dummy_data_param();
-  ret = caffe_parser.ParseParamsForDummyData(lay, op);
+  ret = caffe_parser.ParseParamsForDummyData(*lay, op);
   EXPECT_EQ(ret, FAILED);
 
   domi::caffe::BlobShape* dummpShape = dummyData->add_shape();
-  ret = caffe_parser.ParseParamsForDummyData(lay, op);
+  ret = caffe_parser.ParseParamsForDummyData(*lay, op);
   EXPECT_EQ(ret, SUCCESS);
 }
 

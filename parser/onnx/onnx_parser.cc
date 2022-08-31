@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020~2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,7 +48,7 @@
 #include "mmpa/mmpa_api.h"
 
 namespace {
-const std::string kLocation = "location";
+const char *kLocation = "location";
 }
 
 namespace ge {
@@ -671,13 +671,12 @@ Status OnnxModelParser::ParseAllNodeProto(ge::onnx::GraphProto &onnx_graph, ge::
 }
 
 Status OnnxModelParser::GetGraphInputs(ge::onnx::GraphProto &onnx_graph, std::vector<ge::Operator> &input_ops) {
-  if (input_node_names_.empty()) {
-    // subgraph might not have input, we use constant nodes as the start nodes of graph
-    for (int i = 0; i < onnx_graph.node_size(); i++) {
-      ge::onnx::NodeProto *node = onnx_graph.mutable_node(i);
-      if (node->op_type() == kOpTypeConstant) {
-        input_node_names_.emplace_back(node->name());
-      }
+  // subgraph might not have input, or isolated const nodes exist in the graph,
+  // we use constant nodes as the start nodes of graph
+  for (int i = 0; i < onnx_graph.node_size(); i++) {
+    ge::onnx::NodeProto *node = onnx_graph.mutable_node(i);
+    if (node->op_type() == kOpTypeConstant) {
+      input_node_names_.emplace_back(node->name());
     }
   }
   for (auto in_name : input_node_names_) {
