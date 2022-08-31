@@ -100,15 +100,11 @@ Status TensorFlowShapeNParser::ParseParams(const Message *op_src, ge::OpDescPtr 
   ShapeNOperator op;
   op.Name(node->name());
 
-  GE_RETURN_IF_ERROR(PreParseParams(node, &op));
-
   GE_RETURN_WITH_LOG_IF_ERROR(ParseInType(node, &op), "Parse in type for node %s failed.", node->name().c_str());
 
   GE_RETURN_WITH_LOG_IF_ERROR(ParseN(node, &op), "Parse N for node %s failed.", node->name().c_str());
 
   GE_RETURN_WITH_LOG_IF_ERROR(ParseOutType(node, &op), "Parse out type for node %s failed.", node->name().c_str());
-
-  GE_RETURN_IF_ERROR(PostParseParams(node, &op));
 
   // add dynamic input/output
   domi::tensorflow::AttrValue attr_num;
@@ -151,19 +147,6 @@ Status TensorFlowShapeNParser::ParseParams(const Message *op_src, ge::OpDescPtr 
   }
   GELOGI("add dynamic input and output for op [%s], type[%s], name: %s, number:%d", op_dest->GetName().c_str(),
          op_dest->GetType().c_str(), SHAPEN_ATTR_N.c_str(), dynamic_tensor_num);
-  return SUCCESS;
-}
-
-// AUTO GEN PLEASE DO NOT MODIFY IT
-Status TensorFlowShapeNParser::PreParseParams(const domi::tensorflow::NodeDef *node, const ShapeNOperator *op) {
-  (void)node;
-  (void)op;
-  return SUCCESS;
-}
-
-Status TensorFlowShapeNParser::PostParseParams(const domi::tensorflow::NodeDef *node, const ShapeNOperator *op) {
-  (void)node;
-  (void)op;
   return SUCCESS;
 }
 

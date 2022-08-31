@@ -27,9 +27,6 @@ class PARSER_FUNC_VISIBILITY TensorFlowShapeNParser : public TensorFlowOpParser 
   Status ParseParams(const Message *op_src, ge::OpDescPtr &op_dest) override;
 
  protected:
-  Status PreParseParams(const domi::tensorflow::NodeDef *node, const ShapeNOperator *op);
-  Status PostParseParams(const domi::tensorflow::NodeDef *node, const ShapeNOperator *op);
-
   static Status ParseN(const domi::tensorflow::NodeDef *node, ShapeNOperator *op);
   static Status ParseInType(const domi::tensorflow::NodeDef *node, ShapeNOperator *op);
   static Status ParseOutType(const domi::tensorflow::NodeDef *node, ShapeNOperator *op);

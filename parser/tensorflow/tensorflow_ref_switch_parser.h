@@ -43,26 +43,6 @@ class PARSER_FUNC_VISIBILITY TensorFlowRefSwitchParser : public TensorFlowOpPars
    * @return SUCCESS 解析成功
    * @return FAILED 解析失败
    */
-  Status PreParseParams(const domi::tensorflow::NodeDef *node, RefSwitchOperator *op);
-
-  /**
-   * @ingroup domi_omg
-   * @brief 解析模型文件信息
-   * @param [in] v_input_const 待解析的模型数据
-   * @param [out] node 解析后的模型数据
-   * @return SUCCESS 解析成功
-   * @return FAILED 解析失败
-   */
-  Status PostParseParams(const domi::tensorflow::NodeDef *node, RefSwitchOperator *op);
-
-  /**
-   * @ingroup domi_omg
-   * @brief 解析模型文件信息
-   * @param [in] v_input_const 待解析的模型数据
-   * @param [out] node 解析后的模型数据
-   * @return SUCCESS 解析成功
-   * @return FAILED 解析失败
-   */
   static Status ParseT(const domi::tensorflow::NodeDef *node, RefSwitchOperator *op);
 
   // AUTO GEN PLEASE DO NOT MODIFY IT

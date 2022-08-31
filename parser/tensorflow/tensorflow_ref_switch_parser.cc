@@ -64,28 +64,12 @@ Status TensorFlowRefSwitchParser::ParseParams(const Message *op_src, ge::OpDescP
   op.Name(node->name());
 
   GELOGI("RefSwitch Op %s ParseParams Begin.", node->name().c_str());
-  GE_RETURN_IF_ERROR(PreParseParams(node, &op));
 
   GE_RETURN_WITH_LOG_IF_ERROR(ParseT(node, &op), "Parse T for node %s failed.", node->name().c_str());
-
-  GE_RETURN_IF_ERROR(PostParseParams(node, &op));
 
   Status status = ConvertToOpDesc(op, op_dest);
 
   return status;
-}
-
-// AUTO GEN PLEASE DO NOT MODIFY IT
-Status TensorFlowRefSwitchParser::PreParseParams(const domi::tensorflow::NodeDef *node, RefSwitchOperator *op) {
-  (void)node;
-  (void)op;
-  return SUCCESS;
-}
-
-Status TensorFlowRefSwitchParser::PostParseParams(const domi::tensorflow::NodeDef *node, RefSwitchOperator *op) {
-  (void)node;
-  (void)op;
-  return SUCCESS;
 }
 
 REGISTER_OP_PARSER_CREATOR(TENSORFLOW, REFSWITCH, TensorFlowRefSwitchParser);
