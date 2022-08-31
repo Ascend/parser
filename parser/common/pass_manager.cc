@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,11 @@
  */
 
 #include "common/util.h"
-#include "parser/common/pass_manager.h"
 #include "framework/omg/parser/parser_types.h"
 #include "parser/common/acl_graph_parser_util.h"
 #include "graph/utils/node_utils.h"
 #include "omg/omg_inner_types.h"
+#include "parser/common/pass_manager.h"
 
 namespace ge {
 namespace parser {

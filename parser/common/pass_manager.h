@@ -30,30 +30,24 @@ namespace parser {
 ///
 class PassManager {
 public:
-  ///
+
   /// get graph passes
   /// @author
-  ///
   const std::vector<std::pair<std::string, GraphPass *>> &GraphPasses() const;
 
-  ///
   /// Add graph pass
   /// @param [in] pass  Pass to be added, it will be destroyed when pass manager destroys.
   /// @author
-  ///
   Status AddPass(const string &pass_name, GraphPass *const pass);
 
-  ///
   /// Optimize graph with added pass
   /// @param [inout] graph graph to be optimized
   /// @return SUCCESS optimize successfully
   /// @return NOT_CHANGED not optimized
   /// @return others optimize failed
   /// @author
-  ///
   Status Run(const ge::ComputeGraphPtr &graph);
 
-  ///
   /// Optimize graph with specified pass
   /// @param [inout] graph graph to be optimized
   /// @param [in] passes passes to be used
@@ -61,8 +55,8 @@ public:
   /// @return NOT_CHANGED not optimized
   /// @return others optimized failed
   /// @author
-  ///
-  static Status Run(const ge::ComputeGraphPtr &graph, std::vector<std::pair<std::string, GraphPass *>> &names_to_passes);
+  static Status Run(const ge::ComputeGraphPtr &graph,
+                    std::vector<std::pair<std::string, GraphPass *>> &names_to_passes);
 
   ~PassManager();
 

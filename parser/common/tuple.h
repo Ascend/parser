@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,27 +32,23 @@ class Tuple {
     delete[] data_heap_;
     data_heap_ = nullptr;
   }
-  ///
+
   /// @brief copy constructor from another tuple
   /// @param s the source tuple
-  ///
   inline Tuple(const Tuple<ValueType> &s) { this->assign(s.begin(), s.end()); }
-  ///
+
   /// @brief constructor from initializer list
   /// @param init the initializer_list
-  ///
   explicit Tuple(const std::initializer_list<ValueType> &init) { this->assign(init.begin(), init.end()); }
-  ///
+
   /// @brief constructor from vector
   /// @param init the vector
-  ///
   explicit Tuple(const std::vector<ValueType> &init) {  // NOLINT(runtime/explicit)
     this->assign(init.begin(), init.end());
   }
-  ///
+
   /// @brief move constructor from Tuple
   /// @param src the source shape
-  ///
   inline Tuple(Tuple<ValueType> &&src) {  // NOLINT(runtime/explicit)
     this->swap(src);
   }
@@ -77,102 +73,88 @@ class Tuple {
     this->SetDim(end - begin);
     (void)std::copy(begin, end, this->begin());
   }
-  ///
+
   /// @brief Swap current object with other
   /// @param other another object to be swapped.
-  ///
   inline void swap(Tuple<ValueType> &other) {  // NOLINT(*)
     std::swap(ndim_, other.ndim_);
     std::swap(num_heap_allocated_, other.num_heap_allocated_);
     std::swap(data_stack_, other.data_stack_);
     std::swap(data_heap_, other.data_heap_);
   }
-  ///
+
   /// @brief assignment from another tuple.
   /// @param src source tuple
   /// @return reference of self
-  ///
   inline Tuple<ValueType> &operator=(const Tuple<ValueType> &src) {
     if (&src != this) {
       this->assign(src.begin(), src.end());
     }
     return *this;
   }
-  ///
+
   /// @brief assignment from rvalue of another tuple.
   /// @param src source tuple
   /// @return reference of self
-  ///
   inline Tuple<ValueType> &operator=(Tuple<ValueType> &&src) {
     if (&src != this) {
       Tuple<ValueType>(std::move(src)).swap(*this);
     }
     return *this;
   }
-  ///
+
   /// @brief assignment from initializer list
   /// @param init the source initializer list
   /// @return reference of self
-  ///
   inline Tuple<ValueType> &operator=(std::initializer_list<ValueType> init) {
     this->assign(init.begin(), init.end());
     return *this;
   }
-  ///
+
   /// @return whether two tuple equals
   /// @param s the tuple to compare against
-  ///
   inline bool operator==(const Tuple<ValueType> &s) const {
     if (ndim_ != s.ndim_) {
       return false;
     }
     return std::equal(begin(), end(), s.begin());
   }
-  ///
+
   /// @return whether two tuple not equal
   /// @param s the tuple to compare against
-  ///
   inline bool operator!=(const Tuple<ValueType> &s) const { return !(*this == s); }
-  ///
+
   /// @return the begin data pointer to content of the tuple
-  ///
   inline const ValueType *begin() const { return ndim_ <= STACK_CACHE_NUM ? data_stack_ : data_heap_; }
-  ///
+
   /// @return the begin data pointer to content of the tuple
-  ///
   inline ValueType *begin() { return ndim_ <= STACK_CACHE_NUM ? data_stack_ : data_heap_; }
-  ///
+
   /// @return the data pointer to end of the tuple
-  ///
   inline const ValueType *end() const {
     return ndim_ <= STACK_CACHE_NUM ? (data_stack_ + ndim_) : (data_heap_ + ndim_);
   }
-  ///
+
   /// @return the data pointer to end the tuple
-  ///
   inline ValueType *end() { return ndim_ <= STACK_CACHE_NUM ? (data_stack_ + ndim_) : (data_heap_ + ndim_); }
-  ///
+
   /// @return number of dimension of the tuple
-  ///
   inline uint32_t ndim() const { return ndim_; }
-  ///
+
   /// @brief get corresponding index
   /// @param i dimension index
   /// @return the corresponding dimension size
-  ///
   inline ValueType &operator[](size_t i) { return begin()[i]; }
-  ///
+
   /// @brief get corresponding index
   /// @param i dimension index
   /// @return the corresponding dimension size
-  ///
   inline const ValueType &operator[](size_t i) const { return begin()[i]; }
-  ///
+
   /// @brief allow output string of tuple to ostream
   /// @param os the output stream
   /// @param t the tuple
   /// @return the ostream
-  ///
   friend std::ostream &operator<<(std::ostream &os, const Tuple<ValueType> &t) {
     os << '[';
     const ValueType *begin = t.begin();
@@ -186,12 +168,11 @@ class Tuple {
     os << ']';
     return os;
   }
-  ///
+
   /// @brief read tuple from the istream
   /// @param is the input stream
   /// @param t The tuple
   /// @return the istream
-  ///
   friend std::istream &operator>>(std::istream &is, Tuple<ValueType> &t) {
     // get (
     if (!HandleLeftBracket(is, t)) {

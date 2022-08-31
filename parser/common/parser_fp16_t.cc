@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,9 +30,9 @@ const TagFp16RoundMode g_round_mode = TagFp16RoundMode::kRoundToNearest;
 
 void ExtractFp16(const uint16_t &val, uint16_t &s, int16_t &e, uint16_t &m) {
   // 1.Extract
-  s = static_cast<uint16_t>(FP16_EXTRAC_SIGN(val));
-  e = static_cast<int16_t>(FP16_EXTRAC_EXP(val));
-  m = static_cast<uint16_t>(FP16_EXTRAC_MAN(val));
+  s = static_cast<uint16_t>(Fp16ExtracSign(val));
+  e = static_cast<int16_t>(Fp16ExtracExp(val));
+  m = static_cast<uint16_t>(Fp16ExtracMan(val));
   // Denormal
   if (e == 0) {
     e = 1;
@@ -104,7 +104,7 @@ static float Fp16ToFloat(const uint16_t &fp_val) {
     m_ret = hf_man & kFp16ManMask;
     m_ret = m_ret << (kFp32ManLen - kFp16ManLen);
   }
-  uint32_t f_val = FP32_CONSTRUCTOR(s_ret, e_ret, m_ret);
+  uint32_t f_val = Fp32Constructor(s_ret, e_ret, m_ret);
   auto p_ret_v = ge::PtrToPtr<uint32_t, float>(&f_val);
 
   return *p_ret_v;
@@ -172,12 +172,12 @@ static int8_t Fp16ToInt8(const uint16_t &fp_val) {
   int8_t ret;
   uint8_t ret_v;
   // 1.get s_ret and shift it to bit0.
-  uint8_t s_ret = FP16_EXTRAC_SIGN(fp_val);
+  uint8_t s_ret = Fp16ExtracSign(fp_val);
   // 2.get hf_e and hf_m
-  uint16_t hf_e = FP16_EXTRAC_EXP(fp_val);
-  uint16_t hf_m = FP16_EXTRAC_MAN(fp_val);
+  uint16_t hf_e = Fp16ExtracExp(fp_val);
+  uint16_t hf_m = Fp16ExtracMan(fp_val);
 
-  if (FP16_IS_DENORM(fp_val)) {  // Denormalized number
+  if (Fp16IsDenorm(fp_val)) {  // Denormalized number
     ret_v = 0;
     ret = *(ge::PtrToPtr<uint8_t, uint8_t>(&ret_v));
     return ret;
@@ -186,7 +186,7 @@ static int8_t Fp16ToInt8(const uint16_t &fp_val) {
   uint64_t long_int_m = hf_m;
   uint8_t overflow_flag = 0;
   uint16_t shift_out = 0;
-  if (FP16_IS_INVALID(fp_val)) {  // Inf or NaN
+  if (Fp16IsInvalid(fp_val)) {  // Inf or NaN
     overflow_flag = 1;
   } else {
     while (hf_e != kFp16ExpBias) {
@@ -226,16 +226,16 @@ static int8_t Fp16ToInt8(const uint16_t &fp_val) {
 static uint8_t Fp16ToUInt8(const uint16_t &fp_val) {
   uint8_t m_ret = 0;
   // 1.get s_ret and shift it to bit0.
-  uint8_t s_ret = FP16_EXTRAC_SIGN(fp_val);
+  uint8_t s_ret = Fp16ExtracSign(fp_val);
   // 2.get hf_e and hf_m
-  uint16_t hf_e = FP16_EXTRAC_EXP(fp_val);
-  uint16_t hf_m = FP16_EXTRAC_MAN(fp_val);
+  uint16_t hf_e = Fp16ExtracExp(fp_val);
+  uint16_t hf_m = Fp16ExtracMan(fp_val);
 
-  if (FP16_IS_DENORM(fp_val)) {  // Denormalized number
+  if (Fp16IsDenorm(fp_val)) {  // Denormalized number
     return 0;
   }
 
-  if (FP16_IS_INVALID(fp_val)) {  // Inf or NaN
+  if (Fp16IsInvalid(fp_val)) {  // Inf or NaN
     m_ret = ~0;
   } else {
     uint64_t long_int_m = hf_m;
@@ -301,12 +301,12 @@ static int16_t Fp16ToInt16(const uint16_t &fp_val) {
   int16_t ret;
   uint16_t ret_v;
   // 1.get s_ret and shift it to bit0.
-  uint16_t s_ret = FP16_EXTRAC_SIGN(fp_val);
+  uint16_t s_ret = Fp16ExtracSign(fp_val);
   // 2.get hf_e and hf_m
-  uint16_t hf_e = FP16_EXTRAC_EXP(fp_val);
-  uint16_t hf_m = FP16_EXTRAC_MAN(fp_val);
+  uint16_t hf_e = Fp16ExtracExp(fp_val);
+  uint16_t hf_m = Fp16ExtracMan(fp_val);
 
-  if (FP16_IS_DENORM(fp_val)) {  // Denormalized number
+  if (Fp16IsDenorm(fp_val)) {  // Denormalized number
     ret_v = 0;
     ret = *(ge::PtrToPtr<uint16_t, uint8_t>(&ret_v));
     return ret;
@@ -315,7 +315,7 @@ static int16_t Fp16ToInt16(const uint16_t &fp_val) {
   uint64_t long_int_m = hf_m;
   uint8_t overflow_flag = 0;
   uint16_t shift_out = 0;
-  if (FP16_IS_INVALID(fp_val)) {  // Inf or NaN
+  if (Fp16IsInvalid(fp_val)) {  // Inf or NaN
     overflow_flag = 1;
   } else {
     while (hf_e != kFp16ExpBias) {
@@ -354,16 +354,16 @@ static int16_t Fp16ToInt16(const uint16_t &fp_val) {
 static uint16_t Fp16ToUInt16(const uint16_t &fp_val) {
   uint16_t m_ret = 0;
   // 1.get s_ret and shift it to bit0.
-  uint16_t s_ret = FP16_EXTRAC_SIGN(fp_val);
+  uint16_t s_ret = Fp16ExtracSign(fp_val);
   // 2.get hf_e and hf_m
-  uint16_t hf_e = FP16_EXTRAC_EXP(fp_val);
-  uint16_t hf_m = FP16_EXTRAC_MAN(fp_val);
+  uint16_t hf_e = Fp16ExtracExp(fp_val);
+  uint16_t hf_m = Fp16ExtracMan(fp_val);
 
-  if (FP16_IS_DENORM(fp_val)) {  // Denormalized number
+  if (Fp16IsDenorm(fp_val)) {  // Denormalized number
     return 0;
   }
 
-  if (FP16_IS_INVALID(fp_val)) {  // Inf or NaN
+  if (Fp16IsInvalid(fp_val)) {  // Inf or NaN
     m_ret = ~0;
   } else {
     uint64_t long_int_m = hf_m;
@@ -398,12 +398,12 @@ static uint16_t Fp16ToUInt16(const uint16_t &fp_val) {
 static int32_t Fp16ToInt32(const uint16_t &fp_val) {
   uint32_t ret_v;
   // 1.get s_ret and shift it to bit0.
-  uint32_t s_ret = FP16_EXTRAC_SIGN(fp_val);
+  uint32_t s_ret = Fp16ExtracSign(fp_val);
   // 2.get hf_e and hf_m
-  uint16_t hf_e = FP16_EXTRAC_EXP(fp_val);
-  uint16_t hf_m = FP16_EXTRAC_MAN(fp_val);
+  uint16_t hf_e = Fp16ExtracExp(fp_val);
+  uint16_t hf_m = Fp16ExtracMan(fp_val);
 
-  if (FP16_IS_INVALID(fp_val)) {  // Inf or NaN
+  if (Fp16IsInvalid(fp_val)) {  // Inf or NaN
     ret_v = kInt32Max + s_ret;
   } else {
     uint64_t long_int_m = hf_m;
@@ -444,16 +444,16 @@ static int32_t Fp16ToInt32(const uint16_t &fp_val) {
 static uint32_t Fp16ToUInt32(const uint16_t &fp_val) {
   uint32_t m_ret;
   // 1.get s_ret and shift it to bit0.
-  uint32_t s_ret = FP16_EXTRAC_SIGN(fp_val);
+  uint32_t s_ret = Fp16ExtracSign(fp_val);
   // 2.get hf_e and hf_m
-  uint16_t hf_e = FP16_EXTRAC_EXP(fp_val);
-  uint16_t hf_m = FP16_EXTRAC_MAN(fp_val);
+  uint16_t hf_e = Fp16ExtracExp(fp_val);
+  uint16_t hf_m = Fp16ExtracMan(fp_val);
 
-  if (FP16_IS_DENORM(fp_val)) {  // Denormalized number
+  if (Fp16IsDenorm(fp_val)) {  // Denormalized number
     return 0u;
   }
 
-  if (FP16_IS_INVALID(fp_val)) {  // Inf or NaN
+  if (Fp16IsInvalid(fp_val)) {  // Inf or NaN
     m_ret = ~0u;
   } else {
     uint64_t long_int_m = hf_m;
@@ -513,7 +513,7 @@ static uint16_t Fp16AddCalVal(uint16_t s_ret, int16_t e_ret, uint16_t m_ret, uin
     m_ret = m_ret >> 1;
   }
   Fp16Normalize(e_ret, m_ret);
-  uint16_t ret = FP16_CONSTRUCTOR(s_ret, static_cast<uint16_t>(e_ret), m_ret);
+  uint16_t ret = Fp16Constructor(s_ret, static_cast<uint16_t>(e_ret), m_ret);
   return ret;
 }
 
@@ -640,7 +640,7 @@ static uint16_t Fp16Mul(uint16_t v_1, uint16_t v_2) {
 
   Fp16Normalize(e_ret, m_ret);
 
-  uint16_t ret = FP16_CONSTRUCTOR(s_ret, static_cast<uint16_t>(e_ret), m_ret);
+  uint16_t ret = Fp16Constructor(s_ret, static_cast<uint16_t>(e_ret), m_ret);
   return ret;
 }
 
@@ -651,15 +651,15 @@ static uint16_t Fp16Mul(uint16_t v_1, uint16_t v_2) {
 /// @return  Return fp16_t result of division this by fp
 static uint16_t Fp16Div(uint16_t v_1, uint16_t v_2) {
   uint16_t ret;
-  if (FP16_IS_ZERO(v_2)) {  // result is inf
+  if (Fp16IsZero(v_2)) {  // result is inf
     // throw "fp16_t division by zero.";
     uint16_t s_a, s_b;
     uint16_t s_ret;
-    s_a = FP16_EXTRAC_SIGN(v_1);
-    s_b = FP16_EXTRAC_SIGN(v_2);
+    s_a = Fp16ExtracSign(v_1);
+    s_b = Fp16ExtracSign(v_2);
     s_ret = s_a ^ s_b;
-    ret = FP16_CONSTRUCTOR(s_ret, kFp16MaxExp, 0u);
-  } else if (FP16_IS_ZERO(v_1)) {
+    ret = Fp16Constructor(s_ret, kFp16MaxExp, 0u);
+  } else if (Fp16IsZero(v_1)) {
     ret = 0u;
   } else {
     uint16_t s_a, s_b;
@@ -747,7 +747,7 @@ fp16_t fp16_t::operator/=(const fp16_t fp) {
 // compare
 bool fp16_t::operator==(const fp16_t &fp) const {
   bool result = true;
-  if (FP16_IS_ZERO(val) && FP16_IS_ZERO(fp.val)) {
+  if (Fp16IsZero(val) && Fp16IsZero(fp.val)) {
     result = true;
   } else {
     result = ((val & kBitLen16Max) == (fp.val & kBitLen16Max));  // bit compare
@@ -757,7 +757,7 @@ bool fp16_t::operator==(const fp16_t &fp) const {
 
 bool fp16_t::operator!=(const fp16_t &fp) const {
   bool result = true;
-  if (FP16_IS_ZERO(val) && FP16_IS_ZERO(fp.val)) {
+  if (Fp16IsZero(val) && Fp16IsZero(fp.val)) {
     result = false;
   } else {
     result = ((val & kBitLen16Max) != (fp.val & kBitLen16Max));  // bit compare
@@ -772,17 +772,17 @@ bool fp16_t::operator>(const fp16_t &fp) const {
   bool result = true;
 
   // 1.Extract
-  s_a = FP16_EXTRAC_SIGN(val);
-  s_b = FP16_EXTRAC_SIGN(fp.val);
-  e_a = FP16_EXTRAC_EXP(val);
-  e_b = FP16_EXTRAC_EXP(fp.val);
-  m_a = FP16_EXTRAC_MAN(val);
-  m_b = FP16_EXTRAC_MAN(fp.val);
+  s_a = Fp16ExtracSign(val);
+  s_b = Fp16ExtracSign(fp.val);
+  e_a = Fp16ExtracExp(val);
+  e_b = Fp16ExtracExp(fp.val);
+  m_a = Fp16ExtracMan(val);
+  m_b = Fp16ExtracMan(fp.val);
 
   // Compare
   if ((s_a == 0) && (s_b > 0)) {  // +  -
     // -0=0
-    result = !(FP16_IS_ZERO(val) && FP16_IS_ZERO(fp.val));
+    result = !(Fp16IsZero(val) && Fp16IsZero(fp.val));
   } else if ((s_a == 0) && (s_b == 0)) {  // + +
     if (e_a > e_b) {                      // e_a - e_b >= 1; Va always larger than Vb
       result = true;
@@ -898,7 +898,7 @@ fp16_t &fp16_t::operator=(const float &f_val) {
   }
 
   Fp16Normalize(e_ret, m_ret);
-  val = FP16_CONSTRUCTOR(s_ret, static_cast<uint16_t>(e_ret), m_ret);
+  val = Fp16Constructor(s_ret, static_cast<uint16_t>(e_ret), m_ret);
   return *this;
 }
 
@@ -923,7 +923,7 @@ fp16_t &fp16_t::operator=(const int8_t &i_val) {
     e_ret = e_ret + kFp16ExpBias;
   }
 
-  val = FP16_CONSTRUCTOR(s_ret, e_ret, m_ret);
+  val = Fp16Constructor(s_ret, e_ret, m_ret);
   return *this;
 }
 
@@ -941,7 +941,7 @@ fp16_t &fp16_t::operator=(const uint8_t &ui_val) {
     e_ret = e_ret + kFp16ExpBias;
   }
 
-  val = FP16_CONSTRUCTOR(s_ret, e_ret, m_ret);
+  val = Fp16Constructor(s_ret, e_ret, m_ret);
   return *this;
 }
 
@@ -982,7 +982,7 @@ static void SetValByUint16Val(const uint16_t &input_val, const uint16_t &sign, u
       e_ret = e_ret + (len - 1);
     }
     auto m_ret = static_cast<uint16_t>(m_tmp);
-    ret_val = FP16_CONSTRUCTOR(sign, static_cast<uint16_t>(e_ret), m_ret);
+    ret_val = Fp16Constructor(sign, static_cast<uint16_t>(e_ret), m_ret);
   }
 }
 
@@ -1035,7 +1035,7 @@ fp16_t &fp16_t::operator=(const uint16_t &ui_val) {
         m_ret = m_ret >> 1;
         e_ret = e_ret + 1;
       }
-      if (FP16_IS_INVALID(val)) {
+      if (Fp16IsInvalid(val)) {
         val = kFp16Max;
       }
     } else {
@@ -1043,7 +1043,7 @@ fp16_t &fp16_t::operator=(const uint16_t &ui_val) {
       m_ret = m_ret << (static_cast<uint16_t>(kDim11) - len);
       e_ret = e_ret + (len - 1);
     }
-    val = FP16_CONSTRUCTOR(0u, static_cast<uint16_t>(e_ret), m_ret);
+    val = Fp16Constructor(0u, static_cast<uint16_t>(e_ret), m_ret);
   }
   return *this;
 }
@@ -1089,7 +1089,7 @@ static void SetValByUint32Val(const uint32_t &input_val, const uint16_t &sign, u
     e_ret = e_ret + (len - 1);
   }
   auto m_ret = static_cast<uint16_t>(m_tmp);
-  ret_val = FP16_CONSTRUCTOR(sign, static_cast<uint16_t>(e_ret), m_ret);
+  ret_val = Fp16Constructor(sign, static_cast<uint16_t>(e_ret), m_ret);
 }
 
 fp16_t &fp16_t::operator=(const int32_t &i_val) {
@@ -1151,7 +1151,7 @@ fp16_t &fp16_t::operator=(const uint32_t &ui_val) {
       e_ret = e_ret + (len - 1);
     }
     auto m_ret = static_cast<uint16_t>(m_tmp);
-    val = FP16_CONSTRUCTOR(0u, static_cast<uint16_t>(e_ret), m_ret);
+    val = Fp16Constructor(0u, static_cast<uint16_t>(e_ret), m_ret);
   }
   return *this;
 }
@@ -1175,7 +1175,7 @@ fp16_t &fp16_t::operator=(const double &d_val) {
   if (e_d >= 0x410u) {  // 0x410:1040=1023+16
     e_ret = kFp16MaxExp - 1;
     m_ret = kFp16MaxMan;
-    val = FP16_CONSTRUCTOR(s_ret, static_cast<uint16_t>(e_ret), m_ret);
+    val = Fp16Constructor(s_ret, static_cast<uint16_t>(e_ret), m_ret);
   } else if (e_d <= 0x3F0u) {  // Exponent underflow converts to denormalized half or signed zero
     // 0x3F0:1008=1023-15
     // Signed zeros, denormalized floats, and floats with small
@@ -1211,7 +1211,7 @@ fp16_t &fp16_t::operator=(const double &d_val) {
   }
 
   Fp16Normalize(e_ret, m_ret);
-  val = FP16_CONSTRUCTOR(s_ret, static_cast<uint16_t>(e_ret), m_ret);
+  val = Fp16Constructor(s_ret, static_cast<uint16_t>(e_ret), m_ret);
   return *this;
 }
 
