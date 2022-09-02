@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,21 +14,20 @@
  * limitations under the License.
  */
 
-#ifndef DOMI_OP_ARG_OP_H_
-#define DOMI_OP_ARG_OP_H_
+// AUTO GEN PLEASE DO NOT MODIFY IT
+#ifndef DOMI_OP_VARISINITIALIZEDOP_H_
+#define DOMI_OP_VARISINITIALIZEDOP_H_
 #include "parser/common/op_def/operator.h"
+#include "framework/omg/parser/parser_types.h"
 
 namespace ge {
-class ArgOpOperator : public ParserOperator {
+class VarIsInitializedOpOperator : public ParserOperator {
  public:
-  ArgOpOperator();
+  VarIsInitializedOpOperator();
+  ~VarIsInitializedOpOperator() override;
 
-  ~ArgOpOperator() override;
-
-  ArgOpOperator &Index(int64_t index);
-
-  int64_t GetIndex() const;
+  VarIsInitializedOpOperator &VectorAttr(const std::string &key, std::vector<int64_t> &value);
 };
 }  // namespace ge
 
-#endif  // DOMI_OP_ARG_OP_H_
+#endif  // DOMI_OP_VARISINITIALIZEDOP_H_ AUTO GEN PLEASE DO NOT MODIFY IT

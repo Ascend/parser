@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,19 +14,29 @@
  * limitations under the License.
  */
 
-// AUTO GEN PLEASE DO NOT MODIFY IT
-#include "common/op_def/var_is_initialized_op_op.h"
-#include <string>
-#include <vector>
+#ifndef DOMI_OP_FILL_OP_H_
+#define DOMI_OP_FILL_OP_H_
+#include "parser/common/op_def/operator.h"
 
 namespace ge {
-VarIsInitializedOpOperator::VarIsInitializedOpOperator() : ParserOperator(ge::parser::VARISINITIALIZEDOP) {}
+class FillOperator : public ParserOperator {
+ public:
+  FillOperator();
 
-VarIsInitializedOpOperator::~VarIsInitializedOpOperator() {}
+  ~FillOperator() override;
 
-VarIsInitializedOpOperator &VarIsInitializedOpOperator::VectorAttr(const std::string &key,
-                                                                   std::vector<int64_t> &value) {
-  Attr(key, value);
-  return *this;
-}
+  FillOperator &DataType(int64_t dataType);
+
+  FillOperator &Alpha(float alpha);
+
+  FillOperator &Beta(float beta);
+
+  int64_t GetDataType() const;
+
+  float GetAlpha() const;
+
+  float GetBeta() const;
+};
 }  // namespace ge
+
+#endif  // DOMI_OP_FILL_OP_H_

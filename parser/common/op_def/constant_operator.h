@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,32 +15,22 @@
  */
 
 // AUTO GEN PLEASE DO NOT MODIFY IT
-#ifndef DOMI_OP_VARIABLE_H_
-#define DOMI_OP_VARIABLE_H_
-#include <vector>
+#ifndef DOMI_OP_CONSTANT_OP_H_
+#define DOMI_OP_CONSTANT_OP_H_
 #include "parser/common/op_def/operator.h"
 #include "framework/omg/parser/parser_types.h"
 
 namespace ge {
-class VariableOperator : public ParserOperator {
+class ConstantOperator : public ParserOperator {
  public:
-  VariableOperator();
-  ~VariableOperator() override;
+  ConstantOperator();
+  ~ConstantOperator() override;
 
-  VariableOperator &Container(const std::string &container);
+  ConstantOperator &VectorAttr(std::string key, std::vector<int64_t> &value);
 
-  VariableOperator &SharedName(const std::string &sharedname);
-
-  VariableOperator &Placement(const std::string &placement);
-
-  VariableOperator &MemType(const uint32_t &mem_type);
-
-  VariableOperator &SrcType(const int64_t &dtype);
-
-  VariableOperator &VarShape(const std::vector<int64_t> &shape_value);
-
-  int64_t GetVarSrcType() const;
+  ConstantOperator &DType(ge::DataType t);
+  ge::DataType GetDType() const;
 };
 }  // namespace ge
 
-#endif  // DOMI_OP_VAR_H_ AUTO GEN PLEASE DO NOT MODIFY IT
+#endif  // DOMI_OP_CONSTANT_OP_H_ AUTO GEN PLEASE DO NOT MODIFY IT

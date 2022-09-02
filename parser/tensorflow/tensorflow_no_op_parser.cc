@@ -18,7 +18,7 @@
 #include "common/util.h"
 #include "framework/common/debug/ge_log.h"
 #include "parser/common/op_def/ir_pb_converter.h"
-#include "parser/common/op_def/no_op_op.h"
+#include "parser/common/op_def/no_op_operator.h"
 #include "parser/common/op_parser_factory.h"
 
 using domi::TENSORFLOW;

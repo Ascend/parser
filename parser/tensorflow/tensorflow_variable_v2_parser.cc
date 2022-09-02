@@ -21,7 +21,7 @@
 #include "graph/op_desc.h"
 #include "graph/utils/attr_utils.h"
 #include "graph/utils/tensor_utils.h"
-#include "parser/common/op_def/variable_op.h"
+#include "parser/common/op_def/variable_operator.h"
 #include "parser/common/op_parser_factory.h"
 #include "parser/tensorflow/tensorflow_op_parser.h"
 #include "parser/tensorflow/tensorflow_parser_register.h"

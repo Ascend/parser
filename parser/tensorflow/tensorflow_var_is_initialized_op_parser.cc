@@ -15,7 +15,7 @@
  */
 
 #include "framework/common/debug/ge_log.h"
-#include "parser/common/op_def/var_is_initialized_op_op.h"
+#include "parser/common/op_def/var_is_initialized_op_operator.h"
 #include "parser/common/op_parser_factory.h"
 #include "parser/tensorflow/tensorflow_op_parser.h"
 #include "parser/tensorflow/tensorflow_parser_register.h"

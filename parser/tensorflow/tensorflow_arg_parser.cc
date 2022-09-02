@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "parser/common/op_def/arg_op.h"
+#include "parser/common/op_def/arg_op_operator.h"
 #include "framework/common/debug/ge_log.h"
 #include "framework/omg/parser/parser_inner_ctx.h"
 #include "graph/compute_graph.h"

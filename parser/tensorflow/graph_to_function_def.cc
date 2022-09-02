@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+* Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "graph_functiondef.h"
+#include "graph_to_function_def.h"
 #include <iostream>
 #include "common/fmk_error_codes.h"
 #include "graph/debug/ge_attr_define.h"

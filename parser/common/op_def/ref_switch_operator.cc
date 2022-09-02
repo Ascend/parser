@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,22 +15,15 @@
  */
 
 // AUTO GEN PLEASE DO NOT MODIFY IT
-#ifndef DOMI_OP_CONSTANT_OP_H_
-#define DOMI_OP_CONSTANT_OP_H_
-#include "parser/common/op_def/operator.h"
-#include "framework/omg/parser/parser_types.h"
+#include "common/op_def/ref_switch_operator.h"
 
 namespace ge {
-class ConstantOperator : public ParserOperator {
- public:
-  ConstantOperator();
-  ~ConstantOperator() override;
+FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY RefSwitchOperator::RefSwitchOperator() : ParserOperator("RefSwitch") {}
 
-  ConstantOperator &VectorAttr(std::string key, std::vector<int64_t> &value);
+FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY RefSwitchOperator::~RefSwitchOperator() {}
 
-  ConstantOperator &DType(ge::DataType t);
-  ge::DataType GetDType() const;
-};
-}  // namespace ge
-
-#endif  // DOMI_OP_CONSTANT_OP_H_ AUTO GEN PLEASE DO NOT MODIFY IT
+FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY RefSwitchOperator &RefSwitchOperator::T(ge::DataType t) {
+  Attr("T", static_cast<int64_t>(t));
+  return *this;
+}
+}  // namespace ge  AUTO GEN PLEASE DO NOT MODIFY IT
