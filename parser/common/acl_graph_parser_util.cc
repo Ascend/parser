@@ -431,6 +431,41 @@ domi::Status AclGrphParseUtil::ParseAclInputFp16Nodes(const ComputeGraphPtr &gra
   return SUCCESS;
 }
 
+domi::Status AclGrphParseUtil::SetSpecifyIndexAttrByInputNames(const ComputeGraphPtr &graph,
+    const std::string &input_data_names) const {
+  std::vector<std::string> input_names = StringUtils::Split(input_data_names, ',');
+  std::unordered_map<std::string, size_t> name_to_index;
+  for (auto &input_name : input_names) {
+    if (!name_to_index.emplace(input_name, name_to_index.size()).second) {
+      GELOGE(PARAM_INVALID, "[Check][Param] Duplicate input name[%s].", input_name.c_str());
+      return FAILED;
+    }
+  }
+
+  for (const NodePtr &node : graph->GetDirectNode()) {
+    if (node->GetType() != ge::parser::DATA) {
+      continue;
+    }
+    auto op_desc = node->GetOpDesc();
+    GE_CHECK_NOTNULL(op_desc);
+    auto iter = name_to_index.find(node->GetName());
+    if (iter== name_to_index.cend()) {
+      GELOGE(PARAM_INVALID, "[Check][Param] Input name[%s] is not in input_data_names",
+             node->GetName().c_str());
+      return FAILED;
+    }
+    GELOGI("[SetSpecifyIndexAttr] set node(%s) index attr, index is %ld",
+           op_desc->GetName().c_str(), iter->second);
+    if (!AttrUtils::SetInt(op_desc, ATTR_NAME_INDEX, iter->second)) {
+      REPORT_CALL_ERROR("E19999", "set attr %s failed for node:%s",
+          ATTR_NAME_INDEX.c_str(), op_desc->GetName().c_str());
+      GELOGE(FAILED, "set attr %s failed for node:%s", ATTR_NAME_INDEX.c_str(), op_desc->GetName().c_str());
+      return FAILED;
+    }
+  }
+  return SUCCESS;
+}
+
 void AclGrphParseUtil::CreateOutputNodesInfo(std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info,
                                              std::vector<std::string> &output_nodes_name) const {
   output_nodes_name.clear();
@@ -668,6 +703,16 @@ domi::Status AclGrphParseUtil::ParseParamsAfterGraph(ge::Graph &graph,
     GELOGE(FAILED, "[Invoke][ParseAclInputFp16Nodes] Parse input_fp16_nodes failed, graph:%s",
            compute_graph->GetName().c_str());
     return PARAM_INVALID;
+  }
+
+  string input_data_names;
+  GetAclParams(parser_params, ge::ir_option::INPUT_DATA_NAMES, input_data_names);
+  if (!input_data_names.empty()) {
+    if (SetSpecifyIndexAttrByInputNames(compute_graph, input_data_names) != SUCCESS) {
+      GELOGE(FAILED, "[Invoke][SetIndexAttr] set index attr failed, graph:%s",
+             compute_graph->GetName().c_str());
+      return PARAM_INVALID;
+    }
   }
 
   return SUCCESS;

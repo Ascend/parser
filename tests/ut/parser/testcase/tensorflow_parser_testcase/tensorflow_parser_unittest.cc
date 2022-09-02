@@ -1032,7 +1032,9 @@ TEST_F(UtestTensorflowParser, tensorflow_parser_success) {
   ParserOperator unused("Add");
   case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
   std::string model_file = case_dir + "/tensorflow_model/tf_add.pb";
-  std::map<ge::AscendString, ge::AscendString> parser_params;
+  std::map<ge::AscendString, ge::AscendString> parser_params = {
+      {ge::AscendString(ge::ir_option::INPUT_DATA_NAMES), ge::AscendString("Placeholder,Placeholder_1")},
+  };
   ge::Graph graph;
   auto ret = ge::aclgrphParseTensorFlow(model_file.c_str(), parser_params, graph);
   ASSERT_EQ(ret, SUCCESS);
@@ -1044,6 +1046,21 @@ TEST_F(UtestTensorflowParser, tensorflow_parser_success) {
   auto &net_out_name = ge::GetParserContext().net_out_nodes;
   ASSERT_EQ(net_out_name.size(), 1);
   EXPECT_EQ(net_out_name.at(0), "add_test_1:0");
+}
+
+TEST_F(UtestTensorflowParser, tensorflow_parser_input_data_names_failed) {
+  RegisterCustomOp();
+
+  std::string case_dir = __FILE__;
+  ParserOperator unused("Add");
+  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
+  std::string model_file = case_dir + "/tensorflow_model/tf_add.pb";
+  std::map<ge::AscendString, ge::AscendString> parser_params = {
+    {ge::AscendString(ge::ir_option::INPUT_DATA_NAMES), ge::AscendString("Placeholder_1,Placeholder_2")},
+  };
+  ge::Graph graph;
+  auto ret = ge::aclgrphParseTensorFlow(model_file.c_str(), parser_params, graph);
+  ASSERT_EQ(ret, ge::GRAPH_FAILED);
 }
 
 TEST_F(UtestTensorflowParser, tensorflow_model_Failed) {
