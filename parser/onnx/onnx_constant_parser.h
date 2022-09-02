@@ -69,16 +69,14 @@ class PARSER_FUNC_VISIBILITY OnnxConstantParser : public OnnxOpParser {
         break;
       }
 #define CASE_SET_DATA(dt_type, value_type, addr, count, tensor)                                     \
-  case dt_type:                                                                                     \
-  {                                                                                                 \
+  case dt_type: {                                                                                   \
     unique_ptr<value_type> addr_trans(new(std::nothrow) value_type[count]());                       \
     GE_CHECK_NOTNULL(addr_trans);                                                                   \
     for (int32_t i = 0; i < (count); i++) {                                                         \
       *(addr_trans.get() + i) = static_cast<value_type>(*((addr).get() + i));                       \
     }                                                                                               \
     (tensor).SetData(reinterpret_cast<uint8_t *>(addr_trans.get()), (count) * sizeof(value_type));  \
-    break;                                                                                          \
-  }                                                                                                 \
+    break; }                                                                                        \
 
       CASE_SET_DATA(DT_FLOAT16, uint16_t, addr, count, tensor)
       CASE_SET_DATA(DT_INT16, int16_t, addr, count, tensor)
@@ -89,7 +87,7 @@ class PARSER_FUNC_VISIBILITY OnnxConstantParser : public OnnxOpParser {
 #undef CASE_SET_DATA
       default:
       {
-        tensor.SetData(reinterpret_cast<uint8_t *>(addr.get()), count * sizeof(T));
+        tensor.SetData(PtrToPtr<T, uint8_t>(addr.get()), count * sizeof(T));
         break;
       }
     }

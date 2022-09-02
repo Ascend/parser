@@ -765,7 +765,7 @@ TEST_F(STestCaffeParser, CaffeWeightsParser_CheckLayersSize_test)
   layer->set_name("Abs");
   layer->set_type("AbsVal");
 
-  Status ret = weightParser.CheckLayersSize(layer);
+  Status ret = weightParser.CheckLayersSize(*layer);
   EXPECT_EQ(ret, FAILED);
 }
 
@@ -809,8 +809,54 @@ TEST_F(STestCaffeParser, CaffeWeightsParser_ParseLayerParameter_test)
   const google::protobuf::Message *proto = factory.GetPrototype(descriptor);
   const google::protobuf::Message *message = proto->New();
 
-  Status ret = weightParser.ParseLayerParameter(descriptor, message, compute_graph);
+  Status ret = weightParser.ParseLayerParameter(*descriptor, *message, compute_graph);
   delete message;
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(STestCaffeParser, CaffeModelParser_ParseInput_test_DimSize_0)
+{
+  CaffeModelParser modelParser;
+  domi::caffe::NetParameter net;
+  net.add_input("111");
+  net.add_input_shape();
+  bool input_data_flag = true;
+  Status ret = modelParser.ParseInput(net, input_data_flag);
+  EXPECT_EQ(ret, SUCCESS);
+}
+
+TEST_F(STestCaffeParser, CaffeModelParser_ParseInput_test_Err1)
+{
+  CaffeModelParser modelParser;
+  domi::caffe::NetParameter net;
+  net.add_input("111");
+  net.add_input("222");
+  net.add_input_shape();
+  bool input_data_flag = true;
+  Status ret = modelParser.ParseInput(net, input_data_flag);
+  EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(STestCaffeParser, CaffeModelParser_ParserLayerParameter_Succ)
+{
+  CaffeModelParser modelParser;
+  std::string case_dir = __FILE__;
+  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
+  std::string model_file = case_dir + "/origin_models/";
+  const char *model_path = model_file.c_str();
+
+  std::string custom_proto = model_file;
+  std::string caffe_proto = model_file;
+  std::vector<ge::Operator> operators;
+  ge::OpDescPtr op_desc_src = std::make_shared<ge::OpDesc>("Data", "Input");
+  ge::Operator op_src = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc_src);
+  operators.emplace_back(op_src);
+
+  model_file = case_dir + "/origin_models/caffe_add.pbtxt";
+  custom_proto = case_dir + "/../../../metadef/proto/caffe/caffe.proto";
+  model_path = model_file.c_str();
+  std::string caffe_proto_path = case_dir + "/../../../metadef/proto/caffe/caffe.proto";
+  auto ret = modelParser.CustomProtoParse(model_path, custom_proto, caffe_proto_path, operators);
   EXPECT_EQ(ret, SUCCESS);
 }
 } // namespace ge

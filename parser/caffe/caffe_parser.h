@@ -212,8 +212,8 @@ class PARSER_FUNC_VISIBILITY CaffeModelParser : public domi::ModelParser {
    * @return SUCCESS parse layer successfully
    * @return FAILED parse layer failed
    */
-  Status ParseLayerParameter(const google::protobuf::Descriptor *layer_descriptor,
-                             const google::protobuf::Message *message, std::vector<ge::Operator> &operators) const;
+  Status ParseLayerParameter(const google::protobuf::Descriptor &layer_descriptor,
+                             const google::protobuf::Message &message, std::vector<ge::Operator> &operators) const;
 
   /*
    * @ingroup domi_omg
@@ -386,33 +386,33 @@ class PARSER_FUNC_VISIBILITY CaffeWeightsParser : public domi::WeightsParser {
   Status ParseWeightByFusionProto(const char *weight_path, const string &fusion_proto_path,
                                   const string &fusion_proto_name, ge::ComputeGraphPtr &graph);
 
-  Status ParseLayerParameter(const google::protobuf::Descriptor *layer_descriptor,
-                             const google::protobuf::Message *message,
+  Status ParseLayerParameter(const google::protobuf::Descriptor &layer_descriptor,
+                             const google::protobuf::Message &message,
                              ge::ComputeGraphPtr &graph);
 
   Status ConvertLayerParameter(const google::protobuf::Message *layer_message,
                                ge::ComputeGraphPtr &graph);
 
-  Status CheckLayersSize(const google::protobuf::Message *message) const;
+  Status CheckLayersSize(const google::protobuf::Message &message) const;
 
-  Status ConvertLayerProto(const google::protobuf::Message *message,
+  Status ConvertLayerProto(const google::protobuf::Message &message,
                            google::protobuf::Message *layer);
 
-  Status ParseLayerField(const google::protobuf::Reflection *reflection,
-                         const google::protobuf::Message *message,
-                         const google::protobuf::FieldDescriptor *field,
+  Status ParseLayerField(const google::protobuf::Reflection &reflection,
+                         const google::protobuf::Message &message,
+                         const google::protobuf::FieldDescriptor &field,
                          google::protobuf::Message *layer) const;
 
-  Status ConvertBlobsProto(const google::protobuf::Message *message,
+  Status ConvertBlobsProto(const google::protobuf::Message &message,
                            google::protobuf::Message *blobs) const;
 
-  Status ConvertBlobShapeProto(const google::protobuf::Message *message,
+  Status ConvertBlobShapeProto(const google::protobuf::Message &message,
                                google::protobuf::Message *dest_message) const;
 
-  Status ConvertInnerProdcutProto(const google::protobuf::Message *message,
+  Status ConvertInnerProdcutProto(const google::protobuf::Message &message,
                                   google::protobuf::Message *dest_message) const;
 
-  Status ConvertConvParamProto(const google::protobuf::Message *message,
+  Status ConvertConvParamProto(const google::protobuf::Message &message,
                                google::protobuf::Message *dest_message) const;
   /**
    * @ingroup domi_omg

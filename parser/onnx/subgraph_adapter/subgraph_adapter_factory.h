@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020~2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,7 +62,6 @@ protected:
    * @brief SubgraphAdapter creation function
    * @return Created SubgraphAdapter
    */
-  // typedef shared_ptr<SubgraphAdapter> (*CREATOR_FUN)(void);
   using CREATOR_FUN = std::function<std::shared_ptr<SubgraphAdapter>(void)>;
 
   /**
@@ -105,7 +104,7 @@ public:
  * @param [in] op_type      Op type
  * @param [in] clazz        SubgraphAdapter implementation class
  */
-#define REGISTER_SUBGRAPH_ADAPTER_CREATOR(op_type, clazz)                       \
+#define REGISTER_SUBGRAPH_ADAPTER_CREATOR(op_type, clazz)                         \
   std::shared_ptr<SubgraphAdapter> Creator_##op_type##_Subgraph_Adapter() {     \
     std::shared_ptr<clazz> ptr(new (std::nothrow) clazz());                     \
     if (ptr == nullptr) {                                                       \

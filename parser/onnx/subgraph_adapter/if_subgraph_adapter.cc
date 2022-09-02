@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020~2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ using parser::IF;
 namespace {
 const std::map<std::string, int> kAttrNameToIndex = {{"then_branch", 0}, {"else_branch", 1}};
 const int kIfNodeAttrSize = 2;
+const char *kIf = "If";
 }  // namespace
 domi::Status IfSubgraphAdapter::AdaptAndFindAllSubgraphs(
     ge::onnx::NodeProto *parent_node, std::vector<ge::onnx::GraphProto *> &onnx_graphs,
@@ -33,7 +34,7 @@ domi::Status IfSubgraphAdapter::AdaptAndFindAllSubgraphs(
   GELOGI("Onnx parent node name=%s, op type=%s, adapt subgraph.", parent_node->name().c_str(),
          parent_node->op_type().c_str());
 
-  auto ret = ParseIfNodeSubgraphs(parent_node, onnx_graphs, name_to_onnx_graph, parent_graph_name);
+  auto ret = ParseIfNodeSubgraphs(*parent_node, onnx_graphs, name_to_onnx_graph, parent_graph_name);
   if (ret != SUCCESS) {
     GELOGE(ret, "[Parse][Node] Parse if node failed.");
     REPORT_CALL_ERROR("E19999", "[Parse][Node] Parse if node:%s failed.", parent_node->name().c_str());
@@ -44,19 +45,19 @@ domi::Status IfSubgraphAdapter::AdaptAndFindAllSubgraphs(
 }
 
 domi::Status IfSubgraphAdapter::ParseIfNodeSubgraphs(
-    ge::onnx::NodeProto *parent_node, std::vector<ge::onnx::GraphProto *> &onnx_graphs,
+    ge::onnx::NodeProto &parent_node, std::vector<ge::onnx::GraphProto *> &onnx_graphs,
     std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph, const std::string &parent_graph_name) const {
-  if (parent_node->attribute_size() != kIfNodeAttrSize) {
-    GELOGE(FAILED, "[Parse][Node] Invalid graph, if node attribute size:%d must be 2.", parent_node->attribute_size());
-    REPORT_INNER_ERROR("E19999", "Invalid graph, if node attribute size:%d must be 2.", parent_node->attribute_size());
+  if (parent_node.attribute_size() != kIfNodeAttrSize) {
+    GELOGE(FAILED, "[Parse][Node] Invalid graph, if node attribute size:%d must be 2.", parent_node.attribute_size());
+    REPORT_INNER_ERROR("E19999", "Invalid graph, if node attribute size:%d must be 2.", parent_node.attribute_size());
     return FAILED;
   }
 
-  GELOGD("node attribute size:%d.", parent_node->attribute_size());
+  GELOGD("node attribute size:%d.", parent_node.attribute_size());
   std::set<std::string> all_inputs;
   // for onnx graph, the first attribute may be else branch and the second attribute may be then branch
-  for (int i = 0; i < parent_node->attribute_size(); i++) {
-    ge::onnx::AttributeProto *attribute = parent_node->mutable_attribute(i);
+  for (int i = 0; i < parent_node.attribute_size(); i++) {
+    ge::onnx::AttributeProto *attribute = parent_node.mutable_attribute(i);
     GE_CHECK_NOTNULL(attribute);
     std::string attr_name = attribute->name();
     auto itr = kAttrNameToIndex.find(attr_name);
@@ -68,7 +69,7 @@ domi::Status IfSubgraphAdapter::ParseIfNodeSubgraphs(
       return FAILED;
     }
     std::string unique_subgraph_name;
-    std::string node_name = parent_node->name();
+    std::string node_name = parent_node.name();
     if (!parent_graph_name.empty()) {
       node_name = OnnxUtil::GenUniqueNodeName(parent_graph_name, node_name);
     }
@@ -90,7 +91,7 @@ domi::Status IfSubgraphAdapter::ParseIfNodeSubgraphs(
     AddInputNodeForGraph(all_inputs, *onnx_graph);
   }
 
-  AddInputForParentNode(all_inputs, *parent_node);
+  AddInputForParentNode(all_inputs, parent_node);
   return SUCCESS;
 }
 
@@ -135,5 +136,5 @@ void IfSubgraphAdapter::AddInputForParentNode(const std::set<std::string> &all_i
     parent_node.add_input(input_name);
   }
 }
-REGISTER_SUBGRAPH_ADAPTER_CREATOR(IF, IfSubgraphAdapter);
+REGISTER_SUBGRAPH_ADAPTER_CREATOR(kIf, IfSubgraphAdapter);
 }  // namespace ge

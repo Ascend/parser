@@ -31,11 +31,11 @@ using GeTensorDesc = ge::GeTensorDesc;
 using namespace ge::parser;
 
 namespace {
-const std::string kAttrShape = "shape";
-const std::string kAttrDataType = "dtype";
-const std::string kFileConstantPath = "file_constant_path";
-const std::string kLocation = "location";
-const std::string kOffset = "offset";
+const char *const kAttrShape = "shape";
+const char *const kAttrDataType = "dtype";
+const char *const kFileConstantPath = "file_constant_path";
+const char *const kLocation = "location";
+const char *const kOffset = "offset";
 const int64_t kOffsetCoefficient = 4096;
 const char *const kFileConstant = "FileConstant";
 }
@@ -46,7 +46,7 @@ Status OnnxFileConstantParser::ParseParams(const Message *op_src, ge::Operator &
   GELOGD("Onnx op node name = %s, op type= %s, parse params", node->name().c_str(), node->op_type().c_str());
 
   ge::onnx::TensorProto tensor_proto;
-  if (GetTensorProto(node, tensor_proto) != SUCCESS) {
+  if (GetTensorProto(*node, tensor_proto) != SUCCESS) {
     REPORT_INNER_ERROR("E19999", "node[%s] get tensor failed", node->name().c_str());
     GELOGE(domi::PARAM_INVALID, "[Get][TensorProto] node[%s] get tensor failed", node->name().c_str());
     return FAILED;
@@ -65,29 +65,29 @@ Status OnnxFileConstantParser::ParseParams(const Message *op_src, ge::Operator &
   return SUCCESS;
 }
 
-Status OnnxFileConstantParser::GetTensorProto(const ge::onnx::NodeProto *node_proto,
-                                              ge::onnx::TensorProto &tensor_proto) {
-  for (const auto &it : node_proto->attribute()) {
+Status OnnxFileConstantParser::GetTensorProto(const ge::onnx::NodeProto &node_proto,
+                                              ge::onnx::TensorProto &tensor_proto) const {
+  for (const auto &it : node_proto.attribute()) {
     if (it.name() != ge::kAttrNameValue) {
       continue;
     }
     tensor_proto = it.t();
     return SUCCESS;
   }
-  REPORT_INNER_ERROR("E19999", "node_proto[%s] get value failed", node_proto->name().c_str());
-  GELOGE(ge::PARAM_INVALID, "[Get][TensorProto] node_proto[%s] get value failed", node_proto->name().c_str());
+  REPORT_INNER_ERROR("E19999", "node_proto[%s] get value failed", node_proto.name().c_str());
+  GELOGE(ge::PARAM_INVALID, "[Get][TensorProto] node_proto[%s] get value failed", node_proto.name().c_str());
   return FAILED;
 }
 
-void OnnxFileConstantParser::ParseShape(const ge::onnx::TensorProto &tensor_proto, ge::Operator &op_def) {
+void OnnxFileConstantParser::ParseShape(const ge::onnx::TensorProto &tensor_proto, ge::Operator &op_def) const {
   std::vector<int64_t> tmp_shape;
   for (int i = 0; i < tensor_proto.dims_size(); i++) {
     tmp_shape.push_back(tensor_proto.dims(i));
   }
-  op_def.SetAttr(kAttrShape.c_str(), tmp_shape);
+  op_def.SetAttr(kAttrShape, tmp_shape);
 }
 
-Status OnnxFileConstantParser::ParseDataType(const ge::onnx::TensorProto &tensor_proto, ge::Operator &op_def) {
+Status OnnxFileConstantParser::ParseDataType(const ge::onnx::TensorProto &tensor_proto, ge::Operator &op_def) const {
   int64_t data_type = tensor_proto.data_type();
   ge::DataType type = ge::OnnxUtil::ConvertOnnxDataType(data_type);
   if (type >= ge::DataType::DT_UNDEFINED) {
@@ -96,11 +96,11 @@ Status OnnxFileConstantParser::ParseDataType(const ge::onnx::TensorProto &tensor
     return FAILED;
   }
 
-  op_def.SetAttr(kAttrDataType.c_str(), type);
+  op_def.SetAttr(kAttrDataType, type);
   return SUCCESS;
 }
 
-Status OnnxFileConstantParser::ParsePath(const ge::onnx::TensorProto &tensor_proto, ge::Operator &op_def) {
+Status OnnxFileConstantParser::ParsePath(const ge::onnx::TensorProto &tensor_proto, ge::Operator &op_def) const {
   ge::NamedAttrs attrs;
   for (int32_t i = 0; i < tensor_proto.external_data_size(); ++i) {
     const ge::onnx::StringStringEntryProto &string_proto = tensor_proto.external_data(i);
@@ -116,12 +116,12 @@ Status OnnxFileConstantParser::ParsePath(const ge::onnx::TensorProto &tensor_pro
     GELOGE(domi::PARAM_INVALID, "external tensor proto[%s] must contain location.", tensor_proto.name().c_str());
     return FAILED;
   }
-  op_def.SetAttr(kFileConstantPath.c_str(), attrs);
+  op_def.SetAttr(kFileConstantPath, attrs);
   return SUCCESS;
 }
 
 Status OnnxFileConstantParser::SetPathAttr(const ge::onnx::StringStringEntryProto &string_proto,
-                                           ge::NamedAttrs &attrs) {
+                                           ge::NamedAttrs &attrs) const {
   if (string_proto.key() == kLocation) {
     AttrUtils::SetStr(attrs, kLocation, string_proto.value());
   } else {
@@ -134,7 +134,7 @@ Status OnnxFileConstantParser::SetPathAttr(const ge::onnx::StringStringEntryProt
       return FAILED;
     }
     if (string_proto.key() == kOffset) {
-      if (std::numeric_limits<int64_t>::max() / kOffsetCoefficient < value) {
+      if (value > (std::numeric_limits<int64_t>::max() / kOffsetCoefficient)) {
         REPORT_INNER_ERROR("E19999", "overflow, kOffsetCoefficient[%ld], value[%ld]", kOffsetCoefficient, value);
         GELOGE(domi::PARAM_INVALID, "overflow, kOffsetCoefficient[%ld], value[%ld]", kOffsetCoefficient, value);
         return FAILED;

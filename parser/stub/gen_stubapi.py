@@ -167,6 +167,33 @@ class H2CC(object):
         del self.stack_template
         del self.func_list_exist
 
+    @staticmethod
+    def implement_function(func):
+        function_def = ''
+        function_def += '{\n'
+
+        all_items = func.split()
+        start = 0
+        return_type = all_items[start]
+        if return_type == "const":
+            start += 1
+            return_type = all_items[start]
+        if return_type.startswith(('std::map', 'std::set', 'std::vector')):
+            return_type = "std::map"
+        if return_type.endswith('*') or (len(all_items) > start + 1 and all_items[start + 1].startswith('*')):
+            return_type = "Ptr"
+        if len(all_items) > start + 1 and all_items[start + 1].startswith('&'):
+            return_type += "&"
+        if RETURN_STATEMENTS.__contains__(return_type):
+            function_def += RETURN_STATEMENTS[return_type]
+        else:
+            logging.warning("Unhandled return type[%s]", return_type)
+
+        function_def += '\n'
+        function_def += '}\n'
+        function_def += '\n'
+        return function_def
+
     def just_skip(self):
         # skip blank line or comment
         if pattern_blank_line.search(self.input_content[self.line_index]) or pattern_comment.search(
@@ -262,6 +289,7 @@ class H2CC(object):
 
         logging.info('Added %s functions', len(self.func_list_exist))
         logging.info('Successfully converted,please see ' + self.output_file)
+
 
     def handle_func1(self, line):
         """
@@ -461,12 +489,6 @@ class H2CC(object):
         logging.info("func_name[%s]", func_name)
         return line, func_name
 
-    def write_func_content(self, content, func_name, need_generate):
-        if not (func_name in self.func_list_exist) and need_generate:
-            self.output_fd.write(content)
-            self.func_list_exist.append(func_name)
-            logging.info('add func:[%s]', func_name)
-
     def gen_comment(self, start_i):
         comment_line = ''
         # Function comments are on top of function declarations, copy them over
@@ -488,32 +510,11 @@ class H2CC(object):
                     break
         return comment_line
 
-    @staticmethod
-    def implement_function(func):
-        function_def = ''
-        function_def += '{\n'
-
-        all_items = func.split()
-        start = 0
-        return_type = all_items[start]
-        if return_type == "const":
-            start += 1
-            return_type = all_items[start]
-        if return_type.startswith(('std::map', 'std::set', 'std::vector')):
-            return_type = "std::map"
-        if return_type.endswith('*') or (len(all_items) > start + 1 and all_items[start + 1].startswith('*')):
-            return_type = "Ptr"
-        if len(all_items) > start + 1 and all_items[start + 1].startswith('&'):
-            return_type += "&"
-        if RETURN_STATEMENTS.__contains__(return_type):
-            function_def += RETURN_STATEMENTS[return_type]
-        else:
-            logging.warning("Unhandled return type[%s]", return_type)
-
-        function_def += '\n'
-        function_def += '}\n'
-        function_def += '\n'
-        return function_def
+    def write_func_content(self, content, func_name, need_generate):
+        if not (func_name in self.func_list_exist) and need_generate:
+            self.output_fd.write(content)
+            self.func_list_exist.append(func_name)
+            logging.info('add func:[%s]', func_name)
 
 
 def collect_header_files(path):
