@@ -915,8 +915,9 @@ Status TensorFlowModelParser::CheckOpType(const domi::tensorflow::NodeDef *node_
       GE_CHK_STATUS_RET(CheckOpShapeDim(node_def, check_dims[op_type], valid), "failed to check op shape");
       GE_IF_BOOL_EXEC(!valid, op_type = ge::parser::FRAMEWORKOP;
           GELOGI("Set op %s to frameworkop", node_name.c_str());
-          framework_ops_[node_name] = node_def;);
-  );
+          framework_ops_[node_name] = node_def;
+          );
+      );
 
   GE_IF_BOOL_EXEC(
       op_type == ge::parser::ADD || op_type == ge::parser::MULTIPLY || op_type == ge::parser::MEAN,
@@ -1777,8 +1778,8 @@ bool TensorFlowModelParser::MaybeFusionOp(shared_ptr<ge::ScopeGraph> &scope_grap
   std::vector<ge::ScopeFusionOpInfo> info_list;
   auto &impl = scope_graph->impl_;
   if (impl->IsFusionOpChild(node_def->name(), info_list)) {
-    GE_IF_BOOL_EXEC(
-        info_list.size() > 0, for (size_t i = 0; i < info_list.size(); ++i) {
+    GE_IF_BOOL_EXEC(info_list.size() > 0,
+        for (size_t i = 0; i < info_list.size(); ++i) {
           fusion_op_type_map_[info_list[i].fusion_node_name].push_back(info_list[i].fusion_op_type);
           fusion_op_type_map_[info_list[i].fusion_node_name].push_back(info_list[i].description);
           fusion_op_nodedef_map_[info_list[i].fusion_node_name].push_back(node_def);
@@ -3480,35 +3481,35 @@ void TensorFlowModelParser::RemoveInputAttr(domi::tensorflow::NodeDef *node_def,
       attr_map->find(ge::ATTR_NAME_INPUT_TENSOR_DESC);
   if (it == attr_map->end()) {
     GELOGW("Failed to find input desc from tf node_def[%s]", node_def->name().c_str());
-  } else {
-    domi::tensorflow::AttrValue *input_attr_value = &(it->second);
-    auto tmp_attr = input_attr_value->mutable_list()->mutable_func();
-    auto attr_it = tmp_attr->begin();
-    int index = 0;
-    for (auto input_it = inputs->begin(); input_it != inputs->end(); ++input_it, ++index) {
-      // 1.decide whether to remove the input
-      bool flag = false;
-      for (auto &remove_input : remove_inputs_map) {
-        string remove_input_name = remove_input.first;
-        vector<int> remove_input_indexs = remove_input.second;
-        if ((*input_it) == remove_input_name &&
-            std::find(remove_input_indexs.begin(), remove_input_indexs.end(), index) != remove_input_indexs.end()) {
-          GELOGD("Remove input attr:%s, index:%d", remove_input_name.c_str(), index);
-          flag = true;
-          break;
-        }
+    return;
+  }
+  domi::tensorflow::AttrValue *input_attr_value = &(it->second);
+  auto tmp_attr = input_attr_value->mutable_list()->mutable_func();
+  auto attr_it = tmp_attr->begin();
+  int index = 0;
+  for (auto input_it = inputs->begin(); input_it != inputs->end(); ++input_it, ++index) {
+    // 1.decide whether to remove the input
+    bool flag = false;
+    for (auto &remove_input : remove_inputs_map) {
+      string remove_input_name = remove_input.first;
+      vector<int> remove_input_indexs = remove_input.second;
+      if ((*input_it) == remove_input_name &&
+          std::find(remove_input_indexs.begin(), remove_input_indexs.end(), index) != remove_input_indexs.end()) {
+        GELOGD("Remove input attr:%s, index:%d", remove_input_name.c_str(), index);
+        flag = true;
+        break;
       }
+    }
 
-      if (flag) {
-        // 2.1 remove the input attr
-        if (!tmp_attr->empty() && (attr_it != tmp_attr->end())) {
-          attr_it = tmp_attr->erase(attr_it);
-        } else {
-          ++attr_it;
-        }
+    if (flag) {
+      // 2.1 remove the input attr
+      if (!tmp_attr->empty() && (attr_it != tmp_attr->end())) {
+        attr_it = tmp_attr->erase(attr_it);
       } else {
         ++attr_it;
       }
+    } else {
+      ++attr_it;
     }
   }
 }

@@ -29,10 +29,9 @@ template <typename T>
 class Pass {
  public:
   virtual ~Pass() {}
-  ///
+
   /// run pass
   /// @author
-  ///
   virtual Status Run(std::shared_ptr<T>) = 0;
 };
 }  // namespace ge

@@ -25,13 +25,11 @@
 #include <queue>
 #include <stdexcept>
 #include <thread>
-#include <utility>
 #include <vector>
 
 #include "framework/common/debug/ge_log.h"
 #include "framework/common/ge_inner_error_codes.h"
 #include "external/ge/ge_api_error_codes.h"
-#include "graph/types.h"
 #include "parser/common/acl_graph_parser_util.h"
 
 namespace ge {

@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -55,4 +55,4 @@ private:
 };
 }  // namespace ge
 
-#endif //PARSER_COMMON_TBE_PLUGIN_LOADER_H_
+#endif // PARSER_COMMON_TBE_PLUGIN_LOADER_H_
