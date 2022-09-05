@@ -17,7 +17,7 @@
 #ifndef DOMI_OMG_PARSER_OP_PARSER_TENSORFLOW_SHAPE_N_H_
 #define DOMI_OMG_PARSER_OP_PARSER_TENSORFLOW_SHAPE_N_H_
 
-#include "common/op_def/shape_n_op.h"
+#include "common/op_def/shape_n_operator.h"
 #include "parser/tensorflow/tensorflow_op_parser.h"
 
 namespace ge {

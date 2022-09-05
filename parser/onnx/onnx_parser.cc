@@ -232,7 +232,8 @@ Status PostOpProcessForSubgraph(const ParseArg &arg, ge::ComputeGraphPtr sub_gra
       domi::OpRegistry::Instance()->GetParseSubgraphPostFunc(op_type);
   if (post_func == nullptr) {
     GELOGW("The subgraph post func for node %s type %s is null", op_name.c_str(), op_type.c_str());
-    if (domi::OpRegistry::Instance()->GetParseSubgraphPostFunc(op_type, parse_func_v2) != SUCCESS || parse_func_v2 == nullptr) {
+    if (domi::OpRegistry::Instance()->GetParseSubgraphPostFunc(op_type, parse_func_v2) != SUCCESS ||
+        parse_func_v2 == nullptr) {
       GELOGW("The subgraph post func v2 for node %s type %s is null", op_name.c_str(), op_type.c_str());
       return SUCCESS;
     }
@@ -522,9 +523,9 @@ Status OnnxModelParser::SetOperatorInputs() {
         auto src_op = output_op_iter->second;
         int dst_index = input_node_index.second;
         int src_index = out_node_index.second;
-        GELOGI("Start add output:%d of op:%s as input:%d of op:%s.", src_index,
-               ParserUtils::GetOperatorName(src_op).c_str(), dst_index,
-               ParserUtils::GetOperatorName(dst_op).c_str());
+        GELOGI("Start add output:%d of op:%s as input:%d of op:%s.",
+               src_index, ParserUtils::GetOperatorName(src_op).c_str(),
+               dst_index, ParserUtils::GetOperatorName(dst_op).c_str());
         auto dst_op_desc = ge::OpDescUtils::GetOpDescFromOperator(dst_op);
         GE_CHECK_NOTNULL(dst_op_desc);
         auto src_op_desc = ge::OpDescUtils::GetOpDescFromOperator(src_op);
@@ -689,7 +690,8 @@ Status OnnxModelParser::GetGraphInputs(ge::onnx::GraphProto &onnx_graph, std::ve
       return PARAM_INVALID;
     }
     input_ops.emplace_back(in_op->second);
-    GELOGI("Model assigned input node name: %s", ParserUtils::GetOperatorName(in_op->second).c_str());
+    GELOGI("Model assigned input node name: %s",
+           ParserUtils::GetOperatorName(in_op->second).c_str());
   }
     return SUCCESS;
 }
@@ -717,7 +719,7 @@ Status OnnxModelParser::GetGraphOutputs(std::vector<std::pair<Operator, std::vec
       int index = node_name_index.second;
       output_ops.emplace_back(out_op_itr->second, vector<size_t>{static_cast<size_t>(index)});
       out_tensor_to_nodes[output_name] = std::make_pair(node_name, index);
-      GELOGI("out node index %d, node:%s", index, node_name.c_str());
+      GELOGI("Out node index %d, node:%s", index, node_name.c_str());
     }
   }
   return SUCCESS;
@@ -934,16 +936,13 @@ Status OnnxModelParser::ModelParseToGraph(const ge::onnx::ModelProto &onnx_model
                         cur_compute_graph->GetName().c_str());
       return ret;
     }
-
   }
   UpdateDataFormat(root_graph);
   return SUCCESS;
 }
 
 Status OnnxModelParser::ModelParseToGraphImpl(bool is_subgraph, ge::onnx::GraphProto &onnx_graph, ge::Graph &graph) {
-
   ClearMembers();
-
   GE_RETURN_WITH_LOG_IF_ERROR(ProtoTypePassManager::Instance().Run(&onnx_graph, domi::ONNX),
                               "Run ProtoType Pass Failed");
   // 1. Get all inializer.
@@ -1174,7 +1173,8 @@ Status OnnxModelParser::SetOutputsInfo(const ParserUtils::OutputMapping &final_o
     default_out_nodes.emplace_back(output_node_info);
     output_tensor_names.emplace_back(tensor_name);
     GELOGI("[Default]Add network output node[%s], index[%d], tensor name[%s].",
-           output_node_info.first.c_str(), output_node_info.second, tensor_name.c_str());
+           output_node_info.first.c_str(),
+           output_node_info.second, tensor_name.c_str());
   }
   return SUCCESS;
 }

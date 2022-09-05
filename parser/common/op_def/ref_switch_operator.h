@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,18 @@
  */
 
 // AUTO GEN PLEASE DO NOT MODIFY IT
-#include "common/op_def/no_op_op.h"
-#include <string>
+#ifndef DOMI_OP_REF_SWITCH_H_
+#define DOMI_OP_REF_SWITCH_H_
+#include "parser/common/op_def/operator.h"
+#include "framework/omg/parser/parser_types.h"
 
 namespace ge {
-FMK_FUNC_HOST_VISIBILITY NoOpOperator::NoOpOperator() : ParserOperator("NoOp") {}
-
-FMK_FUNC_HOST_VISIBILITY NoOpOperator::~NoOpOperator() {}
+class RefSwitchOperator : public ParserOperator {
+ public:
+  RefSwitchOperator();
+  ~RefSwitchOperator() override;
+  RefSwitchOperator &T(ge::DataType  t);
+};
 }  // namespace ge
+
+#endif  // DOMI_OP_REF_SWITCH_H_ AUTO GEN PLEASE DO NOT MODIFY IT

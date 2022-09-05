@@ -17,7 +17,7 @@
 #ifndef DOMI_OMG_PARSER_OP_PARSER_TENSORFLOW_REF_SWITCH_H_
 #define DOMI_OMG_PARSER_OP_PARSER_TENSORFLOW_REF_SWITCH_H_
 
-#include "common/op_def/ref_switch_op.h"
+#include "common/op_def/ref_switch_operator.h"
 #include "parser/tensorflow/tensorflow_op_parser.h"
 
 namespace ge {

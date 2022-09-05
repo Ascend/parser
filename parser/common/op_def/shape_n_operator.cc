@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 
 // AUTO GEN PLEASE DO NOT MODIFY IT
-#include "common/op_def/shape_n_op.h"
+#include "common/op_def/shape_n_operator.h"
 #include "graph/debug/ge_attr_define.h"
 #include "framework/omg/parser/parser_types.h"
 

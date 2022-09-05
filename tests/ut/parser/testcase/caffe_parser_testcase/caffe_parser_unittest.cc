@@ -739,6 +739,9 @@ TEST_F(UtestCaffeParser, CaffeModelParser_CustomProtoParse_test)
   Status ret = modelParser.CustomProtoParse(model_path, custom_proto, caffe_proto, operators);
   EXPECT_EQ(ret, PARAM_INVALID);
 
+  ret = modelParser.CustomProtoParse("", custom_proto, caffe_proto, operators);
+  EXPECT_EQ(ret, FAILED);
+
   model_file = case_dir + "/caffe_model/caffe_add.pbtxt";
   custom_proto = case_dir + "/../../../../../metadef/proto/caffe/caffe.proto";
   model_path = model_file.c_str();
@@ -890,7 +893,7 @@ TEST_F(UtestCaffeParser, CaffeWeightsParser_CheckLayersSize_test)
   layer->set_name("Abs");
   layer->set_type("AbsVal");
 
-  Status ret = weightParser.CheckLayersSize(layer);
+  Status ret = weightParser.CheckLayersSize(*layer);
   EXPECT_EQ(ret, FAILED);
 }
 
@@ -902,7 +905,7 @@ TEST_F(UtestCaffeParser, CaffeWeightsParser_ConvertLayerProto_test)
   layer->set_name("Abs");
   layer->set_type("AbsVal");
 
-  Status ret = weightParser.ConvertLayerProto(&net, &net);
+  Status ret = weightParser.ConvertLayerProto(net, &net);
   EXPECT_EQ(ret, SUCCESS);
 
   BlobProto* blob = layer->add_blobs();
@@ -911,16 +914,16 @@ TEST_F(UtestCaffeParser, CaffeWeightsParser_ConvertLayerProto_test)
   BlobShape* shap = blob->mutable_shape();
   shap->add_dim(1);
   shap->add_dim(2);
-  ret = weightParser.ConvertBlobsProto(&net, &net);
+  ret = weightParser.ConvertBlobsProto(net, &net);
   EXPECT_EQ(ret, SUCCESS);
 
-  ret = weightParser.ConvertBlobShapeProto(&net, &net);
+  ret = weightParser.ConvertBlobShapeProto(net, &net);
   EXPECT_EQ(ret, SUCCESS);
 
-  ret = weightParser.ConvertConvParamProto(&net, &net);
+  ret = weightParser.ConvertConvParamProto(net, &net);
   EXPECT_EQ(ret, SUCCESS);
 
-  ret = weightParser.ConvertInnerProdcutProto(&net, &net);
+  ret = weightParser.ConvertInnerProdcutProto(net, &net);
   EXPECT_EQ(ret, SUCCESS);
 }
 
@@ -1133,7 +1136,7 @@ TEST_F(UtestCaffeParser, CaffeWeightsParser_ParseLayerParameter_test)
   const google::protobuf::Message *proto = factory.GetPrototype(descriptor);
   const google::protobuf::Message *message = proto->New();
 
-  Status ret = weightParser.ParseLayerParameter(descriptor, message, compute_graph);
+  Status ret = weightParser.ParseLayerParameter(*descriptor, *message, compute_graph);
   delete message;
   EXPECT_EQ(ret, SUCCESS);
 }
@@ -1163,7 +1166,7 @@ TEST_F(UtestCaffeParser, CaffeModelParser_ParseLayerParameter_test)
   google::protobuf::DynamicMessageFactory factory;
   const google::protobuf::Message *proto = factory.GetPrototype(descriptor);
   google::protobuf::Message *message = proto->New();
-  Status ret = modelParser.ParseLayerParameter(descriptor, message, operators);
+  Status ret = modelParser.ParseLayerParameter(*descriptor, *message, operators);
   EXPECT_EQ(ret, SUCCESS);
 
   const domi::FrameworkType fmk_type = domi::TENSORFLOW;

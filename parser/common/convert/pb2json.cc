@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,7 +82,7 @@ void Pb2Json::OneField2Json(const ProtobufMsg &message, const ProtobufFieldDescr
   switch (field->type()) {
     case ProtobufFieldDescriptor::TYPE_MESSAGE: {
       const ProtobufMsg &tmp_message = reflection->GetMessage(message, field);
-      if (0UL != tmp_message.ByteSizeLong()) {
+      if (tmp_message.ByteSizeLong() != 0UL) {
         Message2Json(tmp_message, black_fields, json[field->name()], enum2str, depth + 1);
       }
       break;
@@ -122,7 +122,7 @@ void Pb2Json::OneField2Json(const ProtobufMsg &message, const ProtobufFieldDescr
 
     case ProtobufFieldDescriptor::TYPE_FLOAT:
       char str[kSignificantDigits];
-      if (sprintf_s(str, kSignificantDigits, "%g", reflection->GetFloat(message, field)) != -1){
+      if (sprintf_s(str, kSignificantDigits, "%g", reflection->GetFloat(message, field)) != -1) {
         json[field->name()] = str;
       } else {
         json[field->name()] = reflection->GetFloat(message, field);
@@ -155,10 +155,8 @@ string Pb2Json::TypeBytes2String(string &field_name, string &type_bytes) {
   }
   string result = "";
   for (char temp_value : type_bytes) {
-    uint8_t *value = 0;
-    value = reinterpret_cast<uint8_t *>(&temp_value);
     char str[kSignificantDigits];
-    if (sprintf_s(str, kSignificantDigits, "%d", *value) == -1){
+    if (sprintf_s(str, kSignificantDigits, "%c", temp_value) == -1) {
       GELOGW("Convert bytes to string fail, filed name:%s", field_name.c_str());
       continue;
     }

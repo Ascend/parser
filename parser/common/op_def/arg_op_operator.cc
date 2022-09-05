@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,29 +14,20 @@
  * limitations under the License.
  */
 
-#ifndef DOMI_OP_FILL_OP_H_
-#define DOMI_OP_FILL_OP_H_
-#include "parser/common/op_def/operator.h"
+#include "parser/common/op_def/arg_op_operator.h"
+#include <string>
+#include "framework/common/fmk_types.h"
 
 namespace ge {
-class FillOperator : public ParserOperator {
- public:
-  FillOperator();
+FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY ArgOpOperator::ArgOpOperator() : ParserOperator("Data") {}
 
-  ~FillOperator() override;
+ArgOpOperator::~ArgOpOperator() {}
 
-  FillOperator &DataType(int64_t dataType);
+FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY ArgOpOperator &ArgOpOperator::Index(int64_t index) {
+  Attr("index", static_cast<int64_t>(index));
 
-  FillOperator &Alpha(float alpha);
+  return *this;
+}
 
-  FillOperator &Beta(float beta);
-
-  int64_t GetDataType() const;
-
-  float GetAlpha() const;
-
-  float GetBeta() const;
-};
+int64_t ArgOpOperator::GetIndex() const { return GetIntAttr("index"); }
 }  // namespace ge
-
-#endif  // DOMI_OP_FILL_OP_H_

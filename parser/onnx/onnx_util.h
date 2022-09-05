@@ -17,6 +17,8 @@
 #ifndef PARSER_ONNX_ONNX_UTIL_PARSER_H_
 #define PARSER_ONNX_ONNX_UTIL_PARSER_H_
 
+#include <string>
+#include <cstdint>
 #include "external/graph/types.h"
 
 namespace OnnxDataType {
@@ -59,4 +61,4 @@ class OnnxUtil {
 };
 }  // namespace ge
 
-#endif //PARSER_ONNX_ONNX_UTIL_PARSER_H_
+#endif // PARSER_ONNX_ONNX_UTIL_PARSER_H_

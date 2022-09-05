@@ -17,7 +17,7 @@
 #include "parser/tensorflow/tensorflow_ref_switch_parser.h"
 #include "framework/common/debug/ge_log.h"
 #include "parser/common/op_def/ir_pb_converter.h"
-#include "parser/common/op_def/ref_switch_op.h"
+#include "parser/common/op_def/ref_switch_operator.h"
 #include "parser/common/op_parser_factory.h"
 #include "parser/common/util.h"
 

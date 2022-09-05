@@ -17,7 +17,7 @@
 #ifndef GE_PARSER_TENSORFLOW_TENSORFLOW_CONSTANT_PARSER_H_
 #define GE_PARSER_TENSORFLOW_TENSORFLOW_CONSTANT_PARSER_H_
 
-#include "common/op_def/constant_op.h"
+#include "common/op_def/constant_operator.h"
 #include "parser/common/data_op_parser.h"
 #include "parser/tensorflow/tensorflow_op_parser.h"
 

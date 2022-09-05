@@ -26,11 +26,11 @@ class PARSER_FUNC_VISIBILITY OnnxFileConstantParser : public OnnxOpParser {
   Status ParseParams(const Message *op_src, ge::Operator &op_def) override;
 
  private:
-  Status ParsePath(const ge::onnx::TensorProto &tensor_proto, ge::Operator &op_def);
-  Status ParseDataType(const ge::onnx::TensorProto &tensor_proto, ge::Operator &op_def);
-  void ParseShape(const ge::onnx::TensorProto &tensor_proto, ge::Operator &op_def);
-  Status GetTensorProto(const ge::onnx::NodeProto *node_proto, ge::onnx::TensorProto &tensor_proto);
-  Status SetPathAttr(const ge::onnx::StringStringEntryProto &string_proto, ge::NamedAttrs &attrs);
+  Status ParsePath(const ge::onnx::TensorProto &tensor_proto, ge::Operator &op_def) const;
+  Status ParseDataType(const ge::onnx::TensorProto &tensor_proto, ge::Operator &op_def) const;
+  void ParseShape(const ge::onnx::TensorProto &tensor_proto, ge::Operator &op_def) const;
+  Status GetTensorProto(const ge::onnx::NodeProto &node_proto, ge::onnx::TensorProto &tensor_proto) const;
+  Status SetPathAttr(const ge::onnx::StringStringEntryProto &string_proto, ge::NamedAttrs &attrs) const;
 };
 }  // namespace ge
 

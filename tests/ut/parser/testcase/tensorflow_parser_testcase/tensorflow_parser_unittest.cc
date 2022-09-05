@@ -38,17 +38,17 @@
 #include "tests/depends/ops_stub/ops_stub.h"
 #include "parser/tensorflow/tensorflow_constant_parser.h"
 #include "common/types.h"
-#include "parser/common/op_def/variable_op.h"
+#include "parser/common/op_def/variable_operator.h"
 #include "parser/tensorflow/tensorflow_ref_switch_parser.h"
 #include "parser/tensorflow/tensorflow_fusion_op_parser.h"
 #include "parser/tensorflow/tensorflow_auto_mapping_parser_adapter.h"
-#include "parser/common/op_def/arg_op.h"
+#include "parser/common/op_def/arg_op_operator.h"
 #include "parser/tensorflow/tensorflow_fusion_custom_parser_adapter.h"
 #include "parser/tensorflow/tensorflow_reshape_parser.h"
 #include "parser/tensorflow/tensorflow_custom_parser_adapter.h"
 #include "parser/tensorflow/tensorflow_squeeze_parser.h"
-#include "parser/tensorflow/graph_functiondef.h"
-#include "parser/tensorflow/graph_optimizer.h"
+#include "parser/tensorflow/graph_to_function_def.h"
+#include "parser/tensorflow/parser_graph_optimizer.h"
 #include "cce/dnn_base_def.hpp"
 #include "parser/tensorflow/scope/scope_pass_manager.h"
 #include "parser/tensorflow/tensorflow_util.h"
@@ -56,10 +56,10 @@
 #include "parser/tensorflow/tensorflow_enter_parser.h"
 #include "parser/common/op_def/ir_pb_converter.h"
 #include "parser/common/tuple.h"
-#include "common/op_def/frameworkop_op.h"
-#include "common/op_def/shape_n_op.h"
-#include "common/op_def/var_is_initialized_op_op.h"
-#include "common/op_def/fill_op.h"
+#include "common/op_def/framework_op_operator.h"
+#include "common/op_def/shape_n_operator.h"
+#include "common/op_def/var_is_initialized_op_operator.h"
+#include "common/op_def/fill_operator.h"
 #include "common/convert/pb2json.h"
 #include "common/convert/message2operator.h"
 #include "parser/common/proto_file_parser.h"
@@ -73,7 +73,7 @@
 #include "parser/common/prototype_pass_manager.h"
 #include "parser/common/register_tbe.h"
 #include "parser/common/pass_manager.h"
-#include "parser/tensorflow/graph_optimizer.h"
+#include "parser/tensorflow/parser_graph_optimizer.h"
 #include "metadef/inc/register/scope/scope_pass_registry_impl.h"
 #include "register/scope/scope_fusion_pass_register.h"
 #include "common/op_map.h"
@@ -1032,7 +1032,9 @@ TEST_F(UtestTensorflowParser, tensorflow_parser_success) {
   ParserOperator unused("Add");
   case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
   std::string model_file = case_dir + "/tensorflow_model/tf_add.pb";
-  std::map<ge::AscendString, ge::AscendString> parser_params;
+  std::map<ge::AscendString, ge::AscendString> parser_params = {
+      {ge::AscendString(ge::ir_option::INPUT_DATA_NAMES), ge::AscendString("Placeholder,Placeholder_1")},
+  };
   ge::Graph graph;
   auto ret = ge::aclgrphParseTensorFlow(model_file.c_str(), parser_params, graph);
   ASSERT_EQ(ret, SUCCESS);
@@ -1044,6 +1046,21 @@ TEST_F(UtestTensorflowParser, tensorflow_parser_success) {
   auto &net_out_name = ge::GetParserContext().net_out_nodes;
   ASSERT_EQ(net_out_name.size(), 1);
   EXPECT_EQ(net_out_name.at(0), "add_test_1:0");
+}
+
+TEST_F(UtestTensorflowParser, tensorflow_parser_input_data_names_failed) {
+  RegisterCustomOp();
+
+  std::string case_dir = __FILE__;
+  ParserOperator unused("Add");
+  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
+  std::string model_file = case_dir + "/tensorflow_model/tf_add.pb";
+  std::map<ge::AscendString, ge::AscendString> parser_params = {
+    {ge::AscendString(ge::ir_option::INPUT_DATA_NAMES), ge::AscendString("Placeholder_1,Placeholder_2")},
+  };
+  ge::Graph graph;
+  auto ret = ge::aclgrphParseTensorFlow(model_file.c_str(), parser_params, graph);
+  ASSERT_EQ(ret, ge::GRAPH_FAILED);
 }
 
 TEST_F(UtestTensorflowParser, tensorflow_model_Failed) {

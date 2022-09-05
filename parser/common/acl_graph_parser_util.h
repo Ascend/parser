@@ -61,6 +61,7 @@ class AclGrphParseUtil {
                                     size_t index, OpDescPtr &op_desc);
   domi::Status ParseAclInputFp16Nodes(const ComputeGraphPtr &graph, const string &input_fp16_nodes,
                                       const string &is_input_adjust_hw_layout) const;
+  domi::Status SetSpecifyIndexAttrByInputNames(const ComputeGraphPtr &graph, const std::string &input_data_names) const;
   domi::Status GetDefaultOutInfo(ge::ComputeGraphPtr &compute_graph,
                                  std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info) const;
 };

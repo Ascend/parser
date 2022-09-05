@@ -381,7 +381,7 @@ TEST_F(UtestOnnxParser, FileConstantGetTensorProto)
   OnnxFileConstantParser parser;
   ge::onnx::NodeProto input_node;
   ge::onnx::TensorProto tensor_proto;
-  Status ret = parser.GetTensorProto(&input_node, tensor_proto);
+  Status ret = parser.GetTensorProto(input_node, tensor_proto);
   EXPECT_EQ(ret, FAILED);
 
   ge::onnx::AttributeProto *attribute = input_node.add_attribute();
@@ -391,7 +391,7 @@ TEST_F(UtestOnnxParser, FileConstantGetTensorProto)
 
   ge::onnx::TensorProto *attribute_tensor = attribute->mutable_t();
   *attribute_tensor = tensor_proto;
-  ret = parser.GetTensorProto(&input_node, tensor_proto);
+  ret = parser.GetTensorProto(input_node, tensor_proto);
   EXPECT_EQ(ret, SUCCESS);
 }
 

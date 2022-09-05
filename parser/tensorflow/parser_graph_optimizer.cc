@@ -14,14 +14,14 @@
  * limitations under the License.
  */
 
-#include "graph_optimizer.h"
+#include "parser_graph_optimizer.h"
 #include "graph/op_types.h"
 #include "common/types_map.h"
 #include "common/util.h"
 #include "framework/omg/parser/parser_inner_ctx.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/type_utils.h"
-#include "graph_functiondef.h"
+#include "graph_to_function_def.h"
 #include "parser/common/acl_graph_parser_util.h"
 #include "register/op_registry.h"
 
@@ -188,7 +188,10 @@ Status CollectNodeFuncs(vector<ge::NodePtr> &nodes, FunctionDefLibrary *library)
 
 Status ParserGraphOptimizer::UpdateGraph(vector<NodePtr> &nodes) {
   ComputeGraphPtr sub_graph = nullptr;
-  GE_MAKE_SHARED(sub_graph = std::make_shared<ComputeGraph>("subGraph"), sub_graph = nullptr; return PARAM_INVALID);
+  GE_MAKE_SHARED(
+      sub_graph = std::make_shared<ComputeGraph>("subGraph"),
+      sub_graph = nullptr;
+      return PARAM_INVALID);
 
   unordered_map<string, NodePtr> node_map;
   vector<InDataAnchorPtr> input_anchors;

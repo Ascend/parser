@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020~2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,8 +36,6 @@
 #include "proto/onnx/ge_onnx.pb.h"
 #include "external/register/register_error_codes.h"
 #include "framework/omg/parser/parser_types.h"
-#include "parser/onnx/onnx_util.h"
-
 namespace ge {
 class PARSER_FUNC_VISIBILITY SubgraphAdapter {
  public:

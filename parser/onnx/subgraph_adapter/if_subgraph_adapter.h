@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020~2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@
 #include <set>
 #include <string>
 #include "subgraph_adapter.h"
+#include "parser/onnx/onnx_util.h"
 
 namespace ge {
 class PARSER_FUNC_VISIBILITY IfSubgraphAdapter : public SubgraphAdapter {
@@ -30,7 +31,7 @@ class PARSER_FUNC_VISIBILITY IfSubgraphAdapter : public SubgraphAdapter {
                                         const std::string &parent_graph_name = "") override;
 
  private:
-  domi::Status ParseIfNodeSubgraphs(ge::onnx::NodeProto *parent_node, std::vector<ge::onnx::GraphProto *> &onnx_graphs,
+  domi::Status ParseIfNodeSubgraphs(ge::onnx::NodeProto &parent_node, std::vector<ge::onnx::GraphProto *> &onnx_graphs,
                                     std::map<std::string, ge::onnx::GraphProto *> &name_to_onnx_graph,
                                     const std::string &parent_graph_name) const;
   domi::Status GetSubgraphsAllInputs(ge::onnx::GraphProto &onnx_graph, std::set<std::string> &all_inputs) const;

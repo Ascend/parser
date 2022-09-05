@@ -92,18 +92,18 @@ PARSER_SCOPE_SRC_FILES := \
     tensorflow/scope/scope_pass_manager.cc \
 
 FMK_COMMON_SRC_FILES := \
-    tensorflow/graph_functiondef.cc \
-    tensorflow/graph_optimizer.cc \
+    tensorflow/graph_to_function_def.cc \
+    tensorflow/parser_graph_optimizer.cc \
     tensorflow/iterator_fusion_pass.cc \
-    common/op_def/arg_op.cc \
-    common/op_def/constant_op.cc \
-    common/op_def/fill_op.cc \
-    common/op_def/frameworkop_op.cc \
-    common/op_def/no_op_op.cc \
-    common/op_def/ref_switch_op.cc \
-    common/op_def/shape_n_op.cc \
-    common/op_def/var_is_initialized_op_op.cc \
-    common/op_def/variable_op.cc \
+    common/op_def/arg_op_operator.cc \
+    common/op_def/constant_operator.cc \
+    common/op_def/fill_operator.cc \
+    common/op_def/framework_op_operator.cc \
+    common/op_def/no_op_operator.cc \
+    common/op_def/ref_switch_operator.cc \
+    common/op_def/shape_n_operator.cc \
+    common/op_def/var_is_initialized_op_operator.cc \
+    common/op_def/variable_operator.cc \
 
 LOCAL_SRC_FILES := $(PARSER_TENSORFLOW_SRC_FILES)
 LOCAL_SRC_FILES += $(PARSER_SCOPE_SRC_FILES)

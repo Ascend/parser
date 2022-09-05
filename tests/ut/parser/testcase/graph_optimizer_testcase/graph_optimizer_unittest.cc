@@ -7,7 +7,7 @@
 #include "tensorflow/iterator_fusion_pass.h"
 #include "parser/common/acl_graph_parser_util.h"
 #define private public
-#include "tensorflow/graph_optimizer.h"
+#include "tensorflow/parser_graph_optimizer.h"
 #undef private
 namespace ge {
   class UtestGraphOptimizer : public testing::Test {
