@@ -103,6 +103,8 @@ set(MATEDEF_SRC_FILES
     "${PARSER_DIR}/metadef/graph/model_serialize.cc"
     "${PARSER_DIR}/metadef/graph/node.cc"
     "${PARSER_DIR}/metadef/graph/op_desc.cc"
+    "${PARSER_DIR}/metadef/graph/ir_meta.cc"
+    "${PARSER_DIR}/metadef/graph/ir_data_type_symbol_store.cc"
     "${PARSER_DIR}/metadef/graph/operator.cc"
     "${PARSER_DIR}/metadef/graph/operator_impl.cc"
     "${PARSER_DIR}/metadef/graph/operator_factory.cc"
