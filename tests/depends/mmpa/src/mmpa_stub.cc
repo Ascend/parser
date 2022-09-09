@@ -249,6 +249,15 @@ INT32 mmGetErrorCode()
 
 INT32 mmIsDir(const CHAR *fileName)
 {
+  struct stat fileStat;
+  memset(&fileStat, sizeof(fileStat), 0);
+  int32_t ret = lstat(fileName, &fileStat);
+  if (ret < 0) {
+    return -1;
+  }
+  if (S_ISDIR(fileStat.st_mode) == 0) {
+    return -1;
+  }
   return 0;
 }
 
