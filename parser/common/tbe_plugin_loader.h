@@ -40,12 +40,25 @@ public:
 
   static string GetPath();
 
+  static Status GetOpsProtoPath(std::string &opsproto_path);
+
 private:
   TBEPluginLoader() = default;
   ~TBEPluginLoader() = default;
   Status ClearHandles_();
   static void ProcessSoFullName(vector<string> &file_list, string &caffe_parser_path, string &full_name,
                                 const string &caffe_parser_so_suff);
+  static Status GetOppPath(std::string &opp_path);
+  static bool IsNewOppPathStruct(const std::string &opp_path);
+  static Status GetOppPluginVendors(const std::string &vendors_config, std::vector<std::string> &vendors);
+  static Status GetOppPluginPathOld(const std::string &opp_path,
+                                    const std::string &path_fmt,
+                                    std::string &plugin_path,
+                                    const std::string &path_fmt_custom = "");
+  static Status GetOppPluginPathNew(const std::string &opp_path,
+                                    const std::string &path_fmt,
+                                    std::string &plugin_path,
+                                    const std::string &path_fmt_custom = "");
   static void GetCustomOpPath(std::string &customop_path);
   static void GetPluginSoFileList(const string &path, vector<string> &file_list, string &caffe_parser_path);
   static void FindParserSo(const string &path, vector<string> &file_list, string &caffe_parser_path);

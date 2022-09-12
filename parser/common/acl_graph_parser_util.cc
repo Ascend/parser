@@ -87,28 +87,6 @@ static string GetSoPath() {
   }
 }
 
-static void GetOpsProtoPath(string &opsproto_path) {
-  GELOGD("Start to get ops proto path schedule.");
-  const char *path_env = std::getenv("ASCEND_OPP_PATH");
-  if (path_env != nullptr) {
-    string path = path_env;
-    string file_path = ge::parser::RealPath(path.c_str());
-    if (file_path.empty()) {
-      REPORT_INNER_ERROR("E19999", "File path %s is invalid.", path.c_str());
-      GELOGE(ge::FAILED, "[Get][Path] File path %s is invalid.", path.c_str());
-      return;
-    }
-    opsproto_path = (path + "/op_proto/custom/" + ":") + (path + "/op_proto/built-in/");
-    GELOGI("Get opsproto so path from env : %s", path.c_str());
-    return;
-  }
-  string path_base = GetSoPath();
-  GELOGI("path_base is %s", path_base.c_str());
-  path_base = path_base.substr(0, path_base.rfind('/'));
-  path_base = path_base.substr(0, path_base.rfind('/') + 1);
-  opsproto_path = (path_base + "ops/op_proto/custom/" + ":") + (path_base + "ops/op_proto/built-in/");
-}
-
 static void GetAclParams(const std::map<ge::AscendString, ge::AscendString> &parser_params, const string &key,
                          string &value) {
   for (auto &ele : parser_params) {
@@ -173,7 +151,10 @@ static Status CheckOutNode(ge::OpDescPtr op_desc, int32_t index) {
 
 domi::Status AclGrphParseUtil::LoadOpsProtoLib() {
   string opsproto_path;
-  GetOpsProtoPath(opsproto_path);
+  ge::Status ret = ge::TBEPluginLoader::GetOpsProtoPath(opsproto_path);
+  if (ret != ge::SUCCESS) {
+    GELOGW("Failed to get ops proto path!");
+  }
   GELOGI("Get opsproto path is %s", opsproto_path.c_str());
   OpsProtoManager *manager = OpsProtoManager::Instance();
   map<string, string> option_tmp;
@@ -196,18 +177,17 @@ void AclGrphParseUtil::SaveCustomCaffeProtoPath() {
   path_base = path_base.substr(0, path_base.rfind('/') + 1);
   ge::GetParserContext().caffe_proto_path = path_base + "include/proto/";
 
-  string custom_op_path;
+  std::string path = path_base + "ops";
   const char *path_env = std::getenv("ASCEND_OPP_PATH");
   if (path_env != nullptr) {
-    std::string path = path_env;
-    custom_op_path = path + "/framework/custom/caffe/";
+    path = path_env;
     GELOGI("Get custom proto path from env : %s", path_env);
-    GetParserContext().custom_proto_path = custom_op_path;
-    return;
   }
-  custom_op_path = path_base + "ops/framework/custom/caffe/";
-  ge::GetParserContext().custom_proto_path = custom_op_path;
-  return;
+  if (mmIsDir((path + "/vendors").c_str()) != EN_OK) {
+    ge::GetParserContext().custom_proto_path = path + "framework/custom/caffe/";
+  } else {
+    ge::GetParserContext().custom_proto_path = path + "vendors/customize/framework/caffe/";
+  }
 }
 
 // Initialize PARSER, load custom op plugin
