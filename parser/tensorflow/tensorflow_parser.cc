@@ -1,4 +1,4 @@
-/**
+/*
  * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
@@ -377,7 +377,7 @@ Status MappingAndAddSubGraph(const NodePtr &node, const Graph &graph, const Comp
 }
 }  // namespace
 
-/**
+/*
  * @ingroup domi_omg
  * @brief Trans common decorate function to PartitionedCall.
  * @param [in] node_def:  Node of common function.
@@ -1488,10 +1488,10 @@ Status TensorFlowModelParser::ParseAllGraph(const google::protobuf::Message *pro
     GELOGE(ret, "[TF Parse] scope fusion failed.");
     return ret;
   }
-  GELOGD("[TF Parse] scope fusion success");
+  GELOGD("[TF Parse] scope fusion success.");
 
   GE_RETURN_IF_ERROR(OptimizeConstNodes4CustomOp(&graph_def));
-  GELOGD("[TF Parse] optimize const nodes for custom op base success");
+  GELOGD("[TF Parse] optimize const nodes for custom op base success.");
 
   // Add nodedef in the model to prechecker and check the general parameters
   // Prevent data residue in multiple calls
@@ -1537,15 +1537,15 @@ Status TensorFlowModelParser::ParseAllGraph(const google::protobuf::Message *pro
 
   // Building input and input relationships for all OP nodes
   GE_RETURN_IF_ERROR(GetOpNodesContextFromGraph(graph_def));
-  GELOGD("[TF Parse] get op nodes context from graph success");
+  GELOGD("[TF Parse] get op nodes context from graph success.");
 
   // Infer input formats
   ge::GetParserContext().format = InferInputFormats();
-  GELOGD("[TF Parse] infer input formats success");
+  GELOGD("[TF Parse] infer input formats success.");
 
   // Building input-output relationship between fusionop and common op
   GE_RETURN_IF_ERROR(UpdateAllNodeOpContext(scope_graph, op_node_name_list));
-  GELOGD("[TF Parse] update all node op context success");
+  GELOGD("[TF Parse] update all node op context success.");
 
   // set user-designate-inputs-order
   std::vector<std::string> user_inputs_order;
@@ -1580,13 +1580,13 @@ Status TensorFlowModelParser::ParseAllGraph(const google::protobuf::Message *pro
     }
     ret = AddNode(node_def, graph, scope_graph);
     if (ret != SUCCESS) {
-      GELOGE(ret, "Add op[%s] failed", node_def->name().c_str());
+      GELOGE(ret, "Add op[%s] failed.", node_def->name().c_str());
       DeleteFuisonNodeDef();
       return ret;
     }
   }
 
-  GELOGD("[TF Parse] parse tf node to geop success");
+  GELOGD("[TF Parse] parse tf node to geop success.");
 
   DeleteFuisonNodeDef();
 
@@ -3331,7 +3331,7 @@ Status TensorFlowModelParser::OptimizeConstNodes4CustomOp(domi::tensorflow::Grap
       // solve the problem of protobuf index less current_size.
       GE_IF_BOOL_EXEC(current_node->input_size() == 0, GELOGI("Input size is 0, already optimized"); continue);
 
-      if (it.moveType == domi::OMG_REMOVE_TYPE_WITH_COND) {
+      if (it.moveType == domi::RemoveInputType::OMG_REMOVE_TYPE_WITH_COND) {
         domi::tensorflow::AttrValue attr_value;
         GE_IF_BOOL_EXEC(!(ge::TensorFlowUtil::FindAttrValue(current_node, it.attrName, attr_value)),
                         REPORT_INNER_ERROR("E19999", "Op:%s register AttrName[%s] has no value, check invalid",
@@ -3339,10 +3339,11 @@ Status TensorFlowModelParser::OptimizeConstNodes4CustomOp(domi::tensorflow::Grap
                         GELOGE(INTERNAL_ERROR, "AttrName[%s] has no value!", it.attrName.c_str());
                         return PARAM_INVALID);
         GE_IF_BOOL_EXEC(attr_value.b() == it.attrValue, unused_inputs.insert(move_index));
-      } else if (it.moveType == domi::OMG_REMOVE_INPUT_WITH_ORIGINAL_TYPE && it.originalType == current_op_name) {
+      } else if (it.moveType == domi::RemoveInputType::OMG_REMOVE_INPUT_WITH_ORIGINAL_TYPE &&
+                 it.originalType == current_op_name) {
         GELOGD("Input %s:%d will be removed.", current_op_name.c_str(), move_index);
         unused_inputs.insert(move_index);
-      } else if (it.moveType == domi::OMG_INPUT_REORDER) {
+      } else if (it.moveType == domi::RemoveInputType::OMG_INPUT_REORDER) {
         auto inputs = current_node->input();
         if (static_cast<size_t>(inputs.size()) != it.input_order.size()) {
           REPORT_INNER_ERROR("E19999", "Input size of node:%s(%s) is mismatched, new order size:%zu, input size:%d",
