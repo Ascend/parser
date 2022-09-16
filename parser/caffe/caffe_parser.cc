@@ -1641,7 +1641,7 @@ Status CaffeModelParser::ReorderInput(domi::caffe::NetParameter &net) const {
       continue;
     }
     for (const auto &it : move_input_vec) {
-      if (it.moveType == domi::OMG_INPUT_REORDER) {
+      if (it.moveType == domi::RemoveInputType::OMG_INPUT_REORDER) {
         auto inputs = layer->bottom();
         if (static_cast<size_t>(inputs.size()) != it.input_order.size()) {
           REPORT_INNER_ERROR("E19999", "Size of input is mismatched, check invalid,"
