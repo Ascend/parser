@@ -16,7 +16,7 @@ Makefile:
 
 '''
 
-ATC_INCLUDE_DIR := $(ASCEND_PATH)/atc/include
+ATC_INCLUDE_DIR := $(ASCEND_PATH)/compiler/include
 OPP_INCLUDE_DIR := $(ASCEND_PATH)/opp/op_proto/built-in/inc
 LOCAL_MODULE_NAME := ir_build
 CC := g++
@@ -26,7 +26,7 @@ INCLUDES := -I $(ASCEND_OPP_PATH)/op_proto/built-in/inc \
             -I $(ATC_INCLUDE_DIR)/graph \
             -I $(ATC_INCLUDE_DIR)/ge \
 
-LIBS := -L ${ASCEND_PATH}/atc/lib64/stub \
+LIBS := -L ${ASCEND_PATH}/compiler/lib64/stub \
     -lgraph \
     -lge_compiler
 ir_build:
@@ -38,7 +38,7 @@ clean:
 '''
 make
 
-## Run the application after set the LD_LIBRARY_PATH to include the real path of the library which locates in the directory of atc/lib64
+## Run the application after set the LD_LIBRARY_PATH to include the real path of the library which locates in the directory of compiler/lib64
 
-export LD_LIBRARY_PATH= $(ASCEND_PATH)/atc/lib64
+export LD_LIBRARY_PATH= $(ASCEND_PATH)/compiler/lib64
  -  ./ ir_build
