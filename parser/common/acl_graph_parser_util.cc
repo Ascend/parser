@@ -514,15 +514,10 @@ domi::Status AclGrphParseUtil::GetDefaultOutInfo(ge::ComputeGraphPtr &compute_gr
   if (!default_out_nodes.empty()) {
     for (size_t i = 0; i < default_out_nodes.size(); ++i) {
       ge::NodePtr out_node = compute_graph->FindNode(default_out_nodes[i].first);
-      if (out_node == nullptr) {
-        ErrorManager::GetInstance().ATCReportErrMessage("E10016", {"parameter", "opname"},
-                                                        {"out_nodes", default_out_nodes[i].first});
-        GELOGE(domi::FAILED, "[Check][Param] Can not find out_nodes(%zu) (%s) in graph.",
-               i, default_out_nodes[i].first.c_str());
-        return domi::FAILED;
+      if (out_node != nullptr) {
+        output_nodes_info.push_back(std::make_pair(out_node, default_out_nodes[i].second));
+        GELOGD("Get default output node:%s.", out_node->GetName().c_str());
       }
-      output_nodes_info.push_back(std::make_pair(out_node, default_out_nodes[i].second));
-      GELOGD("Get default output node:%s.", out_node->GetName().c_str());
     }
     return domi::SUCCESS;
   }

@@ -174,4 +174,14 @@ TEST_F(STestOnnxParser, onnx_parser_const_data_type) {
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
 
+TEST_F(STestOnnxParser, onnx_parser_if_node_with_const_input) {
+  std::string case_dir = __FILE__;
+  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
+  std::string model_file = case_dir + "/origin_models/onnx_if_const_intput.onnx";
+  std::map<ge::AscendString, ge::AscendString> parser_params;
+  ge::Graph graph;
+  auto ret = ge::aclgrphParseONNX(model_file.c_str(), parser_params, graph);
+  EXPECT_EQ(ret, GRAPH_SUCCESS);
+}
+
 } // namespace ge
