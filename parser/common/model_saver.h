@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,11 +41,9 @@ public:
   static Status SaveJsonToFile(const char *file_path, const Json &model);
 
 private:
-  ///
   /// @ingroup domi_common
   /// @brief Check validity of the file path
   /// @return Status  result
-  ///
   static Status CheckPath(const string &file_path);
 
   static int CreateDirectory(const std::string &directory_path);
@@ -53,4 +51,4 @@ private:
 }  // namespace parser
 }  // namespace ge
 
-#endif //PARSER_COMMON_FILE_SAVER_H_
+#endif // PARSER_COMMON_FILE_SAVER_H_

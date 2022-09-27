@@ -169,7 +169,7 @@ inline bool Fp16IsInf(const uint16_t x) {
 /// @ingroup fp16 special value judgment
 /// @brief   whether a fp16 is NaN
 inline bool Fp16IsNan(const uint16_t x) {
-    return ((((x) & kFp16ExpMask) == kFp16ExpMask) && ((x) & kFp16ManMask));
+    return ((((x) & kFp16ExpMask) == kFp16ExpMask) && (((x) & kFp16ManMask) != 0U));
 }
 /// @ingroup fp16 special value judgment
 /// @brief   whether a fp16 is invalid
@@ -211,38 +211,38 @@ constexpr uint32_t kFp32MaxExp = 0xFFU;
 constexpr uint32_t kFp32MaxMan = 0x7FFFFFU;
 /// @ingroup fp32 special value judgment
 /// @brief   whether a fp32 is NaN
-inline bool Fp32IsNan(const uint16_t x) {
-    return ((((x) & kFp32ExpMask) == kFp32ExpMask) && ((x) & kFp32ManMask));
+inline bool Fp32IsNan(const uint32_t x) {
+  return ((((x) & kFp32ExpMask) == kFp32ExpMask) && (((x) & kFp32ManMask) != 0U));
 }
 /// @ingroup fp32 special value judgment
 /// @brief   whether a fp32 is infinite
-inline bool Fp32IsInf(const uint16_t x) {
-    return ((((x) & kFp32ExpMask) == kFp32ExpMask) && (!((x) & kFp32ManMask)));
+inline bool Fp32IsInf(const uint32_t x) {
+  return ((((x) & kFp32ExpMask) == kFp32ExpMask) && (((x) & kFp32ManMask) == 0U));
 }
 /// @ingroup fp32 special value judgment
 /// @brief   whether a fp32 is a denormalized value
-inline bool Fp32IsDenorm(const uint16_t x) {
-    return ((((x)&kFp32ExpMask) == 0));
+inline bool Fp32IsDenorm(const uint32_t x) {
+  return ((((x)&kFp32ExpMask) == 0));
 }
 /// @ingroup fp32 basic operator
 /// @brief   get sign of fp32
-inline bool Fp32ExtracSign(const uint16_t x) {
-    return (((x) >> kFp32SignIndex) & 1);
+inline uint32_t Fp32ExtracSign(const uint16_t x) {
+  return (((x) >> kFp32SignIndex) & 1U);
 }
 /// @ingroup fp32 basic operator
 /// @brief   get exponent of fp16
-inline bool Fp32ExtracExp(const uint16_t x) {
-    return (((x)&kFp32ExpMask) >> kFp32ManLen);
+inline uint32_t Fp32ExtracExp(const uint32_t x) {
+  return (((x)&kFp32ExpMask) >> kFp32ManLen);
 }
 /// @ingroup fp32 basic operator
 /// @brief   get mantissa of fp16
-inline uint16_t Fp32ExtracMan(const uint16_t x) {
-    return (((x)&kFp32ManMask) | (((((x) >> kFp32ManLen) & kFp32MaxExp) > 0 ? 1 : 0) * kFp32ManHideBit));
+inline uint32_t Fp32ExtracMan(const uint32_t x) {
+  return (((x)&kFp32ManMask) | (((((x) >> kFp32ManLen) & kFp32MaxExp) > 0 ? 1 : 0) * kFp32ManHideBit));
 }
 /// @ingroup fp32 basic operator
 /// @brief   constructor of fp32 from sign exponent and mantissa
-inline uint16_t Fp32Constructor(const uint16_t s, const uint16_t e, const uint16_t m) {
-    return (((s) << kFp32SignIndex) | ((e) << kFp32ManLen) | ((m) & kFp32MaxMan));
+inline uint32_t Fp32Constructor(const uint32_t s, const uint32_t e, const uint32_t m) {
+  return (((s) << kFp32SignIndex) | ((e) << kFp32ManLen) | ((m) & kFp32MaxMan));
 }
 /// @ingroup fp64 basic parameter
 /// @brief   fp64 exponent bias
@@ -279,13 +279,13 @@ constexpr uint64_t kFp64MaxExp = 0x07FF;
 constexpr uint64_t kFp64MaxMan = 0xFFFFFFFFFFFLLu;
 /// @ingroup fp64 special value judgment
 /// @brief   whether a fp64 is NaN
-inline bool Fp64IsNan(const uint16_t x) {
-    return ((((x) & kFp64ExpMask) == kFp64ExpMask) && ((x) & kFp64ManMask));
+inline bool Fp64IsNan(const uint64_t x) {
+  return ((((x) & kFp64ExpMask) == kFp64ExpMask) && (((x) & kFp64ManMask) != 0ULL));
 }
 /// @ingroup fp64 special value judgment
 /// @brief   whether a fp64 is infinite
-inline bool Fp64IsInf(const uint16_t x) {
-    return ((((x) & kFp64ExpMask) == kFp64ExpMask) && (!((x) & kFp64ManMask)));
+inline bool Fp64IsInf(const uint64_t x) {
+  return ((((x) & kFp64ExpMask) == kFp64ExpMask) && (((x) & kFp64ManMask) == 0ULL));
 }
 /// @ingroup integer special value judgment
 /// @brief   maximum positive value of int8_t            (0111 1111)
