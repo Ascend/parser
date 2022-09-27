@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@
 #include "common/util.h"
 #include "tbe_plugin_loader.h"
 #include "framework/common/debug/ge_log.h"
-#include "parser/common/register_tbe.h"
+#include "parser/common/op_registration_tbe.h"
 #include "framework/omg/parser/parser_inner_ctx.h"
 #include "external/ge/ge_api_types.h"
 

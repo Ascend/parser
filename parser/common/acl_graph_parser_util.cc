@@ -37,7 +37,7 @@
 #include "graph/opsproto_manager.h"
 #include "graph/utils/type_utils.h"
 #include "omg/parser/parser_inner_ctx.h"
-#include "parser/common/register_tbe.h"
+#include "parser/common/op_registration_tbe.h"
 #include "tbe_plugin_loader.h"
 #include "mmpa/mmpa_api.h"
 

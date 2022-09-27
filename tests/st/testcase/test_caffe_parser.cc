@@ -21,7 +21,7 @@
 #include "parser/common/op_parser_factory.h"
 #include "graph/operator_reg.h"
 #include "register/op_registry.h"
-#include "parser/common/register_tbe.h"
+#include "parser/common/op_registration_tbe.h"
 #include "framework/omg/parser/model_parser.h"
 #include "framework/omg/parser/parser_factory.h"
 #include "external/parser/caffe_parser.h"

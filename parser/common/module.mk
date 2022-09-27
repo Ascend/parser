@@ -15,7 +15,7 @@ COMMON_LOCAL_SRC_FILES := \
     data_op_parser.cc \
     op_parser_factory.cc \
     pre_checker.cc \
-    register_tbe.cc \
+    op_registration_tbe.cc \
     parser_api.cc \
     parser_inner_ctx.cc \
     proto_file_parser.cc \

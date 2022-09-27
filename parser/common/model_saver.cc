@@ -74,10 +74,9 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY Status ModelSaver::SaveJsonToFi
     GELOGE(FAILED, "[Open][File] [%s] failed. %s", file_path, err_msg);
     return FAILED;
   }
-  const char *model_char = model_str.c_str();
   uint32_t len = static_cast<uint32_t>(model_str.length());
   // Write data to file
-  mmSsize_t mmpa_ret = mmWrite(fd, const_cast<void *>(static_cast<const void *>(model_char)), len);
+  mmSsize_t mmpa_ret = mmWrite(fd, const_cast<void *>(static_cast<const void *>(model_str.c_str())), len);
   if (mmpa_ret == EN_ERROR || mmpa_ret == EN_INVALID_PARAM) {
     char_t err_buf[kMaxErrStrLen + 1U] = {};
     const auto err_msg = mmGetErrorFormatMessage(mmGetErrorCode(), &err_buf[0], kMaxErrStrLen);
