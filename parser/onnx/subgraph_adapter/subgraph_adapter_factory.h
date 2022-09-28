@@ -1,5 +1,5 @@
 /**
- * Copyright (c) Huawei Technologies Co., Ltd. 2020~2022. All rights reserved.
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,20 +16,6 @@
 
 #ifndef GE_PARSER_ONNX_SUBGRAPH_ADAPTER_SUBGRAPH_ADAPTER_FACTORY_H_
 #define GE_PARSER_ONNX_SUBGRAPH_ADAPTER_SUBGRAPH_ADAPTER_FACTORY_H_
-
-#if defined(_MSC_VER)
-#ifdef FUNC_VISIBILITY
-#define PARSER_FUNC_VISIBILITY _declspec(dllexport)
-#else
-#define PARSER_FUNC_VISIBILITY
-#endif
-#else
-#ifdef FUNC_VISIBILITY
-#define PARSER_FUNC_VISIBILITY __attribute__((visibility("default")))
-#else
-#define PARSER_FUNC_VISIBILITY
-#endif
-#endif
 
 #include <map>
 #include <memory>
@@ -106,10 +92,9 @@ public:
  */
 #define REGISTER_SUBGRAPH_ADAPTER_CREATOR(op_type, clazz)                         \
   std::shared_ptr<SubgraphAdapter> Creator_##op_type##_Subgraph_Adapter() {     \
-    std::shared_ptr<clazz> ptr(new (std::nothrow) clazz());                     \
-    if (ptr == nullptr) {                                                       \
-      GELOGW("MakeShared failed, result is nullptr.");                          \
-    }                                                                           \
+    std::shared_ptr<clazz> ptr = nullptr;                                       \
+    GE_MAKE_SHARED(ptr = std::make_shared<clazz>(),                             \
+    ptr = nullptr);                                                             \
     return std::shared_ptr<SubgraphAdapter>(ptr);                               \
   }                                                                             \
   ge::SubgraphAdapterRegisterar g_##op_type##_Subgraph_Adapter_Creator(op_type, \
