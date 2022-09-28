@@ -168,7 +168,7 @@ class PARSER_FUNC_VISIBILITY CaffeModelParser : public domi::ModelParser {
    * @return FAILED parse failed
    */
   Status CustomProtoParse(const char *model_path, const string &custom_proto, const string &caffe_proto,
-                          std::vector<ge::Operator> &operators);
+                          std::vector<ge::Operator> &operators) const;
 
   /*
    * @ingroup domi_omg
@@ -396,7 +396,7 @@ class PARSER_FUNC_VISIBILITY CaffeWeightsParser : public domi::WeightsParser {
   Status CheckLayersSize(const google::protobuf::Message &message) const;
 
   Status ConvertLayerProto(const google::protobuf::Message &message,
-                           google::protobuf::Message *layer);
+                           google::protobuf::Message *layer) const;
 
   Status ParseLayerField(const google::protobuf::Reflection &reflection,
                          const google::protobuf::Message &message,

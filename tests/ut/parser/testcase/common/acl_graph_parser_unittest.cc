@@ -53,7 +53,7 @@ class UtestAclGraphParser : public testing::Test {
 };
 
 TEST_F(UtestAclGraphParser, test_parse_acl_output_nodes) {
-  AclGrphParseUtil acl_graph_parse_util;
+  AclGraphParseUtil acl_graph_parse_util;
   string graph_name;
   // case 1: Normal with 'node and index'
   ParerUTestsUtils::ClearParserInnerCtx();
