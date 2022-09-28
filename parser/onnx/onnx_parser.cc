@@ -52,7 +52,7 @@ const char *kLocation = "location";
 }
 
 namespace ge {
-graphStatus PrepareBeforeParse(AclGrphParseUtil &acl_graph_parse_util,
+graphStatus PrepareBeforeParse(AclGraphParseUtil &acl_graph_parse_util,
                                const std::map<AscendString, AscendString> &parser_params,
                                ge::Graph &graph, std::shared_ptr<domi::ModelParser> &model_parser) {
   GetParserContext().type = domi::ONNX;
@@ -82,7 +82,7 @@ graphStatus PrepareBeforeParse(AclGrphParseUtil &acl_graph_parse_util,
   return ge::SUCCESS;
 }
 
-graphStatus HandleAfterParse(AclGrphParseUtil &acl_graph_parse_util,
+graphStatus HandleAfterParse(AclGraphParseUtil &acl_graph_parse_util,
                              const std::map<AscendString, AscendString> &parser_params,
                              ge::Graph &graph) {
   if (acl_graph_parse_util.ParseParamsAfterGraph(graph, parser_params) != ge::SUCCESS) {
@@ -104,7 +104,7 @@ graphStatus aclgrphParseONNX(const char *model_file,
                              const std::map<AscendString, AscendString> &parser_params, ge::Graph &graph) {
   GE_CHECK_NOTNULL(model_file);
   // load custom plugin so and proto
-  AclGrphParseUtil acl_graph_parse_util;
+  AclGraphParseUtil acl_graph_parse_util;
   std::shared_ptr<domi::ModelParser> model_parser;
 
   if (PrepareBeforeParse(acl_graph_parse_util, parser_params, graph, model_parser) != ge::SUCCESS) {
@@ -136,7 +136,7 @@ graphStatus aclgrphParseONNXFromMem(const char *buffer, size_t size,
                                     const std::map<AscendString, AscendString> &parser_params, ge::Graph &graph) {
   GE_CHECK_NOTNULL(buffer);
   // load custom plugin so and proto
-  AclGrphParseUtil acl_graph_parse_util;
+  AclGraphParseUtil acl_graph_parse_util;
   std::shared_ptr<domi::ModelParser> model_parser;
 
   if (PrepareBeforeParse(acl_graph_parse_util, parser_params, graph, model_parser)  != ge::SUCCESS) {

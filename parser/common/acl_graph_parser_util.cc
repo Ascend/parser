@@ -149,7 +149,7 @@ static Status CheckOutNode(ge::OpDescPtr op_desc, int32_t index) {
   return domi::SUCCESS;
 }
 
-domi::Status AclGrphParseUtil::LoadOpsProtoLib() {
+domi::Status AclGraphParseUtil::LoadOpsProtoLib() {
   string opsproto_path;
   ge::Status ret = ge::TBEPluginLoader::GetOpsProtoPath(opsproto_path);
   if (ret != ge::SUCCESS) {
@@ -170,7 +170,7 @@ domi::Status AclGrphParseUtil::LoadOpsProtoLib() {
   return SUCCESS;
 }
 
-void AclGrphParseUtil::SaveCustomCaffeProtoPath() {
+void AclGraphParseUtil::SaveCustomCaffeProtoPath() {
   GELOGD("Enter save custom caffe proto path.");
   std::string path_base = GetSoPath();
   path_base = path_base.substr(0, path_base.rfind('/'));
@@ -192,7 +192,7 @@ void AclGrphParseUtil::SaveCustomCaffeProtoPath() {
 
 // Initialize PARSER, load custom op plugin
 // options will be used later for parser decoupling
-domi::Status AclGrphParseUtil::AclParserInitialize(const std::map<std::string, std::string> &options) {
+domi::Status AclGraphParseUtil::AclParserInitialize(const std::map<std::string, std::string> &options) {
   GELOGT(TRACE_INIT, "AclParserInitialize start");
   // check init status
   if (parser_initialized) {
@@ -240,7 +240,7 @@ domi::Status AclGrphParseUtil::AclParserInitialize(const std::map<std::string, s
   return SUCCESS;
 }
 
-void AclGrphParseUtil::SetDefaultFormat() {
+void AclGraphParseUtil::SetDefaultFormat() {
   if (ge::GetParserContext().type == domi::TENSORFLOW) {
     ge::GetParserContext().format = domi::DOMI_TENSOR_NHWC;
   } else {
@@ -248,7 +248,7 @@ void AclGrphParseUtil::SetDefaultFormat() {
   }
 }
 
-domi::Status AclGrphParseUtil::ParseAclOutputNodes(const string &out_nodes) const {
+domi::Status AclGraphParseUtil::ParseAclOutputNodes(const string &out_nodes) const {
   try {
     ge::GetParserContext().out_nodes_map.clear();
     ge::GetParserContext().user_out_nodes.clear();
@@ -323,7 +323,7 @@ domi::Status AclGrphParseUtil::ParseAclOutputNodes(const string &out_nodes) cons
   return SUCCESS;
 }
 
-domi::Status AclGrphParseUtil::ParseAclOutputFp16NodesFormat(const string &is_output_fp16) const {
+domi::Status AclGraphParseUtil::ParseAclOutputFp16NodesFormat(const string &is_output_fp16) const {
   if (is_output_fp16.empty()) {
     return SUCCESS;
   }
@@ -347,7 +347,7 @@ domi::Status AclGrphParseUtil::ParseAclOutputFp16NodesFormat(const string &is_ou
   return SUCCESS;
 }
 
-domi::Status AclGrphParseUtil::ParseAclEnableScope(const string &enable_scope_fusion_passes) const {
+domi::Status AclGraphParseUtil::ParseAclEnableScope(const string &enable_scope_fusion_passes) const {
   ge::GetParserContext().enable_scope_fusion_passes.clear();
   if (enable_scope_fusion_passes.empty()) {
     return SUCCESS;
@@ -356,8 +356,8 @@ domi::Status AclGrphParseUtil::ParseAclEnableScope(const string &enable_scope_fu
   return SUCCESS;
 }
 
-void AclGrphParseUtil::AddAttrsForInputNodes(const vector<string> &adjust_fp16_format_vec,
-                                             const string &fp16_nodes_name, size_t index, OpDescPtr &op_desc) {
+void AclGraphParseUtil::AddAttrsForInputNodes(const vector<string> &adjust_fp16_format_vec,
+                                              const string &fp16_nodes_name, size_t index, OpDescPtr &op_desc) {
   if (AttrUtils::SetStr(op_desc, ATTR_ATC_USER_DEFINE_DATATYPE, TypeUtils::DataTypeToSerialString(DT_FLOAT16))) {
     if ((index < adjust_fp16_format_vec.size()) && (adjust_fp16_format_vec[index] == "true")) {
       GELOGI("This node [%s] should be set NC1HWC0", fp16_nodes_name.c_str());
@@ -368,8 +368,8 @@ void AclGrphParseUtil::AddAttrsForInputNodes(const vector<string> &adjust_fp16_f
   }
 }
 
-domi::Status AclGrphParseUtil::ParseAclInputFp16Nodes(const ComputeGraphPtr &graph, const string &input_fp16_nodes,
-                                                      const string &is_input_adjust_hw_layout) const {
+domi::Status AclGraphParseUtil::ParseAclInputFp16Nodes(const ComputeGraphPtr &graph, const string &input_fp16_nodes,
+                                                       const string &is_input_adjust_hw_layout) const {
   GE_CHECK_NOTNULL(graph);
   vector<string> adjust_fp16_format_vec;
   if (!is_input_adjust_hw_layout.empty()) {
@@ -411,7 +411,7 @@ domi::Status AclGrphParseUtil::ParseAclInputFp16Nodes(const ComputeGraphPtr &gra
   return SUCCESS;
 }
 
-domi::Status AclGrphParseUtil::SetSpecifyIndexAttrByInputNames(const ComputeGraphPtr &graph,
+domi::Status AclGraphParseUtil::SetSpecifyIndexAttrByInputNames(const ComputeGraphPtr &graph,
     const std::string &input_data_names) const {
   std::vector<std::string> input_names = StringUtils::Split(input_data_names, ',');
   std::unordered_map<std::string, size_t> name_to_index;
@@ -446,8 +446,8 @@ domi::Status AclGrphParseUtil::SetSpecifyIndexAttrByInputNames(const ComputeGrap
   return SUCCESS;
 }
 
-void AclGrphParseUtil::CreateOutputNodesInfo(std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info,
-                                             std::vector<std::string> &output_nodes_name) const {
+void AclGraphParseUtil::CreateOutputNodesInfo(std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info,
+                                              std::vector<std::string> &output_nodes_name) const {
   output_nodes_name.clear();
   auto &out_tensor_names = ge::GetParserContext().out_tensor_names;
   if (out_tensor_names.empty()) {
@@ -478,8 +478,8 @@ void AclGrphParseUtil::CreateOutputNodesInfo(std::vector<std::pair<ge::NodePtr, 
   }
 }
 
-domi::Status AclGrphParseUtil::GetOutputLeaf(NodePtr node,
-                                             std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info) const {
+domi::Status AclGraphParseUtil::GetOutputLeaf(NodePtr node,
+                                              std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info) const {
   ge::OpDescPtr tmpDescPtr = node->GetOpDesc();
   if (tmpDescPtr == nullptr) {
     REPORT_INNER_ERROR("E19999", "param node has no opdesc.");
@@ -508,7 +508,7 @@ domi::Status AclGrphParseUtil::GetOutputLeaf(NodePtr node,
   return SUCCESS;
 }
 
-domi::Status AclGrphParseUtil::GetDefaultOutInfo(ge::ComputeGraphPtr &compute_graph,
+domi::Status AclGraphParseUtil::GetDefaultOutInfo(ge::ComputeGraphPtr &compute_graph,
     std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info) const {
   std::vector<std::pair<std::string, int32_t>> default_out_nodes = ge::GetParserContext().default_out_nodes;
   if (!default_out_nodes.empty()) {
@@ -531,8 +531,8 @@ domi::Status AclGrphParseUtil::GetDefaultOutInfo(ge::ComputeGraphPtr &compute_gr
   return domi::SUCCESS;
 }
 
-domi::Status AclGrphParseUtil::SetOutputNodeInfo(ge::Graph &graph,
-                                                 const std::map<AscendString, AscendString> &parser_params) {
+domi::Status AclGraphParseUtil::SetOutputNodeInfo(ge::Graph &graph,
+                                                  const std::map<AscendString, AscendString> &parser_params) const {
   (void)parser_params;
   ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
   GE_CHECK_NOTNULL(compute_graph);
@@ -588,7 +588,7 @@ domi::Status AclGrphParseUtil::SetOutputNodeInfo(ge::Graph &graph,
   return domi::SUCCESS;
 }
 
-domi::Status AclGrphParseUtil::CheckOptions(const std::map<AscendString, AscendString> &parser_params) const {
+domi::Status AclGraphParseUtil::CheckOptions(const std::map<AscendString, AscendString> &parser_params) const {
   for (auto &ele : parser_params) {
     const char *key_ascend = ele.first.GetString();
     if (key_ascend == nullptr) {
@@ -609,8 +609,8 @@ domi::Status AclGrphParseUtil::CheckOptions(const std::map<AscendString, AscendS
   return SUCCESS;
 }
 
-domi::Status AclGrphParseUtil::ParseParamsBeforeGraph(const std::map<AscendString, AscendString> &parser_params,
-                                                      string &graph_name) {
+domi::Status AclGraphParseUtil::ParseParamsBeforeGraph(const std::map<AscendString, AscendString> &parser_params,
+                                                       string &graph_name) const {
   GELOGI("Parse graph user options start.");
   ge::GetParserContext().input_nodes_format_map.clear();
   ge::GetParserContext().output_formats.clear();
@@ -663,8 +663,8 @@ domi::Status AclGrphParseUtil::ParseParamsBeforeGraph(const std::map<AscendStrin
   return SUCCESS;
 }
 
-domi::Status AclGrphParseUtil::ParseParamsAfterGraph(ge::Graph &graph,
-                                                     const std::map<AscendString, AscendString> &parser_params) const {
+domi::Status AclGraphParseUtil::ParseParamsAfterGraph(ge::Graph &graph,
+                                                      const std::map<AscendString, AscendString> &parser_params) const {
   // support paragrams: input_fp16_nodes, is_input_adjust_hw_layout,
   ComputeGraphPtr compute_graph = GraphUtils::GetComputeGraph(graph);
   GE_CHECK_NOTNULL(compute_graph);
@@ -938,12 +938,10 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadProtoFromMem(const cha
   return ret;
 }
 
-///
 /// @brief get the Original Type of FrameworkOp
 /// @param [in] node
 /// @param [out] type
 /// @return Status
-///
 Status GetOriginalType(const ge::NodePtr &node, string &type) {
   GE_CHECK_NOTNULL(node);
   type = node->GetType();

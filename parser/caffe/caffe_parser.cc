@@ -86,7 +86,7 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file, 
   options.insert(std::pair<string, string>(string(ge::FRAMEWORK_TYPE), to_string(domi::CAFFE)));
 
   // load custom plugin so and proto
-  AclGrphParseUtil acl_graph_parse_util;
+  AclGraphParseUtil acl_graph_parse_util;
   domi::Status status = acl_graph_parse_util.AclParserInitialize(options);
   if (status != domi::SUCCESS) {
     REPORT_CALL_ERROR("E19999", "AclParserInitialize failed, ret:%d.", status);
@@ -144,7 +144,7 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file,
   options.insert(std::pair<string, string>(string(ge::FRAMEWORK_TYPE), to_string(domi::CAFFE)));
 
   // load custom plugin so and proto
-  AclGrphParseUtil acl_graph_parse_util;
+  AclGraphParseUtil acl_graph_parse_util;
   domi::Status status = acl_graph_parse_util.AclParserInitialize(options);
   if (status != domi::SUCCESS) {
     REPORT_CALL_ERROR("E19999", "AclParserInitialize failed, ret:%d.", status);
@@ -429,7 +429,7 @@ Status CaffeModelParser::ParseNetModelByCustomProto(const char *model_path, cons
 }
 
 Status CaffeModelParser::CustomProtoParse(const char *model_path, const string &custom_proto,
-                                          const string &caffe_proto, vector<ge::Operator> &operators) {
+                                          const string &caffe_proto, vector<ge::Operator> &operators) const {
   (void)caffe_proto;
   string custom_proto_path = ge::parser::RealPath(custom_proto.c_str());
   if (custom_proto_path.empty()) {
@@ -1904,7 +1904,7 @@ Status CaffeWeightsParser::ParseLayerParameter(const google::protobuf::Descripto
 }
 
 Status CaffeWeightsParser::ConvertLayerProto(const google::protobuf::Message &message,
-                                             google::protobuf::Message *layer) {
+                                             google::protobuf::Message *layer) const {
   const google::protobuf::Reflection *layer_reflection = message.GetReflection();
   CAFFE_CHECK_NULL_AND_REPROT_ERRORMSG(layer_reflection, "Get Reflection failed in google::protobuf::Message");
   vector<const google::protobuf::FieldDescriptor *> field_desc;

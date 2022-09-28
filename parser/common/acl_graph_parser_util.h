@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020. All rights reserved.
 
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,16 +34,16 @@ namespace ge {
 
 using google::protobuf::Message;
 
-class AclGrphParseUtil {
+class AclGraphParseUtil {
  public:
-  AclGrphParseUtil() {}
-  virtual ~AclGrphParseUtil() {}
+  AclGraphParseUtil() {}
+  virtual ~AclGraphParseUtil() {}
   static domi::Status LoadOpsProtoLib();
   static void SaveCustomCaffeProtoPath();
   domi::Status AclParserInitialize(const std::map<std::string, std::string> &options);
-  domi::Status SetOutputNodeInfo(ge::Graph &graph, const std::map<AscendString, AscendString> &parser_params);
+  domi::Status SetOutputNodeInfo(ge::Graph &graph, const std::map<AscendString, AscendString> &parser_params) const;
   domi::Status ParseParamsBeforeGraph(const std::map<AscendString, AscendString> &parser_params,
-                                      std::string &graph_name);
+                                      std::string &graph_name) const;
   domi::Status ParseParamsAfterGraph(ge::Graph &graph, const std::map<AscendString,
                                      AscendString> &parser_params) const;
 
@@ -67,31 +67,23 @@ class AclGrphParseUtil {
 };
 
 namespace parser {
-///
 /// @ingroup: domi_common
 /// @brief: get length of file
 /// @param [in] input_file: path of file
 /// @return long: File length. If the file length fails to be obtained, the value -1 is returned.
-///
 extern long GetFileLength(const std::string &input_file);
 
-///
 /// @ingroup domi_common
 /// @brief Absolute path for obtaining files.
 /// @param [in] path of input file
 /// @param [out] Absolute path of a file. If the absolute path cannot be obtained, an empty string is returned
-///
 std::string RealPath(const char *path);
 
-///
 /// @ingroup domi_common
 /// @brief Obtains the absolute time (timestamp) of the current system.
 /// @return Timestamp, in microseconds (US)
-///
-///
 uint64_t GetCurrentTimestamp();
 
-///
 /// @ingroup domi_common
 /// @brief Reads all data from a binary file.
 /// @param [in] file_name  path of file
@@ -99,20 +91,16 @@ uint64_t GetCurrentTimestamp();
 /// @param [out] length  Output memory size
 /// @return false fail
 /// @return true success
-///
 bool ReadBytesFromBinaryFile(const char *file_name, char **buffer, int &length);
 
-///
 /// @ingroup domi_common
 /// @brief proto file in bianary format
 /// @param [in] file path of proto file
 /// @param [out] proto memory for storing the proto file
 /// @return true success
 /// @return false fail
-///
 bool ReadProtoFromBinaryFile(const char *file, Message *proto);
 
-///
 /// @ingroup domi_common
 /// @brief Reads the proto structure from an array.
 /// @param [in] data proto data to be read
@@ -120,42 +108,33 @@ bool ReadProtoFromBinaryFile(const char *file, Message *proto);
 /// @param [out] proto Memory for storing the proto file
 /// @return true success
 /// @return false fail
-///
 bool ReadProtoFromArray(const void *data, int size, Message *proto);
 
-///
 /// @ingroup domi_proto
 /// @brief Reads the proto file in the text format.
 /// @param [in] file path of proto file
 /// @param [out] message Memory for storing the proto file
 /// @return true success
 /// @return false fail
-///
 bool ReadProtoFromText(const char *file, google::protobuf::Message *message);
 
 bool ReadProtoFromMem(const char *data, int size, google::protobuf::Message *message);
 
-///
 /// @brief get the Original Type of FrameworkOp
 /// @param [in] node
 /// @param [out] type
 /// @return Status
-///
 domi::Status GetOriginalType(const ge::NodePtr &node, string &type);
 
-///
 /// @ingroup domi_common
 /// @brief Check whether the file path meets the whitelist verification requirements.
 /// @param [in] filePath file path
 /// @param [out] result
-///
 bool ValidateStr(const std::string &filePath, const std::string &mode);
 
-///
 /// @ingroup domi_common
 /// @brief Obtains the current time string.
 /// @return Time character string in the format: %Y%m%d%H%M%S, eg: 20171011083555
-///
 std::string CurrentTimeInStr();
 
 template <typename T, typename... Args>
