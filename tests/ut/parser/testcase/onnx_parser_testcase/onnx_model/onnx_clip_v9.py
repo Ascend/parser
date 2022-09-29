@@ -1,3 +1,7 @@
+#!/usr/bin/env python3
+# -*- coding utf-8 -*-
+# Copyright Huawei Technologies Co., Ltd 2019-2022. All rights reserved.
+
 import onnx
 from onnx import helper
 from onnx import AttributeProto, TensorProto, GraphProto
