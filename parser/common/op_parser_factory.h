@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2020. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,7 +77,6 @@ class OpParserFactory {
    * @brief OpParser creation function
    * @return Created OpParser
    */
-  // typedef shared_ptr<OpParser> (*CREATOR_FUN)(void);
   using CREATOR_FUN = std::function<std::shared_ptr<OpParser>(void)>;
 
   /**

@@ -22,21 +22,17 @@
 #include "common/pass.h"
 
 namespace ge {
-///
 /// @ingroup domi_omg
 /// @brief graph pass
 /// @author
-///
 class GraphPass : public Pass<ge::ComputeGraph> {
  public:
-  ///
   /// run graph pass
   /// @param [in] graph graph to be optimized
   /// @return SUCCESS optimize successfully
   /// @return NOT_CHANGED not optimized
   /// @return others optimized failed
   /// @author
-  ///
   virtual Status Run(ge::ComputeGraphPtr graph) = 0;
   virtual Status ClearStatus() { return SUCCESS; };
 };
