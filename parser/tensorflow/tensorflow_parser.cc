@@ -94,7 +94,7 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, ge::Graph &graph) {
   options.insert(std::pair<string, string>(string(ge::FRAMEWORK_TYPE), to_string(domi::TENSORFLOW)));
 
   // load custom plugin so and proto
-  AclGrphParseUtil acl_graph_parse_util;
+  AclGraphParseUtil acl_graph_parse_util;
   if (acl_graph_parse_util.AclParserInitialize(options) != domi::SUCCESS) {
     GELOGE(GRAPH_FAILED, "Parser Initialize failed.");
     return GRAPH_FAILED;
@@ -142,7 +142,7 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, const std::map<Ascend
   options.insert(std::pair<string, string>(string(ge::FRAMEWORK_TYPE), to_string(domi::TENSORFLOW)));
 
   // load custom plugin so and proto
-  AclGrphParseUtil acl_graph_parse_util;
+  AclGraphParseUtil acl_graph_parse_util;
   domi::Status status = acl_graph_parse_util.AclParserInitialize(options);
   if (status != domi::SUCCESS) {
     GELOGE(GRAPH_FAILED, "Parser Initialize failed.");
