@@ -1,5 +1,5 @@
 /**
- * Copyright 2020-2021 Huawei Technologies Co., Ltd
+ * Copyright (c) Huawei Technologies Co., Ltd. 2022. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -394,7 +394,7 @@ Status ParserGraphOptimizer::RebuildOutputAnchors(vector<ge::OutDataAnchorPtr> &
     const std::map<int32_t, int32_t>::const_iterator iter =
         GE_TENSORFLOW_DATA_TYPE_MAP.find(static_cast<int32_t>(data_type));
     GE_IF_BOOL_EXEC(
-        iter == GE_TENSORFLOW_DATA_TYPE_MAP.end(),
+        iter == GE_TENSORFLOW_DATA_TYPE_MAP.cend(),
         REPORT_INNER_ERROR("E19999", "datatype:%d of output:%d in node:%s:%s is not supported",
                            data_type, out_anchor->GetIdx(), src_node->GetName().c_str(), src_node->GetName().c_str());
         GELOGE(PARAM_INVALID, "data_type %s not supported", ge::TypeUtils::DataTypeToSerialString(data_type).c_str());
@@ -431,7 +431,7 @@ Status ParserGraphOptimizer::RebuildInputAnchors(vector<ge::InDataAnchorPtr> &in
     const std::map<int32_t, int32_t>::const_iterator iter =
         GE_TENSORFLOW_DATA_TYPE_MAP.find(static_cast<int32_t>(data_type));
     GE_IF_BOOL_EXEC(
-        iter == GE_TENSORFLOW_DATA_TYPE_MAP.end(),
+        iter == GE_TENSORFLOW_DATA_TYPE_MAP.cend(),
         REPORT_INNER_ERROR("E19999", "datatype:%d of input:%d in node:%s:%s is not supported",
                            data_type, in_anchor->GetIdx(), dst_node->GetName().c_str(), dst_node->GetName().c_str());
         GELOGE(PARAM_INVALID, "data_type %s not supported", ge::TypeUtils::DataTypeToSerialString(data_type).c_str());
