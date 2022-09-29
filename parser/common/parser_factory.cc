@@ -16,7 +16,7 @@
 
 #include "omg/parser/parser_factory.h"
 #include "framework/common/debug/ge_log.h"
-#include "common/register_tbe.h"
+#include "common/op_registration_tbe.h"
 
 namespace domi {
 FMK_FUNC_HOST_VISIBILITY WeightsParserFactory *WeightsParserFactory::Instance() {

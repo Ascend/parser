@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include "parser/common/register_tbe.h"
+#include "parser/common/op_registration_tbe.h"
 #include <map>
 #include <memory>
 #include <string>

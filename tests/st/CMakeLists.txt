@@ -274,7 +274,7 @@ set(PARSER_SRC_FILES
     "${PARSER_DIR}/parser/common/pre_checker.cc"
     "${PARSER_DIR}/parser/common/proto_file_parser.cc"
     "${PARSER_DIR}/parser/common/prototype_pass_manager.cc"
-    "${PARSER_DIR}/parser/common/register_tbe.cc"
+    "${PARSER_DIR}/parser/common/op_registration_tbe.cc"
     "${PARSER_DIR}/parser/common/tbe_plugin_loader.cc"
     "${PARSER_DIR}/parser/common/thread_pool.cc"
     "${PARSER_DIR}/parser/common/auto_mapping_subgraph_io_index_func.cc"
