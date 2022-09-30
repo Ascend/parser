@@ -223,7 +223,7 @@ domi::Status GraphToFunctionDef::RecordResult(ge::ComputeGraphPtr graph,
     GE_CHECK_NOTNULL(anchor->GetOwnerNode()->GetOpDesc());
     int32_t type = anchor->GetOwnerNode()->GetOpDesc()->GetOutputDesc(anchor->GetIdx()).GetDataType();
     std::map<int32_t, int32_t>::const_iterator iter = GE_TENSORFLOW_DATA_TYPE_MAP.find(type);
-    GE_IF_BOOL_EXEC(iter == GE_TENSORFLOW_DATA_TYPE_MAP.end(),
+    GE_IF_BOOL_EXEC(iter == GE_TENSORFLOW_DATA_TYPE_MAP.cend(),
                     REPORT_INNER_ERROR("E19999", "datatype:%d of output:%d in node:%s:%s is not supported",
                                        type, anchor->GetIdx(), anchor->GetOwnerNode()->GetName().c_str(),
                                        anchor->GetOwnerNode()->GetName().c_str());
@@ -300,7 +300,7 @@ domi::Status GraphToFunctionDef::RecordArg(ge::ComputeGraphPtr graph, const vect
 
     int32_t type = tensor_desc_ptr->GetDataType();
     std::map<int32_t, int32_t>::const_iterator iter = GE_TENSORFLOW_DATA_TYPE_MAP.find(type);
-    GE_IF_BOOL_EXEC(iter == GE_TENSORFLOW_DATA_TYPE_MAP.end(),
+    GE_IF_BOOL_EXEC(iter == GE_TENSORFLOW_DATA_TYPE_MAP.cend(),
                     REPORT_INNER_ERROR("E19999", "datatype:%d of input:%d in node:%s:%s is not supported",
                                        type, anchor->GetIdx(), anchor->GetOwnerNode()->GetName().c_str(),
                                        anchor->GetOwnerNode()->GetName().c_str());
