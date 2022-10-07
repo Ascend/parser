@@ -380,7 +380,7 @@ static uint16_t Fp16ToUInt16(const uint16_t &fp_val) {
       }
     }
     bool need_round = IsRoundOne(long_int_m, shift_out + kFp16ManLen);
-    m_ret = static_cast<uint16_t>((long_int_m >> static_cast<int16_t>(kFp16ManLen + shift_out)) & kBitLen16Max);
+    m_ret = static_cast<uint16_t>((long_int_m >> static_cast<uint16_t>(kFp16ManLen + shift_out)) & kBitLen16Max);
     if (need_round && m_ret != kBitLen16Max) {
       m_ret++;
     }
@@ -1020,7 +1020,7 @@ fp16_t &fp16_t::operator=(const uint16_t &ui_val) {
       for (int i = 1; i < e_tmp; i++) {
         trunc_mask = (trunc_mask << 1) + 1;
       }
-      m_trunc = (m_ret & trunc_mask) << static_cast<int16_t>(static_cast<uint16_t>(kBitShift32) - e_tmp);
+      m_trunc = (m_ret & trunc_mask) << static_cast<uint16_t>(static_cast<uint16_t>(kBitShift32) - e_tmp);
       for (int i = 0; i < e_tmp; i++) {
         m_ret = (m_ret >> 1);
         e_ret = e_ret + 1;
