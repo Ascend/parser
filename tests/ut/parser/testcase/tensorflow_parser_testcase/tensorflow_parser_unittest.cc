@@ -1106,7 +1106,7 @@ TEST_F(UtestTensorflowParser, parser_tensorflow_model) {
 
   // parser tensorflow model out_node_size is equal to index
   string graph_name;
-  AclGraphParseUtil acl_graph_parse_util;
+  AclGraphParserUtil acl_graph_parse_util;
   std::map<AscendString, AscendString> out_nodes_with_node_and_index = {
     {AscendString(ge::ir_option::OUT_NODES), AscendString("Placeholder:0;Placeholder_1:1")}};
   ParerUTestsUtils::ClearParserInnerCtx();
@@ -1452,7 +1452,7 @@ TEST_F(UtestTensorflowParser, tensorflow_parserAllGraph_failed)
 
 TEST_F(UtestTensorflowParser, test_parse_acl_output_nodes)
 {
-  AclGraphParseUtil acl_graph_parse_util;
+  AclGraphParserUtil acl_graph_parse_util;
   string graph_name;
   // case 1: Normal with 'node and index'
   ParerUTestsUtils::ClearParserInnerCtx();
@@ -1621,7 +1621,7 @@ TEST_F(UtestTensorflowParser, parse_AddFmkNode)
   std::string modelFile = caseDir + "/tensorflow_model/tf_add.pb";
   ge::Graph graph;
   string graph_name;
-  AclGraphParseUtil acl_graph_parse_util;
+  AclGraphParserUtil acl_graph_parse_util;
   std::map<ge::AscendString, ge::AscendString> parser_options = {{AscendString(ge::ir_option::OUT_NODES), AscendString("Placeholder:0;Placeholder_1:0")}};
   ParerUTestsUtils::ClearParserInnerCtx();
   Status ret = acl_graph_parse_util.ParseParamsBeforeGraph(parser_options, graph_name);
@@ -3885,9 +3885,9 @@ TEST_F(UtestTensorflowParser, tensorflow_ReadBytesFromBinaryFile_test)
   EXPECT_EQ(realPath, "");
 }
 
-TEST_F(UtestTensorflowParser, tensorflow_AclGraphParseUtil_ParseAclInputFp16Nodes_test)
+TEST_F(UtestTensorflowParser, tensorflow_AclGraphParserUtil_ParseAclInputFp16Nodes_test)
 {
-  AclGraphParseUtil parserUtil;
+  AclGraphParserUtil parserUtil;
   ge::ComputeGraphPtr graph = std::make_shared<ge::ComputeGraph>(GRAPH_DEFAULT_NAME);
   std::string input_fp16_nodes = "Add";
   std::string is_input_adjust_hw_layout = "is_input_adjust_hw_layout";
@@ -4094,7 +4094,7 @@ TEST_F(UtestTensorflowParser, tensorflow_FP16_parser_test)
 
 TEST_F(UtestTensorflowParser, tensorflow_AclParserInitialize_test)
 {
-  AclGraphParseUtil parseUtil;
+  AclGraphParserUtil parseUtil;
   std::map<std::string, std::string> options;
   Status ret = parseUtil.AclParserInitialize(options);
   EXPECT_EQ(ret, FAILED);
@@ -4106,7 +4106,7 @@ TEST_F(UtestTensorflowParser, tensorflow_AclParserInitialize_test)
 
 TEST_F(UtestTensorflowParser, tensorflow_GetOutputLeaf_test)
 {
-  AclGraphParseUtil parseUtil;
+  AclGraphParserUtil parseUtil;
   ge::ComputeGraphPtr compute_graph = build_graph(true);
   ge::NodePtr output_nodes_info = compute_graph->FindNode("Relu3");
   std::vector<std::pair<ge::NodePtr, int32_t>> output_nodes = {{output_nodes_info,0}};

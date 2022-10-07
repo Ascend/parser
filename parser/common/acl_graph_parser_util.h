@@ -34,10 +34,10 @@ namespace ge {
 
 using google::protobuf::Message;
 
-class AclGraphParseUtil {
+class AclGraphParserUtil {
  public:
-  AclGraphParseUtil() {}
-  virtual ~AclGraphParseUtil() {}
+  AclGraphParserUtil() {}
+  virtual ~AclGraphParserUtil() {}
   static domi::Status LoadOpsProtoLib();
   static void SaveCustomCaffeProtoPath();
   domi::Status AclParserInitialize(const std::map<std::string, std::string> &options);

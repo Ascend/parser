@@ -86,7 +86,7 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file, 
   options.insert(std::pair<string, string>(string(ge::FRAMEWORK_TYPE), to_string(domi::CAFFE)));
 
   // load custom plugin so and proto
-  AclGraphParseUtil acl_graph_parse_util;
+  AclGraphParserUtil acl_graph_parse_util;
   domi::Status status = acl_graph_parse_util.AclParserInitialize(options);
   if (status != domi::SUCCESS) {
     REPORT_CALL_ERROR("E19999", "AclParserInitialize failed, ret:%d.", status);
@@ -144,7 +144,7 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file,
   options.insert(std::pair<string, string>(string(ge::FRAMEWORK_TYPE), to_string(domi::CAFFE)));
 
   // load custom plugin so and proto
-  AclGraphParseUtil acl_graph_parse_util;
+  AclGraphParserUtil acl_graph_parse_util;
   domi::Status status = acl_graph_parse_util.AclParserInitialize(options);
   if (status != domi::SUCCESS) {
     REPORT_CALL_ERROR("E19999", "AclParserInitialize failed, ret:%d.", status);

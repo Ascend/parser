@@ -191,7 +191,7 @@ TEST_F(STestCaffeParser, caffe_parser_user_output_with_default) {
   ge::Graph graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
   auto ret = model_parser->Parse(model_file.c_str(), graph);
   ASSERT_EQ(ret, GRAPH_SUCCESS);
-  AclGraphParseUtil acl_graph_parse_util;
+  AclGraphParserUtil acl_graph_parse_util;
   std::map<AscendString, AscendString> parser_params;
   auto status = acl_graph_parse_util.SetOutputNodeInfo(graph, parser_params);
   ASSERT_EQ(status, SUCCESS);
@@ -483,7 +483,7 @@ TEST_F(STestCaffeParser, CaffeWeightsParser_CreateCustomOperator_test)
 TEST_F(STestCaffeParser, CaffeWeightsParser_ParseOutputNodeTopInfo_test)
 {
   CaffeModelParser model_parser;
-  AclGraphParseUtil acl_graph_parse_util;
+  AclGraphParserUtil acl_graph_parse_util;
 
   domi::caffe::NetParameter net;
   domi::caffe::LayerParameter *lay0 = net.add_layer();
