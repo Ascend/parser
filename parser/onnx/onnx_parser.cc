@@ -121,14 +121,14 @@ graphStatus aclgrphParseONNX(const char *model_file,
     GELOGE(ret, "[Parse][ModelFile] %s failed, graph %s.", model_file, ParserUtils::GetGraphName(graph).c_str());
     return ge::FAILED;
   }
-  GELOGI("Parser graph %s success.", ParserUtils::GetGraphName(graph).c_str());
+  GELOGI("Parse graph %s success.", ParserUtils::GetGraphName(graph).c_str());
 
   if (HandleAfterParse(acl_graph_parse_util, parser_params, graph) != ge::SUCCESS) {
     GELOGE(ge::FAILED, "[Invoke][HandleAfterParse] failed.");
     return ge::FAILED;
   }
 
-  GELOGI("AclgrphParse graph %s success.", ParserUtils::GetGraphName(graph).c_str());
+  GELOGI("Call aclgrphParse to parse graph %s success.", ParserUtils::GetGraphName(graph).c_str());
   return ge::SUCCESS;
 }
 
@@ -151,13 +151,13 @@ graphStatus aclgrphParseONNXFromMem(const char *buffer, size_t size,
     GELOGE(ret, "[Parser][Graph] %s failed.", ParserUtils::GetGraphName(graph).c_str());
     return ge::FAILED;
   }
-  GELOGI("Parser graph %s success.", ParserUtils::GetGraphName(graph).c_str());
+  GELOGI("Parse graph %s success.", ParserUtils::GetGraphName(graph).c_str());
 
   if (HandleAfterParse(acl_graph_parse_util, parser_params, graph)  != ge::SUCCESS) {
     GELOGE(ge::FAILED, "[Invoke][HandleAfterParse] failed.");
     return ge::FAILED;
   }
-    GELOGI("AclgrphParse graph %s success.", ParserUtils::GetGraphName(graph).c_str());
+    GELOGI("Call aclgrphParse to parse graph %s success.", ParserUtils::GetGraphName(graph).c_str());
     return ge::SUCCESS;
 }
 } // namespace ge
@@ -179,7 +179,7 @@ struct ParseArg {
 };
 
 Status GenSubgraphParseTasks(const ge::ComputeGraphPtr &parent_graph, std::deque<ParseArg> &args) {
-  GELOGI("Gen subgraph parse tasks start");
+  GELOGI("Generate subgraph parse tasks start");
   for (auto &node : parent_graph->GetDirectNode()) {
     auto op_desc = node->GetOpDesc();
     GE_CHECK_NOTNULL(op_desc);
@@ -200,7 +200,7 @@ Status GenSubgraphParseTasks(const ge::ComputeGraphPtr &parent_graph, std::deque
       args.push_back({nullptr, node, unique_subgraph_name, i});
     }
   }
-  GELOGI("Gen subgraph parse tasks end");
+  GELOGI("Generate subgraph parse tasks end");
   return SUCCESS;
 }
 
@@ -239,8 +239,9 @@ Status PostOpProcessForSubgraph(const ParseArg &arg, ge::ComputeGraphPtr sub_gra
     }
   }
 
-  GELOGD("Post process for subgraph %s node %s type %s", arg.graph_name.c_str(), arg.parent_node->GetName().c_str(),
-         arg.parent_node->GetType().c_str());
+  GELOGD("Post process for node %s with type %s in subgraph %s ", arg.graph_name.c_str(),
+         arg.parent_node->GetType().c_str(),
+         arg.parent_node->GetName().c_str());
 
   // Refresh node_name in subgraph
   for (const ge::NodePtr &node : sub_graph->GetDirectNode()) {
@@ -890,9 +891,8 @@ Status OnnxModelParser::ModelParseToGraph(const ge::onnx::ModelProto &onnx_model
     if (arg.onnx_graph == nullptr) {
       std::map<std::string, ge::onnx::GraphProto *>::const_iterator itr = name_to_onnx_graph.find(arg.graph_name);
       if (itr == name_to_onnx_graph.end()) {
-        GELOGE(FAILED, "[Find][OnnxGraph] Can not find onnx graph, graph:%s.", arg.graph_name.c_str());
-        REPORT_INNER_ERROR("E19999", "Can not find onnx graph, graph:%s.", arg.graph_name.c_str());
-        return FAILED;
+        GELOGI("Graph: %s is subgraph from plugin, no need parser", arg.graph_name.c_str());
+        continue;
       }
       arg.onnx_graph = itr->second;
     }
