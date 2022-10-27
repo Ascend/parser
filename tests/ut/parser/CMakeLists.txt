@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
-project(ut_parser)
-
 set(CMAKE_CXX_STANDARD 11)
 
 ################################################################################
@@ -55,7 +52,7 @@ target_compile_options(ut_parser_proto PRIVATE
 )
 
 target_link_libraries(ut_parser_proto PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
+    intf_pub
     ascend_protobuf
 )
 
@@ -149,12 +146,6 @@ include_directories(${PARSER_DIR}/metadef/inc/external)
 include_directories(${PARSER_DIR}/metadef/inc/external/graph)
 include_directories(${PARSER_DIR}/metadef/graph)
 include_directories(${PARSER_DIR}/metadef/register)
-include_directories(${PARSER_DIR}/metadef/third_party)
-include_directories(${PARSER_DIR}/metadef/third_party/graphengine/inc)
-include_directories(${PARSER_DIR}/metadef/third_party/graphengine/inc/external)
-include_directories(${PARSER_DIR}/metadef/third_party/graphengine/inc/external/ge)
-include_directories(${PARSER_DIR}/metadef/third_party/fwkacllib/inc)
-include_directories(${PARSER_DIR}/metadef/third_party/transformer/inc)
 include_directories(${PARSER_DIR}/metadef)
 include_directories(${CMAKE_BINARY_DIR}/proto/ge)
 include_directories(${CMAKE_BINARY_DIR}/proto/ge/proto)
@@ -173,7 +164,10 @@ target_compile_options(ut_parser_graph PRIVATE
 )
 
 target_link_libraries(ut_parser_graph PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
+    intf_pub
+    metadef_headers
+    air_headers
+    slog_headers
     c_sec ascend_protobuf
 )
 
@@ -216,10 +210,6 @@ include_directories(${PARSER_DIR}/metadef/register)
 include_directories(${PARSER_DIR}/metadef/inc)
 include_directories(${PARSER_DIR}/metadef/inc/external)
 include_directories(${PARSER_DIR}/metadef/inc/register)
-include_directories(${PARSER_DIR}/metadef/third_party/fwkacllib/inc)
-include_directories(${PARSER_DIR}/metadef/third_party/graphengine/inc)
-include_directories(${PARSER_DIR}/metadef/third_party/graphengine/inc/external)
-include_directories(${PARSER_DIR}/metadef/third_party/graphengine/inc/framework)
 
 ############ libut_parser_register.a ############
 add_library(ut_parser_register STATIC
@@ -235,7 +225,11 @@ target_compile_options(ut_parser_register PRIVATE
 )
 
 target_link_libraries(ut_parser_register PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
+    intf_pub
+    air_headers
+    slog_headers
+    runtime_headers
+    msprof_headers
     c_sec ascend_protobuf json
 )
 
@@ -325,11 +319,6 @@ include_directories(${PARSER_DIR}/tests)
 include_directories(${PARSER_DIR}/metadef/inc)
 include_directories(${PARSER_DIR}/metadef/inc/external)
 include_directories(${PARSER_DIR}/metadef/inc/register)
-include_directories(${PARSER_DIR}/metadef/third_party/fwkacllib/inc)
-include_directories(${PARSER_DIR}/metadef/third_party/graphengine/inc)
-include_directories(${PARSER_DIR}/metadef/third_party/graphengine/inc/external)
-include_directories(${PARSER_DIR}/metadef/third_party/graphengine/inc/framework)
-
 
 set(PARSER_UT_FILES
     "parser_ut_utils.cc"
@@ -357,7 +346,9 @@ target_compile_options(ut_parser_common PRIVATE
 )
 
 target_link_libraries(ut_parser_common PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
+    intf_pub
+    air_headers
+    slog_headers
     ut_parser_proto ut_parser_graph c_sec
     ascend_protobuf
     json
@@ -378,9 +369,15 @@ target_compile_definitions(ut_parser PRIVATE
 )
 
 target_link_libraries(ut_parser
-    $<BUILD_INTERFACE:intf_pub>
+    intf_pub
+    metadef_headers
+    air_headers
+    slog_headers
+    cce_headers
+    runtime_headers
+    msprof_headers
     ut_parser_proto
     -Wl,--whole-archive ut_parser_common -Wl,--no-whole-archive
     ut_parser_graph ut_parser_register error_manager_stub parser_mmpa_stub attr_util_stub
-    gtest gtest_main parser_slog_stub ascend_protobuf c_sec json -lrt -ldl -lgcov
+    GTest::gtest GTest::gtest_main parser_slog_stub ascend_protobuf c_sec json -lrt -ldl -lgcov
 )

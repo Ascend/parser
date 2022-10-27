@@ -12,17 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
-#cmake_minimum_required(VERSION 2.8)
-project(parser_profiler_stub)
-
 file(GLOB_RECURSE SRC_FILES RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
     "src/profiler_stub.cc"
 )
-include_directories(${PARSER_DIR}/metadef/third_party/fwkacllib/inc)
 
 add_library(parser_profiler_stub SHARED ${SRC_FILES})
 
-target_link_libraries(parser_profiler_stub PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
+target_link_libraries(parser_profiler_stub
+    PRIVATE
+        intf_pub
+    PUBLIC
+        msprof_headers
 )

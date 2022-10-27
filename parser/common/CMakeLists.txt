@@ -48,37 +48,10 @@ target_compile_definitions(parser_common PRIVATE
 )
 
 target_include_directories(parser_common PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}
     ${PARSER_DIR}
     ${PARSER_DIR}/parser
-    ${METADEF_DIR}
-    ${METADEF_DIR}/inc
-    ${METADEF_DIR}/inc/graph
-    ${METADEF_DIR}/inc/register
-    ${METADEF_DIR}/inc/external
-    ${METADEF_DIR}/inc/external/graph
-    ${METADEF_DIR}/inc/external/register
-    #### temp ####
-    ${PARSER_DIR}/../graphengine/inc/common/util
-    ${PARSER_DIR}/../graphengine/inc/external
-    ${PARSER_DIR}/../graphengine/inc/framework
-    ${PARSER_DIR}/../graphengine/inc
-    ${PARSER_DIR}/../graphengine/ge
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/proto/parser_protos
-    #### blue zone compile #####
-    ${PARSER_DIR}/../ge
-    ${PARSER_DIR}/../inc
-    ${PARSER_DIR}/../inc/framework
-    ${PARSER_DIR}/../inc/common/util
-    ${PARSER_DIR}/../inc/external
-    ${PARSER_DIR}/../third_party/fwkacllib/inc
-    #### independent compile #####
-    ${METADEF_DIR}/third_party/graphengine/ge
-    ${METADEF_DIR}/third_party/graphengine/inc
-    ${METADEF_DIR}/third_party/graphengine/inc/framework
-    ${METADEF_DIR}/third_party/graphengine/inc/external
-    ${METADEF_DIR}/third_party/fwkacllib/inc
 )
 
 target_link_options(parser_common PRIVATE
@@ -88,6 +61,7 @@ target_link_options(parser_common PRIVATE
 target_link_libraries(parser_common
     PRIVATE
         intf_pub
+        air_headers
         static_mmpa
         -Wl,--no-as-needed
         graph

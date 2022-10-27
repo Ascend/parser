@@ -31,39 +31,13 @@ target_compile_definitions(fmk_onnx_parser PRIVATE
 )
 
 target_include_directories(fmk_onnx_parser PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}
     ${CMAKE_CURRENT_LIST_DIR}/subgraph_adapter
     ${PARSER_DIR}
     ${PARSER_DIR}/inc
     ${PARSER_DIR}/parser
     ${PARSER_DIR}/parser/inc
-    ${METADEF_DIR}/inc
-    ${METADEF_DIR}/inc/graph
-    ${METADEF_DIR}/inc/register
-    ${METADEF_DIR}/inc/external
-    ${METADEF_DIR}/inc/external/graph
-    ${METADEF_DIR}/inc/external/register
-    #### temp ####
-    ${PARSER_DIR}/../graphengine/inc/common/util
-    ${PARSER_DIR}/../graphengine/inc/external
-    ${PARSER_DIR}/../graphengine/inc/framework
-    ${PARSER_DIR}/../graphengine/inc
-    ${PARSER_DIR}/../graphengine/ge
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/proto/parser_protos
-    #### blue zone compile #####
-    ${PARSER_DIR}/../ge
-    ${PARSER_DIR}/../inc
-    ${PARSER_DIR}/../inc/common/util
-    ${PARSER_DIR}/../inc/framework
-    ${PARSER_DIR}/../inc/external
-    ${PARSER_DIR}/../third_party/fwkacllib/inc
-    #### independent compile #####
-    ${METADEF_DIR}/third_party/graphengine/ge
-    ${METADEF_DIR}/third_party/graphengine/inc
-    ${METADEF_DIR}/third_party/graphengine/inc/framework
-    ${METADEF_DIR}/third_party/graphengine/inc/external
-    ${METADEF_DIR}/third_party/fwkacllib/inc
 )
 
 target_link_options(fmk_onnx_parser PRIVATE
@@ -73,6 +47,7 @@ target_link_options(fmk_onnx_parser PRIVATE
 target_link_libraries(fmk_onnx_parser
     PRIVATE
         intf_pub
+        air_headers
         static_mmpa
         -Wl,--no-as-needed
         ascend_protobuf
@@ -97,8 +72,6 @@ add_custom_command(
     && ${HI_PYTHON} ${CMAKE_CURRENT_LIST_DIR}/../stub/gen_stubapi.py ${PARSER_DIR}/inc/external ${CMAKE_CURRENT_BINARY_DIR}
     && mv onnx_parser.cc stub_onnx_parser.cc
     &&  echo "Generating stub files end."
-    #WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    #DEPENDS ../stub/gen_stubapi.py ${TOP_DIR}/inc/external ${CMAKE_CURRENT_BINARY_DIR}
 )
 ##################################################################
 
@@ -127,14 +100,11 @@ target_include_directories(fmk_onnx_parser_stub PRIVATE
     ${PARSER_DIR}/inc/external
     ${PARSER_DIR}/parser
     ${PARSER_DIR}/../inc
-    ${METADEF_DIR}/inc
-    ${METADEF_DIR}/inc/graph
-    ${METADEF_DIR}/inc/external
-    ${METADEF_DIR}/inc/external/graph
 )
 
 target_link_libraries(fmk_onnx_parser_stub PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
+    intf_pub
+    metadef_headers
 )
 
 set_target_properties(fmk_onnx_parser_stub PROPERTIES

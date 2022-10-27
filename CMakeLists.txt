@@ -1,6 +1,21 @@
 cmake_minimum_required(VERSION 3.14)
 project (Parser[CXX])
 
+include(CMakePrintHelpers)
+message(STATUS "Variables in parser project :")
+cmake_print_variables(ASCEND_OPENSDK_DIR)
+cmake_print_variables(CMAKE_BUILD_TYPE)
+cmake_print_variables(CMAKE_INSTALL_PREFIX)
+cmake_print_variables(CMAKE_PREFIX_PATH)
+cmake_print_variables(CMAKE_MODULE_PATH)
+cmake_print_variables(protoc_ROOT)
+cmake_print_variables(protobuf_grpc_ROOT)
+cmake_print_variables(protobuf_static_ROOT)
+cmake_print_variables(ascend_protobuf_shared_ROOT)
+cmake_print_variables(ascend_protobuf_static_ROOT)
+cmake_print_variables(ENABLE_OPEN_SRC ENABLE_GITEE ENABLE_PARSER_UT ENABLE_PARSER_ST ENABLE_PARSER_COV)
+cmake_print_variables(BUILD_WITHOUT_AIR BUILD_METADEF METADEF_DIR)
+
 set(INSTALL_BASE_DIR "")
 set(INSTALL_LIBRARY_DIR lib)
 set(INSTALL_RUNTIME_DIR bin)
@@ -9,68 +24,51 @@ set(INSTALL_CONFIG_DIR  cmake)
 include(CMakePackageConfigHelpers)
 
 set(PARSER_DIR ${CMAKE_CURRENT_LIST_DIR})
-
-if (DEFINED ENV{D_PKG_SERVER})
-    set(PARSER_PB_PKG $ENV{D_PKG_SERVER})
-elseif (DEFINED ENV{MSLIBS_SERVER})
-    set(PARSER_PB_PKG "http://$ENV{MSLIBS_SERVER}:8081")
-    message("Download packages from MSPKG server")
-endif ()
-
 option(ENABLE_OPEN_SRC "Enable graphengine compile in opensource." FALSE)
 
 if (ENABLE_OPEN_SRC)
     set(HI_PYTHON python3)
 
-    include(cmake/external_libs/protobuf_shared.cmake)
-    include(cmake/external_libs/protoc.cmake)
-    include(cmake/external_libs/securec.cmake)
-    include(cmake/external_libs/json.cmake)
-    include(cmake/FindModule.cmake)
+    # 开源软件包
+    find_package(json MODULE)
+    find_package(protoc MODULE)
+    find_package(ascend_protobuf_shared MODULE)
+    find_package(ascend_protobuf_static MODULE)
+    find_package(GTest CONFIG REQUIRED)
+
+    # 自研软件包
+    find_package(securec MODULE REQUIRED)
+    find_package(slog CONFIG REQUIRED)
+    find_package(mmpa CONFIG REQUIRED)
+    find_package(runtime CONFIG REQUIRED)
+    find_package(msprof CONFIG REQUIRED)
+    find_package(cce CONFIG REQUIRED)
+    if (BUILD_WITHOUT_AIR)
+        find_package(air CONFIG REQUIRED)
+    endif()
+    if (NOT BUILD_METADEF)
+        find_package(metadef CONFIG REQUIRED)
+    endif()
+
+    if (BUILD_METADEF)
+        # 使用medadef源码编译
+        if (BUILD_WITHOUT_AIR)
+            # parser集成metadef源码
+            set(METADEF_DIR ${CMAKE_CURRENT_LIST_DIR}/metadef) 
+        else ()
+            # air已经集成metadef源码，parser直接使用
+            message(STATUS "METADEF_DIR = ${METADEF_DIR}")
+        endif()
+    else ()
+        # 使用medadef发布包编译
+        set(METADEF_DIR ${ASCEND_OPENSDK_DIR})
+    endif()
+
     include(cmake/intf_pub_linux.cmake)
-
-    if(DEFINED ENV{D_LINK_PATH})
-        # D_LINK_PATH is set
-        set(GE_LIB_PATH $ENV{D_LINK_PATH})
-        set(GE_SYS_ARCH "")
-        if(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "x86_64")
-            # x86 ubuntu
-            set(GE_SYS_ARCH "x86_64")
-        elseif(CMAKE_HOST_SYSTEM_PROCESSOR MATCHES "aarch64")
-            # arm euleros
-            set(GE_SYS_ARCH "aarch64")
-        else()
-            message(FATAL_ERROR "Running on a unsupported architecture: ${SYSTEM_TYPE}, build terminated")
-        endif()
-        set(GE_LIB_PATH ${GE_LIB_PATH}/${GE_SYS_ARCH})
-        find_module(slog libascendalog.so ${GE_LIB_PATH})
-        find_module(static_mmpa libmmpa.a ${GE_LIB_PATH})
-    elseif(ENABLE_GE_COV OR ENABLE_GE_UT)
-        message(STATUS "Runing on llt mode, no need to depend other component")
-    elseif(ENABLE_PARSER_UT OR ENABLE_PARSER_COV OR ENABLE_PARSER_ST)
-        include(cmake/external_libs/gtest.cmake)
-        add_subdirectory(tests)
-    else()
-        if(DEFINED ENV{ASCEND_CUSTOM_PATH})
-            set(ASCEND_DIR $ENV{ASCEND_CUSTOM_PATH})
-        else()
-            set(ASCEND_DIR /usr/local/Ascend)
-        endif()
-
-        set(ASCEND_COMPILER_DIR ${ASCEND_DIR}/compiler/lib64)
-        find_module(slog libascendalog.so ${ASCEND_COMPILER_DIR})
-        find_module(static_mmpa libmmpa.a ${ASCEND_COMPILER_DIR})
-    endif()
-
-    if (NOT DEFINED METADEF_DIR)
-        set(METADEF_DIR ${CMAKE_CURRENT_LIST_DIR}/metadef)
-        add_subdirectory(metadef)
-    endif()
+    include(cmake/function.cmake)
 else()
-
-    ####工程tigong
-    set(METADEF_DIR ${CMAKE_CURRENT_LIST_DIR}/../metadef)
-
+    # 使用全量源码构建框架集成的metadef源码
+    set(METADEF_DIR ${TOP_DIR}/metadef)
 endif()
 
 set(PARSER_PROTO_LIST
@@ -131,16 +129,10 @@ set(PARSER_CAFFE_PROTO_SRC
 
 add_library(parser_graph_library_proto_obj OBJECT ${PARSER_GRAPH_LIBRARY_PROTO_SRC})
 add_dependencies(parser_graph_library_proto_obj parser_protos)
-target_include_directories(parser_graph_library_proto_obj PRIVATE
-    #### blue zone ####
-    ${PROTOBUF_SHARED_PKG_DIR}/include
-    #### yellow zone ####
-    ${ASCEND_PROTOBUF_SHARED_PKG_DIR}/include
-)
 target_compile_definitions(parser_graph_library_proto_obj PRIVATE
     google=ascend_private
 )
-target_link_libraries(parser_graph_library_proto_obj PRIVATE ascend_protobuf $<BUILD_INTERFACE:intf_pub>)
+target_link_libraries(parser_graph_library_proto_obj PRIVATE ascend_protobuf intf_pub)
 target_compile_options(parser_graph_library_proto_obj PRIVATE
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC -Wextra -Wfloat-equal>
     $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:-fexceptions>
@@ -152,16 +144,10 @@ target_compile_options(parser_graph_library_proto_obj PRIVATE
 
 add_library(parser_tensorflow_protos_obj OBJECT ${PARSER_TENSORFLOW_PROTO_SRCS})
 add_dependencies(parser_tensorflow_protos_obj parser_protos)
-target_include_directories(parser_tensorflow_protos_obj PRIVATE
-    #### blue zone ####
-    ${PROTOBUF_SHARED_PKG_DIR}/include
-    #### yellow zone ####
-    ${ASCEND_PROTOBUF_SHARED_PKG_DIR}/include
-)
 target_compile_definitions(parser_tensorflow_protos_obj PRIVATE
     google=ascend_private
 )
-target_link_libraries(parser_tensorflow_protos_obj PRIVATE ascend_protobuf $<BUILD_INTERFACE:intf_pub>)
+target_link_libraries(parser_tensorflow_protos_obj PRIVATE ascend_protobuf intf_pub)
 target_compile_options(parser_tensorflow_protos_obj PRIVATE
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC -Wextra -Wfloat-equal>
     $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:-fexceptions>
@@ -173,16 +159,10 @@ target_compile_options(parser_tensorflow_protos_obj PRIVATE
 
 add_library(parser_onnx_protos_obj OBJECT ${PARSER_ONNX_PROTO_SRCS})
 add_dependencies(parser_onnx_protos_obj parser_protos)
-target_include_directories(parser_onnx_protos_obj PRIVATE
-    #### blue zone ####
-    ${PROTOBUF_SHARED_PKG_DIR}/include
-    #### yellow zone ####
-    ${ASCEND_PROTOBUF_SHARED_PKG_DIR}/include
-)
 target_compile_definitions(parser_onnx_protos_obj PRIVATE
     google=ascend_private
 )
-target_link_libraries(parser_onnx_protos_obj PRIVATE ascend_protobuf $<BUILD_INTERFACE:intf_pub>)
+target_link_libraries(parser_onnx_protos_obj PRIVATE ascend_protobuf intf_pub)
 target_compile_options(parser_onnx_protos_obj PRIVATE
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC -Wextra -Wfloat-equal>
     $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:-fexceptions>
@@ -194,16 +174,10 @@ target_compile_options(parser_onnx_protos_obj PRIVATE
 
 add_library(parser_caffe_proto_obj OBJECT ${PARSER_CAFFE_PROTO_SRC})
 add_dependencies(parser_caffe_proto_obj parser_protos)
-target_include_directories(parser_caffe_proto_obj PRIVATE
-    #### blue zone ####
-    ${PROTOBUF_SHARED_PKG_DIR}/include
-    #### yellow zone ####
-    ${ASCEND_PROTOBUF_SHARED_PKG_DIR}/include
-)
 target_compile_definitions(parser_caffe_proto_obj PRIVATE
     google=ascend_private
 )
-target_link_libraries(parser_caffe_proto_obj PRIVATE ascend_protobuf $<BUILD_INTERFACE:intf_pub>)
+target_link_libraries(parser_caffe_proto_obj PRIVATE ascend_protobuf intf_pub)
 target_compile_options(parser_caffe_proto_obj PRIVATE
     $<$<STREQUAL:${TARGET_SYSTEM_NAME},Linux>:-O2 -fPIC -Wextra -Wfloat-equal>
     $<$<OR:$<STREQUAL:${PRODUCT_SIDE},host>,$<STREQUAL:${ENABLE_OPEN_SRC},True>>:-fexceptions>
@@ -243,6 +217,12 @@ add_subdirectory(parser)
 add_subdirectory(parser/common)
 add_subdirectory(parser/func_to_graph)
 add_subdirectory(parser/onnx)
+if (BUILD_METADEF AND BUILD_WITHOUT_AIR)
+    add_subdirectory(metadef)
+endif()
+if(ENABLE_PARSER_UT OR ENABLE_PARSER_COV OR ENABLE_PARSER_ST)        
+    add_subdirectory(tests)
+endif()
 
 install(TARGETS _caffe_parser parser_common fmk_onnx_parser fmk_parser parser_headers
     EXPORT parser-targets
@@ -255,7 +235,16 @@ install(FILES   ${PARSER_DIR}/inc/external/parser/onnx_parser.h
                 ${PARSER_DIR}/inc/external/parser/tensorflow_parser.h
         DESTINATION ${INSTALL_INCLUDE_DIR}/parser/external/parser COMPONENT opensdk EXCLUDE_FROM_ALL
 )
-
+# 下列头文件发布是非法的，需要在后续整改中删掉
+# --------------------start------------------------
+install(FILES   ${PARSER_DIR}/parser/common/pre_checker.h
+                ${PARSER_DIR}/parser/common/register_tbe.h
+        DESTINATION ${INSTALL_INCLUDE_DIR}/parser/parser/common COMPONENT opensdk EXCLUDE_FROM_ALL
+)
+install(FILES   ${PARSER_DIR}/parser/common/convert/pb2json.h
+        DESTINATION ${INSTALL_INCLUDE_DIR}/parser/parser/common/convert COMPONENT opensdk EXCLUDE_FROM_ALL
+)
+# ---------------------end-------------------------
 if (PACKAGE STREQUAL "opensdk")
     install(EXPORT parser-targets DESTINATION ${INSTALL_CONFIG_DIR}
         FILE parser-targets.cmake COMPONENT opensdk EXCLUDE_FROM_ALL

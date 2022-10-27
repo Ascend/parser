@@ -27,7 +27,7 @@
 #include "external/register/register.h"
 #include "tests/depends/ops_stub/ops_stub.h"
 #include "parser/common/acl_graph_parser_util.h"
-#include "metadef/third_party/graphengine/inc/external/ge/ge_api_types.h"
+#include "external/ge/ge_api_types.h"
 #include "omg/parser/parser_factory.h"
 #include "common/pre_checker.h"
 #include "common/util.h"

@@ -13,7 +13,6 @@
 # limitations under the License.
 # ============================================================================
 
-project(tests CXX C)
 add_subdirectory(depends/slog)
 add_subdirectory(depends/mmpa)
 add_subdirectory(depends/profiler)

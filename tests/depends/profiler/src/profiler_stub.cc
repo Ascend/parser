@@ -15,17 +15,7 @@
  */
 
 #include "toolchain/prof_engine.h"
-#include "toolchain/prof_mgr_core.h"
 
-void * ProfMgrStartUp(const ProfMgrCfg *cfg)
-{
-  return nullptr;
-}
-
-int ProfMgrStop(void *handle)
-{
-	return 0;
-}
 
 int Msprof::Engine::RegisterEngine(const std::string& module, const Msprof::Engine::EngineIntf* engine)
 {

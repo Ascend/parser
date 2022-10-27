@@ -1,4 +1,5 @@
-if (HAVE_PUB)
+include_guard(GLOBAL)
+if (TARGET intf_pub)
     return()
 endif()
 
@@ -30,5 +31,3 @@ target_link_libraries(intf_pub INTERFACE
     -lpthread
 )
 
-#set(HAVE_PUB TRUE CACHE BOOL "pub add")
-set(HAVE_PUB TRUE)
