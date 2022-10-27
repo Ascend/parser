@@ -111,6 +111,29 @@ void UtestOnnxParser::RegisterCustomOp() {
   domi::OpRegistry::Instance()->registrationDatas.clear();
 }
 
+ge::onnx::GraphProto CreateOnnxGraph() {
+  ge::onnx::GraphProto onnx_graph;
+  ::ge::onnx::NodeProto* node_const1 = onnx_graph.add_node();
+  ::ge::onnx::NodeProto* node_const2 = onnx_graph.add_node();
+  ::ge::onnx::NodeProto* node_add = onnx_graph.add_node();
+  node_const1->set_op_type(kOpTypeConstant);
+  node_const2->set_op_type(kOpTypeConstant);
+  node_add->set_op_type("Add");
+
+  ::ge::onnx::AttributeProto* attr = node_const1->add_attribute();
+  attr->set_name(ge::kAttrNameValue);
+  ::ge::onnx::TensorProto* tensor_proto = attr->mutable_t();
+  tensor_proto->set_data_location(ge::onnx::TensorProto_DataLocation_EXTERNAL);
+  attr = node_const1->add_attribute();
+
+  attr = node_const2->add_attribute();
+  attr->set_name(ge::kAttrNameValue);
+  tensor_proto = attr->mutable_t();
+  tensor_proto->set_data_location(ge::onnx::TensorProto_DataLocation_DEFAULT);
+
+  return onnx_graph;
+}
+
 TEST_F(UtestOnnxParser, onnx_parser_if_node) {
   std::string case_dir = __FILE__;
   case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
@@ -573,6 +596,16 @@ TEST_F(UtestOnnxParser, OnnxModelParser_ParseInput_test)
 
   ret = model_parser.ParseOutput(graph);
   EXPECT_EQ(ret, domi::FAILED);
+}
+
+TEST_F(UtestOnnxParser, OnnxModelParser_ParseConstant_test)
+{
+  OnnxModelParser model_parser;
+  ge::onnx::GraphProto onnx_graph = CreateOnnxGraph();
+
+  model_parser.UpdateNodeNameAndOpType(onnx_graph);
+  std::string type = onnx_graph.mutable_node(0)->op_type();
+  EXPECT_EQ(type, kFileConstant);
 }
 
 TEST_F(UtestOnnxParser, onnx_test_ConstructOriType)

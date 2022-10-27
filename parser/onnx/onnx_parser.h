@@ -105,7 +105,9 @@ class PARSER_FUNC_VISIBILITY OnnxModelParser : public domi::ModelParser {
   Status ParseInitializer(ge::onnx::GraphProto &onnx_graph,
                           std::map<std::string, ge::onnx::TensorProto> &initializer_name_tensor) const;
 
-  void UpdateAllNodeName(ge::onnx::GraphProto &onnx_graph) const;
+  void UpdateConstantOpType(ge::onnx::NodeProto *node) const;
+
+  void UpdateNodeNameAndOpType(ge::onnx::GraphProto &onnx_graph) const;
 
   Status ConstructOriType(const ge::onnx::NodeProto *node_proto, std::string &ori_type);
 
