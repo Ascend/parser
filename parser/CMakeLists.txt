@@ -58,37 +58,11 @@ target_compile_definitions(fmk_parser PRIVATE
 )
 
 target_include_directories(fmk_parser PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}
     ${PARSER_DIR}
     ${PARSER_DIR}/inc
     ${PARSER_DIR}/parser
-    ${METADEF_DIR}/inc
-    ${METADEF_DIR}/inc/graph
-    ${METADEF_DIR}/inc/register
-    ${METADEF_DIR}/inc/external
-    ${METADEF_DIR}/inc/external/graph
-    ${METADEF_DIR}/inc/external/register
-    #### temp ####
-    ${PARSER_DIR}/../graphengine/inc/common/util
-    ${PARSER_DIR}/../graphengine/inc/external
-    ${PARSER_DIR}/../graphengine/inc/framework
-    ${PARSER_DIR}/../graphengine/inc
-    ${PARSER_DIR}/../graphengine/ge
     ${CMAKE_BINARY_DIR}
     ${CMAKE_BINARY_DIR}/proto/parser_protos
-    #### blue zone compile #####
-    ${PARSER_DIR}/../ge
-    ${PARSER_DIR}/../inc
-    ${PARSER_DIR}/../inc/framework
-    ${PARSER_DIR}/../inc/common/util
-    ${PARSER_DIR}/../inc/external
-    ${PARSER_DIR}/../third_party/fwkacllib/inc
-    #### blue independent compile #####
-    ${METADEF_DIR}/third_party/graphengine/ge
-    ${METADEF_DIR}/third_party/graphengine/inc
-    ${METADEF_DIR}/third_party/graphengine/inc/framework
-    ${METADEF_DIR}/third_party/graphengine/inc/external
-    ${METADEF_DIR}/third_party/fwkacllib/inc
 )
 
 target_link_options(fmk_parser PRIVATE
@@ -98,6 +72,7 @@ target_link_options(fmk_parser PRIVATE
 target_link_libraries(fmk_parser
     PRIVATE
         intf_pub
+        air_headers
         json
     PUBLIC
         static_mmpa
@@ -125,8 +100,6 @@ add_custom_command(
             && mv tensorflow_parser.cc stub_tensorflow_parser.cc
             && mv caffe_parser.cc stub_caffe_parser.cc
             &&  echo "Generating stub files end."
-    #WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}
-    #DEPENDS ../stub/gen_stubapi.py ${TOP_DIR}/inc/external ${CMAKE_CURRENT_BINARY_DIR}
 )
 
 ##################################################################
@@ -153,29 +126,15 @@ target_compile_definitions(fmk_parser_stub PRIVATE
 )
 
 target_include_directories(fmk_parser_stub PRIVATE
-    ${CMAKE_CURRENT_LIST_DIR}
     ${PARSER_DIR}
     ${PARSER_DIR}/inc
     ${PARSER_DIR}/inc/external
     ${PARSER_DIR}/parser
-    ${PARSER_DIR}/../inc
-    ${PARSER_DIR}/../inc/common/util
-    ${METADEF_DIR}/inc
-    ${METADEF_DIR}/inc/graph
-    ${METADEF_DIR}/inc/register
-    ${METADEF_DIR}/inc/external
-    ${METADEF_DIR}/inc/external/graph
-    ${METADEF_DIR}/inc/external/register
-    #### temp ####
-    ${PARSER_DIR}/../graphengine/inc/common/util
-    ${PARSER_DIR}/../graphengine/inc/external
-    ${PARSER_DIR}/../graphengine/inc/framework
-    ${PARSER_DIR}/../graphengine/inc
-    ${PARSER_DIR}/../graphengine/ge
 )
 
 target_link_libraries(fmk_parser_stub PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
+    intf_pub
+    metadef_headers
 )
 
 set_target_properties(fmk_parser_stub PROPERTIES

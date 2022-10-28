@@ -25,7 +25,10 @@
 #include "external/ge/ge_api_types.h"
 #include "tests/depends/ops_stub/ops_stub.h"
 #include "framework/omg/parser/parser_factory.h"
+#include "parser/onnx/onnx_util.h"
+#define private public
 #include "parser/onnx/onnx_parser.h"
+#undef private
 
 namespace ge {
 class STestOnnxParser : public testing::Test {
@@ -101,6 +104,31 @@ void STestOnnxParser::RegisterCustomOp() {
     domi::OpRegistry::Instance()->Register(reg_data);
   }
   domi::OpRegistry::Instance()->registrationDatas.clear();
+}
+
+ge::onnx::GraphProto CreateOnnxGraph() {
+  ge::onnx::GraphProto onnx_graph;
+  (void)onnx_graph.add_input();
+  (void)onnx_graph.add_output();
+  ::ge::onnx::NodeProto* node_const1 = onnx_graph.add_node();
+  ::ge::onnx::NodeProto* node_const2 = onnx_graph.add_node();
+  ::ge::onnx::NodeProto* node_add = onnx_graph.add_node();
+  node_const1->set_op_type(kOpTypeConstant);
+  node_const2->set_op_type(kOpTypeConstant);
+  node_add->set_op_type("Add");
+
+  ::ge::onnx::AttributeProto* attr = node_const1->add_attribute();
+  attr->set_name(ge::kAttrNameValue);
+  ::ge::onnx::TensorProto* tensor_proto = attr->mutable_t();
+  tensor_proto->set_data_location(ge::onnx::TensorProto_DataLocation_EXTERNAL);
+  attr = node_const1->add_attribute();
+
+  attr = node_const2->add_attribute();
+  attr->set_name(ge::kAttrNameValue);
+  tensor_proto = attr->mutable_t();
+  tensor_proto->set_data_location(ge::onnx::TensorProto_DataLocation_DEFAULT);
+
+  return onnx_graph;
 }
 
 TEST_F(STestOnnxParser, onnx_parser_user_output_with_default) {
@@ -184,4 +212,15 @@ TEST_F(STestOnnxParser, onnx_parser_if_node_with_const_input) {
   EXPECT_EQ(ret, GRAPH_SUCCESS);
 }
 
+TEST_F(STestOnnxParser, onnx_test_ModelParseToGraph)
+{
+  OnnxModelParser modelParser;
+  ge::onnx::ModelProto model_proto;
+  auto onnx_graph = model_proto.mutable_graph();
+  *onnx_graph = CreateOnnxGraph();
+  ge::Graph graph;
+
+  Status ret = modelParser.ModelParseToGraph(model_proto, graph);
+  EXPECT_EQ(ret, FAILED);
+}
 } // namespace ge

@@ -117,6 +117,7 @@ Status OnnxFileConstantParser::ParsePath(const ge::onnx::TensorProto &tensor_pro
     return FAILED;
   }
   op_def.SetAttr(kFileConstantPath, attrs);
+  GELOGD("The weight file of Op[%s] is: [%s].", tensor_proto.name().c_str(), attrs.GetName().c_str());
   return SUCCESS;
 }
 

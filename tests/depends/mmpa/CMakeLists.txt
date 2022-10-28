@@ -12,28 +12,19 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
-#cmake_minimum_required(VERSION 2.8)
-
-project(STUB_MMPA)
-
 file(GLOB_RECURSE SRCS RELATIVE ${CMAKE_CURRENT_LIST_DIR}
         "src/mmpa_stub.cc"
 )
 
-include_directories(${PARSER_DIR}/metadef/third_party/fwkacllib/inc)
-include_directories(${PARSER_DIR}/metadef/third_party/graphengine/inc/framework)
-include_directories(${PARSER_DIR}/metadef/inc)
-include_directories(${PARSER_DIR}/metadef/inc/external)
-include_directories(${PARSER_DIR}/metadef/metadef/inc)
-include_directories(${PARSER_DIR}/metadef/inc/framework)
-include_directories(${PARSER_DIR}/metadef/metadef/inc/external)
-
 add_library(parser_mmpa_stub SHARED ${SRCS})
-target_link_libraries(parser_mmpa_stub PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
-    -Wl,--no-as-needed
-    ascend_protobuf
-    -Wl,--as-needed
-    c_sec
+target_link_libraries(parser_mmpa_stub
+    PRIVATE
+        intf_pub
+        metadef_headers        
+        -Wl,--no-as-needed
+        ascend_protobuf
+        -Wl,--as-needed
+        c_sec
+    PUBLIC
+        mmpa_headers
 )

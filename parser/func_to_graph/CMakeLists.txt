@@ -23,9 +23,6 @@ add_custom_target(util ALL
                 && cp -r ${PROTO_SRCS} ${CMAKE_CURRENT_BINARY_DIR}/util
         )
 
-set(INSTALL_BASE_DIR "")
-set(INSTALL_LIBRARY_DIR lib)
-
 install(DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/util OPTIONAL
     DESTINATION ${INSTALL_LIBRARY_DIR}/func2graph
 )

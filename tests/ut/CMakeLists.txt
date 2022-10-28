@@ -12,9 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
-project(ut CXX C)
-
 if (ENABLE_PARSER_COV)
     set(COVERAGE_COMPILER_FLAGS "-g --coverage -fprofile-arcs -fPIC -O0 -ftest-coverage")
     set(CMAKE_CXX_FLAGS "${COVERAGE_COMPILER_FLAGS}")

@@ -15,9 +15,33 @@
 # ============================================================================
 
 set -e
+
+echo "ASCEND_CUSTOM_PATH=${ASCEND_CUSTOM_PATH}"
+echo "BUILD_METADEF=${BUILD_METADEF}"
+if [ ! ${BUILD_METADEF} ] ; then
+  BUILD_METADEF=ON
+fi
+if [ "X$BUILD_METADEF" = "XON" ]; then
+  git submodule update --init metadef
+fi
+
 BASEPATH=$(cd "$(dirname $0)"; pwd)
 OUTPUT_PATH="${BASEPATH}/output"
-export BUILD_PATH="${BASEPATH}/build/"
+BUILD_PATH="${BASEPATH}/build/"
+ASCEND_OPENSDK_DIR=${ASCEND_CUSTOM_PATH}/opensdk/opensdk
+PREFIX_PATH="${ASCEND_OPENSDK_DIR}/cmake;\
+${ASCEND_OPENSDK_DIR}/c_sec;\
+${ASCEND_OPENSDK_DIR}/json;\
+${ASCEND_OPENSDK_DIR}/openssl;\
+${ASCEND_OPENSDK_DIR}/zlib;\
+${ASCEND_OPENSDK_DIR}/protoc;\
+${ASCEND_OPENSDK_DIR}/protoc_grpc;\
+${ASCEND_OPENSDK_DIR}/grpc;\
+${ASCEND_OPENSDK_DIR}/protobuf_static;\
+${ASCEND_OPENSDK_DIR}/ascend_protobuf;\
+${ASCEND_OPENSDK_DIR}/ascend_protobuf_static;\
+${ASCEND_OPENSDK_DIR}/gtest_shared/lib/cmake/GTest;\
+${ASCEND_OPENSDK_DIR}/gtest_shared/lib64/cmake/GTest"
 
 # print usage message
 usage()
@@ -53,11 +77,9 @@ checkopts()
 {
   VERBOSE=""
   THREAD_NUM=8
-  # ENABLE_PARSER_UT_ONLY_COMPILE="off"
   ENABLE_PARSER_UT="off"
   ENABLE_PARSER_ST="off"
   ENABLE_PARSER_COV="off"
-  GE_ONLY="on"
   ENABLE_GITEE="off"
   # Process the options
   while getopts 'ustchj:vS:' opt
@@ -66,18 +88,15 @@ checkopts()
     case "${opt}" in
       u)
         ENABLE_PARSER_UT="on"
-        GE_ONLY="off"
         ;;
       s)
         ENABLE_PARSER_ST="on"
         ;;
       t)
         ENABLE_PARSER_UT="on"
-        GE_ONLY="off"
         ;;
       c)
         ENABLE_PARSER_COV="on"
-        GE_ONLY="off"
         ;;
       h)
         usage
@@ -103,8 +122,6 @@ checkopts()
 }
 checkopts "$@"
 
-git submodule update --init metadef
-
 mk_dir() {
     local create_dir="$1"  # the target to make
 
@@ -121,31 +138,27 @@ build_parser()
   echo "create build directory and build Parser";
   mk_dir "${BUILD_PATH}"
   cd "${BUILD_PATH}"
-  CMAKE_ARGS="-DBUILD_PATH=$BUILD_PATH -DGE_ONLY=$GE_ONLY"
-
-  if [[ "X$ENABLE_PARSER_COV" = "Xon" ]]; then
-    CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_PARSER_COV=ON"
-  fi
-
-  if [[ "X$ENABLE_PARSER_UT" = "Xon" ]]; then
-    CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_PARSER_UT=ON"
-  fi
-
-
-  if [[ "X$ENABLE_PARSER_ST" = "Xon" ]]; then
-    CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_PARSER_ST=ON"
-  fi
-
-  if [[ "X$ENABLE_GITEE" = "Xon" ]]; then
-    CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_GITEE=ON"
-  fi
-
-  CMAKE_ARGS="${CMAKE_ARGS} -DENABLE_OPEN_SRC=True -DCMAKE_INSTALL_PREFIX=${OUTPUT_PATH}"
-  echo "${CMAKE_ARGS}"
-  cmake ${CMAKE_ARGS} ..
+  cmake -D ENABLE_OPEN_SRC=True \
+        -D ENABLE_PARSER_COV=${ENABLE_PARSER_COV} \
+        -D ENABLE_PARSER_UT=${ENABLE_PARSER_UT} \
+        -D ENABLE_PARSER_ST=${ENABLE_PARSER_ST} \
+        -D ENABLE_GITEE=${ENABLE_GITEE} \
+        -D BUILD_METADEF=${BUILD_METADEF} \
+        -D BUILD_WITHOUT_AIR=True \
+        -D ASCEND_OPENSDK_DIR=${ASCEND_OPENSDK_DIR} \
+        -D CMAKE_BUILD_TYPE=Release \
+        -D CMAKE_INSTALL_PREFIX=${OUTPUT_PATH} \
+        -D CMAKE_MODULE_PATH=${ASCEND_OPENSDK_DIR}/cmake/modules \
+        -D CMAKE_PREFIX_PATH=${PREFIX_PATH} \
+        -D protoc_ROOT=${ASCEND_OPENSDK_DIR}/protoc \
+        -D protobuf_grpc_ROOT=${ASCEND_OPENSDK_DIR}/grpc \
+        -D protobuf_static_ROOT=${ASCEND_OPENSDK_DIR}/protobuf_static \
+        -D ascend_protobuf_shared_ROOT=${ASCEND_OPENSDK_DIR}/ascend_protobuf \
+        -D ascend_protobuf_static_ROOT=${ASCEND_OPENSDK_DIR}/ascend_protobuf_static \
+        ..
   if [ 0 -ne $? ]
   then
-    echo "execute command: cmake ${CMAKE_ARGS} .. failed."
+    echo "execute command: cmake .. failed."
     return 1
   fi
 
@@ -168,14 +181,6 @@ g++ -v
 mk_dir ${OUTPUT_PATH}
 build_parser || { echo "Parser build failed."; return; }
 echo "---------------- Parser build finished ----------------"
-rm -f ${OUTPUT_PATH}/libgmock*.so
-rm -f ${OUTPUT_PATH}/libgtest*.so
-rm -f ${OUTPUT_PATH}/lib*_stub.so
-
-chmod -R 750 ${OUTPUT_PATH}
-find ${OUTPUT_PATH} -name "*.so*" -print0 | xargs -0 chmod 500
-
-echo "---------------- Parser output generated ----------------"
 
 if [[ "X$ENABLE_PARSER_UT" = "Xon" || "X$ENABLE_PARSER_COV" = "Xon" ]]; then
     cp ${BUILD_PATH}/tests/ut/parser/ut_parser ${OUTPUT_PATH}

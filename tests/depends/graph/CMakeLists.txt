@@ -12,12 +12,6 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 # ============================================================================
-
-#cmake_minimum_required(VERSION 2.8)
-
-project(STUB_ATTR_UTIL)
-
-################################################################################
 set(PARSER_PROTO_LIST
     "${PARSER_DIR}/metadef/proto/om.proto"
     "${PARSER_DIR}/metadef/proto/ge_ir.proto"
@@ -46,18 +40,6 @@ file(GLOB_RECURSE SRCS RELATIVE ${CMAKE_CURRENT_LIST_DIR}
 )
 
 include_directories(${CMAKE_CURRENT_LIST_DIR})
-include_directories(${PARSER_DIR}/metadef/inc)
-include_directories(${PARSER_DIR}/metadef/inc/graph)
-include_directories(${PARSER_DIR}/metadef/inc/external)
-include_directories(${PARSER_DIR}/metadef/inc/external/graph)
-include_directories(${PARSER_DIR}/metadef/graph)
-include_directories(${PARSER_DIR}/metadef/third_party)
-include_directories(${PARSER_DIR}/metadef/third_party/graphengine/inc)
-include_directories(${PARSER_DIR}/metadef/third_party/graphengine/inc/external)
-include_directories(${PARSER_DIR}/metadef/third_party/graphengine/inc/external/ge)
-include_directories(${PARSER_DIR}/metadef/third_party/fwkacllib/inc)
-include_directories(${PARSER_DIR}/metadef/third_party/transformer/inc)
-include_directories(${PARSER_DIR}/metadef)
 include_directories(${CMAKE_BINARY_DIR}/proto/ge)
 include_directories(${CMAKE_BINARY_DIR}/proto/ge/proto)
 
@@ -75,7 +57,10 @@ target_compile_options(attr_util_stub PRIVATE
 )
 
 target_link_libraries(attr_util_stub PRIVATE
-    $<BUILD_INTERFACE:intf_pub>
+    intf_pub
+    metadef_headers
+    air_headers
+    slog_headers
     ascend_protobuf
     c_sec
 )

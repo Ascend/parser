@@ -366,6 +366,7 @@ Status OnnxModelParser::ParseInitializer(ge::onnx::GraphProto &onnx_graph,
     *attribute_t = it.second;
     if (it.second.data_location() == ge::onnx::TensorProto_DataLocation_EXTERNAL) {
       const_node->set_op_type(kFileConstant);
+      GELOGD("Initializer const node [%s], the weight was stored in the file.", const_node->name().c_str());
     } else {
       const_node->set_op_type(ge::kOpTypeConstant);
     }
@@ -374,13 +375,30 @@ Status OnnxModelParser::ParseInitializer(ge::onnx::GraphProto &onnx_graph,
   return SUCCESS;
 }
 
-void OnnxModelParser::UpdateAllNodeName(ge::onnx::GraphProto &onnx_graph) const {
+void OnnxModelParser::UpdateConstantOpType(ge::onnx::NodeProto *node) const {
+  // If weight in file, Marker Constant(not Initializer) as file constant
+  for (auto it : node->attribute()) {
+    if (it.name() == ge::kAttrNameValue) {
+      const ::ge::onnx::TensorProto tensor_proto = it.t();
+      if (tensor_proto.data_location() == ge::onnx::TensorProto_DataLocation_EXTERNAL) {
+        node->set_op_type(kFileConstant);
+        GELOGD("Const node [%s], the weight was stored in the file.", node->name().c_str());
+      }
+      break;
+    }
+  }
+}
+
+void OnnxModelParser::UpdateNodeNameAndOpType(ge::onnx::GraphProto &onnx_graph) const {
   int index = 0;
   for (int i = 0; i < onnx_graph.node_size(); i++) {
     ge::onnx::NodeProto *node = onnx_graph.mutable_node(i);
     if (node->name().empty()) {
       std::string node_name = node->op_type() + "_" + to_string(index++);
       node->set_name(node_name);
+    }
+    if (node->op_type() == kOpTypeConstant) {
+      UpdateConstantOpType(node);
     }
   }
 }
@@ -966,7 +984,7 @@ Status OnnxModelParser::ModelParseToGraphImpl(bool is_subgraph, ge::onnx::GraphP
   }
   GELOGI("The size of initializer_name_tensor is %zu after ParseInput", initializer_name_tensor.size());
 
-  // 3. Parse Constant from graph.
+  // 3. Parse Constant(initializer) from graph.
   ret = ParseInitializer(onnx_graph, initializer_name_tensor);
   if (ret != SUCCESS) {
     GELOGE(ret, "[Parse][Initializer] for onnx failed.");
@@ -980,8 +998,8 @@ Status OnnxModelParser::ModelParseToGraphImpl(bool is_subgraph, ge::onnx::GraphP
     return ret;
   }
 
-  // 5. Update node name for node do not has name.
-  UpdateAllNodeName(onnx_graph);
+  // 5. Update node name for node do not has name, update const op type
+  UpdateNodeNameAndOpType(onnx_graph);
 
   // 6 Precheck.
   ret = Prechecker(onnx_graph);
