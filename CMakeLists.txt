@@ -238,7 +238,6 @@ install(FILES   ${PARSER_DIR}/inc/external/parser/onnx_parser.h
 # 下列头文件发布是非法的，需要在后续整改中删掉
 # --------------------start------------------------
 install(FILES   ${PARSER_DIR}/parser/common/pre_checker.h
-                ${PARSER_DIR}/parser/common/register_tbe.h
         DESTINATION ${INSTALL_INCLUDE_DIR}/parser/parser/common COMPONENT opensdk EXCLUDE_FROM_ALL
 )
 install(FILES   ${PARSER_DIR}/parser/common/convert/pb2json.h
