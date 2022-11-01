@@ -85,15 +85,6 @@ std::string RealPath(const char *path);
 uint64_t GetCurrentTimestamp();
 
 /// @ingroup domi_common
-/// @brief Reads all data from a binary file.
-/// @param [in] file_name  path of file
-/// @param [out] buffer  Output memory address, which needs to be released by the caller.
-/// @param [out] length  Output memory size
-/// @return false fail
-/// @return true success
-bool ReadBytesFromBinaryFile(const char *file_name, char **buffer, int &length);
-
-/// @ingroup domi_common
 /// @brief proto file in bianary format
 /// @param [in] file path of proto file
 /// @param [out] proto memory for storing the proto file
@@ -195,19 +186,23 @@ inline domi::Status CheckInt64Uint32MulOverflow(int64_t a, uint32_t b) {
   return domi::SUCCESS;
 }
 
-#define PARSER_INT64_MULCHECK(a, b)                                                                             \
-  if (ge::parser::Int64MulCheckOverflow((a), (b)) != SUCCESS) {                                                 \
-    GELOGW("Int64 %ld and %ld multiplication can result in overflow!", static_cast<int64_t>(a), \
-           static_cast<int64_t>(b));                                                                            \
-    return INTERNAL_ERROR;                                                                                      \
-  }
+#define PARSER_INT64_MULCHECK(a, b)                                                                               \
+  do {                                                                                                            \
+    if (ge::parser::Int64MulCheckOverflow((a), (b)) != SUCCESS) {                                                 \
+      GELOGW("Int64 %ld and %ld multiplication can result in overflow!", static_cast<int64_t>(a),                 \
+             static_cast<int64_t>(b));                                                                            \
+      return INTERNAL_ERROR;                                                                                      \
+    }                                                                                                             \
+  } while (0)
 
-#define PARSER_INT64_UINT32_MULCHECK(a, b)                                                                         \
-  if (ge::parser::CheckInt64Uint32MulOverflow((a), (b)) != SUCCESS) {                                              \
-    GELOGW("Int64 %ld and Uint32 %u multiplication can result in overflow!", static_cast<uint64_t>(a),             \
-           static_cast<uint32_t>(b));                                                                              \
-    return INTERNAL_ERROR;                                                                                         \
-  }
+#define PARSER_INT64_UINT32_MULCHECK(a, b)                                                                           \
+  do {                                                                                                               \
+    if (ge::parser::CheckInt64Uint32MulOverflow((a), (b)) != SUCCESS) {                                              \
+      GELOGW("Int64 %ld and Uint32 %u multiplication can result in overflow!", static_cast<uint64_t>(a),             \
+             static_cast<uint32_t>(b));                                                                              \
+      return INTERNAL_ERROR;                                                                                         \
+    }                                                                                                                \
+  } while (0)
 }  // namespace parser
 }  // namespace ge
 

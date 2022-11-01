@@ -768,64 +768,6 @@ static bool ReadProtoFromCodedInputStream(CodedInputStream &coded_stream, Messag
   return proto->ParseFromCodedStream(&coded_stream);
 }
 
-/** @ingroup domi_common
- *  @brief Read all data from binary file
- *  @param [in] file_name  File path
- *  @param [out] buffer  The address of the output memory, which needs to be released by the caller
- *  @param [out] length  Output memory size
- *  @return false fail
- *  @return true success
- */
-FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadBytesFromBinaryFile(const char *file_name, char **buffer,
-                                                                              int &length) {
-  if (file_name == nullptr) {
-    REPORT_INNER_ERROR("E19999", "param file_name is nullptr, check invalid");
-    GELOGE(FAILED, "[Check][Param] incorrect parameter. file is nullptr");
-    return false;
-  }
-  if (buffer == nullptr) {
-    REPORT_INNER_ERROR("E19999", "param buffer is nullptr, check invalid");
-    GELOGE(FAILED, "[Check][Param] incorrect parameter. buffer is nullptr");
-    return false;
-  }
-
-  std::string real_path = RealPath(file_name);
-  if (real_path.empty()) {
-    REPORT_INNER_ERROR("E19999", "file path '%s' not valid, realpath failed", file_name);
-    GELOGE(FAILED, "[Check][Param]file path '%s' not valid, realpath failed", file_name);
-    return false;
-  }
-
-  std::ifstream file(real_path.c_str(), std::ios::binary | std::ios::ate);
-  if (!file.is_open()) {
-    REPORT_INNER_ERROR("E19999", "read file %s failed", file_name);
-    GELOGE(ge::FAILED, "[Read][File] %s failed.", file_name);
-    return false;
-  }
-
-  length = static_cast<int>(file.tellg());
-  if ((length <= 0)) {
-    file.close();
-    REPORT_INNER_ERROR("E19999", "file length <= 0");
-    GELOGE(FAILED, "[Check][Param] file length <= 0");
-    return false;
-  }
-
-  file.seekg(0, std::ios::beg);
-
-  *buffer = new(std::nothrow) char[length]();
-  if (*buffer == nullptr) {
-    REPORT_INNER_ERROR("E19999", "[Create][Buffer] new an object failed, length=%d.", length);
-    GELOGE(FAILED, "[Create][Buffer] new an object failed, length=%d.", length);
-    file.close();
-    return false;
-  }
-
-  file.read(*buffer, length);
-  file.close();
-  return true;
-}
-
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY bool ReadProtoFromBinaryFile(const char *file, Message *proto) {
   if ((file == nullptr) || (proto == nullptr)) {
     REPORT_INNER_ERROR("E19999", "param file or proto is nullptr, check invalid");
