@@ -3854,27 +3854,8 @@ TEST_F(UtestTensorflowParser, tensorflow_GetOriginalType_test)
   EXPECT_EQ(ret, INTERNAL_ERROR);
 }
 
-TEST_F(UtestTensorflowParser, tensorflow_ReadBytesFromBinaryFile_test)
+TEST_F(UtestTensorflowParser, tensorflow_realpath_test)
 {
-  const char *file_name = nullptr;
-  char *buffer = nullptr;
-  int length = 1;
-  bool ret = parser::ReadBytesFromBinaryFile(file_name, &buffer, length);
-  EXPECT_EQ(ret, false);
-
-  file_name = "./caffe.proto";
-  ret = parser::ReadBytesFromBinaryFile(file_name, &buffer, length);
-  EXPECT_EQ(ret, false);
-
-  std::cout << __FILE__ << std::endl;
-  std::string caseDir = __FILE__;
-  std::size_t idx = caseDir.find_last_of("/");
-  caseDir = caseDir.substr(0, idx);
-  std::string proto_file = caseDir + "/tensorflow_model/caffe.proto";
-  file_name = proto_file.c_str();
-  ret = parser::ReadBytesFromBinaryFile(file_name, &buffer, length);
-  EXPECT_EQ(ret, true);
-
   char path[4096 + 1] = { 0 };
   memset(path, 'a', 4096);
   std::string realPath = parser::RealPath(path);
