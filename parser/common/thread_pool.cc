@@ -21,10 +21,22 @@
 #include <stdexcept>
 
 #include "register/register_types.h"
+#include "graph/ge_context.h"
+#include "mmpa/mmpa_api.h"
 
 namespace ge {
+namespace {
+const char* const kMultiThreadCompile = "MULTI_THREAD_COMPILE";
+const char* const kDisEnableFlag = "0";
+bool IsSingleThreadCompile() {
+  std::string compile_thread;
+  return ((ge::GetContext().GetOption(kMultiThreadCompile, compile_thread) == GRAPH_SUCCESS)
+      && (compile_thread.compare(kDisEnableFlag) == 0));
+}
+}
+
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY ThreadPool::ThreadPool(uint32_t size) : is_stoped_(false) {
-  idle_thrd_num_ = size < 1 ? 1 : size;
+  idle_thrd_num_ = ((size < 1U) || IsSingleThreadCompile()) ? 1U : size;
 
   for (uint32_t i = 0; i < idle_thrd_num_; ++i) {
     pool_.emplace_back(ThreadFunc, this);
