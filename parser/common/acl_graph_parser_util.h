@@ -215,13 +215,13 @@ inline domi::Status CheckInt64Uint32MulOverflow(int64_t a, uint32_t b) {
     uint64_t endUsec_##stage = ge::parser::GetCurrentTimestamp();                     \
     GELOGI("[GEPERFTRACE] The time cost of %s is [%lu] micro second.", (stage_name),  \
             (endUsec_##stage - startUsec_##stage));                                   \
-  } while (0);
+  } while (0)
 
 #define PARSER_TIMESTAMP_EVENT_END(stage, stage_name)                                 \
   do {                                                                                \
     uint64_t endUsec_##stage = ge::parser::GetCurrentTimestamp();                     \
     GEEVENT("[GEPERFTRACE] The time cost of %s is [%lu] micro second.", (stage_name), \
             (endUsec_##stage - startUsec_##stage));                                   \
-  } while (0);
+  } while (0)
 
 #endif  // ACL_GRAPH_PARSE_UTIL_
