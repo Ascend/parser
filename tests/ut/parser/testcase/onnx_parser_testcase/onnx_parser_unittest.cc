@@ -525,7 +525,7 @@ TEST_F(UtestOnnxParser, FileConstantParsePath)
   // check location
   std::string attr_value;
   ge::NamedAttrs attrs;
-  AttrUtils::GetNamedAttrs(op_desc_src, "file_constant_path", attrs);
+  AttrUtils::GetNamedAttrs(op_desc_src, "_file_constant_path", attrs);
   AttrUtils::GetStr(attrs, "location", attr_value);
   EXPECT_EQ(attr_value, "/usr/local");
 }
@@ -567,7 +567,7 @@ TEST_F(UtestOnnxParser, FileConstantParseParam)
 
   // check location, shape, dtype
   NamedAttrs attrs;
-  AttrUtils::GetNamedAttrs(*op_desc_src, "file_constant_path", attrs);
+  AttrUtils::GetNamedAttrs(*op_desc_src, "_file_constant_path", attrs);
   std::string file_path;
   AttrUtils::GetStr(attrs, "location", file_path);
   EXPECT_EQ(file_path, "/usr/local");

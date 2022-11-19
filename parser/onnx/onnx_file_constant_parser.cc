@@ -33,7 +33,7 @@ using namespace ge::parser;
 namespace {
 const char *const kAttrShape = "shape";
 const char *const kAttrDataType = "dtype";
-const char *const kFileConstantPath = "file_constant_path";
+const char *const kFileConstantPath = "_file_constant_path";
 const char *const kLocation = "location";
 const char *const kOffset = "offset";
 const int64_t kOffsetCoefficient = 4096;
