@@ -37,6 +37,7 @@
 #include "parser/caffe/caffe_custom_parser_adapter.h"
 #include "parser/caffe/caffe_op_parser.h"
 #include "graph/operator_reg.h"
+#include "graph/utils/graph_utils_ex.h"
 #include "parser/common/acl_graph_parser_util.h"
 #include "parser/caffe/caffe_reshape_parser.h"
 #include "common/op_map.h"
@@ -184,7 +185,7 @@ TEST_F(UtestCaffeParser, caffe_parser_user_output_with_name_and_index) {
   ASSERT_NE(model_parser, nullptr);
   ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>("tmpGraph");
   ASSERT_NE(compute_graph, nullptr);
-  ge::Graph graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
+  ge::Graph graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(compute_graph);
 
   ge::GetParserContext().user_out_nodes.push_back({"abs", 0});
   auto ret = model_parser->Parse(model_file.c_str(), graph);
@@ -211,7 +212,7 @@ TEST_F(UtestCaffeParser, caffe_parser_user_output_with_top_name) {
   ASSERT_NE(model_parser, nullptr);
   ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>("tmpGraph");
   ASSERT_NE(compute_graph, nullptr);
-  ge::Graph graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
+  ge::Graph graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(compute_graph);
 
   ge::GetParserContext().user_out_tensors.push_back("abs_out");
   auto ret = model_parser->Parse(model_file.c_str(), graph);
@@ -238,7 +239,7 @@ TEST_F(UtestCaffeParser, caffe_parser_user_output_with_default) {
   ASSERT_NE(model_parser, nullptr);
   ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>("tmpGraph");
   ASSERT_NE(compute_graph, nullptr);
-  ge::Graph graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
+  ge::Graph graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(compute_graph);
   auto ret = model_parser->Parse(model_file.c_str(), graph);
   ASSERT_EQ(ret, GRAPH_SUCCESS);
   AclGraphParserUtil acl_graph_parse_util;
@@ -312,7 +313,7 @@ TEST_F(UtestCaffeParser, ParseFromMemory_success)
   ge::Graph graph;
 
   Status ret = ge::aclgrphParseCaffe(modelFile.c_str(), weight_file.c_str(), graph);
-  ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
+  ge::ComputeGraphPtr compute_graph = ge::GraphUtilsEx::GetComputeGraph(graph);
   CaffeModelParser modelParser;
   MemBuffer* memBuffer1 = ParerUTestsUtils::MemBufferFromFile(tmp_tf_pb_model);
   ret = modelParser.ParseFromMemory((char*)memBuffer1->data, memBuffer1->size, compute_graph);
@@ -754,7 +755,7 @@ TEST_F(UtestCaffeParser, CaffeWeightsParser_ParseGraph_test)
 {
   CaffeWeightsParser weightParser;
   ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>("tmp_graph");
-  ge::Graph graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
+  ge::Graph graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(compute_graph);
 
   std::string case_dir = __FILE__;
   case_dir = case_dir.substr(0, case_dir.find_last_of("/"));

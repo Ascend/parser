@@ -23,6 +23,7 @@
 #include "graph/compute_graph.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/graph_utils.h"
+#include "graph/utils/graph_utils_ex.h"
 #include "graph/utils/node_adapter.h"
 #include "graph/utils/op_desc_utils.h"
 #include "register/op_registry.h"
@@ -118,9 +119,9 @@ Status ParserUtils::ExpandOneToManyGraph(const Graph &graph, OutputMapping &outp
 
 Status ParserUtils::ExpandNodeToSubgraph(const Graph &subgraph, const NodePtr &node, const Graph &graph,
                                          OutputMapping &output_mapping) {
-  ComputeGraphPtr sub_compute_graph = GraphUtils::GetComputeGraph(subgraph);
+  ComputeGraphPtr sub_compute_graph = GraphUtilsEx::GetComputeGraph(subgraph);
   GE_CHECK_NOTNULL(sub_compute_graph);
-  ComputeGraphPtr compute_graph = GraphUtils::GetComputeGraph(graph);
+  ComputeGraphPtr compute_graph = GraphUtilsEx::GetComputeGraph(graph);
   GE_CHECK_NOTNULL(compute_graph);
 
   // add subgraph node to graph.
