@@ -21,6 +21,7 @@
 #include "parser/common/op_parser_factory.h"
 #include "parser/tensorflow/tensorflow_parser.h"
 #include "graph/operator_reg.h"
+#include "graph/utils/graph_utils_ex.h"
 #include "register/op_registry.h"
 #include "external/register/register.h"
 #include "st/parser_st_utils.h"
@@ -1035,7 +1036,7 @@ TEST_F(STestTensorflowParser, tensorflow_parser_success) {
   ge::Graph graph;
   auto ret = ge::aclgrphParseTensorFlow(model_file.c_str(), parser_params, graph);
   ASSERT_EQ(ret, SUCCESS);
-  ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
+  ge::ComputeGraphPtr compute_graph = ge::GraphUtilsEx::GetComputeGraph(graph);
   auto output_nodes_info = compute_graph->GetGraphOutNodesInfo();
   ASSERT_EQ(output_nodes_info.size(), 1);
   EXPECT_EQ((output_nodes_info.at(0).first->GetName()), "add_test_1");
@@ -1151,7 +1152,7 @@ TEST_F(STestTensorflowParser, tensorflow_parserfrommemory_failed)
 
   parser_params = {{AscendString(ge::ir_option::OUT_NODES), AscendString("Placeholder:0;Placeholder_1:0")}};
   ret = ge::aclgrphParseTensorFlow(modelFile.c_str(), parser_params, graph);
-  ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
+  ge::ComputeGraphPtr compute_graph = ge::GraphUtilsEx::GetComputeGraph(graph);
   ret = modelParser.ParseFromMemory(modelFile.c_str(), size, compute_graph);
   EXPECT_NE(ret, SUCCESS);
 }
@@ -1168,7 +1169,7 @@ TEST_F(STestTensorflowParser, modelparser_parsefrommemory_success)
   Status ret = ge::aclgrphParseTensorFlow(modelFile.c_str(), parser_params, graph);
   ASSERT_EQ(ret, SUCCESS);
 
-  ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
+  ge::ComputeGraphPtr compute_graph = ge::GraphUtilsEx::GetComputeGraph(graph);
   TensorFlowModelParser modelParser;
   MemBuffer* memBuffer = MemBufferFromFile(tmp_tf_pb_model);
   PreChecker::Instance().HasError() == false;
@@ -1189,7 +1190,7 @@ TEST_F(STestTensorflowParser, weightsparser_parsefrommemory_success)
   Status ret = ge::aclgrphParseTensorFlow(modelFile.c_str(), parser_params, graph);
   ASSERT_EQ(ret, SUCCESS);
 
-  ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
+  ge::ComputeGraphPtr compute_graph = ge::GraphUtilsEx::GetComputeGraph(graph);
   auto weights_parser = domi::WeightsParserFactory::Instance()->CreateWeightsParser(domi::TENSORFLOW);
   MemBuffer* memBuffer = MemBufferFromFile(tmp_tf_pb_model);
   ret = weights_parser->ParseFromMemory((char*)memBuffer->data, memBuffer->size, compute_graph);
@@ -1218,7 +1219,7 @@ TEST_F(STestTensorflowParser, parser_ParseProtoWithSubgraphV2)
   Status ret = ge::aclgrphParseTensorFlow(root_proto.c_str(), parser_params, graph);
   ASSERT_EQ(ret, SUCCESS);
 
-  ge::ComputeGraphPtr root_graph = ge::GraphUtils::GetComputeGraph(graph);
+  ge::ComputeGraphPtr root_graph = ge::GraphUtilsEx::GetComputeGraph(graph);
   domi::GetGraphCallbackV2 callback(&getGraphCallbackV2);
   TensorFlowModelParser parser;
   ret = parser.ParseProtoWithSubgraph(root_proto, callback, root_graph);
@@ -1263,7 +1264,7 @@ TEST_F(STestTensorflowParser, tensorflow_parser_with_external_normal_graph) {
   // 3. Serialize ONNX graph to string
   // 3.1 normal
   ge::Model model("model", "");
-  model.SetGraph(GraphUtils::CreateGraphFromComputeGraph(sub_graph));
+  model.SetGraph(sub_graph);
   Buffer buffer;
   graphStatus save_ret = model.Save(buffer, false);
   ASSERT_EQ(save_ret, GRAPH_SUCCESS);
@@ -1272,7 +1273,7 @@ TEST_F(STestTensorflowParser, tensorflow_parser_with_external_normal_graph) {
   // model will failed
   input1->GetOpDesc()->DelAttr(ATTR_NAME_INDEX);
   ge::Model model_will_fail("model_will_fail", "");
-  model_will_fail.SetGraph(GraphUtils::CreateGraphFromComputeGraph(sub_graph));
+  model_will_fail.SetGraph(sub_graph);
   Buffer buffer_fail;
   save_ret = model_will_fail.Save(buffer_fail, false);
   ASSERT_EQ(save_ret, GRAPH_SUCCESS);
@@ -1312,7 +1313,7 @@ TEST_F(STestTensorflowParser, tensorflow_ParserProto_failed)
   Status ret = ge::aclgrphParseTensorFlow(root_proto.c_str(), parser_params, graph);
   ASSERT_EQ(ret, SUCCESS);
 
-  ge::ComputeGraphPtr root_graph = ge::GraphUtils::GetComputeGraph(graph);
+  ge::ComputeGraphPtr root_graph = ge::GraphUtilsEx::GetComputeGraph(graph);
   TensorFlowModelParser tensorflow_parser;
   ret = tensorflow_parser.ParseProto(reinterpret_cast<google::protobuf::Message *>(&graphDef), root_graph);
   EXPECT_EQ(PARAM_INVALID, ret);
@@ -1348,7 +1349,7 @@ TEST_F(STestTensorflowParser, tensorflow_parserAllGraph_failed)
   Status ret = ge::aclgrphParseTensorFlow(root_proto.c_str(), parser_params, graph);
   ASSERT_EQ(ret, SUCCESS);
 
-  ge::ComputeGraphPtr root_graph = ge::GraphUtils::GetComputeGraph(graph);
+  ge::ComputeGraphPtr root_graph = ge::GraphUtilsEx::GetComputeGraph(graph);
   TensorFlowModelParser tensorflow_parser;
   ret = tensorflow_parser.ParseAllGraph(reinterpret_cast<google::protobuf::Message *>(&graphDef), root_graph);
   ASSERT_NE(ret, SUCCESS);
@@ -1593,7 +1594,7 @@ TEST_F(STestTensorflowParser, parse_AddScopeInnerNode)
   std::string modelFile = caseDir + "/origin_models/tf_add.pb";
   std::string op_name = "ge_ascend_irgraph";
   ge::Graph graph(op_name);
-  ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
+  ge::ComputeGraphPtr compute_graph = ge::GraphUtilsEx::GetComputeGraph(graph);
   std::map<ge::AscendString, ge::AscendString> parser_params = {
     {AscendString(ge::ir_option::OUT_NODES), AscendString("Placeholder:0;Placeholder_1:0")}};
   Status ret = ge::aclgrphParseTensorFlow(modelFile.c_str(), parser_params, graph);

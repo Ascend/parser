@@ -41,6 +41,7 @@
 #include "register/op_registry.h"
 #include "register/register_fmk_types.h"
 #include "graph/utils/graph_utils.h"
+#include "graph/utils/graph_utils_ex.h"
 #include "graph/utils/node_utils.h"
 #include "graph/utils/type_utils.h"
 #include "subgraph_adapter/subgraph_adapter_factory.h"
@@ -76,7 +77,7 @@ graphStatus PrepareBeforeParse(AclGraphParserUtil &acl_graph_parse_util,
   ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>(graph_name);
   GE_CHECK_NOTNULL(compute_graph);
 
-  graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
+  graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(compute_graph);
   model_parser = domi::ModelParserFactory::Instance()->CreateModelParser(domi::ONNX);
   GE_CHECK_NOTNULL(model_parser);
   return ge::SUCCESS;
@@ -251,7 +252,7 @@ Status PostOpProcessForSubgraph(const ParseArg &arg, ge::ComputeGraphPtr sub_gra
     node->GetOpDesc()->SetName(OnnxUtil::GenUniqueNodeName(sub_graph->GetName(), node->GetName()));
   }
 
-  auto graph = ge::GraphUtils::CreateGraphFromComputeGraph(sub_graph);
+  auto graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(sub_graph);
   Status ret = FAILED;
   if (post_func != nullptr) {
     ret = post_func(arg.graph_name, graph);
@@ -928,7 +929,7 @@ Status OnnxModelParser::ModelParseToGraph(const ge::onnx::ModelProto &onnx_model
       root_graph = tmp_graph;
     }
 
-    ge::ComputeGraphPtr cur_compute_graph = ge::GraphUtils::GetComputeGraph(tmp_graph);
+    ge::ComputeGraphPtr cur_compute_graph = ge::GraphUtilsEx::GetComputeGraph(tmp_graph);
     GE_CHECK_NOTNULL(cur_compute_graph);
 
     ret = PostOpProcessForSubgraph(arg, cur_compute_graph);

@@ -20,6 +20,7 @@
 #define private public
 #include "parser/common/op_parser_factory.h"
 #include "graph/operator_reg.h"
+#include "graph/utils/graph_utils_ex.h"
 #include "register/op_registry.h"
 #include "parser/common/op_registration_tbe.h"
 #include "framework/omg/parser/model_parser.h"
@@ -188,7 +189,7 @@ TEST_F(STestCaffeParser, caffe_parser_user_output_with_default) {
   ASSERT_NE(model_parser, nullptr);
   ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>("tmp_graph");
   ASSERT_NE(compute_graph, nullptr);
-  ge::Graph graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
+  ge::Graph graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(compute_graph);
   auto ret = model_parser->Parse(model_file.c_str(), graph);
   ASSERT_EQ(ret, GRAPH_SUCCESS);
   AclGraphParserUtil acl_graph_parse_util;
@@ -258,7 +259,7 @@ TEST_F(STestCaffeParser, modelparser_parsefrommemory_success)
   const char* tmp_tf_pb_model = modelFile.c_str();
   ge::Graph graph;
 
-  ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
+  ge::ComputeGraphPtr compute_graph = ge::GraphUtilsEx::GetComputeGraph(graph);
   CaffeModelParser modelParser;
   MemBuffer* memBuffer = ParerSTestsUtils::MemBufferFromFile(tmp_tf_pb_model);
   auto ret = modelParser.ParseFromMemory((char*)memBuffer->data, memBuffer->size, compute_graph);
@@ -672,7 +673,7 @@ TEST_F(STestCaffeParser, CaffeWeightsParser_ParseGraph_test)
 {
   CaffeWeightsParser weightParser;
   ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>("tmp_graph");
-  ge::Graph graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
+  ge::Graph graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(compute_graph);
 
   std::string case_dir = __FILE__;
   case_dir = case_dir.substr(0, case_dir.find_last_of("/"));

@@ -18,6 +18,7 @@
 #include <iostream>
 #include "parser/common/op_parser_factory.h"
 #include "graph/operator_reg.h"
+#include "graph/utils/graph_utils_ex.h"
 #include "register/op_registry.h"
 #include "parser/common/op_registration_tbe.h"
 #include "external/parser/onnx_parser.h"
@@ -139,7 +140,7 @@ TEST_F(STestOnnxParser, onnx_parser_user_output_with_default) {
   ge::Graph graph;
   auto ret = ge::aclgrphParseONNX(model_file.c_str(), parser_params, graph);
   ASSERT_EQ(ret, GRAPH_SUCCESS);
-  ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
+  ge::ComputeGraphPtr compute_graph = ge::GraphUtilsEx::GetComputeGraph(graph);
   auto output_nodes_info = compute_graph->GetGraphOutNodesInfo();
   ASSERT_EQ(output_nodes_info.size(), 1);
   EXPECT_EQ((output_nodes_info.at(0).first->GetName()), "Conv_0");

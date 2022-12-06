@@ -36,6 +36,7 @@
 #include "graph/debug/ge_attr_define.h"
 #include "graph/opsproto_manager.h"
 #include "graph/utils/type_utils.h"
+#include "graph/utils/graph_utils_ex.h"
 #include "omg/parser/parser_inner_ctx.h"
 #include "parser/common/op_registration_tbe.h"
 #include "tbe_plugin_loader.h"
@@ -534,7 +535,7 @@ domi::Status AclGraphParserUtil::GetDefaultOutInfo(ge::ComputeGraphPtr &compute_
 domi::Status AclGraphParserUtil::SetOutputNodeInfo(ge::Graph &graph,
                                                    const std::map<AscendString, AscendString> &parser_params) const {
   (void)parser_params;
-  ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
+  ge::ComputeGraphPtr compute_graph = ge::GraphUtilsEx::GetComputeGraph(graph);
   GE_CHECK_NOTNULL(compute_graph);
 
   std::vector<std::pair<std::string, int32_t>> user_out_nodes = ge::GetParserContext().user_out_nodes;
@@ -666,7 +667,7 @@ domi::Status AclGraphParserUtil::ParseParamsBeforeGraph(const std::map<AscendStr
 domi::Status AclGraphParserUtil::ParseParamsAfterGraph(ge::Graph &graph,
     const std::map<AscendString, AscendString> &parser_params) const {
   // support paragrams: input_fp16_nodes, is_input_adjust_hw_layout,
-  ComputeGraphPtr compute_graph = GraphUtils::GetComputeGraph(graph);
+  ComputeGraphPtr compute_graph = GraphUtilsEx::GetComputeGraph(graph);
   GE_CHECK_NOTNULL(compute_graph);
 
   string input_fp16_nodes;

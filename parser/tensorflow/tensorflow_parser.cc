@@ -29,6 +29,7 @@
 #include "framework/omg/parser/parser_inner_ctx.h"
 #include "graph/debug/ge_attr_define.h"
 #include "graph/utils/graph_utils.h"
+#include "graph/utils/graph_utils_ex.h"
 #include "graph/utils/node_utils.h"
 #include "graph/utils/type_utils.h"
 #include "iterator_fusion_pass.h"
@@ -109,7 +110,7 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, ge::Graph &graph) {
     return FAILED;
   }
 
-  graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
+  graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(compute_graph);
   auto model_parser = domi::ModelParserFactory::Instance()->CreateModelParser(domi::TENSORFLOW);
   if (model_parser == nullptr) {
     REPORT_CALL_ERROR("E19999", "No Model Parser for tensorflow, check invalid");
@@ -164,7 +165,7 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, const std::map<Ascend
     return FAILED;
   }
 
-  graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
+  graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(compute_graph);
   auto model_parser = domi::ModelParserFactory::Instance()->CreateModelParser(domi::TENSORFLOW);
   if (model_parser == nullptr) {
     REPORT_CALL_ERROR("E19999", "No Model Parser for tensorflow, check invalid");
@@ -305,7 +306,7 @@ Status PostOpProcessForSubgraph(const ParseArg &arg) {
     node->GetOpDesc()->SetName(node->GetOwnerComputeGraph()->GetName() + "/" + node->GetName());
   }
 
-  auto graph = ge::GraphUtils::CreateGraphFromComputeGraph(arg.graph);
+  auto graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(arg.graph);
   Status ret = FAILED;
   if (post_func != nullptr) {
     ret = post_func(arg.subgraph_name, graph);
@@ -349,7 +350,7 @@ Status MappingAndAddSubGraph(const NodePtr &node, const Graph &graph, const Comp
     return INTERNAL_ERROR;
   }
 
-  ComputeGraphPtr compute_graph = GraphUtils::GetComputeGraph(graph);
+  ComputeGraphPtr compute_graph = GraphUtilsEx::GetComputeGraph(graph);
   GE_CHECK_NOTNULL(compute_graph);
   // Inner function, GetOpDesc has been checked by caller
   (void)node->GetOpDesc()->AddSubgraphName("f");
@@ -1371,7 +1372,7 @@ Status TensorFlowModelParser::GetFunctionProto(const string &file,
 Status TensorFlowModelParser::Parse(const char *file, ge::Graph &graph) {
   ErrorManager::GetInstance().SetStage(error_message::kModelCompile, error_message::kParser);
   GE_CHECK_NOTNULL(file);
-  ge::ComputeGraphPtr root_graph = ge::GraphUtils::GetComputeGraph(graph);
+  ge::ComputeGraphPtr root_graph = ge::GraphUtilsEx::GetComputeGraph(graph);
   GE_CHECK_NOTNULL(root_graph);
 
   Status ret = Parse(file, root_graph);
@@ -1591,7 +1592,7 @@ Status TensorFlowModelParser::ParseAllGraph(const google::protobuf::Message *pro
   DeleteFuisonNodeDef();
 
   GE_RETURN_IF_ERROR(AddEdges(graph));
-  Graph dest_graph = GraphUtils::CreateGraphFromComputeGraph(graph);
+  Graph dest_graph = GraphUtilsEx::CreateGraphFromComputeGraph(graph);
   ParserUtils::OutputMapping final_output_nodes;
   GE_RETURN_IF_ERROR(ParserUtils::ExpandOneToManyGraph(dest_graph, final_output_nodes));
   GE_RETURN_IF_ERROR(UpdateOutputsInfo(final_output_nodes));
@@ -2336,7 +2337,7 @@ Status TensorFlowModelParser::ParseProto(const google::protobuf::Message *proto,
 
   ret = AddEdges(graph);
 
-  Graph dest_graph = GraphUtils::CreateGraphFromComputeGraph(graph);
+  Graph dest_graph = GraphUtilsEx::CreateGraphFromComputeGraph(graph);
   ParserUtils::OutputMapping final_output_nodes;
   GE_RETURN_IF_ERROR(ParserUtils::ExpandOneToManyGraph(dest_graph, final_output_nodes));
   GE_RETURN_IF_ERROR(UpdateOutputsInfo(final_output_nodes));
@@ -4024,7 +4025,7 @@ Status TensorFlowModelParser::AddExternalGraph(const ComputeGraphPtr &root_graph
         REPORT_CALL_ERROR("E19999", "Failed to parse external model, node:%s.", node->GetName().c_str());
         return INTERNAL_ERROR;
       }
-      Graph graph = model.GetGraph();
+      Graph graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(model.GetGraph());
       GELOGD("Get subgraph[%s] from model[%s].", ParserUtils::GetGraphName(graph).c_str(), node->GetName().c_str());
       Status ret = MappingAndAddSubGraph(node, graph, root_graph);
       if (ret != SUCCESS) {

@@ -23,6 +23,7 @@
 #include "graph/debug/ge_attr_define.h"
 #include "graph/debug/ge_op_types.h"
 #include "graph/utils/graph_utils.h"
+#include "graph/utils/graph_utils_ex.h"
 #include "graph/utils/node_utils.h"
 #include "register/register_fmk_types.h"
 #include "framework/common/debug/ge_log.h"
@@ -126,7 +127,7 @@ Status AutoMappingSubgraphIndexByDataNodeAndOutputNodesInfo(
     const std::function<Status(int netoutput_index, int &parent_output_index)> &output) {
   GE_CHECK_NOTNULL(input);
   GE_CHECK_NOTNULL(output);
-  auto compute_graph = ge::GraphUtils::GetComputeGraph(graph);
+  auto compute_graph = ge::GraphUtilsEx::GetComputeGraph(graph);
   GE_CHECK_NOTNULL(compute_graph);
 
   auto ret = AutoMappingSubgraphIndexByDataNode(compute_graph, input);
@@ -149,7 +150,7 @@ domi::Status AutoMappingSubgraphDataFormat(const NodePtr &parent_node, const ge:
   GE_CHECK_NOTNULL(parent_node);
   const auto &parent_op_desc = parent_node->GetOpDesc();
   GE_CHECK_NOTNULL(parent_op_desc);
-  const auto &compute_graph = ge::GraphUtils::GetComputeGraph(graph);
+  const auto &compute_graph = ge::GraphUtilsEx::GetComputeGraph(graph);
   GE_CHECK_NOTNULL(compute_graph);
   const auto data_nodes = FindNodesByType(compute_graph, DATA);
   for (size_t i = 0U; i < data_nodes.size(); ++i) {

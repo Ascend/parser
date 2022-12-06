@@ -39,6 +39,7 @@
 #include "external/ge/ge_api_types.h"
 #include "framework/common/debug/ge_log.h"
 #include "graph/utils/graph_utils.h"
+#include "graph/utils/graph_utils_ex.h"
 #include "omg/parser/op_parser.h"
 #include "omg/parser/parser_factory.h"
 #include "omg/parser/parser_inner_ctx.h"
@@ -98,7 +99,7 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file, 
   ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>("tmpGraph");
   GE_CHECK_NOTNULL(compute_graph);
 
-  graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
+  graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(compute_graph);
   auto model_parser = domi::ModelParserFactory::Instance()->CreateModelParser(domi::CAFFE);
   GE_CHECK_NOTNULL(model_parser);
 
@@ -162,7 +163,7 @@ graphStatus aclgrphParseCaffe(const char *model_file, const char *weights_file,
   ge::ComputeGraphPtr compute_graph = ge::parser::MakeShared<ge::ComputeGraph>(graph_name);
   GE_CHECK_NOTNULL(compute_graph);
 
-  graph = ge::GraphUtils::CreateGraphFromComputeGraph(compute_graph);
+  graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(compute_graph);
   auto model_parser = domi::ModelParserFactory::Instance()->CreateModelParser(domi::CAFFE);
   GE_CHECK_NOTNULL(model_parser);
 
@@ -1373,7 +1374,7 @@ Status CaffeModelParser::ParseFromMemory(const char *data, uint32_t size, ge::Co
 Status CaffeModelParser::Parse(const char *model_path, ge::Graph &graph) {
   ErrorManager::GetInstance().SetStage(error_message::kModelCompile, error_message::kParser);
   GE_CHECK_NOTNULL(model_path);
-  ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
+  ge::ComputeGraphPtr compute_graph = ge::GraphUtilsEx::GetComputeGraph(graph);
   GE_CHECK_NOTNULL(compute_graph);
 
   Status ret = Parse(model_path, compute_graph);
@@ -1702,7 +1703,7 @@ Status CaffeWeightsParser::ParseFromMemory(const char *data, uint32_t size, ge::
 Status CaffeWeightsParser::Parse(const char *file, ge::Graph &graph) {
   ErrorManager::GetInstance().SetStage(error_message::kModelCompile, error_message::kParser);
   GE_CHECK_NOTNULL(file);
-  ge::ComputeGraphPtr compute_graph = ge::GraphUtils::GetComputeGraph(graph);
+  ge::ComputeGraphPtr compute_graph = ge::GraphUtilsEx::GetComputeGraph(graph);
   GE_CHECK_NOTNULL(compute_graph);
 
   Status ret = Parse(file, compute_graph);
