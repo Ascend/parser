@@ -184,7 +184,7 @@ void AclGraphParserUtil::SaveCustomCaffeProtoPath() {
     path = path_env;
     GELOGI("Get custom proto path from env : %s", path_env);
   }
-  if (mmIsDir((path + "/vendors").c_str()) != EN_OK) {
+  if (mmIsDir((path + "/built-in").c_str()) != EN_OK) {
     ge::GetParserContext().custom_proto_path = path + "framework/custom/caffe/";
   } else {
     ge::GetParserContext().custom_proto_path = path + "vendors/customize/framework/caffe/";

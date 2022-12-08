@@ -4862,13 +4862,28 @@ TEST_F(UtestTensorflowParser, test_plugin_manager_getopp_plugin_vendors_03) {
   EXPECT_NE(ret, SUCCESS);
 }
 
-TEST_F(UtestTensorflowParser, test_plugin_manager_GetOpsProtoPath_01) {
+TEST_F(UtestTensorflowParser, test_plugin_manager_getopp_plugin_vendors_04) {
   std::string opp_path = __FILE__;
   opp_path = opp_path.substr(0, opp_path.rfind("/") + 1);
   setenv("ASCEND_OPP_PATH", opp_path.c_str(), 1);
 
   std::string path_vendors = opp_path + "vendors";
-  system(("rm -rf " + path_vendors).c_str());
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("rm -rf " + path_config).c_str());
+
+  std::vector<std::string> vendors;
+  Status ret = TBEPluginLoader::GetOppPluginVendors(path_config, vendors);
+  EXPECT_NE(ret, SUCCESS);
+}
+
+TEST_F(UtestTensorflowParser, test_plugin_manager_GetOpsProtoPath_01) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1);
+  setenv("ASCEND_OPP_PATH", opp_path.c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  system(("rm -rf " + path_builtin).c_str());
 
   std::string opsproto_path;
   Status ret = TBEPluginLoader::GetOpsProtoPath(opsproto_path);
@@ -4883,8 +4898,10 @@ TEST_F(UtestTensorflowParser, test_plugin_manager_GetOpsProtoPath_02) {
   opp_path = opp_path.substr(0, opp_path.rfind("/") + 1);
   setenv("ASCEND_OPP_PATH", opp_path.c_str(), 1);
 
+  std::string path_builtin = opp_path + "built-in";
   std::string path_vendors = opp_path + "vendors";
   std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
   system(("mkdir -p " + path_vendors).c_str());
   system(("echo 'load_priority=customize,mdc,lhisi' > " + path_config).c_str());
 
@@ -4899,13 +4916,34 @@ TEST_F(UtestTensorflowParser, test_plugin_manager_GetOpsProtoPath_02) {
   );
 }
 
+TEST_F(UtestTensorflowParser, test_plugin_manager_GetOpsProtoPath_03) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1);
+  setenv("ASCEND_OPP_PATH", opp_path.c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo 'load_priority' > " + path_config).c_str());
+
+  std::string opsproto_path;
+  Status ret = TBEPluginLoader::GetOpsProtoPath(opsproto_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(opsproto_path,
+    opp_path + "op_proto/custom/:" +
+    opp_path + "built-in/op_proto/"
+  );
+}
+
 TEST_F(UtestTensorflowParser, test_plugin_manager_GetCustomOpPath_01) {
   std::string opp_path = __FILE__;
   opp_path = opp_path.substr(0, opp_path.rfind("/") + 1);
   setenv("ASCEND_OPP_PATH", opp_path.c_str(), 1);
 
-  std::string path_vendors = opp_path + "vendors";
-  system(("rm -rf " + path_vendors).c_str());
+  std::string path_builtin = opp_path + "built-in";
+  system(("rm -rf " + path_builtin).c_str());
 
   std::string customop_path;
   TBEPluginLoader::GetCustomOpPath(customop_path);
@@ -4917,8 +4955,10 @@ TEST_F(UtestTensorflowParser, test_plugin_manager_GetCustomOpPath_02) {
   opp_path = opp_path.substr(0, opp_path.rfind("/") + 1);
   setenv("ASCEND_OPP_PATH", opp_path.c_str(), 1);
 
+  std::string path_builtin = opp_path + "built-in";
   std::string path_vendors = opp_path + "vendors";
   std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
   system(("mkdir -p " + path_vendors).c_str());
   system(("echo 'load_priority=customize,mdc,lhisi' > " + path_config).c_str());
 
@@ -4928,6 +4968,25 @@ TEST_F(UtestTensorflowParser, test_plugin_manager_GetCustomOpPath_02) {
     path_vendors + "/customize/framework/:" +
     path_vendors + "/mdc/framework/:" +
     path_vendors + "/lhisi/framework/:" +
+    opp_path + "built-in/framework/"), 0);
+}
+
+TEST_F(UtestTensorflowParser, test_plugin_manager_GetCustomOpPath_03) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1);
+  setenv("ASCEND_OPP_PATH", opp_path.c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo 'load_priority' > " + path_config).c_str());
+
+  std::string customop_path;
+  TBEPluginLoader::GetCustomOpPath(customop_path);
+  EXPECT_EQ(customop_path.find(
+    opp_path + "framework/custom/:" +
     opp_path + "built-in/framework/"), 0);
 }
 } // namespace ge

@@ -45,6 +45,7 @@
 namespace ge {
 namespace {
 const char_t *const kOppEnvName = "ASCEND_OPP_PATH";
+const char_t *const kBuiltIn = "built-in";     // opp built-in directory name
 const char_t *const kVendors = "vendors";      // opp vendors directory name
 const char_t *const kConfig = "config.ini";    // opp vendors config file name
 const size_t kVendorConfigPartsCount = 2U;
@@ -137,14 +138,16 @@ Status TBEPluginLoader::GetOppPath(std::string &opp_path) {
 }
 
 bool TBEPluginLoader::IsNewOppPathStruct(const std::string &opp_path) {
-  return mmIsDir((opp_path + kVendors).c_str()) == EN_OK;
+  return mmIsDir((opp_path + kBuiltIn).c_str()) == EN_OK;
 }
 
 Status TBEPluginLoader::GetOppPluginVendors(const std::string &vendors_config, std::vector<std::string> &vendors) {
-  GELOGI("Enter get opp plugin config file schedule");
-  GE_ASSERT_TRUE(!vendors_config.empty(), "[Check]Value of vendors_config should not be empty!");
+  GELOGI("Enter get opp plugin config file schedule, config file is '%s'", vendors_config.c_str());
   std::ifstream config(vendors_config);
-  GE_ASSERT_TRUE(config.good(), "File '%s' open failed!", vendors_config.c_str());
+  if (!config.good()) {
+    GELOGI("Can not open file '%s'!", vendors_config.c_str());
+    return FAILED;
+  }
   std::string content;
   std::getline(config, content);
   config.close();
@@ -161,27 +164,32 @@ Status TBEPluginLoader::GetOppPluginPathOld(const std::string &opp_path,
                                             std::string &plugin_path,
                                             const std::string &path_fmt_custom) {
   GELOGI("Enter get opp plugin path old schedule");
-  const std::string &fmt_builtin = path_fmt;
   const std::string &fmt_custom  = path_fmt_custom.empty() ? path_fmt : path_fmt_custom;
   plugin_path = (opp_path + std::regex_replace(fmt_custom, std::regex("%s"), "custom") + ":")
-              + (opp_path + std::regex_replace(fmt_builtin, std::regex("%s"), "built-in"));
+              + (opp_path + std::regex_replace(path_fmt, std::regex("%s"), "built-in"));
+  GELOGI("plugin_path is '%s'", plugin_path.c_str());
   return SUCCESS;
 }
 
 Status TBEPluginLoader::GetOppPluginPathNew(const std::string &opp_path,
                                             const std::string &path_fmt,
                                             std::string &plugin_path,
+                                            const std::string &old_custom_path,
                                             const std::string &path_fmt_custom) {
   GELOGI("Enter get opp plugin path new schedule");
   const std::string vendors_config = opp_path + kVendors + "/" + kConfig;
   std::vector<std::string> vendors;
-  GE_ASSERT_TRUE(GetOppPluginVendors(vendors_config, vendors) == SUCCESS, "Failed to get opp plugin vendors!");
-  const std::string &fmt_builtin = path_fmt;
-  const std::string &fmt_custom  = path_fmt_custom.empty() ? path_fmt : path_fmt_custom;
-  for (const auto &vendor : vendors) {
-    plugin_path += opp_path + kVendors + "/" + std::regex_replace(fmt_custom, std::regex("%s"), vendor) + ":";
+  if (GetOppPluginVendors(vendors_config, vendors) != SUCCESS) {
+    GELOGI("Can not get opp plugin vendors!");
+    plugin_path += opp_path + old_custom_path + ":";
+  } else {
+    const std::string &fmt_custom  = path_fmt_custom.empty() ? path_fmt : path_fmt_custom;
+    for (const auto &vendor : vendors) {
+      plugin_path += opp_path + kVendors + "/" + std::regex_replace(fmt_custom, std::regex("%s"), vendor) + ":";
+    }
   }
-  plugin_path += opp_path + std::regex_replace(fmt_builtin, std::regex("%s"), "built-in");
+  plugin_path += opp_path + std::regex_replace(path_fmt, std::regex("%s"), "built-in");
+  GELOGI("plugin_path is '%s'", plugin_path.c_str());
   return SUCCESS;
 }
 
@@ -194,7 +202,7 @@ Status TBEPluginLoader::GetOpsProtoPath(std::string &opsproto_path) {
     return GetOppPluginPathOld(opp_path, "op_proto/%s/", opsproto_path);
   } else {
     GELOGI("Opp plugin path structure is new version!");
-    return GetOppPluginPathNew(opp_path, "%s/op_proto/", opsproto_path);
+    return GetOppPluginPathNew(opp_path, "%s/op_proto/", opsproto_path, "op_proto/custom/");
   }
 }
 
@@ -220,7 +228,8 @@ void TBEPluginLoader::GetCustomOpPath(std::string &customop_path) {
     ret = GetOppPluginPathOld(opp_path, "framework/%s/" + fmk_type + "/", customop_path, "framework/%s/");
   } else {
     GELOGI("Opp plugin path structure is new version!");
-    ret = GetOppPluginPathNew(opp_path, "%s/framework/" + fmk_type + "/", customop_path, "%s/framework/");
+    ret = GetOppPluginPathNew(opp_path, "%s/framework/" + fmk_type + "/", customop_path, "framework/custom/",
+                              "%s/framework/");
   }
   if (ret != SUCCESS) {
     GELOGW("Failed to get custom op path!");

@@ -58,6 +58,7 @@ private:
   static Status GetOppPluginPathNew(const std::string &opp_path,
                                     const std::string &path_fmt,
                                     std::string &plugin_path,
+                                    const std::string &old_custom_path,
                                     const std::string &path_fmt_custom = "");
   static void GetCustomOpPath(std::string &customop_path);
   static void GetPluginSoFileList(const string &path, vector<string> &file_list, string &caffe_parser_path);
