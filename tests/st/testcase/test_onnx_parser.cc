@@ -157,7 +157,8 @@ TEST_F(STestOnnxParser, onnx_parser_if_node) {
   std::map<ge::AscendString, ge::AscendString> parser_params;
   ge::Graph graph;
   auto ret = ge::aclgrphParseONNX(model_file.c_str(), parser_params, graph);
-  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  // has circle struct, topo sort failed
+  EXPECT_EQ(ret, FAILED);
 }
 
 TEST_F(STestOnnxParser, onnx_parser_expand_one_to_many) {
