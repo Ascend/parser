@@ -36,7 +36,6 @@ const char *const kAttrDataType = "dtype";
 const char *const kFileConstantPath = "_file_constant_path";
 const char *const kLocation = "location";
 const char *const kOffset = "offset";
-const char *const kLength = "length";
 const int64_t kOffsetCoefficient = 4096;
 const char *const kFileConstant = "FileConstant";
 }
@@ -102,30 +101,30 @@ Status OnnxFileConstantParser::ParseDataType(const ge::onnx::TensorProto &tensor
 }
 
 Status OnnxFileConstantParser::ParsePath(const ge::onnx::TensorProto &tensor_proto, ge::Operator &op_def) const {
+  ge::NamedAttrs attrs;
   for (int32_t i = 0; i < tensor_proto.external_data_size(); ++i) {
     const ge::onnx::StringStringEntryProto &string_proto = tensor_proto.external_data(i);
-    if (SetPathAttr(string_proto, op_def) != SUCCESS) {
+    if (SetPathAttr(string_proto, attrs) != SUCCESS) {
       REPORT_INNER_ERROR("E19999", "external tensor proto[%s] parse attrs failed.", tensor_proto.name().c_str());
       GELOGE(domi::PARAM_INVALID, "external tensor proto[%s] parse attrs failed.", tensor_proto.name().c_str());
       return FAILED;
     }
   }
 
-  std::string location;
-  (void)op_def.GetAttr(kLocation, location);
-  if (location.empty()) {
+  if (!attrs.HasAttr(kLocation)) {
     REPORT_INNER_ERROR("E19999", "external tensor proto[%s] must contain location.", tensor_proto.name().c_str());
     GELOGE(domi::PARAM_INVALID, "external tensor proto[%s] must contain location.", tensor_proto.name().c_str());
     return FAILED;
   }
-  GELOGD("The weight file of Op[%s] is: [%s].", tensor_proto.name().c_str(), location.c_str());
+  op_def.SetAttr(kFileConstantPath, attrs);
+  GELOGD("The weight file of Op[%s] is: [%s].", tensor_proto.name().c_str(), attrs.GetName().c_str());
   return SUCCESS;
 }
 
 Status OnnxFileConstantParser::SetPathAttr(const ge::onnx::StringStringEntryProto &string_proto,
-                                           ge::Operator &op_def) const {
+                                           ge::NamedAttrs &attrs) const {
   if (string_proto.key() == kLocation) {
-    op_def.SetAttr(kLocation, string_proto.value());
+    AttrUtils::SetStr(attrs, kLocation, string_proto.value());
   } else {
     int64_t value;
     try {
@@ -142,10 +141,8 @@ Status OnnxFileConstantParser::SetPathAttr(const ge::onnx::StringStringEntryProt
         return FAILED;
       }
       value *= kOffsetCoefficient;
-      op_def.SetAttr(kOffset, value);
-    } else {
-      op_def.SetAttr(kLength, value);
     }
+    AttrUtils::SetInt(attrs, string_proto.key(), value);
   }
   return SUCCESS;
 }

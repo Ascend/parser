@@ -30,7 +30,7 @@ class PARSER_FUNC_VISIBILITY OnnxFileConstantParser : public OnnxOpParser {
   Status ParseDataType(const ge::onnx::TensorProto &tensor_proto, ge::Operator &op_def) const;
   void ParseShape(const ge::onnx::TensorProto &tensor_proto, ge::Operator &op_def) const;
   Status GetTensorProto(const ge::onnx::NodeProto &node_proto, ge::onnx::TensorProto &tensor_proto) const;
-  Status SetPathAttr(const ge::onnx::StringStringEntryProto &string_proto, ge::Operator &op_def) const;
+  Status SetPathAttr(const ge::onnx::StringStringEntryProto &string_proto, ge::NamedAttrs &attrs) const;
 };
 }  // namespace ge
 
