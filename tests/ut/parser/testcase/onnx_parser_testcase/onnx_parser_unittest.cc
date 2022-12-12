@@ -462,37 +462,36 @@ TEST_F(UtestOnnxParser, FileConstantParseAttr)
 {
   OnnxFileConstantParser parser;
   ge::onnx::StringStringEntryProto string_proto;
-  ge::OpDescPtr op_desc_src = std::make_shared<ge::OpDesc>("file_constant", "FileConstant");
-  ge::Operator op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc_src);
+  ge::NamedAttrs attrs;
 
   // test location
   string_proto.set_key("location");
   string_proto.set_value("/usr/local");
-  Status ret = parser.SetPathAttr(string_proto, op);
+  Status ret = parser.SetPathAttr(string_proto, attrs);
   EXPECT_EQ(ret, SUCCESS);
   std::string attr_value;
-  AttrUtils::GetStr(op_desc_src, "location", attr_value);
+  AttrUtils::GetStr(attrs, "location", attr_value);
   EXPECT_EQ(attr_value, "/usr/local");
 
   // test offset
   string_proto.set_key("offset");
   string_proto.set_value("123");
-  ret = parser.SetPathAttr(string_proto, op);
+  ret = parser.SetPathAttr(string_proto, attrs);
   EXPECT_EQ(ret, SUCCESS);
   int64_t offset_value;
-  AttrUtils::GetInt(op_desc_src, "offset", offset_value);
+  AttrUtils::GetInt(attrs, "offset", offset_value);
   EXPECT_EQ(offset_value, 123 * 4096);
 
   // offset overflow
   string_proto.set_key("offset");
   string_proto.set_value("9223372036854775800");
-  ret = parser.SetPathAttr(string_proto, op);
+  ret = parser.SetPathAttr(string_proto, attrs);
   EXPECT_EQ(ret, FAILED);
 
   // itol exception
   string_proto.set_key("offset");
   string_proto.set_value("999999999999999999999999999999999999");
-  ret = parser.SetPathAttr(string_proto, op);
+  ret = parser.SetPathAttr(string_proto, attrs);
   EXPECT_EQ(ret, FAILED);
 }
 
@@ -526,7 +525,9 @@ TEST_F(UtestOnnxParser, FileConstantParsePath)
 
   // check location
   std::string attr_value;
-  AttrUtils::GetStr(op_desc_src, "location", attr_value);
+  ge::NamedAttrs attrs;
+  AttrUtils::GetNamedAttrs(op_desc_src, "_file_constant_path", attrs);
+  AttrUtils::GetStr(attrs, "location", attr_value);
   EXPECT_EQ(attr_value, "/usr/local");
 }
 
@@ -566,8 +567,10 @@ TEST_F(UtestOnnxParser, FileConstantParseParam)
   EXPECT_EQ(ret, SUCCESS);
 
   // check location, shape, dtype
+  NamedAttrs attrs;
+  AttrUtils::GetNamedAttrs(*op_desc_src, "_file_constant_path", attrs);
   std::string file_path;
-  AttrUtils::GetStr(op_desc_src, "location", file_path);
+  AttrUtils::GetStr(attrs, "location", file_path);
   EXPECT_EQ(file_path, "/usr/local");
 
   std::vector<int64_t> dims;
