@@ -113,6 +113,13 @@ Status ParserUtils::ExpandOneToManyGraph(const Graph &graph, OutputMapping &outp
       return FAILED;
     }
   }
+  ComputeGraphPtr compute_graph = GraphUtilsEx::GetComputeGraph(graph);
+  GE_CHECK_NOTNULL(compute_graph);
+  if (compute_graph->TopologicalSorting() != GRAPH_SUCCESS) {
+    REPORT_CALL_ERROR("E19999", "TopologicalSorting failed, graph:%s.", compute_graph->GetName().c_str());
+    GELOGE(FAILED, "[Invoke][TopologicalSorting] failed, graph:%s.", compute_graph->GetName().c_str());
+    return FAILED;
+  }
   GELOGD("Run ParserUtils::ExpandOneToManyGraph success.");
   return SUCCESS;
 }
@@ -160,12 +167,6 @@ Status ParserUtils::ExpandNodeToSubgraph(const Graph &subgraph, const NodePtr &n
                       compute_graph->GetName().c_str());
     GELOGE(FAILED, "[Remove][Node] %s from graph:%s failed.", node->GetName().c_str(),
            compute_graph->GetName().c_str());
-    return FAILED;
-  }
-  graph_status = compute_graph->TopologicalSorting();
-  if (graph_status != GRAPH_SUCCESS) {
-    REPORT_CALL_ERROR("E19999", "TopologicalSorting failed, graph:%s.", compute_graph->GetName().c_str());
-    GELOGE(FAILED, "[Invoke][TopologicalSorting] failed, graph:%s.", compute_graph->GetName().c_str());
     return FAILED;
   }
   return SUCCESS;

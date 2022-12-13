@@ -29,6 +29,7 @@
 #include "parser/onnx/onnx_util.h"
 #define private public
 #include "parser/onnx/onnx_parser.h"
+#include "parser/onnx/onnx_file_constant_parser.h"
 #undef private
 
 namespace ge {
@@ -157,7 +158,8 @@ TEST_F(STestOnnxParser, onnx_parser_if_node) {
   std::map<ge::AscendString, ge::AscendString> parser_params;
   ge::Graph graph;
   auto ret = ge::aclgrphParseONNX(model_file.c_str(), parser_params, graph);
-  EXPECT_EQ(ret, GRAPH_SUCCESS);
+  // has circle struct, topo sort failed
+  EXPECT_EQ(ret, FAILED);
 }
 
 TEST_F(STestOnnxParser, onnx_parser_expand_one_to_many) {
@@ -223,5 +225,33 @@ TEST_F(STestOnnxParser, onnx_test_ModelParseToGraph)
 
   Status ret = modelParser.ModelParseToGraph(model_proto, graph);
   EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(STestOnnxParser, FileConstantParseParam)
+{
+  OnnxFileConstantParser parser;
+  ge::onnx::NodeProto input_node;
+  ge::OpDescPtr op_desc_src = std::make_shared<ge::OpDesc>("file_constant", "FileConstant");
+  ge::Operator op = ge::OpDescUtils::CreateOperatorFromOpDesc(op_desc_src);
+
+  ge::onnx::TensorProto tensor_proto;
+  ge::onnx::AttributeProto *attribute = input_node.add_attribute();
+  attribute->set_name("value");
+  ge::onnx::TensorProto *attribute_tensor = attribute->mutable_t();
+  *attribute_tensor = tensor_proto;
+  attribute_tensor->set_data_type(OnnxDataType::UINT16);
+  attribute_tensor->add_dims(4);
+
+  ge::onnx::StringStringEntryProto *string_proto1 = attribute_tensor->add_external_data();
+  string_proto1->set_key("location");
+  string_proto1->set_value("/tmp/weight");
+  ge::onnx::StringStringEntryProto *string_proto2 = attribute_tensor->add_external_data();
+  string_proto2->set_key("offset");
+  string_proto2->set_value("4");
+  ge::onnx::StringStringEntryProto *string_proto3 = attribute_tensor->add_external_data();
+  string_proto3->set_key("length");
+  string_proto3->set_value("16");
+  Status ret = parser.ParseParams(reinterpret_cast<Message *>(&input_node), op);
+  EXPECT_EQ(ret, SUCCESS);
 }
 } // namespace ge
