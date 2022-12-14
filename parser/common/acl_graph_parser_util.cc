@@ -142,7 +142,7 @@ static Status CheckOutNode(ge::OpDescPtr op_desc, int32_t index) {
     GELOGE(domi::FAILED, "[Check][Param]out_node [%s] output index:%d must be smaller "
            "than node output size:%d and can not be negative!", op_desc->GetName().c_str(), index, out_size);
     std::string fail_reason = "output index:" + to_string(index) +
-                              " must be smaller than output size:" + to_string(out_size) + " and can not be negative!";
+                              " must be smaller than output size:" + to_string(out_size) + " and can not be negative";
     ErrorManager::GetInstance().ATCReportErrMessage("E10003", {"parameter", "value", "reason"},
                                                     {"out_nodes", op_desc->GetName(), fail_reason});
     return domi::FAILED;
