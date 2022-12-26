@@ -121,16 +121,16 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, ge::Graph &graph) {
   // parse tensorflow model_file to GE graph
   ge::graphStatus ret = model_parser->Parse(model_file, graph);
   if (ret != ge::SUCCESS) {
-    GELOGE(ret, "Parse graph %s failed.", ParserUtils::GetGraphName(graph).c_str());
+    GELOGE(ret, "Parser graph %s failed.", ParserUtils::GetGraphName(graph).c_str());
     return ge::FAILED;
   }
 
   std::map<AscendString, AscendString> parser_params;
   if (acl_graph_parse_util.SetOutputNodeInfo(graph, parser_params) != ge::SUCCESS) {
-    GELOGE(ret, "Set graph %s default output node info failed.", ParserUtils::GetGraphName(graph).c_str());
+    GELOGE(ret, "Set graph %s default output node failed.", ParserUtils::GetGraphName(graph).c_str());
     return ge::FAILED;
   }
-  GELOGI("Parse graph %s success.", ParserUtils::GetGraphName(graph).c_str());
+  GELOGI("Parser graph %s success.", ParserUtils::GetGraphName(graph).c_str());
   return ge::SUCCESS;
 }
 
@@ -189,7 +189,7 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, const std::map<Ascend
     GELOGE(ge::FAILED, "Set graph %s default output node failed.", ParserUtils::GetGraphName(graph).c_str());
     return ge::FAILED;
   }
-  GELOGI("aclgrphParseTensorFlow graph %s success.", ParserUtils::GetGraphName(graph).c_str());
+  GELOGI("AclgrphParse graph %s success.", ParserUtils::GetGraphName(graph).c_str());
   return ge::SUCCESS;
 }
 
@@ -209,7 +209,7 @@ void AddDumpOriginName(const ge::NodePtr parent_node, const std::string& subgrap
     if (!ge::AttrUtils::SetListStr(node->GetOpDesc(), ge::ATTR_NAME_DATA_DUMP_ORIGIN_OP_NAMES, original_names)) {
       GELOGW("Set dump origin name to %s fail.", node->GetOpDesc()->GetName().c_str());
     }
-    GELOGD("Add dump origin name %s on node %s.", original_names[0].c_str(), node->GetName().c_str());
+    GELOGD("Add dump origin name %s for node %s.", original_names[0].c_str(), node->GetName().c_str());
   }
 }
 }  // namespace ge
@@ -240,7 +240,7 @@ struct ParseArg {
 };
 
 Status GenSubgraphParseTasks(const ge::ComputeGraphPtr &parent_graph, std::deque<ParseArg> &args) {
-  GELOGI("Gen subgraph parse tasks start.");
+  GELOGI("Gen subgraph parse tasks start");
   for (auto &node : parent_graph->GetDirectNode()) {
     auto op_desc = node->GetOpDesc();
     GE_CHECK_NOTNULL(op_desc);
@@ -251,9 +251,10 @@ Status GenSubgraphParseTasks(const ge::ComputeGraphPtr &parent_graph, std::deque
         GELOGW("The subgraph index %u of node %s is empty", i, node->GetName().c_str());
         continue;
       }
-
+      static uint64_t index = 0;
       // A function may be referenced multiple times in TF, change the graph name to ensure it is unique in GE
-      auto unique_name = node->GetName() + std::to_string(i) + subgraph_iname;
+      auto unique_name = node->GetName() + std::to_string(i) + subgraph_iname + std::to_string(index);
+      ++index;
       auto subgraph = ge::parser::MakeShared<ge::ComputeGraph>(unique_name);
       if (subgraph == nullptr) {
         REPORT_CALL_ERROR("E19999", "New ComputeGraph failed when create subgraph:%s", subgraph_iname.c_str());
@@ -273,7 +274,7 @@ Status GenSubgraphParseTasks(const ge::ComputeGraphPtr &parent_graph, std::deque
       args.push_back({nullptr, subgraph_iname, node, subgraph_name_to_index.first, subgraph});
     }
   }
-  GELOGI("Gen subgraph parse tasks end.");
+  GELOGI("Gen subgraph parse tasks end");
   return SUCCESS;
 }
 
@@ -282,16 +283,6 @@ Status PostOpProcessForSubgraph(const ParseArg &arg) {
   if (arg.parent_node == nullptr) {
     return SUCCESS;
   }
-  GELOGD("Post process for subgraph %s node %s type %s subgraph name %s", arg.function_name.c_str(),
-      arg.parent_node->GetName().c_str(), arg.parent_node->GetType().c_str(), arg.subgraph_name.c_str());
-  // refresh node_name in subgraph
-  for (const ge::NodePtr &node : arg.graph->GetDirectNode()) {
-    if ((node->GetOpDesc() == nullptr) || (node->GetType() == "Variable") || (node->GetType() == "VariableV2")) {
-      continue;
-    }
-    node->GetOpDesc()->SetName(node->GetOwnerComputeGraph()->GetName() + "/" + node->GetName());
-  }
-
   std::string op_type = arg.parent_node->GetType();
   std::string op_name = arg.parent_node->GetName();
   domi::ParseSubgraphFuncV2 parse_func_v2 = nullptr;
@@ -303,6 +294,17 @@ Status PostOpProcessForSubgraph(const ParseArg &arg) {
       GELOGW("The subgraph post func v2 for node %s type %s is null", op_name.c_str(), op_type.c_str());
       return SUCCESS;
     }
+  }
+
+  GELOGD("Post process for subgraph %s node %s type %s subgraph name %s", arg.function_name.c_str(),
+         arg.parent_node->GetName().c_str(), arg.parent_node->GetType().c_str(), arg.subgraph_name.c_str());
+
+  // refresh node_name in subgraph
+  for (const ge::NodePtr &node : arg.graph->GetDirectNode()) {
+    if ((node->GetOpDesc() == nullptr) || (node->GetType() == "Variable") || (node->GetType() == "VariableV2")) {
+      continue;
+    }
+    node->GetOpDesc()->SetName(node->GetOwnerComputeGraph()->GetName() + "/" + node->GetName());
   }
 
   auto graph = ge::GraphUtilsEx::CreateGraphFromComputeGraph(arg.graph);
@@ -371,7 +373,7 @@ Status MappingAndAddSubGraph(const NodePtr &node, const Graph &graph, const Comp
       return INTERNAL_ERROR;
     }
     compute_graph->RemoveSubgraph(sub_graph);
-    GELOGD("Add subgraph %s to root graph %s.", sub_graph->GetName().c_str(), root_graph->GetName().c_str());
+    GELOGD("Add subgraph[%s] to root graph[%s].", sub_graph->GetName().c_str(), root_graph->GetName().c_str());
   }
   return SUCCESS;
 }
@@ -425,7 +427,7 @@ Status TensorFlowModelParser::DefunToPartitionedCall(const domi::tensorflow::Nod
     }
   }
 
-  GELOGI("After AddTensorDescToOpDesc op[%s]: type[%s] have input size %zu, output size %zu, disable inference: %d",
+  GELOGI("After AddTensorDescToOpDesc op[%s]: type[%s] have input size: %zu, output size: %zu, disable inference: %d",
          op_name.c_str(), op->GetType().c_str(), op->GetInputsSize(), op->GetOutputsSize(), attr_call_inference.b());
 
   (void)op->AddSubgraphName("f");
@@ -454,11 +456,11 @@ Status TensorFlowModelParser::TransNodeToOpDesc(const domi::tensorflow::NodeDef 
   } else {
     op = ge::OpDescUtils::GetOpDescFromOperator(op_factory);
     GE_CHECK_NOTNULL(op);
-    GELOGI("After GetOpDescFromOperator op[%s]: type[%s] has input size %zu, output size %zu", op->GetName().c_str(),
+    GELOGI("After GetOpDescFromOperator op[%s]: type[%s] has input size: %zu, output size: %zu", op->GetName().c_str(),
            op->GetType().c_str(), op->GetInputsSize(), op->GetOutputsSize());
 
     GE_RETURN_IF_ERROR(AddTensorDescToOpDesc(op, node_def));
-    GELOGI("After AddTensorDescToOpDesc op[%s]: type[%s] has input size %zu, output size %zu", op->GetName().c_str(),
+    GELOGI("After AddTensorDescToOpDesc op[%s]: type[%s] has input size: %zu, output size: %zu", op->GetName().c_str(),
            op->GetType().c_str(), op->GetInputsSize(), op->GetOutputsSize());
   }
   op_factory.BreakConnect();
@@ -525,7 +527,7 @@ Status TensorFlowModelParser::AddNode(const domi::tensorflow::NodeDef *node_def,
   string node_op = node_def->op();
   std::map<std::string, std::string>::const_iterator type_it = tensorflow_op_map.find(node_op);
   if (type_it == tensorflow_op_map.end()) {
-    GELOGI("Can not find, maybe this node has no plugin node_name is %s, node_op is %s ", node_name.c_str(),
+    GELOGI("Can not find,maybe this node has no plugin node_name is %s, node_op is %s ", node_name.c_str(),
            node_op.c_str());
     ge::OpDescPtr op_desc;
     GE_RETURN_IF_ERROR(TransNodeToOpDesc(node_def, op_desc, node_op));
@@ -572,7 +574,7 @@ Status TensorFlowModelParser::AddNode(const domi::tensorflow::NodeDef *node_def,
       return status;
     }
   }
-  GELOGI("After op parser op[%s] type[%s] have input size %zu, output size %zu", op->GetName().c_str(),
+  GELOGI("After op parser op[%s] type[%s] have input size: %zu, output size: %zu", op->GetName().c_str(),
          op->GetType().c_str(), op->GetInputsSize(), op->GetOutputsSize());
   // checkout op input number with IR
   GE_RETURN_IF_ERROR(CheckoutInputNum(op, node_def));
@@ -674,7 +676,7 @@ Status TensorFlowModelParser::CheckoutInputNum(ge::OpDescPtr &op_desc, const dom
         "E19014", {"opname", "value", "reason"},
         {op_desc->GetName(), "input number of tensorflow[" + std::to_string(input_tensor_num) + "]",
          "should be equal to factory size[" + std::to_string(factory_input_size) + "]"});
-    GELOGE(FAILED, "op [%s], type[%s], the input number of tensorflow[%zu] should be equal to factory size[%zu]",
+    GELOGE(FAILED, "op [%s], type[%s], The input number of tensorflow[%zu] should be equal to factory size[%zu]",
            op_desc->GetName().c_str(), op_desc->GetType().c_str(), input_tensor_num, factory_input_size);
     return FAILED;
   }
@@ -699,7 +701,7 @@ void TensorFlowModelParser::UpdateInputTensor(ge::OpDescPtr &op_desc, const std:
       ge::graphStatus ret = op_desc->UpdateInputDesc(op_desc->GetInputNameByIndex(i), input_tensor);
       if (ret != ge::GRAPH_SUCCESS) {
         // UpdateInputDesc for dynamic intput will be failed, but it will be added in later op parser.
-        GELOGI("op [%s], type[%s], input %zu with name %s is not updated", op_desc->GetName().c_str(),
+        GELOGI("op [%s], type[%s], input(%zu) with name %s is not updated", op_desc->GetName().c_str(),
                op_desc->GetType().c_str(), i, op_desc->GetInputNameByIndex(i).c_str());
       }
     }
@@ -724,7 +726,7 @@ void TensorFlowModelParser::UpdateOutputTensor(ge::OpDescPtr &op_desc, const std
       ge::graphStatus ret = op_desc->UpdateOutputDesc(op_desc->GetOutputNameByIndex(i), output_tensor);
       if (ret != ge::GRAPH_SUCCESS) {
         // UpdateOutputDesc for dynamic output will be failed, but it will be added in later op parser.
-        GELOGI("op [%s], type[%s], output %zu with name %s is not updated", op_desc->GetName().c_str(),
+        GELOGI("op [%s], type[%s], output(%zu) with name %s is not updated", op_desc->GetName().c_str(),
                op_desc->GetType().c_str(), i, op_desc->GetInputNameByIndex(i).c_str());
       }
     }
@@ -745,14 +747,14 @@ Status TensorFlowModelParser::AddTensorDescToOpDesc(ge::OpDescPtr &op_desc,
                                                                 TENSORFLOW_NORMAL_INPUT_TENSOR_FLAG, type),
                       "trans input_attr_value failed, op: %s", node->name().c_str());
   } else {
-    GELOGD("Frameworkop has no input tensor desc, name: %s, type: %s.", node->name().c_str(), type.c_str());
+    GELOGD("Frameworkop has no input tensor desc, name:%s, type:%s.", node->name().c_str(), type.c_str());
   }
   if (ge::TensorFlowUtil::FindAttrValue(node, ge::ATTR_NAME_OUTPUT_TENSOR_DESC, output_attr_value)) {
     GE_CHK_STATUS_RET(ge::TensorFlowUtil::TransTensorDescriptor(output_attr_value, &temp_op,
                                                                 TENSORFLOW_NORMAL_OUTPUT_TENSOR_FLAG, type),
                       "trans output_attr_value failed, op: %s", node->name().c_str());
   } else {
-    GELOGD("Frameworkop has no output tensor desc, name: %s, type: %s.", node->name().c_str(), type.c_str());
+    GELOGD("Frameworkop has no output tensor desc, name:%s, type:%s.", node->name().c_str(), type.c_str());
   }
 
   auto iter = op_node_context_map_.find(op_desc->GetName());
@@ -824,7 +826,7 @@ Status TensorFlowModelParser::AddEdges(ge::ComputeGraphPtr &graph) {
         bool control = GetEdgesControlInfo(dest_op_name, outputpair.second);
         // Graph create new edge
         if (!control) {
-          GELOGD("Start add edge from %s:%d to %s:%d.", src->GetName().c_str(), outputpair.first,
+          GELOGD("Start add edge: from %s:%d to %s:%d.", src->GetName().c_str(), outputpair.first,
                  dest->GetName().c_str(), outputpair.second);
           ge::OutDataAnchorPtr out_archor_ptr = src->GetOutDataAnchor(outputpair.first);
           GE_CHECK_NOTNULL(out_archor_ptr);
@@ -837,7 +839,7 @@ Status TensorFlowModelParser::AddEdges(ge::ComputeGraphPtr &graph) {
             return INTERNAL_ERROR;
           }
         } else {
-          GELOGD("Start add contorl edge from %s to %s.", src->GetName().c_str(), dest->GetName().c_str());
+          GELOGD("Start add contorl edge: from %s to %s.", src->GetName().c_str(), dest->GetName().c_str());
           ge::InControlAnchorPtr in_archor_ptr = dest->GetInControlAnchor();
           GE_CHECK_NOTNULL(in_archor_ptr);
           ge::OutControlAnchorPtr out_archor_ptr = src->GetOutControlAnchor();
@@ -955,7 +957,7 @@ Status TensorFlowModelParser::ParseNodeDef(TensorFlowModelParser *parser, ge::Co
   // The caller guarantees that the pointer is not null
   string node_name = node_def->name();
   string node_op = node_def->op();
-  GELOGD("TF op node name is %s, op type is %s", node_name.c_str(), node_op.c_str());
+  GELOGD("TF op node name = %s, op type= %s", node_name.c_str(), node_op.c_str());
   domi::tensorflow::AttrValue attr_value;
   if (ge::TensorFlowUtil::FindAttrValue(node_def, kAttrNameIsScopeInnerNode, attr_value) && attr_value.b()) {
     return AddScopeInnerNode(parser, graph, graphMutex, node_def);
@@ -972,15 +974,14 @@ Status TensorFlowModelParser::ParseNodeDef(TensorFlowModelParser *parser, ge::Co
   // Log printing for determining operator type
   domi::ImplyType implyType = domi::OpRegistry::Instance()->GetImplyType(op_type);
   GE_IF_BOOL_EXEC((implyType == domi::ImplyType::TVM) && (op_type != ge::parser::FRAMEWORKOP),
-                  GELOGD("TBE %s is parsering", node_op.c_str()););
+                  GELOGD("TBE %s parsering", node_op.c_str()););
   GE_IF_BOOL_EXEC((implyType == domi::ImplyType::CCE) && (op_type != ge::parser::FRAMEWORKOP),
-                  GELOGD("CCE %s is parsering", node_op.c_str()););
+                  GELOGD("CCE %s parsering", node_op.c_str()););
   GE_IF_BOOL_EXEC((implyType == domi::ImplyType::HCCL) && (op_type != ge::parser::FRAMEWORKOP),
-                  GELOGD("HCCL %s is parsering", node_op.c_str()););
+                  GELOGD("HCCL %s parsering", node_op.c_str()););
   GE_IF_BOOL_EXEC(op_type == ge::parser::FRAMEWORKOP,
                   GELOGD("FRAMEWORKOP %s parsering", node_op.c_str()););
-  GELOGD("TF op node name is %s, op type is %s, trans to op type %s",
-      node_name.c_str(), node_op.c_str(), op_type.c_str());
+  GELOGD("TF op node name = %s, op type= %s, trans to op type %s", node_name.c_str(), node_op.c_str(), op_type.c_str());
 
   // Construct operator by IR
   ge::OpDescPtr op;
@@ -1015,21 +1016,21 @@ Status TensorFlowModelParser::ParseNodeDef(TensorFlowModelParser *parser, ge::Co
   } else {
     op = ge::OpDescUtils::GetOpDescFromOperator(op_factory);
     GE_CHECK_NOTNULL(op);
-    GELOGD("After GetOpDescFromOperator op[%s] type[%s] have input size %zu, output size %zu", op->GetName().c_str(),
+    GELOGD("After GetOpDescFromOperator op[%s] type[%s] have input size: %zu, output size: %zu", op->GetName().c_str(),
            op->GetType().c_str(), op->GetInputsSize(), op->GetOutputsSize());
 
     GE_RETURN_IF_ERROR(parser->AddTensorDescToOpDesc(op, node_def));
-    GELOGD("After AddTensorDescToOpDesc op[%s] type[%s] have input size %zu, output size %zu", op->GetName().c_str(),
+    GELOGD("After AddTensorDescToOpDesc op[%s] type[%s] have input size: %zu, output size: %zu", op->GetName().c_str(),
            op->GetType().c_str(), op->GetInputsSize(), op->GetOutputsSize());
   }
-  GELOGD("TF op node name is %s, outpusize= %zu", node_name.c_str(), op->GetAllOutputsDesc().size());
+  GELOGD("TF op node name = %s, outpusize= %zu", node_name.c_str(), op->GetAllOutputsDesc().size());
   op_factory.BreakConnect();
 
   // create OpParser
   shared_ptr<OpParserFactory> factory = OpParserFactory::Instance(domi::TENSORFLOW);
   GE_CHECK_NOTNULL(factory);
   bool needFusion = parser->IsFusionOp(scope_graph, node_def);
-  GELOGD("TF op node name is %s, op type %s is fusion op(NO: 0; YES: 1)= %d", node_name.c_str(), node_op.c_str(),
+  GELOGD("TF op node name = %s, op type= %s is fusion op(NO: 0; YES: 1)= %d", node_name.c_str(), node_op.c_str(),
          needFusion);
 
   Status status = FAILED;
@@ -1041,7 +1042,7 @@ Status TensorFlowModelParser::ParseNodeDef(TensorFlowModelParser *parser, ge::Co
       return status;
     }
   }
-  GELOGD("After op parser op[%s] type[%s] have input size %zu, output size %zu", op->GetName().c_str(),
+  GELOGD("After op parser op[%s] type[%s] have input size: %zu, output size: %zu", op->GetName().c_str(),
          op->GetType().c_str(), op->GetInputsSize(), op->GetOutputsSize());
 
   // checkout op input number with IR
@@ -1118,7 +1119,7 @@ Status TensorFlowModelParser::AddFmkNode(ge::ComputeGraphPtr &graph, shared_ptr<
     GE_CHECK_NOTNULL(node_def);
     GE_RETURN_IF_ERROR(AdaptOpType(node_def, is_dataset_init));
   }
-  GELOGD("Add fusion nodedef and adapt op type success");
+  GELOGD("Add fusion nodedef and Adapt op type success");
 
   // Multithreading parallel parsing nodedef
   ThreadPool executor(kThreadNum);
@@ -1139,7 +1140,7 @@ Status TensorFlowModelParser::AddFmkNode(ge::ComputeGraphPtr &graph, shared_ptr<
     }
     vectorFuture[j] = std::move(f);
   }
-  GELOGD("Parse nodedef success.");
+  GELOGD("Parse nodedef success");
   // Wait for the return value of each thread. If the thread does not finish processing, it will block here
   bool ret_flag = true;
   size_t futureSize = vectorFuture.size();
@@ -1202,7 +1203,7 @@ Status TensorFlowModelParser::ExcuteScopeFusionPasses(domi::tensorflow::GraphDef
       continue;
     }
     if (!impl->SetPassEnableFlag(enable_pass_names[i], true)) {
-      GELOGW("Failed to set enable flag of scope fusion pass %s", enable_pass_names[i].c_str());
+      GELOGW("Failed to set enable flag of scope fusion pass:%s", enable_pass_names[i].c_str());
     }
   }
   std::vector<std::string> scope_passes_list = impl->GetAllRegisteredPasses();
