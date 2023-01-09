@@ -21,6 +21,7 @@
 #include "parser/common/op_parser_factory.h"
 #include "graph/operator_reg.h"
 #include "graph/utils/graph_utils_ex.h"
+#include "graph/utils/op_desc_utils_ex.h"
 #include "register/op_registry.h"
 #include "parser/common/op_registration_tbe.h"
 #include "framework/omg/parser/model_parser.h"
@@ -80,21 +81,21 @@ static ge::NodePtr GenNodeFromOpDesc(ge::OpDescPtr opDesc){
   {
     ge::ComputeGraphPtr graph = std::make_shared<ge::ComputeGraph>("default");
     ge::OpDescPtr data_op = std::make_shared<ge::OpDesc>();
-    data_op->SetType(parser::DATA);
+    ge::OpDescUtilsEx::SetType(data_op, parser::DATA);
     data_op->SetName("Data1");
     data_op->AddInputDesc(ge::GeTensorDesc());
     data_op->AddOutputDesc(ge::GeTensorDesc());
     ge::NodePtr data1 = graph->AddNode(data_op);
 
     ge::OpDescPtr relu_op1 = std::make_shared<ge::OpDesc>();
-    relu_op1->SetType(parser::ACTIVATION);
+    ge::OpDescUtilsEx::SetType(relu_op1, parser::ACTIVATION);
     relu_op1->SetName("Relu1");
     relu_op1->AddInputDesc(ge::GeTensorDesc());
     relu_op1->AddOutputDesc(ge::GeTensorDesc());
     ge::NodePtr relu1 = graph->AddNode(relu_op1);
 
     ge::OpDescPtr relu_op2 = std::make_shared<ge::OpDesc>();
-    relu_op2->SetType(parser::RELU);
+    ge::OpDescUtilsEx::SetType(relu_op2, parser::RELU);
     relu_op2->SetName("Relu2");
     relu_op2->AddInputDesc(ge::GeTensorDesc());
     relu_op2->AddOutputDesc(ge::GeTensorDesc());
@@ -102,7 +103,7 @@ static ge::NodePtr GenNodeFromOpDesc(ge::OpDescPtr opDesc){
     ge::NodePtr relu2 = graph->AddNode(relu_op2);
 
     ge::OpDescPtr relu_op3 = std::make_shared<ge::OpDesc>();
-    relu_op3->SetType(parser::ACTIVATION);
+    ge::OpDescUtilsEx::SetType(relu_op3, parser::ACTIVATION);
     relu_op3->SetName("Relu3");
     relu_op3->AddInputDesc(ge::GeTensorDesc());
     relu_op3->AddOutputDesc(ge::GeTensorDesc());
@@ -112,7 +113,7 @@ static ge::NodePtr GenNodeFromOpDesc(ge::OpDescPtr opDesc){
     }
 
     ge::OpDescPtr mul_op = std::make_shared<ge::OpDesc>();
-    mul_op->SetType(parser::MUL);
+    ge::OpDescUtilsEx::SetType(mul_op, parser::MUL);
     mul_op->SetName("Mul");
     mul_op->AddInputDesc(ge::GeTensorDesc());
     mul_op->AddInputDesc(ge::GeTensorDesc());
@@ -123,7 +124,7 @@ static ge::NodePtr GenNodeFromOpDesc(ge::OpDescPtr opDesc){
     ge::NodePtr mul = graph->AddNode(mul_op);
 
     ge::OpDescPtr mul_op1 = std::make_shared<ge::OpDesc>();
-    mul_op1->SetType(parser::MUL);
+    ge::OpDescUtilsEx::SetType(mul_op1, parser::MUL);
     mul_op1->SetName("Mul1");
     mul_op1->AddInputDesc(ge::GeTensorDesc());
     mul_op1->AddInputDesc(ge::GeTensorDesc());
@@ -131,7 +132,7 @@ static ge::NodePtr GenNodeFromOpDesc(ge::OpDescPtr opDesc){
     ge::NodePtr mul1 = graph->AddNode(mul_op1);
 
     ge::OpDescPtr mul_op2 = std::make_shared<ge::OpDesc>();
-    mul_op2->SetType(parser::MUL);
+    ge::OpDescUtilsEx::SetType(mul_op2, parser::MUL);
     mul_op2->SetName("Mul2");
     mul_op2->AddInputDesc(ge::GeTensorDesc());
     mul_op2->AddInputDesc(ge::GeTensorDesc());
@@ -139,7 +140,7 @@ static ge::NodePtr GenNodeFromOpDesc(ge::OpDescPtr opDesc){
     ge::NodePtr mul2 = graph->AddNode(mul_op2);
 
     ge::OpDescPtr fc_op = std::make_shared<ge::OpDesc>();
-    fc_op->SetType(parser::FULL_CONNECTION);
+    ge::OpDescUtilsEx::SetType(fc_op, parser::FULL_CONNECTION);
     fc_op->SetName("FullConnection");
     fc_op->AddInputDesc(ge::GeTensorDesc());
     fc_op->AddOutputDesc(ge::GeTensorDesc());

@@ -93,15 +93,15 @@ static void UpdateTensorForOpDesc(const ParserOperator &op, ge::OpDescPtr op_def
 }
 
 FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY domi::Status ConvertToOpDesc(const ParserOperator &op,
-                                                                              const ge::OpDescPtr &op_def) {
+                                                                              ge::OpDescPtr &op_def) {
   if (op_def == nullptr) {
     REPORT_INNER_ERROR("E19999", "param op_def is nullptr, check invalid.");
     GELOGE(ge::FAILED, "[Check][Param] param op_def is nullptr, check invalid.");
     return ge::FAILED;
   }
   op_def->SetName(op.GetName());
-  op_def->SetType(op.GetType());
-  GE_IF_BOOL_EXEC(op.GetType() == ge::parser::YOLO, op_def->SetType(ge::parser::REGION));
+  ge::OpDescUtilsEx::SetType(op_def, op.GetType());
+  GE_IF_BOOL_EXEC(op.GetType() == ge::parser::YOLO, ge::OpDescUtilsEx::SetType(op_def, ge::parser::REGION));
 
   UpdateTensorForOpDesc(op, op_def);
   GELOGD("Convert to op desc: name:%s, input size: %zu, output size:%zu", op_def->GetName().c_str(),

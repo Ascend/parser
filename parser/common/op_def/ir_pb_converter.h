@@ -20,10 +20,11 @@
 #include "framework/common/fmk_error_codes.h"
 #include "parser/common/op_def/operator.h"
 #include "graph/utils/op_desc_utils.h"
+#include "graph/utils/op_desc_utils_ex.h"
 #include "proto/om.pb.h"
 
 namespace ge {
-domi::Status ConvertToOpDesc(const ParserOperator &op, const ge::OpDescPtr &op_def);
+domi::Status ConvertToOpDesc(const ParserOperator &op, ge::OpDescPtr &op_def);
 
 domi::Status ConvertFromOpDesc(const ge::OpDescPtr op_def, ParserOperator &op);
 }  // namespace ge
