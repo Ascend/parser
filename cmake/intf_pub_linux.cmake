@@ -31,7 +31,8 @@ target_link_libraries(intf_pub INTERFACE
     -lpthread
 )
 
-set(CMAKE_C_COMPILER_LAUNCHER /usr/local/ccache/bin/ccache CACHE PATH "cache Compiler")
-set(CMAKE_CXX_COMPILER_LAUNCHER /usr/local/ccache/bin/ccache CACHE PATH "cache Compiler")
+find_program(CCACHE_FOUND ccache)
+set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_FOUND} CACHE PATH "cache Compiler")
+set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_FOUND} CACHE PATH "cache Compiler")
 message(STATUS "CMAKE_C_COMPILER_LAUNCHER:${CMAKE_C_COMPILER_LAUNCHER}")
 message(STATUS "CMAKE_CXX_COMPILER_LAUNCHER:${CMAKE_CXX_COMPILER_LAUNCHER}")
