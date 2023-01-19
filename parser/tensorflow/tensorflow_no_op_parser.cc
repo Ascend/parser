@@ -34,6 +34,4 @@ Status TensorFlowNoOpParser::ParseParams(const Message *op_src, ge::OpDescPtr &o
 
   return ConvertToOpDesc(op, op_dest);
 }
-
-REGISTER_OP_PARSER_CREATOR(TENSORFLOW, NOOP, TensorFlowNoOpParser);
 }  // namespace ge
