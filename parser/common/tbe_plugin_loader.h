@@ -51,6 +51,7 @@ private:
   static Status GetOppPath(std::string &opp_path);
   static bool IsNewOppPathStruct(const std::string &opp_path);
   static Status GetOppPluginVendors(const std::string &vendors_config, std::vector<std::string> &vendors);
+  static void GetPluginPathFromCustomOppPath(const std::string &sub_path, std::string &plugin_path);
   static Status GetOppPluginPathOld(const std::string &opp_path,
                                     const std::string &path_fmt,
                                     std::string &plugin_path,
