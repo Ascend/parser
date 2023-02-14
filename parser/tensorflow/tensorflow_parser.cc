@@ -2439,19 +2439,63 @@ Status TensorFlowModelParser::ParseProtoWithSubgraph(const google::protobuf::Mes
 }
 
 Status TensorFlowModelParser::ParseProto(const std::string &serialized_proto, ge::ComputeGraphPtr &graph) {
-  if (serialized_proto.empty()) {
+  std::vector<std::string> partitioned_serialized{serialized_proto};
+  std::map<std::string, std::string> const_value_map;
+  return ParseProto(partitioned_serialized, const_value_map, graph);
+}
+
+Status TensorFlowModelParser::ParseProto(const std::vector<std::string> &partitioned_serialized,
+                                         const std::map<std::string, std::string> &const_value_map,
+                                         ge::ComputeGraphPtr &graph) {
+  // support multiply graphdef parser proto
+  if (partitioned_serialized.empty()) {
+    GELOGE(FAILED, "Deserialize proto failed as partition string vector is empty");
+    return FAILED;
+  }
+  if (partitioned_serialized.size() > 1UL) {
+    GELOGE(FAILED, "Partition graphDef vector size is beyond 1, it's not support now");
+    return FAILED;
+  }
+  if (partitioned_serialized.front().empty()) {
     GELOGE(FAILED, "Deserialize proto failed as serialized proto is empty");
     return FAILED;
   }
   domi::tensorflow::GraphDef graph_def;
-  if (!graph_def.ParseFromString(serialized_proto)) {
+  if (!graph_def.ParseFromString(partitioned_serialized.front())) {
     GELOGE(FAILED, "Proto object GraphDef parse serialized proto failed");
     return FAILED;
+  }
+  if (!const_value_map.empty()) {
+    for (auto &node : *graph_def.mutable_node()) {
+      if (node.op() == "Const") {
+        auto iter = const_value_map.find(node.name());
+        if (iter == const_value_map.end()) {
+          continue;
+        }
+        auto attr_iter = node.mutable_attr()->find("value");
+        if (attr_iter == node.mutable_attr()->end()) {
+          GELOGE(FAILED, "Can't not find value attribute of node[%s]", node.name().c_str());
+          return FAILED;
+        }
+        domi::tensorflow::TensorProto *tensor = attr_iter->second.mutable_tensor();
+        tensor->set_tensor_content(iter->second);
+      }
+    }
   }
   return ParseProto(ge::PtrToPtr<domi::tensorflow::GraphDef, const google::protobuf::Message>(&graph_def), graph);
 }
 
-Status TensorFlowModelParser::ParseProtoWithSubgraph(const std::string &root_proto, domi::GetGraphCallbackV2 callback,
+Status TensorFlowModelParser::ParseProtoWithSubgraph(const std::string &root_proto,
+                                                     domi::GetGraphCallbackV2 callback,
+                                                     ge::ComputeGraphPtr &root_graph) {
+  std::vector<std::string> partitioned_serialized{root_proto};
+  std::map<std::string, std::string> const_value_map;
+  return ParseProtoWithSubgraph(partitioned_serialized, const_value_map, callback, root_graph);
+}
+
+Status TensorFlowModelParser::ParseProtoWithSubgraph(const std::vector<std::string> &partitioned_serialized,
+                                                     const std::map<std::string, std::string> &const_value_map,
+                                                     domi::GetGraphCallbackV2 callback,
                                                      ge::ComputeGraphPtr &root_graph) {
   ErrorManager::GetInstance().SetStage(error_message::kModelCompile, error_message::kParser);
   ErrorManager::GetInstance().GenWorkStreamIdDefault();
@@ -2475,7 +2519,7 @@ Status TensorFlowModelParser::ParseProtoWithSubgraph(const std::string &root_pro
       ret = model_parser->ParseProto(callback(arg.function_name), arg.graph);
     } else {
       GELOGI("Begin to parse serialized proto of root graph");
-      ret = model_parser->ParseProto(root_proto, arg.graph);
+      ret = model_parser->ParseProto(partitioned_serialized, const_value_map, arg.graph);
       root_parsed = true;
     }
 

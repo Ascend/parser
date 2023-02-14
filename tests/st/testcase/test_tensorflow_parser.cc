@@ -966,7 +966,6 @@ void CreateGraphDef(domi::tensorflow::GraphDef &graph_def) {
   auto retval1 = graph_def.add_node();
   auto softmax0 = graph_def.add_node();
   auto softmax1 = graph_def.add_node();
-
   // 2. set info
   placeholder0->set_name("placeholder0");
   placeholder0->set_op("PlaceHolder");
@@ -1224,6 +1223,38 @@ TEST_F(STestTensorflowParser, parser_ParseProtoWithSubgraphV2)
   domi::GetGraphCallbackV2 callback(&getGraphCallbackV2);
   TensorFlowModelParser parser;
   ret = parser.ParseProtoWithSubgraph(root_proto, callback, root_graph);
+}
+
+TEST_F(STestTensorflowParser, parser_ParseProtoWithSubgraphWithConstValue)
+{
+  ge::ComputeGraphPtr root_graph = std::make_shared<ge::ComputeGraph>("ge_default");
+  domi::tensorflow::GraphDef graph_def;
+  auto const1 = graph_def.add_node();
+  auto const2 = graph_def.add_node();
+  auto add = graph_def.add_node();
+  const1->set_name("const1");
+  const1->set_op("Const");
+  const2->set_name("const2");
+  const2->set_op("Const");
+  add->set_name("Add");
+  add->set_op("Add");
+  add->add_input("const1");
+  add->add_input("const0");
+  std::string root_proto = graph_def.SerializeAsString();
+  domi::GetGraphCallbackV2 callback(&getGraphCallbackV2);
+  TensorFlowModelParser parser;
+  std::vector<std::string> partition_graph{root_proto};
+  std::map<std::string, std::string> const_value_map;
+  const_value_map.insert({"abc", "abc"});
+  auto ret = parser.ParseProtoWithSubgraph(partition_graph, const_value_map, callback, root_graph);
+  const_value_map.insert({"const1", "abc"});
+  ret = parser.ParseProtoWithSubgraph(partition_graph, const_value_map, callback, root_graph);
+  partition_graph.push_back("kkkkkkk");
+  ret = parser.ParseProtoWithSubgraph(partition_graph, const_value_map, callback, root_graph);
+  partition_graph.clear();
+  ret = parser.ParseProtoWithSubgraph(partition_graph, const_value_map, callback, root_graph);
+  partition_graph.push_back("");
+  ret = parser.ParseProtoWithSubgraph(partition_graph, const_value_map, callback, root_graph);
 }
 
 TEST_F(STestTensorflowParser, parser_ConvertToGeDataType)
