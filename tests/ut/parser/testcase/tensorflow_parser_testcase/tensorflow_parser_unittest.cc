@@ -4882,6 +4882,25 @@ TEST_F(UtestTensorflowParser, test_plugin_manager_getopp_plugin_vendors_04) {
   system(("rm -rf " + opp_path).c_str());
 }
 
+TEST_F(UtestTensorflowParser, test_plugin_manager_getopp_plugin_vendors_05) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  setenv("ASCEND_OPP_PATH", opp_path.c_str(), 1);
+
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo ' load_priority = customize , mdc , lhisi ' > " + path_config).c_str());
+
+  std::vector<std::string> vendors;
+  Status ret = TBEPluginLoader::GetOppPluginVendors(path_config, vendors);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(vendors[0], "customize");
+  EXPECT_EQ(vendors[1], "mdc");
+  EXPECT_EQ(vendors[2], "lhisi");
+  system(("rm -rf " + opp_path).c_str());
+}
+
 TEST_F(UtestTensorflowParser, test_plugin_manager_GetOpsProtoPath_01) {
   std::string opp_path = __FILE__;
   opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";

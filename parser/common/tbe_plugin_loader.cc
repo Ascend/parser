@@ -156,6 +156,7 @@ Status TBEPluginLoader::GetOppPluginVendors(const std::string &vendors_config, s
   GE_ASSERT_TRUE(v_parts.size() == kVendorConfigPartsCount, "Format of file content is invalid!");
   vendors = StringUtils::Split(v_parts[1], ',');
   GE_ASSERT_TRUE(!vendors.empty(), "Format of file content is invalid!");
+  (void) for_each(vendors.begin(), vendors.end(), &StringUtils::Trim);
   return SUCCESS;
 }
 
