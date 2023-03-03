@@ -40,7 +40,7 @@ class PARSER_FUNC_VISIBILITY OnnxConstantParser : public OnnxOpParser {
   static Status SetTensorData(int32_t val_size, const google::protobuf::RepeatedField<T> &val_vector, int count,
                               Tensor &tensor) {
     bool zeros_like = (count != val_size && val_size == 1);
-    unique_ptr<T> addr(new(std::nothrow) T[count]());
+    unique_ptr<T[]> addr(new(std::nothrow) T[count]());
     GE_CHECK_NOTNULL(addr);
     int minCount = (count > val_size) ? val_size : count;
     if (!zeros_like) {
@@ -59,7 +59,7 @@ class PARSER_FUNC_VISIBILITY OnnxConstantParser : public OnnxOpParser {
     DataType data_type = tensor.GetTensorDesc().GetDataType();
     switch (data_type) {
       case DT_BOOL: {
-        unique_ptr<bool> addr_trans(new(std::nothrow) bool[count]());
+        unique_ptr<bool[]> addr_trans(new(std::nothrow) bool[count]());
         GE_CHECK_NOTNULL(addr_trans);
         for (int32_t i = 0; i < count; i++) {
           *(addr_trans.get() + i) = static_cast<bool>(
@@ -70,7 +70,7 @@ class PARSER_FUNC_VISIBILITY OnnxConstantParser : public OnnxOpParser {
       }
 #define CASE_SET_DATA(dt_type, value_type, addr, count, tensor)                                     \
   case dt_type: {                                                                                   \
-    unique_ptr<value_type> addr_trans(new(std::nothrow) value_type[count]());                       \
+    unique_ptr<value_type[]> addr_trans(new(std::nothrow) value_type[count]());                     \
     GE_CHECK_NOTNULL(addr_trans);                                                                   \
     for (int32_t i = 0; i < (count); i++) {                                                         \
       *(addr_trans.get() + i) = static_cast<value_type>(*((addr).get() + i));                       \
