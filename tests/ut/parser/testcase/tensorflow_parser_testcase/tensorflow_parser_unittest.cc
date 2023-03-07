@@ -5409,4 +5409,247 @@ TEST_F(UtestTensorflowParser, test_plugin_manager_GetCustomOpPath_09) {
     opp_path + "built-in/framework/"), 0);
   system(("rm -rf " + opp_path).c_str());
 }
+
+TEST_F(UtestTensorflowParser, test_plugin_manager_GetCustomCaffeProtoPath_01) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  setenv("ASCEND_OPP_PATH", opp_path.c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  system(("rm -rf " + path_builtin).c_str());
+  system(("rm -rf " + path_vendors).c_str());
+
+  std::string customcaffe_path;
+  Status ret = TBEPluginLoader::GetCustomCaffeProtoPath(customcaffe_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(customcaffe_path,
+    opp_path + "framework/custom/caffe/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
+TEST_F(UtestTensorflowParser, test_plugin_manager_GetCustomCaffeProtoPath_02) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  setenv("ASCEND_OPP_PATH", opp_path.c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo 'load_priority=customize,mdc,lhisi' > " + path_config).c_str());
+
+  std::string customcaffe_path;
+  Status ret = TBEPluginLoader::GetCustomCaffeProtoPath(customcaffe_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(customcaffe_path,
+    path_vendors + "/customize/framework/caffe/:" +
+    path_vendors + "/mdc/framework/caffe/:" +
+    path_vendors + "/lhisi/framework/caffe/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
+TEST_F(UtestTensorflowParser, test_plugin_manager_GetCustomCaffeProtoPath_03) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  setenv("ASCEND_OPP_PATH", opp_path.c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("rm -rf " + path_config).c_str());
+
+  std::string customcaffe_path;
+  Status ret = TBEPluginLoader::GetCustomCaffeProtoPath(customcaffe_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(customcaffe_path,
+    opp_path + "framework/custom/caffe/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
+TEST_F(UtestTensorflowParser, test_plugin_manager_GetCustomCaffeProtoPath_04) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  std::string custom_opp_path = opp_path + "custom_opp_path";
+  setenv("ASCEND_OPP_PATH", opp_path.c_str(), 1);
+  setenv("ASCEND_CUSTOM_OPP_PATH", custom_opp_path.c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo 'load_priority=customize,mdc,lhisi' > " + path_config).c_str());
+  system(("mkdir -p " + custom_opp_path + "/framework/caffe").c_str());
+
+  std::string customcaffe_path;
+  Status ret = TBEPluginLoader::GetCustomCaffeProtoPath(customcaffe_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(customcaffe_path,
+    custom_opp_path + "/framework/caffe/:" +
+    path_vendors + "/customize/framework/caffe/:" +
+    path_vendors + "/mdc/framework/caffe/:" +
+    path_vendors + "/lhisi/framework/caffe/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
+TEST_F(UtestTensorflowParser, test_plugin_manager_GetCustomCaffeProtoPath_05) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  std::string custom_opp_path = opp_path + "custom_opp_path";
+  setenv("ASCEND_OPP_PATH", opp_path.c_str(), 1);
+  setenv("ASCEND_CUSTOM_OPP_PATH", "", 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo 'load_priority=customize,mdc,lhisi' > " + path_config).c_str());
+  system(("mkdir -p " + custom_opp_path + "/framework/caffe").c_str());
+
+  std::string customcaffe_path;
+  Status ret = TBEPluginLoader::GetCustomCaffeProtoPath(customcaffe_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(customcaffe_path,
+    path_vendors + "/customize/framework/caffe/:" +
+    path_vendors + "/mdc/framework/caffe/:" +
+    path_vendors + "/lhisi/framework/caffe/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
+TEST_F(UtestTensorflowParser, test_plugin_manager_GetCustomCaffeProtoPath_06) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  std::string custom_opp_path_01 = opp_path + "custom_opp_path_01";
+  std::string custom_opp_path_02 = opp_path + "custom_opp_path_02";
+  setenv("ASCEND_OPP_PATH", opp_path.c_str(), 1);
+  setenv("ASCEND_CUSTOM_OPP_PATH", (custom_opp_path_01 + ":" + custom_opp_path_02).c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo 'load_priority=customize,mdc,lhisi' > " + path_config).c_str());
+  system(("mkdir -p " + custom_opp_path_01 + "/framework/caffe").c_str());
+  system(("mkdir -p " + custom_opp_path_02 + "/framework/caffe").c_str());
+
+  std::string customcaffe_path;
+  Status ret = TBEPluginLoader::GetCustomCaffeProtoPath(customcaffe_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(customcaffe_path,
+    custom_opp_path_01 + "/framework/caffe/:" +
+    custom_opp_path_02 + "/framework/caffe/:" +
+    path_vendors + "/customize/framework/caffe/:" +
+    path_vendors + "/mdc/framework/caffe/:" +
+    path_vendors + "/lhisi/framework/caffe/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
+TEST_F(UtestTensorflowParser, test_plugin_manager_GetCustomCaffeProtoPath_07) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  std::string custom_opp_path = opp_path + "custom_opp_path";
+  setenv("ASCEND_OPP_PATH", opp_path.c_str(), 1);
+  setenv("ASCEND_CUSTOM_OPP_PATH", custom_opp_path.c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("mkdir -p " + custom_opp_path + "/framework/caffe").c_str());
+
+  std::string customcaffe_path;
+  Status ret = TBEPluginLoader::GetCustomCaffeProtoPath(customcaffe_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(customcaffe_path,
+    custom_opp_path + "/framework/caffe/:" +
+    opp_path + "framework/custom/caffe/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
+TEST_F(UtestTensorflowParser, test_plugin_manager_GetCustomCaffeProtoPath_08) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  std::string custom_opp_path_01 = opp_path + "custom_opp_path_01";
+  std::string custom_opp_path_invalid_01 = opp_path + "custom_opp_path_invalid_01";
+  std::string custom_opp_path_empty = "";
+  std::string custom_opp_path_02 = opp_path + "custom_opp_path_02";
+  std::string custom_opp_path_invalid_02 = opp_path + "custom_opp_path_invalid_02";
+  setenv("ASCEND_OPP_PATH", opp_path.c_str(), 1);
+  setenv("ASCEND_CUSTOM_OPP_PATH", (custom_opp_path_01 + ":" +
+                                    custom_opp_path_invalid_01 + ":" +
+                                    custom_opp_path_empty + ":" +
+                                    custom_opp_path_02 + ":" +
+                                    custom_opp_path_invalid_02
+                                   ).c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo 'load_priority=customize,mdc,lhisi' > " + path_config).c_str());
+  system(("mkdir -p " + custom_opp_path_01 + "/framework/caffe").c_str());
+  system(("mkdir -p " + custom_opp_path_02 + "/framework/caffe").c_str());
+
+  std::string customcaffe_path;
+  Status ret = TBEPluginLoader::GetCustomCaffeProtoPath(customcaffe_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(customcaffe_path,
+    custom_opp_path_01 + "/framework/caffe/:" +
+    custom_opp_path_02 + "/framework/caffe/:" +
+    path_vendors + "/customize/framework/caffe/:" +
+    path_vendors + "/mdc/framework/caffe/:" +
+    path_vendors + "/lhisi/framework/caffe/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
+
+TEST_F(UtestTensorflowParser, test_plugin_manager_GetCustomCaffeProtoPath_09) {
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  std::string custom_opp_path_01 = opp_path + "custom_opp_path_01";
+  std::string custom_opp_path_02 = opp_path + "custom_opp_path_02";
+  setenv("ASCEND_OPP_PATH", opp_path.c_str(), 1);
+  setenv("ASCEND_CUSTOM_OPP_PATH", (custom_opp_path_01 + ":" +
+                                    custom_opp_path_02 + ":" +
+                                    custom_opp_path_01 + ":" +
+                                    custom_opp_path_02
+                                   ).c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in";
+  std::string path_vendors = opp_path + "vendors";
+  std::string path_config = path_vendors + "/config.ini";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("mkdir -p " + path_vendors).c_str());
+  system(("echo 'load_priority=customize,mdc,lhisi' > " + path_config).c_str());
+  system(("mkdir -p " + custom_opp_path_01 + "/framework/caffe").c_str());
+  system(("mkdir -p " + custom_opp_path_02 + "/framework/caffe").c_str());
+
+  std::string customcaffe_path;
+  Status ret = TBEPluginLoader::GetCustomCaffeProtoPath(customcaffe_path);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(customcaffe_path,
+    custom_opp_path_01 + "/framework/caffe/:" +
+    custom_opp_path_02 + "/framework/caffe/:" +
+    custom_opp_path_01 + "/framework/caffe/:" +
+    custom_opp_path_02 + "/framework/caffe/:" +
+    path_vendors + "/customize/framework/caffe/:" +
+    path_vendors + "/mdc/framework/caffe/:" +
+    path_vendors + "/lhisi/framework/caffe/"
+  );
+  system(("rm -rf " + opp_path).c_str());
+}
 } // namespace ge

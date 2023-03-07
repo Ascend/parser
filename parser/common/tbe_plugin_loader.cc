@@ -265,6 +265,33 @@ void TBEPluginLoader::GetCustomOpPath(std::string &customop_path) {
   }
 }
 
+Status TBEPluginLoader::GetCustomCaffeProtoPath(std::string &customcaffe_path) {
+  GELOGD("Enter GetCustomCaffeProtoPath schedule");
+  std::string opp_path;
+  GE_ASSERT_TRUE(GetOppPath(opp_path) == SUCCESS, "Failed to get opp path!");
+  if (!IsNewOppPathStruct(opp_path)) {
+    customcaffe_path = opp_path + "framework/custom/caffe/";
+    GELOGI("Opp plugin path structure is old version! customcaffe_path is '%s'", customcaffe_path.c_str());
+    return SUCCESS;
+  } else {
+    GELOGI("Opp plugin path structure is new version!");
+    GetPluginPathFromCustomOppPath("framework/caffe/", customcaffe_path);
+    const std::string vendors_config = opp_path + kVendors + "/" + kConfig;
+    std::vector<std::string> vendors;
+    if (GetOppPluginVendors(vendors_config, vendors) != SUCCESS) {
+      GELOGI("Can not get opp plugin vendors!");
+      customcaffe_path += opp_path + "framework/custom/caffe/";
+    } else {
+      for (const auto &vendor : vendors) {
+        customcaffe_path += (customcaffe_path.empty() || (customcaffe_path.back() == ':')) ? "" : ":";
+        customcaffe_path += opp_path + kVendors + "/" + vendor + "/framework/caffe/";
+      }
+    }
+    GELOGI("customcaffe_path is '%s'", customcaffe_path.c_str());
+    return SUCCESS;
+  }
+}
+
 string TBEPluginLoader::GetPath() {
   Dl_info dl_info;
   if (dladdr(reinterpret_cast<void *>(&TBEPluginLoader::GetPath), &dl_info) == 0) {

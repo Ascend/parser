@@ -178,17 +178,9 @@ void AclGraphParserUtil::SaveCustomCaffeProtoPath() {
   path_base = path_base.substr(0, path_base.rfind('/') + 1);
   ge::GetParserContext().caffe_proto_path = path_base + "include/proto/";
 
-  std::string path = path_base + "ops";
-  const char *path_env = std::getenv("ASCEND_OPP_PATH");
-  if (path_env != nullptr) {
-    path = path_env;
-    GELOGI("Get custom proto path from env : %s", path_env);
-  }
-  if (mmIsDir((path + "/built-in").c_str()) != EN_OK) {
-    ge::GetParserContext().custom_proto_path = path + "framework/custom/caffe/";
-  } else {
-    ge::GetParserContext().custom_proto_path = path + "vendors/customize/framework/caffe/";
-  }
+  std::string customcaffe_path;
+  (void)ge::TBEPluginLoader::GetCustomCaffeProtoPath(customcaffe_path);
+  GetParserContext().custom_proto_path = customcaffe_path;
 }
 
 // Initialize PARSER, load custom op plugin

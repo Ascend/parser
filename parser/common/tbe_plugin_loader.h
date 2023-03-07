@@ -42,6 +42,8 @@ public:
 
   static Status GetOpsProtoPath(std::string &opsproto_path);
 
+  static Status GetCustomCaffeProtoPath(std::string &customcaffe_path);
+
 private:
   TBEPluginLoader() = default;
   ~TBEPluginLoader() = default;
