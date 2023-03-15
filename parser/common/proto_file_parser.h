@@ -29,8 +29,13 @@ public:
   ~ProtoFileParser();
   Status CombineProtoFile(const char *caffe_proto_file, const char *custom_proto_file,
                           std::string &dest_proto_file);
+  Status CombineProtoFileMultiCustomProto(const char *caffe_proto_file, const char *custom_proto_paths,
+                                          std::string &dest_proto_file);
   std::string GetFusionProtoFile();
 private:
+  void ResetParserStatus(bool reset_fusion_proto);
+  std::string ResetFusionProtoPath();
+  void SetFusionProtoPath(const std::string &path);
   Status CreatProtoFile();
   Status ParseProtoFile(const std::string &proto_file,
                         std::map<int, std::pair<std::string, std::string> > &identifier_op_map,
@@ -52,6 +57,7 @@ private:
   std::map<std::string, int> caffe_conflict_line_map_;
   std::map<std::string, int> custom_repeat_line_map_;
   std::map<std::string, int> custom_repeat_message_map_;
+  std::map<std::string, int> fusion_proto_path_map_;
   std::string fusion_proto_path;
 };
 }  // namespace ge

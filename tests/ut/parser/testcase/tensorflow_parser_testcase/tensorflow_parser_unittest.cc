@@ -170,6 +170,12 @@ static Status ParseParamByOpFunc(const ge::Operator &op_src, ge::Operator& op_de
   return SUCCESS;
 }
 
+static std::string read_file(const std::string &file_name) {
+  std::ifstream input_file(file_name);
+  std::string file_data((std::istreambuf_iterator<char>(input_file)), std::istreambuf_iterator<char>());
+  return file_data;
+}
+
 void AddDumpOriginName(const ge::NodePtr parent_node, const std::string& subgraph_name, ge::ComputeGraphPtr graph);
 
 void UtestTensorflowParser::RegisterCustomOp() {
@@ -3775,6 +3781,302 @@ TEST_F(UtestTensorflowParser, input_proto_real_path_success) {
 
   ret = proto_file_parser.AddCustomAndConflictLayer(custom_proto_path, write_tmp);
   EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(UtestTensorflowParser, ProtoFileParser_CombineProtoFileMultiCustomProto_not_exists) {
+  std::string proto_dir = __FILE__;
+  proto_dir = proto_dir.substr(0, proto_dir.rfind("/") + 1) + "proto_dir/";
+
+  std::string caffe_proto_path = proto_dir + "not_exists_dir/caffe.proto";
+  std::string custom_proto_path = proto_dir + "not_exists_dir/custom.proto";
+  ProtoFileParser proto_file_parser;
+  std::string fusion_proto_file;
+  auto ret = proto_file_parser.CombineProtoFileMultiCustomProto(caffe_proto_path.c_str(),
+                                                                custom_proto_path.c_str(),
+                                                                fusion_proto_file);
+  EXPECT_EQ(ret, FAILED);
+}
+
+TEST_F(UtestTensorflowParser, ProtoFileParser_CombineProtoFileMultiCustomProto_exists_01) {
+  std::string proto_dir = __FILE__;
+  proto_dir = proto_dir.substr(0, proto_dir.rfind("/") + 1) + "proto_dir/";
+  system(("mkdir -p " + proto_dir).c_str());
+
+  // init caffe proto file
+  std::string caffe_proto_path = proto_dir + "caffe.proto";
+  stringstream sstream_caffe_proto;
+  sstream_caffe_proto << R"(cat - << EOF > )" << caffe_proto_path;
+  sstream_caffe_proto << R"(
+syntax = "proto2";
+package domi::caffe;
+
+message LayerParameter {
+    optional string type = 1 [default = 'constant'];
+    optional float value = 2 [default = 0];
+    optional float min = 3 [default = 0];
+    optional float max = 4 [default = 1];
+    optional float mean = 5 [default = 0];
+    optional float std = 6 [default = 1];
+    optional int32 sparse = 7 [default = 1];
+    optional VarianceNorm variance_norm = 8 [default = FAN_IN];
+})" << endl << R"(EOF)";
+  system(sstream_caffe_proto.str().c_str());
+
+  // init custom proto file
+  std::string custom_proto_path = proto_dir + "custom.proto";
+  stringstream sstream_custom_proto;
+  sstream_custom_proto << R"(cat - << EOF > )" << custom_proto_path;
+  sstream_custom_proto << R"(
+syntax = "proto2";
+package domi::caffe;
+
+message LayerParameter {
+    optional string type = 1 [default = 'constant'];
+    optional float value = 2 [default = 1];
+    optional float min = 3 [default = 0];
+    optional float max = 4 [default = 1];
+    optional float mean = 5 [default = 0];
+    optional float std = 6 [default = 1];
+    optional int32 sparse = 7 [default = 1];
+    optional VarianceNorm variance_norm = 8 [default = FAN_IN];
+})" << endl << R"(EOF)";
+  system(sstream_custom_proto.str().c_str());
+
+  ProtoFileParser proto_file_parser((proto_dir + "fusion_proto_file.proto").c_str());
+  std::string fusion_proto_file;
+  auto ret = proto_file_parser.CombineProtoFileMultiCustomProto(caffe_proto_path.c_str(),
+                                                                custom_proto_path.c_str(),
+                                                                fusion_proto_file);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(fusion_proto_file, proto_dir + "fusion_proto_file.proto");
+  EXPECT_EQ(read_file(fusion_proto_file), R"(syntax = "proto2";
+package domi::caffe;
+
+message LayerParameter {
+    optional string type = 1 [default = 'constant'];
+    optional float min = 3 [default = 0];
+    optional float max = 4 [default = 1];
+    optional float mean = 5 [default = 0];
+    optional float std = 6 [default = 1];
+    optional int32 sparse = 7 [default = 1];
+    optional VarianceNorm variance_norm = 8 [default = FAN_IN];
+    optional float value = 2 [default = 1];
+}
+)");
+  system(("rm -rf " + proto_dir).c_str());
+}
+
+TEST_F(UtestTensorflowParser, ProtoFileParser_CombineProtoFileMultiCustomProto_exists_02) {
+  std::string proto_dir = __FILE__;
+  proto_dir = proto_dir.substr(0, proto_dir.rfind("/") + 1) + "proto_dir/";
+  system(("mkdir -p " + proto_dir).c_str());
+
+  // init caffe proto file
+  std::string caffe_proto_path = proto_dir + "caffe.proto";
+  stringstream sstream_caffe_proto;
+  sstream_caffe_proto << R"(cat - << EOF > )" << caffe_proto_path;
+  sstream_caffe_proto << R"(
+syntax = "proto2";
+package domi::caffe;
+
+message LayerParameter {
+    optional string type = 1 [default = 'constant'];
+    optional float value = 2 [default = 0];
+    optional float min = 3 [default = 0];
+    optional float max = 4 [default = 1];
+    optional float mean = 5 [default = 0];
+    optional float std = 6 [default = 1];
+    optional int32 sparse = 7 [default = 1];
+    optional VarianceNorm variance_norm = 8 [default = FAN_IN];
+})" << endl << R"(EOF)";
+  system(sstream_caffe_proto.str().c_str());
+
+  // init custom proto file 01
+  std::string custom_proto_path_01 = proto_dir + "custom_01.proto";
+  stringstream sstream_custom_proto_01;
+  sstream_custom_proto_01 << R"(cat - << EOF > )" << custom_proto_path_01;
+  sstream_custom_proto_01 << R"(
+syntax = "proto2";
+package domi::caffe;
+
+message LayerParameter {
+    optional string type = 1 [default = 'constant'];
+    optional float value = 2 [default = 1];
+    optional float min = 3 [default = 0];
+    optional float max = 4 [default = 1];
+    optional float mean = 5 [default = 0];
+    optional float std = 6 [default = 1];
+    optional int32 sparse = 7 [default = 1];
+    optional VarianceNorm variance_norm = 8 [default = FAN_IN];
+})" << endl << R"(EOF)";
+  system(sstream_custom_proto_01.str().c_str());
+
+  // init custom proto file 02
+  std::string custom_proto_path_02 = proto_dir + "custom_02.proto";
+  stringstream sstream_custom_proto_02;
+  sstream_custom_proto_02 << R"(cat - << EOF > )" << custom_proto_path_02;
+  sstream_custom_proto_02 << R"(
+syntax = "proto2";
+package domi::caffe;
+
+message LayerParameter {
+    optional string type = 1 [default = 'constant'];
+    optional float value = 2 [default = 2];
+    optional float min = 3 [default = 0];
+    optional float max = 4 [default = 1];
+    optional float mean = 5 [default = 0];
+    optional float std = 6 [default = 1];
+    optional int32 sparse = 7 [default = 1];
+    optional VarianceNorm variance_norm = 8 [default = FAN_IN];
+})" << endl << R"(EOF)";
+  system(sstream_custom_proto_02.str().c_str());
+
+  ProtoFileParser proto_file_parser((proto_dir + "fusion_proto_file.proto").c_str());
+  std::string fusion_proto_file;
+  auto ret = proto_file_parser.CombineProtoFileMultiCustomProto(caffe_proto_path.c_str(),
+                                                                (custom_proto_path_02 + ":" + custom_proto_path_01).c_str(),
+                                                                fusion_proto_file);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(fusion_proto_file, proto_dir + "fusion_proto_file.proto");
+  EXPECT_EQ(read_file(fusion_proto_file), R"(syntax = "proto2";
+package domi::caffe;
+
+message LayerParameter {
+    optional string type = 1 [default = 'constant'];
+    optional float min = 3 [default = 0];
+    optional float max = 4 [default = 1];
+    optional float mean = 5 [default = 0];
+    optional float std = 6 [default = 1];
+    optional int32 sparse = 7 [default = 1];
+    optional VarianceNorm variance_norm = 8 [default = FAN_IN];
+    optional float value = 2 [default = 2];
+}
+)");
+  system(("rm -rf " + proto_dir).c_str());
+}
+
+TEST_F(UtestTensorflowParser, ProtoFileParser_CombineProtoFileMultiCustomProto_exists_03) {
+  std::string proto_dir = __FILE__;
+  proto_dir = proto_dir.substr(0, proto_dir.rfind("/") + 1) + "proto_dir/";
+  system(("mkdir -p " + proto_dir).c_str());
+
+  // init caffe proto file
+  std::string caffe_proto_path = proto_dir + "caffe.proto";
+  stringstream sstream_caffe_proto;
+  sstream_caffe_proto << R"(cat - << EOF > )" << caffe_proto_path;
+  sstream_caffe_proto << R"(
+syntax = "proto2";
+package domi::caffe;
+
+message LayerParameter {
+    optional string type = 1 [default = 'constant'];
+    optional float value = 2 [default = 0];
+    optional float min = 3 [default = 0];
+    optional float max = 4 [default = 1];
+    optional float mean = 5 [default = 0];
+    optional float std = 6 [default = 1];
+    optional int32 sparse = 7 [default = 1];
+    optional VarianceNorm variance_norm = 8 [default = FAN_IN];
+})" << endl << R"(EOF)";
+  system(sstream_caffe_proto.str().c_str());
+
+  // init custom proto file 01
+  std::string custom_proto_path_01 = proto_dir + "custom_01.proto";
+  stringstream sstream_custom_proto_01;
+  sstream_custom_proto_01 << R"(cat - << EOF > )" << custom_proto_path_01;
+  sstream_custom_proto_01 << R"(
+syntax = "proto2";
+package domi::caffe;
+
+message LayerParameter {
+    optional string type = 1 [default = 'constant'];
+    optional float value = 2 [default = 1];
+    optional float min = 3 [default = 0];
+    optional float max = 4 [default = 1];
+    optional float mean = 5 [default = 0];
+    optional float std = 6 [default = 1];
+    optional int32 sparse = 7 [default = 1];
+    optional VarianceNorm variance_norm = 8 [default = FAN_IN];
+})" << endl << R"(EOF)";
+  system(sstream_custom_proto_01.str().c_str());
+
+  // init custom proto file 02
+  std::string custom_proto_path_02 = proto_dir + "custom_02.proto";
+  stringstream sstream_custom_proto_02;
+  sstream_custom_proto_02 << R"(cat - << EOF > )" << custom_proto_path_02;
+  sstream_custom_proto_02 << R"(
+syntax = "proto2";
+package domi::caffe;
+
+message LayerParameter {
+    optional string type = 1 [default = 'constant'];
+    optional float value = 2 [default = 2];
+    optional float min = 3 [default = 0];
+    optional float max = 4 [default = 1];
+    optional float mean = 5 [default = 0];
+    optional float std = 6 [default = 1];
+    optional int32 sparse = 7 [default = 1];
+    optional VarianceNorm variance_norm = 8 [default = FAN_IN];
+})" << endl << R"(EOF)";
+  system(sstream_custom_proto_02.str().c_str());
+
+  ProtoFileParser proto_file_parser((proto_dir + "fusion_proto_file.proto").c_str());
+  std::string fusion_proto_file;
+  auto ret = proto_file_parser.CombineProtoFileMultiCustomProto(caffe_proto_path.c_str(),
+    (custom_proto_path_02 + ":" + "/tmp/a_not_exists_path/custom.proto" + ":" + custom_proto_path_01).c_str(),
+    fusion_proto_file);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(fusion_proto_file, proto_dir + "fusion_proto_file.proto");
+  EXPECT_EQ(read_file(fusion_proto_file), R"(syntax = "proto2";
+package domi::caffe;
+
+message LayerParameter {
+    optional string type = 1 [default = 'constant'];
+    optional float min = 3 [default = 0];
+    optional float max = 4 [default = 1];
+    optional float mean = 5 [default = 0];
+    optional float std = 6 [default = 1];
+    optional int32 sparse = 7 [default = 1];
+    optional VarianceNorm variance_norm = 8 [default = FAN_IN];
+    optional float value = 2 [default = 2];
+}
+)");
+  system(("rm -rf " + proto_dir).c_str());
+}
+
+TEST_F(UtestTensorflowParser, ProtoFileParser_CombineProtoFileMultiCustomProto_exists_04) {
+  std::string proto_dir = __FILE__;
+  proto_dir = proto_dir.substr(0, proto_dir.rfind("/") + 1) + "proto_dir/";
+  system(("mkdir -p " + proto_dir).c_str());
+
+  // init caffe proto file
+  std::string caffe_proto_path = proto_dir + "caffe.proto";
+  stringstream sstream_caffe_proto;
+  sstream_caffe_proto << R"(cat - << EOF > )" << caffe_proto_path;
+  sstream_caffe_proto << R"(
+syntax = "proto2";
+package domi::caffe;
+
+message LayerParameter {
+    optional string type = 1 [default = 'constant'];
+    optional float value = 2 [default = 0];
+    optional float min = 3 [default = 0];
+    optional float max = 4 [default = 1];
+    optional float mean = 5 [default = 0];
+    optional float std = 6 [default = 1];
+    optional int32 sparse = 7 [default = 1];
+    optional VarianceNorm variance_norm = 8 [default = FAN_IN];
+})" << endl << R"(EOF)";
+  system(sstream_caffe_proto.str().c_str());
+
+  ProtoFileParser proto_file_parser((proto_dir + "fusion_proto_file.proto").c_str());
+  std::string fusion_proto_file;
+  auto ret = proto_file_parser.CombineProtoFileMultiCustomProto(caffe_proto_path.c_str(),
+                                                                "",
+                                                                fusion_proto_file);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(fusion_proto_file, caffe_proto_path);
+  system(("rm -rf " + proto_dir).c_str());
 }
 
 TEST_F(UtestTensorflowParser, all_success)

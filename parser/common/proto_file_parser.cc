@@ -56,6 +56,33 @@ const char *const kOptional = "optional";
 const char *const kRepeated = "repeated";
 const char *const kRequired = "required";
 
+bool EndWith(const std::string &s, const std::string &sub) {
+  const size_t pos = s.rfind(sub);
+  if (pos == std::string::npos) {
+    return false;
+  }
+  return (pos == (s.length() - sub.length())) ? true : false;
+}
+
+ge::Status CopyFile(const std::string &src, const std::string &dst) {
+  if (src == dst) {
+    return ge::SUCCESS;
+  }
+  ge::Status ret = ge::FAILED;
+  std::ifstream input(src, std::ios::binary);
+  std::ofstream output(dst, std::ios::binary);
+  if (input.is_open() && output.is_open()) {
+    output << input.rdbuf();
+    ret = ge::SUCCESS;
+  } else {
+    REPORT_INNER_ERROR("E19999", "open [%s] or [%s] file failed.", src.c_str(), dst.c_str());
+    GELOGE(ge::FAILED, "[Copy][Proto][File] open [%s] or [%s] file failed.", src.c_str(), dst.c_str());
+  }
+  input.close();
+  output.close();
+  return ret;
+}
+
 bool GetIdentifier(const std::string &line, int &identifier) {
   int size = line.size();
   auto pos = line.find("=");
@@ -115,9 +142,9 @@ string GetMessageName(const std::string &line) {
 }
 
 string CreatTmpName(int len) {
-  std::uniform_int_distribution<int> u(kMinRandomNum, kMaxRandomNum);
-  std::default_random_engine e;
-  e.seed(time(nullptr));
+  static std::uniform_int_distribution<int> u(kMinRandomNum, kMaxRandomNum);
+  static std::random_device rd;
+  static std::default_random_engine e{rd()};
   string tmp_name = "";
   for (int i = 0; i < len; i++) {
     tmp_name += std::to_string(u(e));
@@ -176,16 +203,42 @@ ProtoFileParser::~ProtoFileParser() {
   if (!fusion_proto_path.empty() && CheckRealPath(fusion_proto_path.c_str())) {
     (void)remove(fusion_proto_path.c_str());
   }
+  for (const auto &pr : fusion_proto_path_map_) {
+    const auto &file_name = pr.first;
+    if (!file_name.empty() && CheckRealPath(file_name.c_str())) {
+      (void)remove(file_name.c_str());
+    }
+  }
 }
 
 std::string ProtoFileParser::GetFusionProtoFile() {
   return fusion_proto_path;
 }
 
+void ProtoFileParser::ResetParserStatus(bool reset_fusion_proto) {
+  caffe_conflict_line_map_.clear();
+  custom_repeat_line_map_.clear();
+  custom_repeat_message_map_.clear();
+  if (reset_fusion_proto) {
+    fusion_proto_path = "";
+  }
+}
+
+std::string ProtoFileParser::ResetFusionProtoPath() {
+  std::string path = fusion_proto_path;
+  fusion_proto_path = "";
+  return path;
+}
+
+void ProtoFileParser::SetFusionProtoPath(const std::string &path) {
+  fusion_proto_path = path;
+}
+
 Status ProtoFileParser::CreatProtoFile() {
   if (fusion_proto_path.empty()) {
     fusion_proto_path.assign(kTmpPath);
     fusion_proto_path += "/" + CreatTmpName(kTmpFileNameLen);
+    fusion_proto_path_map_[fusion_proto_path] ++;
   }
 
   int fd = open(fusion_proto_path.c_str(), O_RDWR | O_CREAT | O_TRUNC, S_IRUSR | S_IWUSR | S_IRGRP);
@@ -540,6 +593,53 @@ Status ProtoFileParser::CombineProtoFile(const char *caffe_proto_file, const cha
   }
   dest_proto_file.assign(fusion_proto_path);
   GELOGI("Fusion custom and caffe proto to file[%s] success.", dest_proto_file.c_str());
+  return SUCCESS;
+}
+
+Status ProtoFileParser::CombineProtoFileMultiCustomProto(const char *caffe_proto_file, const char *custom_proto_paths,
+                                                         std::string &dest_proto_file) {
+  GE_CHECK_NOTNULL(caffe_proto_file);
+  GE_CHECK_NOTNULL(custom_proto_paths);
+
+  if (!CheckRealPath(caffe_proto_file)) {
+    REPORT_CALL_ERROR("E19999", "caffe proto[%s] is not existed.", caffe_proto_file);
+    GELOGE(FAILED, "[Check][Param] caffe proto[%s] is not existed.", caffe_proto_file);
+    return FAILED;
+  }
+
+  std::string fusion_proto_file_bak;
+  const std::vector<std::string> custom_paths = StringUtils::Split(custom_proto_paths, ':');
+  if (custom_paths.size() >= 2U && (!fusion_proto_path.empty())) { // if size of vector custom_paths is 0 or 1, then
+    fusion_proto_file_bak = ResetFusionProtoPath();                //  following "for" clause will loop no more than
+  }                                                                //  one time, so no need backup fusion_proto_path
+  size_t custom_proto_invalid_count = 0U;
+  std::string fusion_proto_file = caffe_proto_file;
+  for (auto it = custom_paths.rbegin(); it != custom_paths.rend(); ++it) {
+    const std::string custom_proto_file = *it + (EndWith(*it, ".proto") ? "" : "custom.proto");
+    if (!CheckRealPath(custom_proto_file.c_str())) {
+      custom_proto_invalid_count ++;
+      continue;
+    }
+    const std::string caffe_proto_path = fusion_proto_file;
+    ResetParserStatus(custom_paths.size() >= 2U);
+    if (CombineProtoFile(caffe_proto_path.c_str(), custom_proto_file.c_str(), fusion_proto_file) != SUCCESS) {
+      GELOGW("CombineProtoFile failed, caffe_proto_path:%s, custom_proto_file:%s.",
+             caffe_proto_path.c_str(), custom_proto_file.c_str());
+      custom_proto_invalid_count ++;
+      fusion_proto_file = caffe_proto_path;
+    }
+  }
+  if (!fusion_proto_file_bak.empty()) {
+    (void)CopyFile(fusion_proto_file, fusion_proto_file_bak);
+    SetFusionProtoPath(fusion_proto_file_bak);
+  }
+  if (custom_proto_invalid_count == custom_paths.size()) {
+    dest_proto_file.assign(caffe_proto_file);
+    GELOGW("All paths in custom_proto_paths: '%s' is not existed", custom_proto_paths);
+    return SUCCESS;
+  }
+  dest_proto_file.assign(fusion_proto_path);
+  GELOGI("Fusion multi custom and caffe proto to file[%s] success.", dest_proto_file.c_str());
   return SUCCESS;
 }
 } // namespace ge
