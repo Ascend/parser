@@ -930,6 +930,10 @@ Status OnnxModelParser::ModelParseToGraph(const ge::onnx::ModelProto &onnx_model
     }
 
     ge::ComputeGraphPtr cur_compute_graph = ge::GraphUtilsEx::GetComputeGraph(tmp_graph);
+    if ((ge::GetParserContext().run_mode == ge::ONLY_PRE_CHECK) && (cur_compute_graph == nullptr)) {
+      GELOGD("Only prechecker.");
+      return SUCCESS;
+    }
     GE_CHECK_NOTNULL(cur_compute_graph);
 
     ret = PostOpProcessForSubgraph(arg, cur_compute_graph);
