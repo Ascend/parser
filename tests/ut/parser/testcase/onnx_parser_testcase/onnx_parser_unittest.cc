@@ -165,6 +165,18 @@ TEST_F(UtestOnnxParser, onnx_parser_user_output_with_name_and_index) {
   EXPECT_EQ(net_out_name.at(0), "Conv_0:0");
 }
 
+TEST_F(UtestOnnxParser, onnx_parser_precheck) {
+  std::string case_dir = __FILE__;
+  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
+  std::string model_file = case_dir + "/onnx_model/conv2d.onnx";
+  std::map<ge::AscendString, ge::AscendString> parser_params;
+  parser_params.insert({AscendString(ge::ir_option::OUT_NODES), AscendString("Conv_0:0")});
+  ge::Graph graph;
+  ge::GetParserContext().run_mode = ge::ONLY_PRE_CHECK;
+  auto ret = ge::aclgrphParseONNX(model_file.c_str(), parser_params, graph);
+  ASSERT_EQ(ret, GRAPH_FAILED);
+}
+
 TEST_F(UtestOnnxParser, onnx_parser_user_output_with_tensor) {
   std::string case_dir = __FILE__;
   case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
