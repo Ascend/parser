@@ -1461,10 +1461,18 @@ Status CaffeModelParser::Parse(const char *model_path, ge::ComputeGraphPtr &grap
   }
 
   // parse network model by custom proto and get custom operators
-  string custom_proto_path = ge::GetParserContext().custom_proto_path + "custom.proto";
-  string caffe_proto_path = ge::GetParserContext().caffe_proto_path + "caffe.proto";
-  GE_CHK_STATUS(CustomProtoParse(model_path, custom_proto_path, caffe_proto_path, custom_operator_),
-                "[Parse][Model] by custom proto failed, model path: %s.", model_path);
+  const string caffe_proto_path = ge::GetParserContext().caffe_proto_path + "caffe.proto";
+  const std::vector<std::string> &custom_paths = StringUtils::Split(ge::GetParserContext().custom_proto_path, ':');
+  Status result = FAILED;
+  for (const auto &custom_path : custom_paths) {
+    const string custom_proto_path = custom_path + "custom.proto";
+    if (CustomProtoParse(model_path, custom_proto_path, caffe_proto_path, custom_operator_) == SUCCESS) {
+      result = SUCCESS;
+    }
+  }
+  GE_CHK_STATUS(result, "[Parse][Model] by custom proto failed, model path: %s, caffe_proto_path: %s,"
+                "custom_proto_path: %s.", model_path, caffe_proto_path.c_str(),
+                ge::GetParserContext().custom_proto_path.c_str());
 
   if (proto_message.layer_size() == 0) {
     return ReportLayerInvalid(proto_message, model_path);
@@ -1732,23 +1740,18 @@ Status CaffeWeightsParser::Parse(const char *file, ge::ComputeGraphPtr &graph) {
   GELOGI("Parse weights file:%s", file);
 
   string caffe_proto_path = ge::GetParserContext().caffe_proto_path + "caffe.proto";
-  string custom_proto_path = ge::GetParserContext().custom_proto_path + "custom.proto";
+  string custom_proto_path = ge::GetParserContext().custom_proto_path;
   ProtoFileParser proto_file_parser;
 
   GELOGD("caffe_proto_path:%s custom_proto_path:%s", caffe_proto_path.c_str(), custom_proto_path.c_str());
   string fusion_proto_file;
-  string custom_proto_file = ge::parser::RealPath(custom_proto_path.c_str());
-  if (custom_proto_file.empty()) {
-    GELOGW("custom_proto_path:%s is not existed", custom_proto_path.c_str());
-    fusion_proto_file = caffe_proto_path;
-  } else {
-    if (proto_file_parser.CombineProtoFile(caffe_proto_path.c_str(), custom_proto_path.c_str(),\
-        fusion_proto_file) != SUCCESS) {
-      REPORT_INNER_ERROR("E19999", "CombineProtoFile failed, caffe_proto_path:%s, custom_proto_path:%s.",
-                         caffe_proto_path.c_str(), custom_proto_path.c_str());
-      GELOGE(FAILED, "[Invoke][CombineProtoFile]Create tmp fusion proto file from caffe and custom proto failed.");
-      return FAILED;
-    }
+  if (proto_file_parser.CombineProtoFileMultiCustomProto(caffe_proto_path.c_str(), custom_proto_path.c_str(),
+      fusion_proto_file) != SUCCESS) {
+    REPORT_INNER_ERROR("E19999", "CombineProtoFileMultiCustomProto failed, caffe_proto_path:%s, custom_proto_path:%s.",
+                       caffe_proto_path.c_str(), custom_proto_path.c_str());
+    GELOGE(FAILED, "[Invoke]CombineProtoFileMultiCustomProto failed, caffe_proto_path:%s, custom_proto_path:%s.",
+           caffe_proto_path.c_str(), custom_proto_path.c_str());
+    return FAILED;
   }
 
   string fusion_proto_path = ge::parser::RealPath(fusion_proto_file.c_str());
