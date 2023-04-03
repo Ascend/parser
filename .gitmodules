@@ -1,4 +1,4 @@
 [submodule "metadef"]
 	path = metadef
 	url = https://gitee.com/ascend/metadef.git
-	branch = master
+	branch = r1.12.0
