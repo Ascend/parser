@@ -18,7 +18,7 @@ set -e
 
 echo "ASCEND_CUSTOM_PATH=${ASCEND_CUSTOM_PATH}"
 echo "BUILD_METADEF=${BUILD_METADEF}"
-if [ ! ${BUILD_METADEF} ] ; then
+if [ -z "${BUILD_METADEF}" ] ; then
   BUILD_METADEF=ON
 fi
 if [ "X$BUILD_METADEF" = "XON" ]; then
