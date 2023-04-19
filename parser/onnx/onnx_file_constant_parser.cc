@@ -37,7 +37,6 @@ const char *const kFileConstantPath = "_file_constant_path";
 const char *const kLocation = "location";
 const char *const kOffset = "offset";
 const char *const kLength = "length";
-const int64_t kOffsetCoefficient = 4096;
 const char *const kFileConstant = "FileConstant";
 }
 namespace ge {
@@ -136,12 +135,6 @@ Status OnnxFileConstantParser::SetPathAttr(const ge::onnx::StringStringEntryProt
       return FAILED;
     }
     if (string_proto.key() == kOffset) {
-      if (value > (std::numeric_limits<int64_t>::max() / kOffsetCoefficient)) {
-        REPORT_INNER_ERROR("E19999", "overflow, kOffsetCoefficient[%ld], value[%ld]", kOffsetCoefficient, value);
-        GELOGE(domi::PARAM_INVALID, "overflow, kOffsetCoefficient[%ld], value[%ld]", kOffsetCoefficient, value);
-        return FAILED;
-      }
-      value *= kOffsetCoefficient;
       op_def.SetAttr(kOffset, value);
     } else {
       op_def.SetAttr(kLength, value);

@@ -482,19 +482,7 @@ TEST_F(UtestOnnxParser, FileConstantParseAttr)
   EXPECT_EQ(ret, SUCCESS);
   int64_t offset_value;
   AttrUtils::GetInt(op_desc_src, "offset", offset_value);
-  EXPECT_EQ(offset_value, 123 * 4096);
-
-  // offset overflow
-  string_proto.set_key("offset");
-  string_proto.set_value("9223372036854775800");
-  ret = parser.SetPathAttr(string_proto, op);
-  EXPECT_EQ(ret, FAILED);
-
-  // itol exception
-  string_proto.set_key("offset");
-  string_proto.set_value("999999999999999999999999999999999999");
-  ret = parser.SetPathAttr(string_proto, op);
-  EXPECT_EQ(ret, FAILED);
+  EXPECT_EQ(offset_value, 123);
 }
 
 TEST_F(UtestOnnxParser, FileConstantParsePath)
