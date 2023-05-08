@@ -5466,4 +5466,20 @@ TEST_F(STestTensorflowParser, test_plugin_manager_GetCustomCaffeProtoPath_09) {
   );
   system(("rm -rf " + opp_path).c_str());
 }
+
+TEST_F(STestTensorflowParser, tensorflow_parser_ParserInitializeOk)
+{
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  setenv("ASCEND_OPP_PATH", opp_path.c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in/framework/tensorflow/";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("touch " + path_builtin + "libops_all_plugin.so").c_str());
+
+  std::map<string, string> options;
+  Status ret = ParserInitialize(options);
+  EXPECT_EQ(ret, SUCCESS);
+  system(("rm -rf " + opp_path).c_str());
+}
 } // namespace ge

@@ -99,7 +99,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY void TBEPluginLoader::LoadPlugi
   for (auto elem : file_list) {
     StringUtils::Trim(elem);
 
-    void *handle = dlopen(elem.c_str(), RTLD_NOW | RTLD_GLOBAL | RTLD_NODELETE);
+    void *handle = dlopen(elem.c_str(), RTLD_NOW | RTLD_LOCAL | RTLD_NODELETE);
     if (handle == nullptr) {
       GELOGW("dlopen failed, plugin name:%s. Message(%s).", elem.c_str(), dlerror());
     } else if (find(handles_vec_.begin(), handles_vec_.end(), handle) == handles_vec_.end()) {
