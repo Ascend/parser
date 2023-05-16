@@ -103,6 +103,7 @@ graphStatus HandleAfterParse(AclGraphParserUtil &acl_graph_parse_util,
 
 graphStatus aclgrphParseONNX(const char *model_file,
                              const std::map<AscendString, AscendString> &parser_params, ge::Graph &graph) {
+  GEEVENT("Begin to call aclgrphParseONNX.");
   GE_CHECK_NOTNULL(model_file);
   // load custom plugin so and proto
   AclGraphParserUtil acl_graph_parse_util;
@@ -129,7 +130,7 @@ graphStatus aclgrphParseONNX(const char *model_file,
     return ge::FAILED;
   }
 
-  GELOGI("Call aclgrphParse to parse graph %s success.", ParserUtils::GetGraphName(graph).c_str());
+  GEEVENT("Call aclgrphParseONNX to parse graph %s success.", ParserUtils::GetGraphName(graph).c_str());
   return ge::SUCCESS;
 }
 
