@@ -88,6 +88,7 @@ using ge::parser::ModelSaver;
 
 namespace ge {
 graphStatus aclgrphParseTensorFlow(const char *model_file, ge::Graph &graph) {
+  GEEVENT("Begin to call aclgrphParseTensorFlow.");
   ErrorManager::GetInstance().SetStage(error_message::kModelCompile, error_message::kParser);
   GE_CHECK_NOTNULL(model_file);
   GetParserContext().type = domi::TENSORFLOW;
@@ -130,12 +131,13 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, ge::Graph &graph) {
     GELOGE(ret, "Set graph %s default output node failed.", ParserUtils::GetGraphName(graph).c_str());
     return ge::FAILED;
   }
-  GELOGI("Parser graph %s success.", ParserUtils::GetGraphName(graph).c_str());
+  GEEVENT("Call aclgrphParseTensorFlow to parse graph %s success.", ParserUtils::GetGraphName(graph).c_str());
   return ge::SUCCESS;
 }
 
 graphStatus aclgrphParseTensorFlow(const char *model_file, const std::map<AscendString, AscendString> &parser_params,
                                    ge::Graph &graph) {
+  GEEVENT("Begin to call aclgrphParseTensorFlow.");
   ErrorManager::GetInstance().SetStage(error_message::kModelCompile, error_message::kParser);
   GE_CHECK_NOTNULL(model_file);
   GetParserContext().type = domi::TENSORFLOW;
@@ -189,7 +191,7 @@ graphStatus aclgrphParseTensorFlow(const char *model_file, const std::map<Ascend
     GELOGE(ge::FAILED, "Set graph %s default output node failed.", ParserUtils::GetGraphName(graph).c_str());
     return ge::FAILED;
   }
-  GELOGI("AclgrphParse graph %s success.", ParserUtils::GetGraphName(graph).c_str());
+  GEEVENT("Call aclgrphParseTensorFlow to parse graph %s success.", ParserUtils::GetGraphName(graph).c_str());
   return ge::SUCCESS;
 }
 
