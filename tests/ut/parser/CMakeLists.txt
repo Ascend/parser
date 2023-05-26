@@ -133,6 +133,7 @@ set(MATEDEF_SRC_FILES
     "${PARSER_DIR}/metadef/graph/utils/tuning_utils.cc"
     "${PARSER_DIR}/metadef/graph/utils/type_utils.cc"
     "${PARSER_DIR}/metadef/graph/utils/trace/trace_manager.cc"
+    "${PARSER_DIR}/metadef/graph/utils/op_type_utils.cc"
     "${PARSER_DIR}/metadef/graph/common/large_bm.cc"
     "${PARSER_DIR}/metadef/graph/common/plugin/plugin_manager.cc"
     "${PARSER_DIR}/metadef/ops/op_imp.cpp"
