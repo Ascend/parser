@@ -355,4 +355,26 @@ TEST_F(UtestAclGraphParser, test_pre_checker) {
   ret = PreChecker::Instance().CheckTypeSupported(id, type, name, true);
   EXPECT_EQ(ret, FAILED);
 }
+
+TEST_F(UtestAclGraphParser, test_ParseAclInputShape) {
+  dlog_setlevel(0, 0, 0);
+  AclGraphParserUtil acl_graph_parse_util;
+  std::map<AscendString, AscendString> param = {
+    {AscendString(ge::ir_option::INPUT_SHAPE), AscendString("input1:1, 2;input2:3")}};
+  string graph_name;
+  auto ret = acl_graph_parse_util.ParseParamsBeforeGraph(param, graph_name);
+  ASSERT_EQ(ret, SUCCESS);
+  EXPECT_EQ(ge::GetParserContext().input_dims.size(), 2);
+
+  std::map<AscendString, AscendString> param1 = {
+    {AscendString(ge::ir_option::INPUT_SHAPE), AscendString("")}};
+  ret = acl_graph_parse_util.ParseParamsBeforeGraph(param1, graph_name);
+  ASSERT_EQ(ret, SUCCESS);
+  EXPECT_EQ(ge::GetParserContext().input_dims.size(), 0);
+
+  std::map<AscendString, AscendString> param2 = {
+    {AscendString(ge::ir_option::INPUT_SHAPE), AscendString("input1:1, 2;input2:3,#")}};
+  ret = acl_graph_parse_util.ParseParamsBeforeGraph(param2, graph_name);
+  ASSERT_NE(ret, SUCCESS);
+}
 } // namespace ge

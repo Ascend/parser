@@ -24,6 +24,7 @@
 #include <fstream>
 #include <atomic>
 
+#include "common/checker.h"
 #include "common/string_util.h"
 #include "common/util.h"
 #include "common/util/error_manager/error_manager.h"
@@ -59,6 +60,11 @@ const int kWarningThreshold = 536870912 * 2; // 536870912 represent 512M
 const uint32_t kSetOutputWithNodeAndIndex = 0x1;
 const uint32_t kSetOutputWithTensorName = 0x2;
 const uint32_t kSetOutputModeMixed = 0x3;
+const size_t kInputShapePairSize = 2U;
+const char *const kInputShapeSample1 = "\"input_name1:n1,c1,h1,w1\"";
+const char *const kInputShapeSample2 = "\"input_name1:1,3,224,224\"";
+const char *const kSplitError1 = "after split shape by \":\", the shape must contains two parts: name and value.";
+const char *const kEmptyError = "the shape has a name, it's value can not be empty";
 const std::set<domi::FrameworkType> kSupportTensorAsOutput = {
     domi::CAFFE,
     domi::ONNX
@@ -121,6 +127,27 @@ static bool CheckDigitStr(std::string &str) {
     }
   }
   return true;
+}
+
+bool ConvertStringToNumber(const std::string &num_str, int64_t &value) {
+  std::stringstream ss(num_str);
+  ss >> value;
+  if (ss.fail() || !ss.eof()) {
+    GELOGW("Can not convert [%s] to number", num_str.c_str());
+    return false;
+  }
+  GELOGD("Convert str %s to num %ld", num_str.c_str(), value);
+  return true;
+}
+
+vector<std::string> SplitInputShape(const std::string &input_shape) {
+  std::vector<std::string> shape_pair_vec;
+  size_t pos = input_shape.rfind(":");
+  if (pos != std::string::npos) {
+    shape_pair_vec.emplace_back(input_shape.substr(0, pos));
+    shape_pair_vec.emplace_back(input_shape.substr(pos + 1, input_shape.size() - pos));
+  }
+  return shape_pair_vec;
 }
 } // namespace
 
@@ -653,6 +680,12 @@ domi::Status AclGraphParserUtil::ParseParamsBeforeGraph(const std::map<AscendStr
     return PARAM_INVALID;
   }
 
+  string input_dims;
+  GetAclParams(parser_params, ge::ir_option::INPUT_SHAPE, input_dims);
+  GE_ASSERT_SUCCESS(ParseAclInputShape(input_dims),
+                    "[Invoke][ParseAclEnableScope] Parse enable_scope_fusion_passes failed, graph:%s.",
+                    graph_name.c_str());
+
   return SUCCESS;
 }
 
@@ -683,6 +716,35 @@ domi::Status AclGraphParserUtil::ParseParamsAfterGraph(ge::Graph &graph,
     }
   }
 
+  return SUCCESS;
+}
+
+domi::Status AclGraphParserUtil::ParseAclInputShape(const string &input_shape) const {
+  ge::GetParserContext().input_dims.clear();
+  if (input_shape.empty()) {
+    return SUCCESS;
+  }
+
+  std::vector<std::string> shape_vec = StringUtils::Split(input_shape, ';');
+  for (const auto &shape : shape_vec) {
+    std::vector<std::string> shape_pair_vec = SplitInputShape(shape);
+    GE_ASSERT_TRUE((shape_pair_vec.size() == kInputShapePairSize),
+                   "the parameter [input_shape] Parse failed, value: \"%s\", reason: %s, correct sample is %s.",
+                   shape.c_str(), kSplitError1, kInputShapeSample1);
+    GE_ASSERT_TRUE(!shape_pair_vec[1].empty(),
+                   "Parse input parameter [input_shape]'s shape[%s] failed, reason: %s, correct sample is %s.",
+                   shape.c_str(), kEmptyError, kInputShapeSample1);
+
+    std::vector<std::string> shape_value_split = StringUtils::Split(shape_pair_vec[1], ',');
+    std::vector<int64_t> shape_values;
+    for (auto &shape_value_str : shape_value_split) {
+      int64_t input_dim = 0;
+      GE_ASSERT_TRUE(ConvertStringToNumber(StringUtils::Trim(shape_value_str), input_dim));
+      shape_values.emplace_back(input_dim);
+      GELOGD("Input node name:%s, with shape:%ld", StringUtils::Trim(shape_pair_vec[0]).c_str(), input_dim);
+    }
+    ge::GetParserContext().input_dims.emplace(make_pair(StringUtils::Trim(shape_pair_vec[0]), shape_values));
+  }
   return SUCCESS;
 }
 
