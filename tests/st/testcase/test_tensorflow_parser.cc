@@ -5482,4 +5482,19 @@ TEST_F(STestTensorflowParser, tensorflow_parser_ParserInitializeOk)
   EXPECT_EQ(ret, SUCCESS);
   system(("rm -rf " + opp_path).c_str());
 }
+
+TEST_F(STestTensorflowParser, tensorflow_parser_input_shape_success) {
+  RegisterCustomOp();
+  std::string case_dir = __FILE__;
+  case_dir = case_dir.substr(0, case_dir.find_last_of("/"));
+  std::string model_file = case_dir + "/origin_models/tf_add.pb";
+  std::map<ge::AscendString, ge::AscendString> parser_params = {
+    {ge::AscendString(ge::ir_option::INPUT_SHAPE), ge::AscendString("Placeholder:1,2;Placeholder_1:3,4")},
+  };
+
+  ge::Graph graph;
+  auto ret = ge::aclgrphParseTensorFlow(model_file.c_str(), parser_params, graph);
+  ASSERT_EQ(ret, SUCCESS);
+  EXPECT_EQ(ge::GetParserContext().input_dims.size(), 2);
+}
 } // namespace ge

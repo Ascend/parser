@@ -64,6 +64,7 @@ class AclGraphParserUtil {
   domi::Status SetSpecifyIndexAttrByInputNames(const ComputeGraphPtr &graph, const std::string &input_data_names) const;
   domi::Status GetDefaultOutInfo(ge::ComputeGraphPtr &compute_graph,
                                  std::vector<std::pair<ge::NodePtr, int32_t>> &output_nodes_info) const;
+  domi::Status ParseAclInputShape(const string &input_shape) const;
 };
 
 namespace parser {
