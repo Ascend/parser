@@ -357,7 +357,6 @@ TEST_F(UtestAclGraphParser, test_pre_checker) {
 }
 
 TEST_F(UtestAclGraphParser, test_ParseAclInputShape) {
-  dlog_setlevel(0, 0, 0);
   AclGraphParserUtil acl_graph_parse_util;
   std::map<AscendString, AscendString> param = {
     {AscendString(ge::ir_option::INPUT_SHAPE), AscendString("input1:1, 2;input2:3")}};
@@ -375,6 +374,16 @@ TEST_F(UtestAclGraphParser, test_ParseAclInputShape) {
   std::map<AscendString, AscendString> param2 = {
     {AscendString(ge::ir_option::INPUT_SHAPE), AscendString("input1:1, 2;input2:3,#")}};
   ret = acl_graph_parse_util.ParseParamsBeforeGraph(param2, graph_name);
+  ASSERT_NE(ret, SUCCESS);
+
+  std::map<AscendString, AscendString> param3 = {
+    {AscendString(ge::ir_option::INPUT_SHAPE), AscendString("-2")}};
+  ret = acl_graph_parse_util.ParseParamsBeforeGraph(param3, graph_name);
+  ASSERT_NE(ret, SUCCESS);
+
+  std::map<AscendString, AscendString> param4 = {
+    {AscendString(ge::ir_option::INPUT_SHAPE), AscendString("input1:")}};
+  ret = acl_graph_parse_util.ParseParamsBeforeGraph(param4, graph_name);
   ASSERT_NE(ret, SUCCESS);
 }
 } // namespace ge
