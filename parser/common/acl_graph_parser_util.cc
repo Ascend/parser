@@ -63,7 +63,7 @@ const uint32_t kSetOutputModeMixed = 0x3;
 const size_t kInputShapePairSize = 2U;
 const char *const kInputShapeSample1 = "\"input_name1:n1,c1,h1,w1\"";
 const char *const kInputShapeSample2 = "\"input_name1:1,3,224,224\"";
-const char *const kSplitError1 = "after split shape by \":\", the shape must contains two parts: name and value.";
+const char *const kSplitError1 = "after split shape by \":\", the shape must contains two parts: name and value";
 const char *const kEmptyError = "the shape has a name, it's value can not be empty";
 const std::set<domi::FrameworkType> kSupportTensorAsOutput = {
     domi::CAFFE,
@@ -728,12 +728,20 @@ domi::Status AclGraphParserUtil::ParseAclInputShape(const string &input_shape) c
   std::vector<std::string> shape_vec = StringUtils::Split(input_shape, ';');
   for (const auto &shape : shape_vec) {
     std::vector<std::string> shape_pair_vec = SplitInputShape(shape);
-    GE_ASSERT_TRUE((shape_pair_vec.size() == kInputShapePairSize),
-                   "the parameter [input_shape] Parse failed, value: \"%s\", reason: %s, correct sample is %s.",
-                   shape.c_str(), kSplitError1, kInputShapeSample1);
-    GE_ASSERT_TRUE(!shape_pair_vec[1].empty(),
-                   "Parse input parameter [input_shape]'s shape[%s] failed, reason: %s, correct sample is %s.",
-                   shape.c_str(), kEmptyError, kInputShapeSample1);
+    if (shape_pair_vec.size() != kInputShapePairSize) {
+      ErrorManager::GetInstance().ATCReportErrMessage("E10002", {"shape", "reason", "sample"},
+                                                      {shape, kSplitError1, kInputShapeSample1});
+      GELOGE(FAILED, "the parameter [--input_shape] Parse failed, value: \"%s\", reason: %s, correct sample is %s.",
+             shape.c_str(), kSplitError1, kInputShapeSample1);
+      return FAILED;
+    }
+    if (shape_pair_vec[1].empty()) {
+      ErrorManager::GetInstance().ATCReportErrMessage("E10002", {"shape", "reason", "sample"},
+                                                      {shape, kEmptyError, kInputShapeSample1});
+      GELOGE(FAILED, "Parse input parameter [--input_shape]'s shape[%s] failed, reason: %s, correct sample is %s.",
+             shape.c_str(), kEmptyError, kInputShapeSample1);
+      return FAILED;
+    }
 
     std::vector<std::string> shape_value_split = StringUtils::Split(shape_pair_vec[1], ',');
     std::vector<int64_t> shape_values;
