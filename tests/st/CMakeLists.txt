@@ -173,6 +173,7 @@ target_link_libraries(st_parser_graph PRIVATE
     metadef_headers
     air_headers
     slog_headers
+    json
     c_sec ascend_protobuf
 )
 
