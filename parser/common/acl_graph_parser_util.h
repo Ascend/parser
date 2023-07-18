@@ -40,7 +40,7 @@ class AclGraphParserUtil {
   virtual ~AclGraphParserUtil() {}
   static domi::Status LoadOpsProtoLib();
   static void SaveCustomCaffeProtoPath();
-  domi::Status AclParserInitialize(const std::map<std::string, std::string> &options);
+  domi::Status AclParserInitialize(const std::map<std::string, std::string> &options, bool is_train = false);
   domi::Status SetOutputNodeInfo(ge::Graph &graph, const std::map<AscendString, AscendString> &parser_params) const;
   domi::Status ParseParamsBeforeGraph(const std::map<AscendString, AscendString> &parser_params,
                                       std::string &graph_name) const;

@@ -17,6 +17,7 @@
 #include "framework/omg/parser/parser_api.h"
 
 #include "common/util.h"
+#include "common/acl_graph_parser_util.h"
 #include "tbe_plugin_loader.h"
 #include "framework/common/debug/ge_log.h"
 #include "parser/common/op_registration_tbe.h"
@@ -34,28 +35,15 @@ Status ParserInitialize(const std::map<std::string, std::string> &options) {
     GELOGW("ParserInitialize is called more than once");
     return SUCCESS;
   }
-
-  // load custom op plugin
-  TBEPluginLoader::Instance().LoadPluginSo(options);
-
-  std::string fmk_type = std::to_string(domi::TENSORFLOW);
-  auto it = options.find(ge::FRAMEWORK_TYPE);
-  if (it != options.end()) {
-   fmk_type = it->second;
+  AclGraphParserUtil acl_graph_parse_util;
+  if (acl_graph_parse_util.AclParserInitialize(options, true) != domi::SUCCESS) {
+    GELOGE(GRAPH_FAILED, "Parser Initialize failed.");
+    return GRAPH_FAILED;
   }
-  std::vector<OpRegistrationData> registrationDatas = domi::OpRegistry::Instance()->registrationDatas;
-  GELOGI("The size of registrationDatas in parser is: %zu", registrationDatas.size());
-  for (OpRegistrationData &reg_data : registrationDatas) {
-    if (std::to_string(reg_data.GetFrameworkType()) == fmk_type) {
-      (void)OpRegistrationTbe::Instance()->Finalize(reg_data, true);
-    }
-  }
-
   auto iter = options.find(ge::OPTION_EXEC_ENABLE_SCOPE_FUSION_PASSES);
   if (iter != options.end()) {
     ge::GetParserContext().enable_scope_fusion_passes = iter->second;
   }
-
   // set init status
   if (!parser_initialized) {
     // Initialize success, first time calling initialize

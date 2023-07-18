@@ -4414,7 +4414,7 @@ TEST_F(UtestTensorflowParser, tensorflow_AclParserInitialize_test)
   AclGraphParserUtil parseUtil;
   std::map<std::string, std::string> options;
   Status ret = parseUtil.AclParserInitialize(options);
-  EXPECT_EQ(ret, FAILED);
+  EXPECT_EQ(ret, SUCCESS);
 
   options = {{ge::FRAMEWORK_TYPE, "2"}};
   ret = parseUtil.AclParserInitialize(options);
