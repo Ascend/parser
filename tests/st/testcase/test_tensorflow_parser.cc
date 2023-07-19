@@ -4329,11 +4329,18 @@ TEST_F(STestTensorflowParser, tensorflow_AclParserInitialize_test)
   AclGraphParserUtil parseUtil;
   std::map<std::string, std::string> options;
   Status ret = parseUtil.AclParserInitialize(options);
-  EXPECT_EQ(ret, FAILED);
-
-  options = {{ge::FRAMEWORK_TYPE, "2"}};
+  EXPECT_EQ(ret, SUCCESS);
+  REGISTER_CUSTOM_OP("Stub")
+      .FrameworkType(domi::TENSORFLOW)
+      .OriginOpType("Stub")
+      .ParseParamsFn(ParseParams);
+  options = {{ge::FRAMEWORK_TYPE, std::to_string(domi::TENSORFLOW)}};
+  parseUtil.parser_initialized = false;
   ret = parseUtil.AclParserInitialize(options);
   EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(*(domi::OpRegistry::Instance()->op_parse_params_fn_map_["Stub_Stub"].target
+      < domi::Status(*)(const google::protobuf::Message *, ge::Operator &)>()), &ParseParams);
+  parseUtil.parser_initialized = false;
 }
 
 TEST_F(STestTensorflowParser, tensorflow_GetOutputLeaf_test)

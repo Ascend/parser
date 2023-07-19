@@ -212,7 +212,7 @@ void AclGraphParserUtil::SaveCustomCaffeProtoPath() {
 
 // Initialize PARSER, load custom op plugin
 // options will be used later for parser decoupling
-domi::Status AclGraphParserUtil::AclParserInitialize(const std::map<std::string, std::string> &options) {
+domi::Status AclGraphParserUtil::AclParserInitialize(const std::map<std::string, std::string> &options, bool is_train) {
   GELOGT(TRACE_INIT, "AclParserInitialize start");
   // check init status
   if (parser_initialized) {
@@ -234,19 +234,17 @@ domi::Status AclGraphParserUtil::AclParserInitialize(const std::map<std::string,
     return FAILED;
   }
 
+  std::string fmk_type = std::to_string(domi::TENSORFLOW);
   auto it = options.find(ge::FRAMEWORK_TYPE);
-  if (it == options.end()) {
-    REPORT_INNER_ERROR("E19999", "Can not find ge.frameworkType in param options");
-    GELOGE(FAILED, "[Check][Param]Can not find ge.frameworkType in options");
-    return FAILED;
+  if (it != options.end()) {
+    fmk_type = it->second;
   }
-  std::string fmk_type = it->second;
   std::vector<OpRegistrationData> registrationDatas = op_registry->registrationDatas;
   GELOGI("The size of registrationDatas in parser is: %zu", registrationDatas.size());
   for (OpRegistrationData &reg_data : registrationDatas) {
     if (std::to_string(reg_data.GetFrameworkType()) == fmk_type) {
-      (void)OpRegistrationTbe::Instance()->Finalize(reg_data, false);
-      (void)domi::OpRegistry::Instance()->Register(reg_data);
+      (void) OpRegistrationTbe::Instance()->Finalize(reg_data, is_train);
+      (void) domi::OpRegistry::Instance()->Register(reg_data);
     }
   }
 
