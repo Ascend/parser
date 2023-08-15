@@ -174,8 +174,8 @@ target_link_libraries(st_parser_graph PRIVATE
     air_headers
     slog_headers
     json
-    c_sec ascend_protobuf
-)
+    c_sec ascend_protobuf platform_stub_parser
+    )
 
 
 ################################################################################
@@ -385,6 +385,6 @@ target_link_libraries(st_parser PRIVATE
     st_parser_proto
     json
     -Wl,--whole-archive st_parser_common -Wl,--no-whole-archive
-    st_parser_graph st_parser_register error_manager_stub parser_mmpa_stub attr_util_stub
+    st_parser_graph st_parser_register error_manager_stub_parser parser_mmpa_stub attr_util_stub
     GTest::gtest GTest::gtest_main parser_slog_stub ascend_protobuf c_sec  -lrt -ldl -lgcov
 )

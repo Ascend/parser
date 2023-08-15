@@ -18,6 +18,7 @@ add_subdirectory(depends/mmpa)
 add_subdirectory(depends/profiler)
 add_subdirectory(depends/error_manager)
 add_subdirectory(depends/graph)
+add_subdirectory(depends/platform)
 
 if (ENABLE_PARSER_COV OR ENABLE_PARSER_UT)
     add_subdirectory(ut)
