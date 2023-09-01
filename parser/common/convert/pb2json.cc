@@ -46,6 +46,7 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY void Pb2Json::Message2Json(cons
     GELOGE(FAILED, "[Check][Param]Message depth can not exceed %d.", kMaxParseDepth);
     return;
   }
+
   auto descriptor = message.GetDescriptor();
   auto reflection = message.GetReflection();
   if (descriptor == nullptr || reflection == nullptr) {
@@ -78,7 +79,10 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY void Pb2Json::Message2Json(cons
 
     OneField2Json(message, field, reflection, black_fields, json, enum2str, depth);
   }
-  EnumJson2Json(json);
+
+  if (depth == 0) {
+    EnumJson2Json(json);
+  }
 }
 
 void Pb2Json::OneField2Json(const ProtobufMsg &message, const ProtobufFieldDescriptor *field,
@@ -288,6 +292,7 @@ int Pb2Json::DictInit(Json &json, std::vector<string> &idx2name, std::vector<str
       it++;
     }
   }
+
   return om_compress_version;
 }
 
@@ -313,12 +318,12 @@ int Pb2Json::AttrReplaceKV(Json &attrs, const std::vector<string> &idx2name,
       continue;
     }
 
-    if (value.find("list") == value.end()) {
+    if (value.find("i") != value.end()) {
       std::string attr_value;
       ret = EnumAttrUtils::GetAttrValue(idx2value, value["i"], attr_value);
       value["s"] = attr_value;
       value.erase("i");
-    } else {
+    } else if (value.find("list") != value.end() && value["list"].find("i") != value["list"].end()) {
       std::vector<std::string> attr_values;
       ret = EnumAttrUtils::GetAttrValues(idx2value, value["list"]["i"], attr_values);
       value["list"]["s"] = attr_values;
@@ -338,14 +343,21 @@ void Pb2Json::EnumJson2Json(Json &json) {
   std::vector<string> idx2name;
   std::vector<string> idx2value;
   std::vector<bool> use_string_val;
+
   if (DictInit(json, idx2name, idx2value, use_string_val) != USE_OM_COMPRESS) {
     return;
   }
 
+  GELOGD("DictInit finish");
+
   for (auto &graph : json["graph"]) {
     for (auto &op : graph["op"]) {
-      if (AttrReplaceKV(op["attr"], idx2name, idx2value, use_string_val) < 0) {
-        return;
+      AttrReplaceKV(op["attr"], idx2name, idx2value, use_string_val);
+      for (auto &desc: op["output_desc"]) {
+        AttrReplaceKV(desc["attr"], idx2name, idx2value, use_string_val);
+      }
+      for (auto &desc: op["input_desc"]) {
+        AttrReplaceKV(desc["attr"], idx2name, idx2value, use_string_val);
       }
     }
   }
