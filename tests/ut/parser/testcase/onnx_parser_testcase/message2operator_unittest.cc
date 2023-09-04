@@ -16,6 +16,7 @@
 
 #include "common/convert/message2operator.h"
 
+#include <fstream>
 #include <gtest/gtest.h>
 
 #include "proto/onnx/ge_onnx.pb.h"
@@ -96,5 +97,11 @@ TEST_F(UtestMessage2Operator, pb2json_one_field_json_type) {
   ge::Pb2Json::Message2Json(input_node, std::set<std::string>{}, json, true);
 }
 
+TEST_F(UtestMessage2Operator, enum_to_json_success) {
+  std::ifstream f("../tests/ut/parser/testcase/onnx_parser_testcase/om_json/enumjson1.json");
+  Json json = Json::parse(f);
+  ge::Pb2Json::EnumJson2Json(json);
+  std::cout << json.dump(4) << std::endl;
+}
 
 }  // namespace ge

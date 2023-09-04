@@ -74,6 +74,8 @@
 #include "parser/tensorflow/parser_graph_optimizer.h"
 #include "metadef/inc/register/scope/scope_pass_registry_impl.h"
 #include "register/scope/scope_fusion_pass_register.h"
+#include "proto/ge_ir.pb.h"
+
 #undef protected
 #undef private
 
@@ -5500,5 +5502,57 @@ TEST_F(STestTensorflowParser, tensorflow_parser_input_shape_fail) {
   };
   ret = ge::aclgrphParseTensorFlow(model_file.c_str(), parser_params1, graph);
   ASSERT_NE(ret, SUCCESS);
+}
+
+TEST_F(STestTensorflowParser, tensorflow_Pb2Json_Enum2Json_test)
+{
+  ge::proto::ModelDef model_def;
+  auto attrs = model_def.add_graph()->add_op()->mutable_attr();
+
+  std::string key = "";
+  key.append(1, 0);
+  key.append(1, 1);
+  ge::proto::AttrDef attr_def;
+  attr_def.set_i(0);
+  (*attrs)[key] = attr_def;
+
+  key[1] = 2;
+  attr_def.mutable_list()->add_i(1);
+  attr_def.mutable_list()->add_i(2);
+  (*attrs)[key] = attr_def;
+
+  key[1] = 3;
+  attr_def.set_i(3);
+  (*attrs)[key] = attr_def;
+
+  attr_def.set_s("cmd");
+  model_def.mutable_attr()->insert({"atc_cmdline", attr_def});
+
+  attr_def.set_i(1);
+  model_def.mutable_attr()->insert({"om_compress_version", attr_def});
+
+  attr_def.mutable_list()->add_s("attr1");
+  attr_def.mutable_list()->add_s("attr2");
+  attr_def.mutable_list()->add_s("attr3");
+  model_def.mutable_attr()->insert({"attr_name_enum", attr_def});
+
+  attr_def.mutable_list()->clear_s();
+  attr_def.mutable_list()->add_s("attr1_value1");
+  attr_def.mutable_list()->add_s("attr2_value1");
+  attr_def.mutable_list()->add_s("attr2_value2");
+  attr_def.mutable_list()->add_s("attr3_value1");
+  model_def.mutable_attr()->insert({"attr_value_enum", attr_def});
+
+  attr_def.mutable_list()->clear_s();
+  attr_def.mutable_list()->add_b(true);
+  attr_def.mutable_list()->add_b(true);
+  attr_def.mutable_list()->add_b(true);
+  model_def.mutable_attr()->insert({"attrs_use_string_value", attr_def});
+
+  set<string> black_fields;
+  Json json;
+  Pb2Json toJson;
+  toJson.Message2Json(model_def, black_fields, json, true);
+  std::cout << json.dump(4) << std::endl;
 }
 } // namespace ge

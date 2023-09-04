@@ -16,8 +16,8 @@ file(GLOB_RECURSE SRCS RELATIVE ${CMAKE_CURRENT_LIST_DIR}
         "src/error_manager_stub.cc"
 )
 
-add_library(error_manager_stub SHARED ${SRCS})
-target_link_libraries(error_manager_stub
+add_library(error_manager_stub_parser SHARED ${SRCS})
+target_link_libraries(error_manager_stub_parser
     PRIVATE
         intf_pub
     PUBLIC

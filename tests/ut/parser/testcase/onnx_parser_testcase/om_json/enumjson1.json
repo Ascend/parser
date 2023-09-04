@@ -1,0 +1,97 @@
+{
+  "attr": [
+    {
+      "key": "atc_cmdline",
+      "value": {
+        "s": "cmd"
+      }
+    },
+    {
+      "key": "_fp_ceiling_mode",
+      "value": {
+        "s": "2"
+      }
+    },
+    {
+      "key": "om_compress_version",
+      "value": {
+        "i": 1
+      }
+    },
+    {
+      "key": "attr_name_enum",
+      "value": {
+        "list": {
+          "s": [
+            "attr1",
+            "attr2",
+            "attr3"
+          ]
+        }
+      }
+    },
+    {
+      "key": "attr_value_enum",
+      "value": {
+        "list": {
+          "s": [
+            "attr1_value1",
+            "attr2_value1",
+            "attr2_value2",
+            "attr3_value1"
+          ]
+        }
+      }
+    },
+    {
+      "key": "attrs_use_string_value",
+      "value": {
+        "list": {
+          "b": [
+            true,
+            true,
+            true
+          ]
+        }
+      }
+    }
+  ],
+  "graph": [
+    {
+      "op":[
+        {
+          "attr": [
+            {
+              "key": "\u0000\u0001",
+              "value": {
+                "i": 0
+              }
+            },
+            {
+              "key": "\u0000\u0002",
+              "value": {
+                "list": {
+                  "i": [
+                    1,
+                    2
+                  ]
+                }
+              }
+            }
+          ]
+        },
+        {
+          "type": "data",
+          "attr": [
+            {
+              "key": "\u0000\u0003",
+              "value": {
+                "i": 3
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

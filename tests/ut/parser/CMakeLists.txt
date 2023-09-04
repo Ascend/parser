@@ -74,7 +74,6 @@ set(MATEDEF_SRC_FILES
     "${PARSER_DIR}/metadef/graph/attr_value.cc"
     "${PARSER_DIR}/metadef/graph/buffer.cc"
     "${PARSER_DIR}/metadef/graph/compute_graph.cc"
-    "${PARSER_DIR}/metadef/graph/debug/graph_debug.cc"
     "${PARSER_DIR}/metadef/graph/detail/attributes_holder.cc"
     "${PARSER_DIR}/metadef/graph/format_refiner.cc"
     "${PARSER_DIR}/metadef/graph/ge_attr_define.cc"
@@ -134,6 +133,7 @@ set(MATEDEF_SRC_FILES
     "${PARSER_DIR}/metadef/graph/utils/type_utils.cc"
     "${PARSER_DIR}/metadef/graph/utils/trace/trace_manager.cc"
     "${PARSER_DIR}/metadef/graph/utils/op_type_utils.cc"
+    "${PARSER_DIR}/metadef/graph/utils/enum_attr_utils.cc"
     "${PARSER_DIR}/metadef/graph/common/large_bm.cc"
     "${PARSER_DIR}/metadef/graph/common/plugin/plugin_manager.cc"
     "${PARSER_DIR}/metadef/ops/op_imp.cpp"
@@ -174,7 +174,7 @@ target_link_libraries(ut_parser_graph PRIVATE
     air_headers
     slog_headers
     json
-    c_sec ascend_protobuf
+    c_sec ascend_protobuf platform_stub_parser
 )
 
 
@@ -384,6 +384,6 @@ target_link_libraries(ut_parser
     msprof_headers
     ut_parser_proto
     -Wl,--whole-archive ut_parser_common -Wl,--no-whole-archive
-    ut_parser_graph ut_parser_register error_manager_stub parser_mmpa_stub attr_util_stub
+    ut_parser_graph ut_parser_register error_manager_stub_parser parser_mmpa_stub attr_util_stub platform_stub_parser
     GTest::gtest GTest::gtest_main parser_slog_stub ascend_protobuf c_sec json -lrt -ldl -lgcov
 )
