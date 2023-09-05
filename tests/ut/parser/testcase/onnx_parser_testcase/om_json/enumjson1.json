@@ -81,12 +81,18 @@
           ]
         },
         {
-          "type": "data",
           "attr": [
             {
               "key": "\u0000\u0003",
               "value": {
                 "i": 3
+              }
+            }, {
+              "key": "\u0000\u0001",
+              "value": {
+                "list": {
+                  "val_type":"VT_LIST_INT"
+                }
               }
             }
           ]
