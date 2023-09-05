@@ -68,7 +68,7 @@ protected:
   static int DictInit(Json &json, std::vector<std::string> &idx2name,
                       std::vector<std::string> &idx2value, std::vector<bool> &use_string_val);
 
-  static int AttrReplaceKV(Json &attrs, const std::vector<std::string> &idx2name,
+  static int AttrReplaceKV(Json &json, const std::vector<std::string> &idx2name,
                            const std::vector<std::string> &idx2value, const std::vector<bool> &use_string_val);
 };
 }  // namespace ge

@@ -296,44 +296,58 @@ int Pb2Json::DictInit(Json &json, std::vector<string> &idx2name, std::vector<str
   return om_compress_version;
 }
 
-
-int Pb2Json::AttrReplaceKV(Json &attrs, const std::vector<string> &idx2name,
+int Pb2Json::AttrReplaceKV(Json &json, const std::vector<string> &idx2name,
                            const std::vector<string> &idx2value,
                            const std::vector<bool> &use_string_val) {
-  for (auto &attr : attrs) {
-    auto &key = attr["key"];
-    auto &value = attr["value"];
+  if (!json.is_array() && !json.is_object()) {
+    return 0;
+  }
+
+  if (json.find("key") != json.end() && json.find("value") != json.end()) {
+    auto &key = json["key"];
+    auto &value = json["value"];
 
     bool is_value_string = false;
     std::string attr_name;
     auto ret = EnumAttrUtils::GetAttrName(idx2name, use_string_val, key, attr_name, is_value_string);
     if (ret != GRAPH_SUCCESS) {
       REPORT_INNER_ERROR("E19999", "Key convert failed.");
-      GELOGE(FAILED, "Key convert failed.");
       return -1;
     }
     key = attr_name;
 
     if (!is_value_string) {
-      continue;
+      return 0;
     }
 
-    if (value.find("i") != value.end()) {
+    if (value.find("i") != value.end()) { // value->i
       std::string attr_value;
       ret = EnumAttrUtils::GetAttrValue(idx2value, value["i"], attr_value);
       value["s"] = attr_value;
       value.erase("i");
-    } else if (value.find("list") != value.end() && value["list"].find("i") != value["list"].end()) {
-      std::vector<std::string> attr_values;
-      ret = EnumAttrUtils::GetAttrValues(idx2value, value["list"]["i"], attr_values);
-      value["list"]["s"] = attr_values;
-      value["list"].erase("i");
+    }
+    if (value.find("list") != value.end()) { // value->list
+      if (value["list"].find("i") != value["list"].end()) { // list->i
+        std::vector<std::string> attr_values;
+        ret = EnumAttrUtils::GetAttrValues(idx2value, value["list"]["i"], attr_values);
+        value["list"]["s"] = attr_values;
+        value["list"].erase("i");
+      }
+      if (value["list"].find("val_type") != value["list"].end()) { // list->val_type
+        value["list"]["val_type"] = "VT_LIST_STRING";
+      }
     }
 
     if (ret != GRAPH_SUCCESS) {
-      REPORT_INNER_ERROR("E19999", "value of \"%s\" convert failed.", attr_name.c_str());
-      GELOGE(FAILED, "value of \"%s\" convert failed.", attr_name.c_str());
+      REPORT_INNER_ERROR("E19999", "Value of \"%s\" convert failed.", attr_name.c_str());
       return -1;
+    }
+  }
+
+  for (auto &sub_json : json) {
+    if (AttrReplaceKV(sub_json, idx2name, idx2value, use_string_val) < 0) {
+      GELOGE(FAILED, "EnumJson convert failed.");
+      return  -1;
     }
   }
   return 0;
@@ -343,23 +357,9 @@ void Pb2Json::EnumJson2Json(Json &json) {
   std::vector<string> idx2name;
   std::vector<string> idx2value;
   std::vector<bool> use_string_val;
-
   if (DictInit(json, idx2name, idx2value, use_string_val) != USE_OM_COMPRESS) {
     return;
   }
-
-  GELOGD("DictInit finish");
-
-  for (auto &graph : json["graph"]) {
-    for (auto &op : graph["op"]) {
-      AttrReplaceKV(op["attr"], idx2name, idx2value, use_string_val);
-      for (auto &desc: op["output_desc"]) {
-        AttrReplaceKV(desc["attr"], idx2name, idx2value, use_string_val);
-      }
-      for (auto &desc: op["input_desc"]) {
-        AttrReplaceKV(desc["attr"], idx2name, idx2value, use_string_val);
-      }
-    }
-  }
+  AttrReplaceKV(json, idx2name, idx2value, use_string_val);
 }
 }  //  namespace ge
