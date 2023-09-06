@@ -80,6 +80,7 @@
 #include "common/op_map.h"
 #undef protected
 #undef private
+#include "tests/depends/mmpa/src/parser_mmpa_stub.h"
 
 using namespace std;
 using namespace domi::tensorflow;
@@ -96,6 +97,43 @@ struct DelTransposeInfo {
   domi::tensorflow::NodeDef *node_def;     // transpose
   domi::tensorflow::NodeDef *nextNodeDef;  // transpose --> [next]
   int inputIdx;
+};
+
+int32_t dl_flag = -1;
+int32_t dl_open_count = 0;
+class MockMmpa : public MmpaStubApi {
+ public:
+  INT32 mmDladdr(VOID *addr, mmDlInfo *info)
+  {
+    if (dl_flag == 0) {
+      std::string file_path = __FILE__;
+      info->dli_fname = (file_path + "libregister.so").c_str();
+      return 1;
+    }
+    return 0;
+  }
+
+  VOID *mmDlopen(const CHAR *fileName, INT32 mode)
+  {
+    if (dl_flag == 0) {
+      std::string file_name(fileName);
+      if ((file_name.find("libops_all_plugin.so") != std::string::npos) && dl_open_count == 0) {
+        ++dl_open_count;
+        return NULL;
+      }
+      return (void *)0x01;
+    }
+    return NULL;
+  }
+
+  virtual INT32 mmRealPath(const CHAR *path, CHAR *realPath, INT32 realPathLen)
+  {
+    if (dl_flag == 0) {
+      strncpy(realPath, path, realPathLen);
+      return 0;
+    }
+    return 0;
+  }
 };
 
 /*
@@ -116,9 +154,12 @@ class UtestTensorflowParser : public testing::Test {
  protected:
   void SetUp() {
     ParerUTestsUtils::ClearParserInnerCtx();
+    MmpaStub::GetInstance().SetImpl(std::make_shared<MockMmpa>());
   }
 
-  void TearDown() {}
+  void TearDown() {
+    MmpaStub::GetInstance().Reset();
+  }
 
  public:
   void RegisterCustomOp();
@@ -5942,9 +5983,10 @@ TEST_F(UtestTensorflowParser, test_plugin_manager_LoadPluginSo) {
   system(("mkdir -p " + path_builtin).c_str());
   system(("touch " + path_builtin + "libops_all_plugin.so").c_str());
 
+  dl_flag = 0;
   std::map<string, string> options;
   TBEPluginLoader::Instance().LoadPluginSo(options);
-  EXPECT_EQ(TBEPluginLoader::Instance().handles_vec_.size(), 0);
+  EXPECT_EQ(TBEPluginLoader::Instance().handles_vec_.size(), 1);
   system(("rm -rf " + opp_path).c_str());
 }
 } // namespace ge
