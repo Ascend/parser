@@ -32,6 +32,7 @@
 #include <regex>
 
 #include "external/ge/ge_api_types.h"
+#include "common/plugin/plugin_manager.h"
 #include "common/util/error_manager/error_manager.h"
 #include "framework/common/debug/ge_log.h"
 #include "framework/common/string_util.h"
@@ -49,6 +50,7 @@ const char_t *const kBuiltIn = "built-in";     // opp built-in directory name
 const char_t *const kVendors = "vendors";      // opp vendors directory name
 const char_t *const kConfig = "config.ini";    // opp vendors config file name
 const size_t kVendorConfigPartsCount = 2U;
+const char_t *const kLibRegisterSo = "libregister.so";
 }  // namespace
 std::map<string, string> TBEPluginLoader::options_ = {};
 
@@ -60,13 +62,21 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY TBEPluginLoader &TBEPluginLoade
 
 Status TBEPluginLoader::ClearHandles_() {
   Status ret = SUCCESS;
-  for (const auto &handle : handles_vec_) {
-    if (dlclose(handle) != 0) {
+  const auto close_func = [&ret](void *handle) -> void {
+    if (mmDlclose(handle) != 0) {
       ret = FAILED;
       GELOGW("Failed to close handle: %s", dlerror());
     }
+  };
+
+  for (const auto &handle : handles_vec_) {
+    close_func(handle);
   }
   handles_vec_.clear();
+
+  if (handle_reg_ != nullptr) {
+    close_func(handle_reg_);
+  }
   return ret;
 }
 
@@ -99,8 +109,8 @@ FMK_FUNC_HOST_VISIBILITY FMK_FUNC_DEV_VISIBILITY void TBEPluginLoader::LoadPlugi
   for (auto elem : file_list) {
     StringUtils::Trim(elem);
 
-    void *handle = dlopen(elem.c_str(), RTLD_NOW | RTLD_LOCAL | RTLD_NODELETE);
-    if (handle == nullptr) {
+    void *handle = mmDlopen(elem.c_str(), RTLD_NOW | RTLD_LOCAL | RTLD_NODELETE);
+    if ((handle == nullptr) && !TryOnceAfterLoadRegisterSo(elem, &handle)) {
       GELOGW("dlopen failed, plugin name:%s. Message(%s).", elem.c_str(), dlerror());
     } else if (find(handles_vec_.begin(), handles_vec_.end(), handle) == handles_vec_.end()) {
       // Close dl when the program exist, not close here
@@ -372,5 +382,33 @@ void TBEPluginLoader::ProcessSoFullName(vector<string> &file_list, string &caffe
     // Save parser so path into file_list vector
     file_list.push_back(full_name);
   }
+}
+
+// for version compatibility, follow the ccb  conclusion to avoid the problem that
+// custom opp so is not linked to libregister.so
+// the formal solution is to modify custom opp makefile to link libregsiter.so
+// after the formal solution, here can be deleted.
+bool TBEPluginLoader::TryOnceAfterLoadRegisterSo(const std::string &opp_path, void **handle) {
+  static std::atomic_bool flag{false};
+  if (!flag && (handle != nullptr)) {
+    flag = true;
+    std::string tmp_path = GetModelPath();
+    tmp_path.append(kLibRegisterSo);
+    std::string register_path = RealPath(tmp_path.c_str());
+    if (register_path.empty()) {
+      GELOGW("Can not find libregister from path:%s", register_path.c_str());
+      return false;
+    }
+    handle_reg_ = mmDlopen(register_path.c_str(), RTLD_NOW | RTLD_GLOBAL | RTLD_NODELETE);
+    if (handle_reg_ == nullptr) {
+      GELOGW("Load libregister failed from path:%s", register_path.c_str());
+      return false;
+    }
+    GELOGD("Load libregister succ from path:%s, will try to load %s later.", register_path.c_str(), opp_path.c_str());
+
+    *handle = mmDlopen(opp_path.c_str(), RTLD_NOW | RTLD_LOCAL | RTLD_NODELETE);
+    return (*handle != nullptr);
+  }
+  return false;
 }
 }  // namespace ge

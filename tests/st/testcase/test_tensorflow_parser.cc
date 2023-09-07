@@ -78,6 +78,7 @@
 
 #undef protected
 #undef private
+#include "tests/depends/mmpa/src/parser_mmpa_stub.h"
 
 using namespace std;
 using namespace domi::tensorflow;
@@ -90,13 +91,53 @@ using namespace google::protobuf;
 static const string GRAPH_DEFAULT_NAME = "default";
 
 namespace ge {
+int32_t dl_flag = -1;
+int32_t dl_open_count = 0;
+class MockMmpa : public MmpaStubApi {
+ public:
+  INT32 mmDladdr(VOID *addr, mmDlInfo *info)
+  {
+    if (dl_flag == 0) {
+      std::string file_path = __FILE__;
+      info->dli_fname = (file_path + "libregister.so").c_str();
+      return 1;
+    }
+    return 0;
+  }
+
+  VOID *mmDlopen(const CHAR *fileName, INT32 mode)
+  {
+    if (dl_flag == 0) {
+      std::string file_name(fileName);
+      if ((file_name.find("libops_all_plugin.so") != std::string::npos) && dl_open_count == 0) {
+        ++dl_open_count;
+        return NULL;
+      }
+      return (void *)0x01;
+    }
+    return NULL;
+  }
+
+  virtual INT32 mmRealPath(const CHAR *path, CHAR *realPath, INT32 realPathLen)
+  {
+    if (dl_flag == 0) {
+      strncpy(realPath, path, realPathLen);
+      return 0;
+    }
+    return 0;
+  }
+};
+
 class STestTensorflowParser : public testing::Test {
  protected:
   void SetUp() {
     ParerSTestsUtils::ClearParserInnerCtx();
+    MmpaStub::GetInstance().SetImpl(std::make_shared<MockMmpa>());
   }
 
-  void TearDown() {}
+  void TearDown() {
+    MmpaStub::GetInstance().Reset();
+  }
 
  public:
   void RegisterCustomOp();
@@ -5465,6 +5506,7 @@ TEST_F(STestTensorflowParser, tensorflow_parser_ParserInitializeOk)
   system(("touch " + path_builtin + "libops_all_plugin.so").c_str());
 
   std::map<string, string> options;
+  dl_flag = 0;
   Status ret = ParserInitialize(options);
   EXPECT_EQ(ret, SUCCESS);
   system(("rm -rf " + opp_path).c_str());
@@ -5554,5 +5596,25 @@ TEST_F(STestTensorflowParser, tensorflow_Pb2Json_Enum2Json_test)
   Pb2Json toJson;
   toJson.Message2Json(model_def, black_fields, json, true);
   std::cout << json.dump(4) << std::endl;
+}
+
+TEST_F(STestTensorflowParser, tensorflow_AclParserInitialize_TryOnceAfterLoadRegisterSo)
+{
+  std::string opp_path = __FILE__;
+  opp_path = opp_path.substr(0, opp_path.rfind("/") + 1) + "opp_path/";
+  setenv("ASCEND_OPP_PATH", opp_path.c_str(), 1);
+
+  std::string path_builtin = opp_path + "built-in/framework/tensorflow/";
+  system(("mkdir -p " + path_builtin).c_str());
+  system(("touch " + path_builtin + "libops_all_plugin.so").c_str());
+
+  AclGraphParserUtil parseUtil;
+  std::map<std::string, std::string> options;
+  dl_flag = 0;
+  Status ret = parseUtil.AclParserInitialize(options);
+  EXPECT_EQ(ret, SUCCESS);
+  EXPECT_EQ(TBEPluginLoader::Instance().handles_vec_.size(), 1);
+  EXPECT_EQ(TBEPluginLoader::Instance().Finalize(), SUCCESS);
+  system(("rm -rf " + opp_path).c_str());
 }
 } // namespace ge

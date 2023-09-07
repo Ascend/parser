@@ -14,8 +14,11 @@
  * limitations under the License.
  */
 
+#include "parser_mmpa_stub.h"
 #include "mmpa/mmpa_api.h"
 #include <string>
+
+#include <iostream>
 
 typedef int mmErrorMSg;
 
@@ -239,7 +242,7 @@ INT32 mmGetTimeOfDay(mmTimeval *timeVal, mmTimezone *timeZone)
 
 INT32 mmRealPath(const CHAR *path, CHAR *realPath, INT32 realPathLen)
 {
-  return 0;
+  return ge::MmpaStub::GetInstance().GetImpl()->mmRealPath(path, realPath, realPathLen);
 }
 
 INT32 mmGetErrorCode()
@@ -278,12 +281,12 @@ CHAR *mmDlerror()
 
 INT32 mmDladdr(VOID *addr, mmDlInfo *info)
 {
-  return 0;
+  return ge::MmpaStub::GetInstance().GetImpl()->mmDladdr(addr, info);
 }
 
 VOID *mmDlopen(const CHAR *fileName, INT32 mode)
 {
-  return NULL;
+  return ge::MmpaStub::GetInstance().GetImpl()->mmDlopen(fileName, mode);
 }
 
 VOID *mmDlsym(VOID *handle, const CHAR *funcName)

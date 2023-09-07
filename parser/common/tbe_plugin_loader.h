@@ -66,8 +66,10 @@ private:
   static void GetCustomOpPath(std::string &customop_path);
   static void GetPluginSoFileList(const string &path, vector<string> &file_list, string &caffe_parser_path);
   static void FindParserSo(const string &path, vector<string> &file_list, string &caffe_parser_path);
+  bool TryOnceAfterLoadRegisterSo(const std::string &opp_path, void **handle);
 
   SoHandlesVec handles_vec_;
+  void *handle_reg_ = nullptr;
   static std::map<string, string> options_;
 };
 }  // namespace ge
