@@ -54,7 +54,7 @@ Status OnnxConstantParser::ParseConvertData(const ge::onnx::TensorProto &tensor_
     {OnnxDataType::INT32, tensor_proto.int32_data_size()}, {OnnxDataType::UINT8, tensor_proto.int32_data_size()},
     {OnnxDataType::INT8, tensor_proto.int32_data_size()}, {OnnxDataType::UINT16, tensor_proto.int32_data_size()},
     {OnnxDataType::INT16, tensor_proto.int32_data_size()}, {OnnxDataType::BOOL, tensor_proto.int32_data_size()},
-    {OnnxDataType::FLOAT16, tensor_proto.int32_data_size()},
+    {OnnxDataType::FLOAT16, tensor_proto.int32_data_size()}, {OnnxDataType::BFLOAT16, tensor_proto.int32_data_size()},
     // for int64 values
     {OnnxDataType::INT64, tensor_proto.int64_data_size()},
     // for string values
@@ -112,6 +112,7 @@ void OnnxConstantParser::ParseConvertDataElements(const ge::onnx::TensorProto &t
     case OnnxDataType::INT16:
     case OnnxDataType::BOOL:
     case OnnxDataType::FLOAT16:
+    case OnnxDataType::BFLOAT16:
       (void)SetTensorData(tensor_proto.int32_data_size(), tensor_proto.int32_data(), count, tensor);
       break;
     // for int64 values

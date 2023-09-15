@@ -27,7 +27,7 @@ const std::map<uint32_t, ge::DataType> onnx_data_type_map = {
     {OnnxDataType::FLOAT16, ge::DataType::DT_FLOAT16},     {OnnxDataType::DOUBLE, ge::DataType::DT_DOUBLE},
     {OnnxDataType::UINT32, ge::DataType::DT_UINT32},       {OnnxDataType::UINT64, ge::DataType::DT_UINT64},
     {OnnxDataType::COMPLEX64, ge::DataType::DT_COMPLEX64}, {OnnxDataType::COMPLEX128, ge::DataType::DT_COMPLEX128},
-    {OnnxDataType::BFLOAT16, ge::DataType::DT_UNDEFINED},
+    {OnnxDataType::BFLOAT16, ge::DataType::DT_BF16},
 };
 }
 

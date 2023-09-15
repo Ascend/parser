@@ -410,7 +410,7 @@ TEST_F(UtestOnnxParser, OnnxConstantParser_ParseConvertDataType_test)
 
   ge::Tensor tensor;
   Status ret = constant_parser.ParseConvertDataType(*attribute_tensor, tensor);
-  EXPECT_EQ(ret, FAILED);
+  EXPECT_EQ(ret, SUCCESS);
 }
 
 TEST_F(UtestOnnxParser, FileConstantGetTensorProto)
