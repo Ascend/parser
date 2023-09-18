@@ -79,6 +79,7 @@ class PARSER_FUNC_VISIBILITY OnnxConstantParser : public OnnxOpParser {
     break; }                                                                                        \
 
       CASE_SET_DATA(DT_FLOAT16, uint16_t, addr, count, tensor)
+      CASE_SET_DATA(DT_BF16, uint16_t, addr, count, tensor)
       CASE_SET_DATA(DT_INT16, int16_t, addr, count, tensor)
       CASE_SET_DATA(DT_INT8, int8_t, addr, count, tensor)
       CASE_SET_DATA(DT_UINT16, uint16_t, addr, count, tensor)
