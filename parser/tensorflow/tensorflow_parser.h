@@ -159,6 +159,17 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
   /**
    * @ingroup domi_omg
    * @brief Analyze callback model data in subgraph
+   * @param [in] proto serialized network model
+   * @param [in] callback callback of subgraph
+   * @param [in|out] graph Save the network information after analysis
+   * @return SUCCESS
+   * @return Others failed
+   */
+  Status ParseProtoWithSubgraph(const ge::AscendString &root_proto, domi::GetGraphCallbackV3 callback,
+                                ge::ComputeGraphPtr &root_graph) override;
+  /**
+   * @ingroup domi_omg
+   * @brief Analyze callback model data in subgraph
    * @param [in] partitioned_serialized partitioned serialized network model
    * @param [in] const_value_map const value map, key: constant node name value: serialized constant output tensor
    * @param [in] callback callback of subgraph
@@ -169,6 +180,21 @@ class PARSER_FUNC_VISIBILITY TensorFlowModelParser : public domi::ModelParser {
   Status ParseProtoWithSubgraph(const std::vector<std::string> &partitioned_serialized,
                                 const std::map<std::string, std::string> &const_value_map,
                                 domi::GetGraphCallbackV2 callback,
+                                ge::ComputeGraphPtr &root_graph) override;
+
+  /**
+   * @ingroup domi_omg
+   * @brief Analyze callback model data in subgraph
+   * @param [in] partitioned_serialized partitioned serialized network model
+   * @param [in] const_value_map const value map, key: constant node name value: serialized constant output tensor
+   * @param [in] callback callback of subgraph
+   * @param [in|out] graph Save the network information after analysis
+   * @return SUCCESS
+   * @return Others failed
+   */
+  Status ParseProtoWithSubgraph(const std::vector<ge::AscendString> &partitioned_serialized,
+                                const std::map<ge::AscendString, ge::AscendString> &const_value_map,
+                                domi::GetGraphCallbackV3 callback,
                                 ge::ComputeGraphPtr &root_graph) override;
 
   /**
