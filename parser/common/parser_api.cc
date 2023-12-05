@@ -28,7 +28,7 @@ namespace ge {
 static bool parser_initialized = false;
 // Initialize PARSER, load custom op plugin
 // options will be used later for parser decoupling
-Status ParserInitialize(const std::map<std::string, std::string> &options) {
+Status ParserInitializeImpl(const std::map<std::string, std::string> &options) {
   GELOGT(TRACE_INIT, "ParserInitialize start");
   // check init status
   if (parser_initialized) {
@@ -52,6 +52,24 @@ Status ParserInitialize(const std::map<std::string, std::string> &options) {
 
   GELOGT(TRACE_STOP, "ParserInitialize finished");
   return SUCCESS;
+}
+
+// Initialize PARSER, load custom op plugin
+// options will be used later for parser decoupling
+Status ParserInitialize(const std::map<std::string, std::string> &options) {
+  return ParserInitializeImpl(options);
+}
+
+Status ParserInitialize(const std::map<ge::AscendString, ge::AscendString> &options) {
+  std::map<std::string, std::string> str_options;
+  for (const auto &option : options) {
+    const std::string &key =
+        std::string(option.first.GetString(), option.first.GetLength());
+    const std::string &val =
+        std::string(option.second.GetString(), option.second.GetLength());
+    str_options[key] = val;
+  }
+  return ParserInitializeImpl(str_options);
 }
 
 Status ParserFinalize() {

@@ -1398,13 +1398,14 @@ TEST_F(UtestTensorflowParser, weightsparser_parsefrommemory_success)
   EXPECT_EQ(SUCCESS, ret);
 }
 
-std::string getGraphCallbackV2(string subgraph_name)
+ge::AscendString getGraphCallbackV3(const ge::AscendString &subgraph_name)
 {
   std::string caseDir = __FILE__;
   std::size_t idx = caseDir.find_last_of("/");
   caseDir = caseDir.substr(0, idx);
-  subgraph_name = caseDir + "/tensorflow_model/tf_add.pb";
-  return subgraph_name;
+  std::string subgraph_name_str = caseDir + "/origin_models/tf_add.pb";
+  ge::AscendString subgraph_name_ascend_string = ge::AscendString(subgraph_name_str.c_str());
+  return subgraph_name_ascend_string;
 }
 
 TEST_F(UtestTensorflowParser, parser_ParseProtoWithSubgraphV2)
@@ -1412,16 +1413,17 @@ TEST_F(UtestTensorflowParser, parser_ParseProtoWithSubgraphV2)
   std::string caseDir = __FILE__;
   std::size_t idx = caseDir.find_last_of("/");
   caseDir = caseDir.substr(0, idx);
-  const std::string root_proto = caseDir + "/tensorflow_model/tf_add.pb";
+  std::string root_proto = caseDir + "/tensorflow_model/tf_add.pb";
+  ge::AscendString root_proto_str(root_proto.c_str());
   ge::Graph graph;
   std::map<ge::AscendString, ge::AscendString> parser_params;
   Status ret = ge::aclgrphParseTensorFlow(root_proto.c_str(), parser_params, graph);
   ASSERT_EQ(ret, SUCCESS);
 
   ge::ComputeGraphPtr root_graph = ge::GraphUtilsEx::GetComputeGraph(graph);
-  domi::GetGraphCallbackV2 callback(&getGraphCallbackV2);
+  domi::GetGraphCallbackV3 callback(&getGraphCallbackV3);
   TensorFlowModelParser parser;
-  ret = parser.ParseProtoWithSubgraph(root_proto, callback, root_graph);
+  ret = parser.ParseProtoWithSubgraph(root_proto_str, callback, root_graph);
 }
 
 TEST_F(UtestTensorflowParser, parser_ParseProtoWithSubgraphWithConstValue)
@@ -1440,10 +1442,10 @@ TEST_F(UtestTensorflowParser, parser_ParseProtoWithSubgraphWithConstValue)
   add->add_input("const1");
   add->add_input("const0");
   std::string root_proto = graph_def.SerializeAsString();
-  domi::GetGraphCallbackV2 callback(&getGraphCallbackV2);
+  domi::GetGraphCallbackV3 callback(&getGraphCallbackV3);
   TensorFlowModelParser parser;
-  std::vector<std::string> partition_graph{root_proto};
-  std::map<std::string, std::string> const_value_map;
+  std::vector<ge::AscendString> partition_graph{ge::AscendString(root_proto.c_str(), root_proto.length())};
+  std::map<ge::AscendString, ge::AscendString> const_value_map;
   const_value_map.insert({"abc", "abc"});
   auto ret = parser.ParseProtoWithSubgraph(partition_graph, const_value_map, callback, root_graph);
   const_value_map.insert({"const1", "abc"});
@@ -4317,8 +4319,10 @@ TEST_F(UtestTensorflowParser, tensorflow_parser_api_test)
   .FrameworkType(domi::TENSORFLOW)
   .OriginOpType("Add11")
   .ParseParamsFn(ParseParamsStub1);
-  std::map<std::string, std::string> options = {{"ge.runFlag", "1"}};
-  options.insert(std::pair<string, string>(string(ge::FRAMEWORK_TYPE), to_string(domi::TENSORFLOW)));
+  std::map<ge::AscendString, ge::AscendString> options = {{"ge.runFlag", "1"}};
+  options.insert(
+      std::pair<ge::AscendString, ge::AscendString>(ge::AscendString(ge::FRAMEWORK_TYPE.c_str()),
+      ge::AscendString(to_string(domi::TENSORFLOW).c_str())));
   Status ret = ParserInitialize(options);
   EXPECT_EQ(ret, SUCCESS);
 

@@ -2497,6 +2497,39 @@ Status TensorFlowModelParser::ParseProtoWithSubgraph(const std::string &root_pro
   return ParseProtoWithSubgraph(partitioned_serialized, const_value_map, callback, root_graph);
 }
 
+Status TensorFlowModelParser::ParseProtoWithSubgraph(const ge::AscendString &root_proto,
+                                                     domi::GetGraphCallbackV3 callback,
+                                                     ge::ComputeGraphPtr &root_graph) {
+  std::vector<ge::AscendString> partitioned_serialized{root_proto};
+  std::map<ge::AscendString, ge::AscendString> const_value_map;
+  return ParseProtoWithSubgraph(partitioned_serialized, const_value_map, callback, root_graph);
+}
+
+Status TensorFlowModelParser::ParseProtoWithSubgraph(
+    const std::vector<ge::AscendString> &partitioned_serialized,
+    const std::map<ge::AscendString, ge::AscendString> &const_value_map,
+    domi::GetGraphCallbackV3 callback,
+    ge::ComputeGraphPtr &root_graph) {
+  std::vector<std::string> str_partitioned_serialized;
+  for (const auto &partitioned_string : partitioned_serialized) {
+    str_partitioned_serialized.emplace_back(
+        std::string(partitioned_string.GetString(), partitioned_string.GetLength()));
+  }
+  std::map<std::string, std::string> str_const_value_map;
+  for (const auto &const_value_pair : const_value_map) {
+    const std::string &key =
+        std::string(const_value_pair.first.GetString(), const_value_pair.first.GetLength());
+    const std::string &val =
+        std::string(const_value_pair.second.GetString(), const_value_pair.second.GetLength());
+    str_const_value_map[key] = val;
+  }
+  auto callback_v2 = [this, &callback](const std::string &graph) -> std::string {
+    const auto &graph_def = callback(ge::AscendString(graph.c_str(), graph.length()));
+    return std::string(graph_def.GetString(), graph_def.GetLength());
+  };
+  return ParseProtoWithSubgraph(str_partitioned_serialized, str_const_value_map, callback_v2, root_graph);
+}
+
 Status TensorFlowModelParser::ParseProtoWithSubgraph(const std::vector<std::string> &partitioned_serialized,
                                                      const std::map<std::string, std::string> &const_value_map,
                                                      domi::GetGraphCallbackV2 callback,
